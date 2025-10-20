@@ -17,9 +17,11 @@ export function evaluatePolicy(
   const deltaPct = currentAmount === 0 ? 1 : Math.abs(delta) / currentAmount
   
   if (opts.maxPctDelta != null) {
+    // When current amount is 0, allow any positive proposed amount
+    const ok = currentAmount === 0 ? proposedAmount > 0 : deltaPct <= opts.maxPctDelta
     checks.push({ 
       name: 'maxPctDelta', 
-      ok: deltaPct <= opts.maxPctDelta, 
+      ok, 
       deltaPct, 
       limit: opts.maxPctDelta 
     })

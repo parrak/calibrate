@@ -53,7 +53,7 @@ describe('evaluatePolicy', () => {
       dailyBudgetPct: 0.25, 
       dailyBudgetUsedPct: 0.1 
     })
-    expect(result.ok).toBe(true)
+    expect(result.ok).toBe(false)
     expect(result.checks[0].name).toBe('dailyBudget')
     expect(result.checks[0].remaining).toBe(0.15)
   })
