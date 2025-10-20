@@ -1,0 +1,51 @@
+{
+  "version": 2,
+  "buildCommand": "pnpm build",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "builds": [
+    {
+      "src": "apps/api/package.json",
+      "use": "@vercel/next",
+      "config": {
+        "distDir": ".next"
+      }
+    },
+    {
+      "src": "apps/console/package.json", 
+      "use": "@vercel/next",
+      "config": {
+        "distDir": ".next"
+      }
+    },
+    {
+      "src": "apps/site/package.json",
+      "use": "@vercel/next", 
+      "config": {
+        "distDir": ".next"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/apps/api/api/$1"
+    },
+    {
+      "src": "/console/(.*)",
+      "dest": "/apps/console/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/apps/site/$1"
+    }
+  ],
+  "functions": {
+    "apps/api/app/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

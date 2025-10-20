@@ -3,14 +3,7 @@ node_modules/
 .pnp
 .pnp.js
 
-# Production builds
-.next/
-out/
-build/
-dist/
-
-# Environment variables
-.env
+# Development files
 .env.local
 .env.development.local
 .env.test.local
@@ -29,15 +22,10 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Coverage directory
 coverage/
 *.lcov
-
-# nyc test coverage
 .nyc_output
-
-# Dependency directories
-jspm_packages/
 
 # TypeScript cache
 *.tsbuildinfo
@@ -63,19 +51,12 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-.env.test
-
-# parcel-bundler cache (https://parceljs.org/)
+# parcel-bundler cache
 .cache
 .parcel-cache
 
-# Next.js build output
-.next
-
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/
@@ -110,8 +91,8 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 
-# Prisma
-prisma/migrations/
+# Prisma migrations (keep schema but exclude migrations)
+packages/db/prisma/migrations/
 
 # Docker
 .dockerignore
@@ -122,5 +103,10 @@ coverage/
 
 # Turbo
 .turbo/
-node_modules
-.vercel
+
+# Documentation
+calibr-docs/
+README.md
+
+# Development scripts
+packages/db/scripts/
