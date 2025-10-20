@@ -12,7 +12,7 @@
       }
     },
     {
-      "src": "apps/console/package.json", 
+      "src": "apps/console/package.json",
       "use": "@vercel/next",
       "config": {
         "distDir": ".next"
@@ -20,7 +20,7 @@
     },
     {
       "src": "apps/site/package.json",
-      "use": "@vercel/next", 
+      "use": "@vercel/next",
       "config": {
         "distDir": ".next"
       }

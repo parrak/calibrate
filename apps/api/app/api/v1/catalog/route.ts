@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   if (!productCode) {
     return NextResponse.json({ error: 'productCode required' }, { status: 400 })
   }
-  
+
   const product = await prisma.product.findFirst({ 
     where: { code: productCode }, 
     include: { 
@@ -15,11 +15,11 @@ export async function GET(req: NextRequest) {
       } 
     } 
   })
-  
+
   if (!product) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
-  
+
   const skus = product.skus.map(s => ({ 
     code: s.code, 
     prices: s.prices.map(p => ({ 
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       amount: p.amount 
     })) 
   }))
-  
+
   return NextResponse.json({ 
     product: { 
       code: product.code, 

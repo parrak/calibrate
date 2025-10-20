@@ -1,9 +1,9 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
-    "build": { 
-      "dependsOn": ["^build", "@calibr/db#generate"], 
-      "outputs": ["dist/**", ".next/**"] 
+    "build": {
+      "dependsOn": ["^build", "@calibr/db#generate"],
+      "outputs": ["dist/**", ".next/**"]
     },
     "dev": { "cache": false },
     "lint": {},
