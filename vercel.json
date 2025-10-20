@@ -1,23 +1,9 @@
 {
   "version": 2,
-  "buildCommand": "pnpm build",
+  "buildCommand": "pnpm install --frozen-lockfile && pnpm build",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": "nextjs",
   "builds": [
-    {
-      "src": "apps/api/package.json",
-      "use": "@vercel/next",
-      "config": {
-        "distDir": ".next"
-      }
-    },
-    {
-      "src": "apps/console/package.json",
-      "use": "@vercel/next",
-      "config": {
-        "distDir": ".next"
-      }
-    },
     {
       "src": "apps/site/package.json",
       "use": "@vercel/next",
@@ -27,18 +13,6 @@
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/apps/api/api/$1"
-    },
-    {
-      "src": "/console",
-      "dest": "/apps/console"
-    },
-    {
-      "src": "/console/(.*)",
-      "dest": "/apps/console/$1"
-    },
     {
       "src": "/(.*)",
       "dest": "/apps/site/$1"
