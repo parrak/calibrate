@@ -1,0 +1,20 @@
+{
+  "name": "@calibr/db",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "index.js",
+  "prisma": { "schema": "prisma/schema.prisma" },
+  "scripts": {
+    "prisma": "prisma",
+    "migrate": "prisma migrate dev",
+    "generate": "prisma generate",
+    "studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.15.0"
+  },
+  "devDependencies": { 
+    "prisma": "^5.15.0", 
+    "ts-node": "^10.9.2" 
+  }
+}

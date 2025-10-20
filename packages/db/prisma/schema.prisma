@@ -1,0 +1,141 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  users     User[]
+  products  Product[]
+  customers Customer[]
+  policies  Policy[]
+  events    Event[]
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(MEMBER)
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  createdAt DateTime @default(now())
+}
+enum Role { OWNER ADMIN MEMBER }
+
+model Product {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  code      String   @unique
+  status    Status   @default(DRAFT)
+  skus      Sku[]
+  createdAt DateTime @default(now())
+}
+enum Status { DRAFT ACTIVE ARCHIVED }
+
+model Sku {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  name       String
+  code       String   @unique
+  attributes Json?
+  status     Status   @default(DRAFT)
+  prices     Price[]
+}
+
+model Price {
+  id           String   @id @default(cuid())
+  skuId        String
+  sku          Sku      @relation(fields: [skuId], references: [id])
+  currency     String
+  billingCycle String?
+  unit         String?
+  amount       Int
+  status       Status   @default(ACTIVE)
+  versions     PriceVersion[]
+  @@index([skuId, currency])
+}
+
+model PriceVersion {
+  id        String   @id @default(cuid())
+  priceId   String
+  price     Price    @relation(fields: [priceId], references: [id])
+  amount    Int
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model Policy {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  autoApply Boolean  @default(false)
+  rules     Json     // {maxPctDelta, dailyChangeBudgetPct, floors, ceilings}
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PriceChange {
+  id          String   @id @default(cuid())
+  tenantId    String
+  skuId       String
+  source      String
+  fromAmount  Int
+  toAmount    Int
+  currency    String
+  context     Json?
+  status      PriceChangeStatus @default(PENDING)
+  policyResult Json?
+  approvedBy  String?
+  appliedAt   DateTime?
+  createdAt   DateTime @default(now())
+  @@index([tenantId, status])
+}
+enum PriceChangeStatus { PENDING APPROVED REJECTED APPLIED FAILED ROLLED_BACK }
+
+model Customer {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  email     String
+  name      String?
+  org       String?
+  quotes    Quote[]
+  createdAt DateTime @default(now())
+}
+
+model Quote {
+  id         String   @id @default(cuid())
+  tenantId   String
+  customerId String
+  status     QuoteStatus @default(DRAFT)
+  currency   String
+  subtotal   Int       @default(0)
+  total      Int       @default(0)
+  meta       Json?
+  createdAt  DateTime  @default(now())
+  items      QuoteItem[]
+  checkoutUrl String?
+}
+enum QuoteStatus { DRAFT ISSUED ACCEPTED EXPIRED }
+
+model QuoteItem {
+  id         String   @id @default(cuid())
+  quoteId    String
+  skuId      String
+  name       String
+  qty        Int
+  unitAmount Int
+  createdAt  DateTime @default(now())
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  kind      String
+  payload   Json
+  createdAt DateTime @default(now())
+}

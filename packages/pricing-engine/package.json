@@ -1,0 +1,16 @@
+{
+  "name": "@calibr/pricing-engine",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "dependencies": {
+    "@calibr/db": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0"
+  }
+}

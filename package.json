@@ -1,0 +1,33 @@
+{
+  "name": "calibrate",
+  "private": true,
+  "packageManager": "pnpm@latest",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "migrate": "pnpm --filter @calibr/db prisma migrate dev",
+    "seed": "pnpm --filter @calibr/db ts-node scripts/seed.ts",
+    "db:generate": "pnpm --filter @calibr/db prisma generate",
+    "db:studio": "pnpm --filter @calibr/db prisma studio"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/supertest": "^2.0.0",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.0",
+    "supertest": "^6.3.0",
+    "turbo": "^1.11.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "prisma": "^5.22.0"
+  }
+}

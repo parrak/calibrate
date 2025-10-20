@@ -1,0 +1,177 @@
+# 📘 Calibr — Webhook Pricing API (Docs v0.1)
+
+**What is Calibr?**  
+Calibr is a webhook-driven pricing engine. You send **price suggestions**; Calibr enforces **guardrails** (floors/ceilings, delta limits, daily budgets) and creates a **review queue** or **auto-applies** the change to your catalog and connected channels (e.g., Shopify) with full audit & rollback.
+
+**Base URLs**
+- **API**: `https://api.calibr.lat`
+- **Console**: `https://app.calibr.lat`
+- **This docs site**: `https://docs.calibr.lat`
+
+---
+
+## ⚡ Quickstart
+
+1) **Get your Webhook Secret**  
+From the Calibr console: **Settings → Webhooks → Secret** (e.g., `whsec_***`).
+
+2) **Post a signed price suggestion**
+```bash
+ts=$(date +%s)
+body='{"idempotencyKey":"sample_1","skuCode":"PRO-M","currency":"USD","proposedAmount":5290,"source":"AI"}'
+sig=$(printf "%s.%s" "$ts" "$body" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" -hex | sed 's/^.* //')
+curl -sS -X POST "https://api.calibr.lat/api/v1/webhooks/price-suggestion" \
+  -H "Content-Type: application/json" \
+  -H "X-Calibr-Signature: t=$ts,v1=$sig" \
+  -d "$body" | jq .
+```
+
+3. **Review/Apply (if not auto-applied)**
+
+```bash
+curl -s "https://api.calibr.lat/api/v1/price-changes?status=PENDING" | jq .
+curl -s -X POST "https://api.calibr.lat/api/v1/price-changes/<id>/approve" | jq .
+curl -s -X POST "https://api.calibr.lat/api/v1/price-changes/<id>/apply" | jq .
+```
+
+---
+
+## 🔐 Security & Auth
+
+* **HMAC header**: `X-Calibr-Signature: t=<unix_ts>,v1=<hex_sha256>`
+  Signature is computed over `<ts>.<raw_body>` using your **Webhook Secret**.
+* **Clock tolerance**: 5 minutes.
+* **Idempotency**: include a unique `idempotencyKey` per suggestion. Duplicates return `{ status: "duplicate" }`.
+* **HTTPS only**: all endpoints require TLS.
+
+---
+
+## 🧾 Webhook: Price Suggestion
+
+**Endpoint**: `POST /api/v1/webhooks/price-suggestion`
+**Purpose**: Propose a new price for a SKU in minor units (e.g., cents).
+
+### Request body (JSON)
+
+```json
+{
+  "idempotencyKey": "pc_2025_10_19_001",
+  "skuCode": "PRO-M",
+  "currency": "USD",
+  "proposedAmount": 5290,
+  "context": { "region": "US", "reason": "competitor_drop", "evidenceUrl": "https://example.com/screenshot" },
+  "source": "AI"
+}
+```
+
+**Fields**
+
+* `idempotencyKey` *(string, required)*: unique per suggestion.
+* `skuCode` *(string, required)*: your SKU code registered in Calibr.
+* `currency` *(ISO 4217, required)*: e.g., `USD`, `EUR`.
+* `proposedAmount` *(integer, required)*: minor units (e.g., 5290 = $52.90).
+* `context` *(object, optional)*: arbitrary metadata (region, source signals).
+* `source` *(enum, required)*: `AI | RULE | MANUAL | CONNECTOR`.
+
+### Headers
+
+* `Content-Type: application/json`
+* `X-Calibr-Signature: t=<ts>,v1=<hex>`
+
+### Success response (200)
+
+```json
+{
+  "id": "pc_abc123",
+  "status": "PENDING",
+  "policyResult": {
+    "ok": true,
+    "checks": [
+      { "name": "maxPctDelta", "ok": true, "deltaPct": 0.08, "limit": 0.15 },
+      { "name": "dailyBudget", "ok": true, "used": 0.12, "limit": 0.25 }
+    ]
+  }
+}
+```
+
+### Error responses
+
+* 400 invalid payload / schema
+* 401 invalid signature
+* 404 unknown SKU or price
+* 429 rate limit exceeded
+* 500 server error
+
+---
+
+## 🧮 Policy Guardrails (examples)
+
+* **Max % delta per change**: e.g., `≤ 15%`
+* **Daily change budget**: e.g., `≤ 25%`
+* **Floors/Ceilings**: per SKU
+* **Channel constraints**: e.g., Amazon fair pricing
+* **Time windows**: no changes during peak hours
+
+---
+
+## 🧑‍⚖️ Human Review & Actions
+
+```
+GET  /api/v1/price-changes?status=PENDING|APPROVED|APPLIED|REJECTED|FAILED|ROLLED_BACK
+POST /api/v1/price-changes/:id/approve
+POST /api/v1/price-changes/:id/apply
+POST /api/v1/price-changes/:id/reject
+POST /api/v1/price-changes/:id/rollback
+```
+
+---
+
+## 🧰 HMAC Signing & Verification (Node.js)
+
+```js
+import crypto from "crypto";
+export function sign(body, secret) {
+  const ts = Math.floor(Date.now()/1000);
+  const digest = crypto.createHmac("sha256", secret).update(`${ts}.${body}`).digest("hex");
+  return `t=${ts},v1=${digest}`;
+}
+export function verify(rawBody, header, secret, toleranceSec=300) {
+  const parts = Object.fromEntries(header.split(",").map(p => p.split("=")));
+  const ts = Number(parts.t); const v1 = parts.v1;
+  if (!ts || !v1) return false;
+  const now = Math.floor(Date.now()/1000);
+  if (Math.abs(now - ts) > toleranceSec) return false;
+  const calc = crypto.createHmac("sha256", secret).update(`${ts}.${rawBody}`).digest("hex");
+  return crypto.timingSafeEqual(Buffer.from(v1), Buffer.from(calc));
+}
+```
+
+---
+
+## 🧪 Testing Recipes
+
+* **Floor breach → PENDING (`ok=false`)**
+
+```bash
+ts=$(date +%s); body='{"idempotencyKey":"t_floor","skuCode":"PRO-M","currency":"USD","proposedAmount":3500,"source":"AI"}'
+sig=$(printf "%s.%s" "$ts" "$body" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" -hex | sed 's/^.* //')
+curl -sS -X POST https://api.calibr.lat/api/v1/webhooks/price-suggestion \
+ -H "Content-Type: application/json" -H "X-Calibr-Signature: t=$ts,v1=$sig" -d "$body" | jq .
+```
+
+* **Within policy (APPROVED or PENDING)**
+
+```bash
+ts=$(date +%s); body='{"idempotencyKey":"t_ok","skuCode":"PRO-M","currency":"USD","proposedAmount":5290,"source":"AI"}'
+sig=$(printf "%s.%s" "$ts" "$body" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" -hex | sed 's/^.* //')
+curl -sS -X POST https://api.calibr.lat/api/v1/webhooks/price-suggestion \
+ -H "Content-Type: application/json" -H "X-Calibr-Signature: t=$ts,v1=$sig" -d "$body" | jq .
+```
+
+---
+
+## ⏱️ Rate Limits (default)
+
+* Suggestions: 60/min per source key
+* Admin actions: 30/min per user
+* Bursty traffic allowed; 429 has `Retry-After`
