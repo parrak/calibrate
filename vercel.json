@@ -40,11 +40,6 @@
       "dest": "/apps/site/$1"
     }
   ],
-  "functions": {
-    "apps/api/app/api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "env": {
     "NODE_ENV": "production"
   }
