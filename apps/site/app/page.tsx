@@ -39,7 +39,7 @@ export default function Home() {
       </section>
 
       {/* Logo strip */}
-      <Section className="py-10">
+      <Section id="logos" className="py-10">
         <Logos />
       </Section>
 
@@ -77,7 +77,7 @@ export default function Home() {
       </Section>
 
       {/* CTA */}
-      <Section>
+      <Section id="cta">
         <CTA />
       </Section>
     </>
