@@ -1,174 +1,100 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Button, EmptyState, StatusPill, Table, useToast } from '@/lib/components'
+import { PriceChangeDrawer } from '@/components/PriceChangeDrawer'
 
-type Item = { 
-  id: string
-  status: string
-  currency: string
-  fromAmount: number
-  toAmount: number
-  createdAt: string
-  context?: any
-  source?: string
-}
+type Item = { id:string; status:string; currency:string; fromAmount:number; toAmount:number; createdAt:string; context?:any; source?:string; policyResult?:{ok:boolean; checks:any[]} }
+
+const api = process.env.NEXT_PUBLIC_API_BASE
+const fmt = (c:string, v:number)=> `${c} ${(v/100).toFixed(2)}`
 
 export default function PriceChanges() {
-  const [items, setItems] = useState<Item[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [items,setItems] = useState<Item[]>([])
+  const [status,setStatus] = useState<'PENDING'|'APPROVED'|'APPLIED'|'REJECTED'|'FAILED'|'ROLLED_BACK'|'ALL'>('PENDING')
+  const [loading,setLoading] = useState(true)
+  const [open,setOpen] = useState(false)
+  const [active,setActive] = useState<Item|null>(null)
+  const { Toast, setMsg } = useToast()
 
   async function load() {
     setLoading(true)
-    setError(null)
-    try {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000'
-      const res = await fetch(`${apiBase}/api/v1/price-changes?status=PENDING`, { 
-        cache: 'no-store' 
-      })
-      
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-      }
-      
-      const json = await res.json()
-      setItems(json.items ?? [])
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data')
-      console.error('Load error:', err)
-    } finally {
-      setLoading(false)
-    }
+    const qs = status==='ALL' ? '' : `?status=${status}`
+    const res = await fetch(`${api}/api/v1/price-changes${qs}`, { cache:'no-store' })
+    const json = await res.json(); setItems(json.items ?? []); setLoading(false)
+  }
+  useEffect(()=>{ load() },[status])
+
+  const rows = useMemo(()=>items.map(i=>{
+    const deltaPct = ((i.toAmount - i.fromAmount)/Math.max(1,i.fromAmount))*100
+    return { ...i, deltaPct }
+  }),[items])
+
+  async function act(id:string, op:'approve'|'apply'|'reject'|'rollback') {
+    const r = await fetch(`${api}/api/v1/price-changes/${id}/${op}`, { method:'POST' })
+    if (r.ok) { setMsg(op==='apply'?'Applied':'OK'); await load() }
   }
 
-  async function act(id: string, action: 'approve' | 'apply' | 'reject') {
-    try {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000'
-      const res = await fetch(`${apiBase}/api/v1/price-changes/${id}/${action}`, { 
-        method: 'POST' 
-      })
-      
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-      }
-      
-      await load() // Reload the list
-    } catch (err) {
-      console.error('Action error:', err)
-      alert(`Failed to ${action} price change: ${err instanceof Error ? err.message : 'Unknown error'}`)
-    }
-  }
-
-  useEffect(() => { 
-    load() 
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-gray-600">Loading price changes...</div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <h3 className="text-red-800 font-medium">Error loading data</h3>
-        <p className="text-red-600 text-sm mt-1">{error}</p>
-        <button 
-          onClick={load}
-          className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
-        >
-          Retry
-        </button>
-      </div>
-    )
-  }
+  if (loading) return <div className="p-6">Loading…{Toast}</div>
+  if (!rows.length) return (
+    <div className="p-6">
+      <EmptyState title="No items here." desc="Send a signed webhook to create a price suggestion.">
+        <pre className="text-xs">curl -X POST https://api.calibr.lat/api/v1/webhooks/price-suggestion …</pre>
+      </EmptyState>
+      {Toast}
+    </div>
+  )
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Price Changes (Pending)</h1>
-        <button 
-          onClick={load}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-        >
-          Refresh
-        </button>
+    <main className="p-6">
+      {Toast}
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Price Changes</h1>
+        <div className="flex gap-2">
+          {(['PENDING','APPROVED','APPLIED','REJECTED','FAILED','ROLLED_BACK','ALL'] as const).map(s=>
+            <button key={s} onClick={()=>setStatus(s)} className={`px-2 py-1 rounded ${status===s?'bg-border':'text-mute hover:text-fg'}`}>{s}</button>
+          )}
+        </div>
       </div>
 
-      {items.length === 0 ? (
-        <div className="bg-gray-50 rounded-lg p-8 text-center">
-          <p className="text-gray-600">No pending price changes</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-900">ID</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-900">From → To</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-900">Currency</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-900">Δ%</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-900">Source</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-900">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {items.map(i => {
-                const delta = ((i.toAmount - i.fromAmount) / i.fromAmount * 100).toFixed(1)
-                const isIncrease = i.toAmount > i.fromAmount
-                
-                return (
-                  <tr key={i.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-600">
-                      {i.id.slice(-8)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="font-medium">
-                        ${(i.fromAmount / 100).toFixed(2)} → ${(i.toAmount / 100).toFixed(2)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{i.currency}</td>
-                    <td className="px-4 py-3">
-                      <span className={`font-medium ${isIncrease ? 'text-green-600' : 'text-red-600'}`}>
-                        {isIncrease ? '+' : ''}{delta}%
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {i.source || 'Unknown'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={() => act(i.id, 'approve')} 
-                          className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors"
-                        >
-                          Approve
-                        </button>
-                        <button 
-                          onClick={() => act(i.id, 'apply')} 
-                          className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors"
-                        >
-                          Apply
-                        </button>
-                        <button 
-                          onClick={() => act(i.id, 'reject')} 
-                          className="px-3 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700 transition-colors"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      <Table head={
+        <tr className="text-left">
+          <th className="px-4 py-3">SKU</th>
+          <th className="px-4 py-3">From → To</th>
+          <th className="px-4 py-3">%Δ</th>
+          <th className="px-4 py-3">Source</th>
+          <th className="px-4 py-3">Status</th>
+          <th className="px-4 py-3"></th>
+        </tr>
+      }>
+        {rows.map(i=>{
+          const pct = i.deltaPct.toFixed(1)
+          const pctColor = i.deltaPct >= 0 ? 'text-emerald-300' : 'text-red-300'
+          return (
+            <tr key={i.id} className="border-t border-border hover:bg-surface/60">
+              <td className="px-4 py-3">{i.context?.skuCode ?? '—'}</td>
+              <td className="px-4 py-3">{fmt(i.currency, i.fromAmount)} → {fmt(i.currency, i.toAmount)}</td>
+              <td className={`px-4 py-3 ${pctColor}`}>{pct}%</td>
+              <td className="px-4 py-3">{i.source ?? '—'}</td>
+              <td className="px-4 py-3"><StatusPill status={i.status} /></td>
+              <td className="px-4 py-3 text-right space-x-2">
+                <Button variant="ghost" onClick={() => { setActive(i); setOpen(true) }}>View</Button>
+                <Button variant="ghost" onClick={()=>act(i.id,'approve')}>Approve</Button>
+                <Button onClick={()=>act(i.id,'apply')}>Apply</Button>
+              </td>
+            </tr>
+          )
+        })}
+      </Table>
+
+      <PriceChangeDrawer
+        open={open}
+        onClose={()=>setOpen(false)}
+        item={active}
+        onApprove={(id)=>act(id,'approve')}
+        onApply={(id)=>act(id,'apply')}
+        onReject={(id)=>act(id,'reject')}
+        onRollback={(id)=>act(id,'rollback')}
+      />
+    </main>
   )
 }

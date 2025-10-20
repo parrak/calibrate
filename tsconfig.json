@@ -23,7 +23,8 @@
       "@calibr/db/*": ["packages/db/*"],
       "@calibr/pricing-engine/*": ["packages/pricing-engine/*"],
       "@calibr/security/*": ["packages/security/*"],
-      "@calibr/connectors/*": ["packages/connectors/*"]
+      "@calibr/connectors/*": ["packages/connectors/*"],
+      "@calibr/ui/*": ["packages/ui/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
