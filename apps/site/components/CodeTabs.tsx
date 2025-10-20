@@ -38,6 +38,43 @@ r = requests.post("https://api.calibr.lat/api/v1/webhooks/price-suggestion",
 
 export function CodeTabs() {
   const [tab, setTab] = useState<typeof tabOrder[number]>('curl')
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle')
+
+  const handleCopy = async () => {
+    try {
+      // Check if Clipboard API is available and we're in a secure context
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(snippets[tab])
+        setCopyStatus('success')
+        setTimeout(() => setCopyStatus('idle'), 2000)
+      } else {
+        // Fallback for non-secure contexts or unsupported browsers
+        const textArea = document.createElement('textarea')
+        textArea.value = snippets[tab]
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        
+        try {
+          document.execCommand('copy')
+          setCopyStatus('success')
+          setTimeout(() => setCopyStatus('idle'), 2000)
+        } catch (err) {
+          setCopyStatus('error')
+          setTimeout(() => setCopyStatus('idle'), 2000)
+        } finally {
+          document.body.removeChild(textArea)
+        }
+      }
+    } catch (err) {
+      setCopyStatus('error')
+      setTimeout(() => setCopyStatus('idle'), 2000)
+    }
+  }
+
   return (
     <div>
       <div className="flex gap-2 text-sm">
@@ -52,11 +89,11 @@ export function CodeTabs() {
           </button>
         ))}
         <button
-          onClick={()=>navigator.clipboard.writeText(snippets[tab])}
+          onClick={handleCopy}
           className="ml-auto text-sm text-mute hover:text-fg"
           aria-label="Copy code"
         >
-          Copy
+          {copyStatus === 'success' ? 'Copied!' : copyStatus === 'error' ? 'Failed' : 'Copy'}
         </button>
       </div>
       <pre className="mt-3 text-sm bg-black/50 border border-border rounded-lg p-3 overflow-auto">

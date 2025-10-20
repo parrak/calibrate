@@ -13,7 +13,8 @@
     "react-dom": "^18.2.0",
     "next": "14.0.4",
     "zod": "^3.22.4",
-    "clsx": "^2.1.1"
+    "clsx": "^2.1.1",
+    "@calibr/ui": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.0",

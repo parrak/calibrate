@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate --schema=../../packages/db/prisma/schema.prisma && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
@@ -18,7 +18,8 @@
     "@calibr/pricing-engine": "workspace:*",
     "@calibr/security": "workspace:*",
     "@calibr/connectors": "workspace:*",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "prisma": "^5.22.0"
   },
   "devDependencies": {
     "typescript": "^5.3.0",

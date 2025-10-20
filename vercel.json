@@ -32,6 +32,10 @@
       "dest": "/apps/api/api/$1"
     },
     {
+      "src": "/console",
+      "dest": "/apps/console"
+    },
+    {
       "src": "/console/(.*)",
       "dest": "/apps/console/$1"
     },

@@ -26,9 +26,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const skus = product.skus.map(s => ({ 
+  const skus = product.skus.map((s: any) => ({ 
     code: s.code, 
-    prices: s.prices.map(p => ({ 
+    prices: s.prices.map((p: any) => ({ 
       currency: p.currency, 
       amount: p.amount 
     })) 
