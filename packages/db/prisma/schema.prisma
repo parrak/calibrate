@@ -1,10 +1,17 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 model Tenant {
   id        String   @id @default(cuid())
   name      String
   users     User[]
+  projects  Project[]
   products  Product[]
   customers Customer[]
   policies  Policy[]
@@ -13,27 +20,72 @@ model Tenant {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      Role     @default(MEMBER)
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  createdAt DateTime @default(now())
+  id          String       @id @default(cuid())
+  email       String       @unique
+  name        String?
+  role        Role         @default(MEMBER)
+  tenantId    String
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  memberships Membership[]
+  createdAt   DateTime     @default(now())
 }
-enum Role { OWNER ADMIN MEMBER }
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  tenantId    String
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  name        String
+  slug        String        @unique
+  memberships Membership[]
+  products    Product[]
+  policies    Policy[]
+  events      Event[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Membership {
+  id        String      @id @default(cuid())
+  userId    String
+  projectId String
+  role      ProjectRole @default(VIEWER)
+  user      User        @relation(fields: [userId], references: [id])
+  project   Project     @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+}
+
+enum ProjectRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
 
 model Product {
   id        String   @id @default(cuid())
   tenantId  String
+  projectId String
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
   name      String
   code      String   @unique
   status    Status   @default(DRAFT)
   skus      Sku[]
   createdAt DateTime @default(now())
 }
-enum Status { DRAFT ACTIVE ARCHIVED }
+
+enum Status {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
 
 model Sku {
   id         String   @id @default(cuid())
@@ -47,15 +99,16 @@ model Sku {
 }
 
 model Price {
-  id           String   @id @default(cuid())
+  id           String         @id @default(cuid())
   skuId        String
-  sku          Sku      @relation(fields: [skuId], references: [id])
+  sku          Sku            @relation(fields: [skuId], references: [id])
   currency     String
   billingCycle String?
   unit         String?
   amount       Int
-  status       Status   @default(ACTIVE)
+  status       Status         @default(ACTIVE)
   versions     PriceVersion[]
+
   @@index([skuId, currency])
 }
 
@@ -71,7 +124,9 @@ model PriceVersion {
 model Policy {
   id        String   @id @default(cuid())
   tenantId  String
+  projectId String
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
   autoApply Boolean  @default(false)
   rules     Json     // {maxPctDelta, dailyChangeBudgetPct, floors, ceilings}
   createdAt DateTime @default(now())
@@ -79,22 +134,32 @@ model Policy {
 }
 
 model PriceChange {
-  id          String   @id @default(cuid())
-  tenantId    String
-  skuId       String
-  source      String
-  fromAmount  Int
-  toAmount    Int
-  currency    String
-  context     Json?
-  status      PriceChangeStatus @default(PENDING)
+  id           String            @id @default(cuid())
+  tenantId     String
+  projectId    String
+  skuId        String
+  source       String
+  fromAmount   Int
+  toAmount     Int
+  currency     String
+  context      Json?
+  status       PriceChangeStatus @default(PENDING)
   policyResult Json?
-  approvedBy  String?
-  appliedAt   DateTime?
-  createdAt   DateTime @default(now())
-  @@index([tenantId, status])
+  approvedBy   String?
+  appliedAt    DateTime?
+  createdAt    DateTime          @default(now())
+
+  @@index([tenantId, projectId, status])
 }
-enum PriceChangeStatus { PENDING APPROVED REJECTED APPLIED FAILED ROLLED_BACK }
+
+enum PriceChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  APPLIED
+  FAILED
+  ROLLED_BACK
+}
 
 model Customer {
   id        String   @id @default(cuid())
@@ -108,23 +173,31 @@ model Customer {
 }
 
 model Quote {
-  id         String   @id @default(cuid())
-  tenantId   String
-  customerId String
-  status     QuoteStatus @default(DRAFT)
-  currency   String
-  subtotal   Int       @default(0)
-  total      Int       @default(0)
-  meta       Json?
-  createdAt  DateTime  @default(now())
-  items      QuoteItem[]
+  id          String      @id @default(cuid())
+  tenantId    String
+  customerId  String
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  status      QuoteStatus @default(DRAFT)
+  currency    String
+  subtotal    Int         @default(0)
+  total       Int         @default(0)
+  meta        Json?
+  createdAt   DateTime    @default(now())
+  items       QuoteItem[]
   checkoutUrl String?
 }
-enum QuoteStatus { DRAFT ISSUED ACCEPTED EXPIRED }
+
+enum QuoteStatus {
+  DRAFT
+  ISSUED
+  ACCEPTED
+  EXPIRED
+}
 
 model QuoteItem {
   id         String   @id @default(cuid())
   quoteId    String
+  quote      Quote    @relation(fields: [quoteId], references: [id])
   skuId      String
   name       String
   qty        Int
@@ -135,6 +208,9 @@ model QuoteItem {
 model Event {
   id        String   @id @default(cuid())
   tenantId  String?
+  projectId String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+  project   Project? @relation(fields: [projectId], references: [id])
   kind      String
   payload   Json
   createdAt DateTime @default(now())

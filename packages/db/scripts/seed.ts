@@ -3,9 +3,17 @@ const prisma = new PrismaClient()
 
 async function main() {
   const tenant = await prisma.tenant.create({ data: { name: 'DemoCo' } })
+  const project = await prisma.project.create({ 
+    data: { 
+      tenantId: tenant.id, 
+      name: 'Demo Project', 
+      slug: 'demo' 
+    } 
+  })
   const product = await prisma.product.create({ 
     data: { 
       tenantId: tenant.id, 
+      projectId: project.id,
       name: 'Pro Plan', 
       code: 'PRO', 
       status: 'ACTIVE' 
@@ -33,6 +41,7 @@ async function main() {
   await prisma.policy.create({ 
     data: { 
       tenantId: tenant.id, 
+      projectId: project.id,
       autoApply: false, 
       rules: { 
         maxPctDelta: 0.15, 

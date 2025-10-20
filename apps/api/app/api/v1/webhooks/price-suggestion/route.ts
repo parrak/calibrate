@@ -27,8 +27,13 @@ export async function POST(req: NextRequest) {
   const ok = await ensureIdempotent(body.idempotencyKey, 'price-suggestion')
   if (!ok) return NextResponse.json({ status: 'duplicate' })
 
+  const projectSlug = req.headers.get('x-calibr-project') || (JSON.parse(raw).projectSlug)
+  if (!projectSlug) return NextResponse.json({ error: 'Missing project identifier' }, { status: 400 })
+  const project = await prisma.project.findUnique({ where: { slug: projectSlug } })
+  if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+
   const sku = await prisma.sku.findFirst({ 
-    where: { code: body.skuCode }, 
+    where: { code: body.skuCode, product: { projectId: project.id } }, 
     include: { product: true } 
   })
   if (!sku) return NextResponse.json({ error: 'SKU not found' }, { status: 404 })
@@ -39,7 +44,7 @@ export async function POST(req: NextRequest) {
   if (!price) return NextResponse.json({ error: 'Price not found' }, { status: 404 })
 
   const policy = await prisma.policy.findFirst({ 
-    where: { tenantId: sku.product.tenantId } 
+    where: { projectId: project.id } 
   })
   const rules: any = policy?.rules ?? {}
   
@@ -56,12 +61,13 @@ export async function POST(req: NextRequest) {
   const pc = await prisma.priceChange.create({
     data: {
       tenantId: sku.product.tenantId,
+      projectId: project.id,
       skuId: sku.id,
       source: body.source,
       fromAmount: price.amount,
       toAmount: body.proposedAmount,
       currency: body.currency,
-      context: body.context ?? {},
+      context: { ...(body.context ?? {}), skuCode: body.skuCode, projectSlug },
       status,
       policyResult: evalRes
     }
