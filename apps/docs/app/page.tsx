@@ -26,11 +26,11 @@ export default function Home() {
                   <div className="text-gray-600">List price changes</div>
                 </div>
                 <div className="bg-gray-100 p-3 rounded font-mono text-sm">
-                  <div>POST /api/v1/price-changes/{id}/approve</div>
+                  <div>POST /api/v1/price-changes/{"{id}"}/approve</div>
                   <div className="text-gray-600">Approve a price change</div>
                 </div>
                 <div className="bg-gray-100 p-3 rounded font-mono text-sm">
-                  <div>POST /api/v1/price-changes/{id}/apply</div>
+                  <div>POST /api/v1/price-changes/{"{id}"}/apply</div>
                   <div className="text-gray-600">Apply a price change</div>
                 </div>
               </div>
