@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const ok = await ensureIdempotent(body.idempotencyKey, 'price-suggestion')
   if (!ok) return NextResponse.json({ status: 'duplicate' })
 
-  const projectSlug = req.headers.get('x-calibr-project') || (JSON.parse(raw).projectSlug)
+  const projectSlug = req.headers.get('x-calibr-project') || body.projectSlug
   if (!projectSlug) return NextResponse.json({ error: 'Missing project identifier' }, { status: 400 })
   const project = await prisma.project.findUnique({ where: { slug: projectSlug } })
   if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 })

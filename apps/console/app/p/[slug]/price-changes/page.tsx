@@ -18,7 +18,7 @@ export default function ProjectPriceChanges({ params }: { params: { slug: string
 
   async function load() {
     setLoading(true)
-    const qs = status==='ALL' ? '' : `?status=${status}`
+    const qs = status==='ALL' ? '' : `&status=${status}`
     const res = await fetch(`${api}/api/v1/price-changes?project=${params.slug}${qs}`, { cache:'no-store' })
     const json = await res.json(); setItems(json.items ?? []); setLoading(false)
   }
