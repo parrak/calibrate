@@ -1,25 +1,6 @@
 {
-  "version": 2,
-  "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @calibr/site build",
-  "installCommand": "pnpm install --frozen-lockfile",
-  "framework": "nextjs",
+  "buildCommand": "cd apps/site && pnpm install --frozen-lockfile && pnpm build",
   "outputDirectory": "apps/site/.next",
-  "builds": [
-    {
-      "src": "apps/site/package.json",
-      "use": "@vercel/next",
-      "config": {
-        "distDir": ".next"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/apps/site/$1"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "framework": "nextjs",
+  "installCommand": "pnpm install --frozen-lockfile"
 }
