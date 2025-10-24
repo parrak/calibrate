@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd apps/site && pnpm install --frozen-lockfile && pnpm build",
+  "buildCommand": "pnpm --filter @calibr/site build",
   "outputDirectory": "apps/site/.next",
   "framework": "nextjs",
   "installCommand": "pnpm install --frozen-lockfile"
