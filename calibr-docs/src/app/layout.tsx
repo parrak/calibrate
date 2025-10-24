@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
           <footer className="border-t border-border">
             <div className="mx-auto max-w-4xl px-4 py-6 text-xs text-mute">
-              © {new Date().getFullYear()} Calibr Labs · <a href="/robots.txt">robots</a> · <a href="/sitemap.xml">sitemap</a>
+              © {new Date().getFullYear()} Porter Labs · <a href="/robots.txt">robots</a> · <a href="/sitemap.xml">sitemap</a>
             </div>
           </footer>
         </div>

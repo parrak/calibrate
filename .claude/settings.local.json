@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(vercel --version:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(test:*)",
+      "Bash(cat:*)",
+      "Bash(git rm:*)",
+      "Bash(curl:*)",
+      "Bash(docker --version:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(pnpm prisma migrate deploy:*)",
+      "Bash(pnpm seed:*)",
+      "Bash(pnpm dev)",
+      "Bash(node test-webhook.js:*)",
+      "Bash(node -e:*)",
+      "Bash(taskkill:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

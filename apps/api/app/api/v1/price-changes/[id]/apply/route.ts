@@ -3,5 +3,17 @@ import { applyPriceChange } from '@calibr/pricing-engine'
 
 export async function POST(_: Request, { params }: { params: { id: string } }) {
   const res = await applyPriceChange(params.id)
-  return NextResponse.json({ priceId: res.id, amount: res.amount })
+  const response = NextResponse.json({ priceId: res.id, amount: res.amount })
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, X-Calibr-Project')
+  return response
+}
+
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 200 })
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, X-Calibr-Project')
+  return response
 }

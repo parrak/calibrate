@@ -5,7 +5,7 @@ import { PriceChangeDrawer } from '@/components/PriceChangeDrawer'
 
 type Item = { id:string; status:string; currency:string; fromAmount:number; toAmount:number; createdAt:string; context?:any; source?:string; policyResult?:{ok:boolean; checks:any[]} }
 
-const api = process.env.NEXT_PUBLIC_API_BASE
+const api = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000'
 const fmt = (c:string, v:number)=> `${c} ${(v/100).toFixed(2)}`
 
 export default function ProjectPriceChanges({ params }: { params: { slug: string } }) {
@@ -41,22 +41,42 @@ export default function ProjectPriceChanges({ params }: { params: { slug: string
   if (!rows.length) return (
     <div className="p-6">
       <EmptyState title="No items here." desc="Send a signed webhook to create a price suggestion.">
-        <pre className="text-xs">curl -X POST https://api.calibr.lat/api/v1/webhooks/price-suggestion \
-  -H "X-Calibr-Project: {params.slug}" \
-  -H "X-Calibr-Signature: t=$ts,v1=$sig" ...</pre>
+        <pre className="text-xs bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto max-w-2xl text-left">
+{`curl -X POST https://api.calibr.lat/api/v1/webhooks/price-suggestion \\
+  -H "X-Calibr-Project: demo" \\
+  -H "X-Calibr-Signature: t=$ts,v1=$sig" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "skuCode": "PRO-MONTHLY",
+    "fromAmount": 4900,
+    "toAmount": 5200,
+    "currency": "USD",
+    "source": "MANUAL"
+  }'`}
+        </pre>
       </EmptyState>
       {Toast}
     </div>
   )
 
   return (
-    <main className="p-6">
+    <main className="p-6 max-w-7xl mx-auto">
       {Toast}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Price Changes</h1>
-        <div className="flex gap-2">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Price Changes</h1>
+        <div className="flex gap-2 flex-wrap">
           {(['PENDING','APPROVED','APPLIED','REJECTED','FAILED','ROLLED_BACK','ALL'] as const).map(s=>
-            <button key={s} onClick={()=>setStatus(s)} className={`px-2 py-1 rounded ${status===s?'bg-border':'text-mute hover:text-fg'}`}>{s}</button>
+            <button
+              key={s}
+              onClick={()=>setStatus(s)}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                status===s
+                  ?'bg-blue-600 text-white shadow-sm'
+                  :'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {s}
+            </button>
           )}
         </div>
       </div>
@@ -73,13 +93,13 @@ export default function ProjectPriceChanges({ params }: { params: { slug: string
       }>
         {rows.map(i=>{
           const pct = i.deltaPct.toFixed(1)
-          const pctColor = i.deltaPct >= 0 ? 'text-emerald-300' : 'text-red-300'
+          const pctColor = i.deltaPct >= 0 ? 'text-green-700 font-semibold' : 'text-red-700 font-semibold'
           return (
-            <tr key={i.id} className="border-t border-border hover:bg-surface/60">
-              <td className="px-4 py-3">{i.context?.skuCode ?? '—'}</td>
-              <td className="px-4 py-3">{fmt(i.currency, i.fromAmount)} → {fmt(i.currency, i.toAmount)}</td>
+            <tr key={i.id} className="hover:bg-gray-50 transition-colors">
+              <td className="px-4 py-3 font-medium text-gray-900">{i.context?.skuCode ?? '—'}</td>
+              <td className="px-4 py-3 text-gray-700">{fmt(i.currency, i.fromAmount)} → {fmt(i.currency, i.toAmount)}</td>
               <td className={`px-4 py-3 ${pctColor}`}>{pct}%</td>
-              <td className="px-4 py-3">{i.source ?? '—'}</td>
+              <td className="px-4 py-3 text-gray-600">{i.source ?? '—'}</td>
               <td className="px-4 py-3"><StatusPill status={i.status} /></td>
               <td className="px-4 py-3 text-right space-x-2">
                 <Button variant="ghost" onClick={() => { setActive(i); setOpen(true) }}>View</Button>

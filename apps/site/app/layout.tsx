@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main>{children}</main>
         <footer className="border-t border-border">
           <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-mute flex flex-col md:flex-row gap-2 md:gap-6 items-center md:items-start justify-between">
-            <div>© {new Date().getFullYear()} Calibr Labs</div>
+            <div>© {new Date().getFullYear()} Porter Labs</div>
             <div className="flex gap-4">
               <a href="https://docs.calibr.lat">Docs</a>
               <a href="/privacy">Privacy</a>

@@ -1,11 +1,11 @@
 export function StatusPill({ status }: { status: string }) {
   const map: Record<string,string> = {
-    PENDING: 'bg-zinc-800 text-zinc-200',
-    APPROVED: 'bg-emerald-900/40 text-emerald-200',
-    APPLIED: 'bg-emerald-800 text-emerald-100',
-    REJECTED: 'bg-zinc-800 text-zinc-300',
-    FAILED: 'bg-red-900/50 text-red-200',
-    ROLLED_BACK: 'bg-amber-900/40 text-amber-200'
+    PENDING: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+    APPROVED: 'bg-blue-100 text-blue-800 border border-blue-200',
+    APPLIED: 'bg-green-100 text-green-800 border border-green-200',
+    REJECTED: 'bg-gray-100 text-gray-800 border border-gray-200',
+    FAILED: 'bg-red-100 text-red-800 border border-red-200',
+    ROLLED_BACK: 'bg-orange-100 text-orange-800 border border-orange-200'
   }
-  return <span className={`px-2 py-0.5 rounded ${map[status] ?? 'bg-zinc-700 text-white'}`}>{status}</span>
+  return <span className={`px-2 py-1 rounded-full text-xs font-medium ${map[status] ?? 'bg-gray-100 text-gray-800 border border-gray-200'}`}>{status}</span>
 }

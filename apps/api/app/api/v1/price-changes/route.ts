@@ -9,12 +9,16 @@ export async function GET(req: NextRequest) {
   if (!project) return NextResponse.json({ error: 'project not found' }, { status: 404 })
   const where: any = { projectId: project.id }
   if (status) where.status = status
-  
-  const items = await prisma.priceChange.findMany({ 
-    where, 
-    orderBy: { createdAt: 'desc' }, 
-    take: 50 
+
+  const items = await prisma.priceChange.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: 50
   })
-  
-  return NextResponse.json({ items })
+
+  const response = NextResponse.json({ items })
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+  return response
 }
