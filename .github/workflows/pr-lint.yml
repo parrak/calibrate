@@ -1,0 +1,98 @@
+name: Pull Request Lint
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  pr_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check PR for Railway / deployment verification
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const core = require('@actions/core');
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.info('No pull request found in context — skipping.');
+              return;
+            }
+
+            const prNumber = pr.number;
+            core.info(`Inspecting PR #${prNumber}`);
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            const changed = files.map(f => f.filename);
+            core.info(`Changed files: ${changed.join(', ')}`);
+
+            // Patterns that indicate deployment/infra/schema changes that require replication evidence
+            const infraPatterns = [
+              /^apps\/.*\/DEPLOYMENT.md$/,
+              /^packages\/db\//,
+              /^apps\/api\//,
+              /^Dockerfile$/,
+              /^packages\/db\/prisma\//,
+              /^\.railwayignore$/,
+              /^apps\/.*\/railway.json$/,
+            ];
+
+            const infraChanged = changed.some(fn => infraPatterns.some(p => p.test(fn)));
+            if (infraChanged) {
+              const body = pr.body || '';
+              const evidenceRegex = /pnpm verify:local|railway\b|railway up|railway logs|verification|CHANGELOG.md|Unreleased/i;
+              const ok = evidenceRegex.test(body) || changed.some(f => f.endsWith('.md'));
+              if (!ok) {
+                const comment = `:warning: **Deployment verification missing**\n\nThis PR modifies deployment/infra files and must include local Railway replication evidence or a changelog entry.\n\nPlease update the PR body to include one of:\n- a summary of commands run (e.g. \`pnpm verify:local\`, \`railway up\`, or \`pnpm --filter @calibr/db prisma migrate deploy\`)\n- migration/build/smoke-test outputs or attach \`{branch}-railway-verify.log\`\n- a changelog entry in \`CHANGELOG.md\` under Unreleased\n\nOr add the relevant docs/DEPLOYMENT/CHANGELOG.md updates to this branch.\n\nOnce you've updated the PR, this check will pass automatically.`;
+                await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, body: comment });
+                core.setFailed('PR missing Railway verification evidence or changelog/docs update.');
+              } else {
+                core.info('PR contains Railway verification evidence or changelog/docs update.');
+              }
+            } else {
+              core.info('No infra/deploy-related files changed; skipping Railway verification check.');
+            }
+
+            // Enforce documentation updates for code changes: if code files were modified, require a Markdown update or changelog entry
+            const codePatterns = [/\.ts$/, /\.tsx$/, /\.js$/, /\.jsx$/, /\.py$/, /\.go$/, /\.java$/, /\.rs$/, /\.cs$/];
+            const codeChanged = changed.some(fn => codePatterns.some(p => p.test(fn)));
+            if (codeChanged) {
+              const hasMdUpdate = changed.some(f => f.endsWith('.md'));
+              const body = pr.body || '';
+              const changelogMention = /CHANGELOG.md|Unreleased/i.test(body);
+              if (!hasMdUpdate && !changelogMention) {
+                const comment2 = `:information_source: **Docs update required**\n\nThis PR changes source code files but does not include any Markdown documentation updates or a changelog entry.\n\nPlease add at least one of the following to this branch or PR body:\n- Update ` + '`CHANGELOG.md`' + ` under Unreleased with a short summary\n- Update the relevant package or app README/DEPLOYMENT.md with the change\n- Add a small `{branch}-verification.md` under `.github/` describing steps you ran\n\nKeeping docs up to date ensures future agents and reviewers understand the context of changes.`;
+                await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, body: comment2 });
+                core.setFailed('PR missing documentation (Markdown) updates for code changes.');
+              } else {
+                core.info('PR includes Markdown docs update or changelog entry for code changes.');
+              }
+            } else {
+              core.info('No code changes detected requiring docs updates.');
+            }
+
+            // If the PR author is an automated agent / bot, require an agent metadata JSON block in the PR body
+            const prAuthor = pr.user && pr.user.login ? pr.user.login : '';
+            const isBotAuthor = (pr.user && pr.user.type === 'Bot') || /bot$/i.test(prAuthor) || prAuthor.endsWith('[bot]');
+            if (isBotAuthor) {
+              const body = pr.body || '';
+              const hasAgentMetadata = /"agent"\s*:\s*".+?"/i.test(body) && /"contextId"\s*:\s*".+?"/i.test(body) && /"timestamp"\s*:\s*".+?"/i.test(body);
+              if (!hasAgentMetadata) {
+                  const comment = `:warning: **Agent metadata required**\n\nThis PR appears to be authored by an automated agent (${prAuthor}). Automated agents must include a small JSON metadata block in the PR body matching the schema in .github/AGENT_METADATA_SCHEMA.md.\n\nPlease include a JSON object with at least the fields "agent", "contextId" and "timestamp" in the PR body (example: {"agent":"gpt-4o","contextId":"...","timestamp":"2025-10-25T12:34:56Z"}).\n\nOnce updated, this check will pass automatically.`;
+                await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, body: comment });
+                core.setFailed('Bot-authored PR missing agent metadata in PR body.');
+              } else {
+                core.info('Agent metadata present for bot-authored PR.');
+              }
+            } else {
+              core.info('PR author is not a bot; agent metadata not required.');
+            }
