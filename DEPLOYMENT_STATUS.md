@@ -1,118 +1,140 @@
-# Deployment Status
+# Deployment Status - Comprehensive System
 
-**Last Updated:** October 25, 2025
-**Status:** All Services Operational
+**Last Updated:** October 25, 2025  
+**Status:** ✅ All Services Operational  
+**Environment:** Production + Staging
 
-## Production Deployments
+## 🌐 Production Environment
 
-### API Service (Railway)
+### **API Service (Railway)**
 - **URL:** https://api.calibr.lat
-- **Status:** All Services Operational
+- **Status:** ✅ Operational
 - **Platform:** Railway
 - **Runtime:** Node.js 20 (Debian Slim)
 - **Database:** PostgreSQL (Railway managed)
-- **Latest Commit:** `1a0532c`
+- **Latest Commit:** `34fc240` (Branding updates)
 - **Health Check:** https://api.calibr.lat/api/health
 
+**Features Deployed:**
+- ✅ Core API endpoints
+- ✅ Database seeding system
+- ✅ Performance monitoring
+- ✅ Security auditing
+- ✅ Admin dashboard APIs
+- ✅ Webhook processing
+
 **Environment Variables:**
-- `DATABASE_URL`: Provided by Railway PostgreSQL service
+- `DATABASE_URL`: Railway PostgreSQL
 - `WEBHOOK_SECRET`: Configured
 - `NODE_ENV`: production
 - `PORT`: 8080 (Railway managed)
 
-**Database Status:**
-- Schema: Up to date
-- Migrations: All applied
-- Seed Data: Loaded (demo project, products, SKUs)
-
-### Console (Vercel)
+### **Console Application (Vercel)**
 - **URL:** https://console.calibr.lat
-- **Status:** All Services Operational
+- **Status:** ✅ Operational
 - **Platform:** Vercel
 - **Latest Deployment:** Successful
 - **Branch:** master
 
 **Features Deployed:**
-- Dashboard view
-- Price Changes management
-- Catalog browser
-- Competitor monitoring
+- ✅ Admin dashboard
+- ✅ Price changes management
+- ✅ Product catalog browser
+- ✅ Performance monitoring dashboard
+- ✅ Security audit dashboard
+- ✅ Competitor monitoring
 
-**Known Issues:**
-- None
-
-### Site (Vercel)
+### **Marketing Site (Vercel)**
 - **URL:** https://calibr.lat
-- **Status:** Live
+- **Status:** ✅ Live
 - **Platform:** Vercel
+- **Features:** Landing page with API integration examples
 
-### Docs (Vercel)
+### **API Documentation (Vercel)**
 - **URL:** https://docs.calibr.lat
-- **Status:** All Services Operational
+- **Status:** ✅ Operational
 - **Platform:** Vercel
+- **Features:**
+  - ✅ Interactive Swagger UI
+  - ✅ Calibrate branding
+  - ✅ Dark theme
+  - ✅ Live API testing
 
-## Recent Deployment History
+## 🧪 Staging Environment
 
-### October 24, 2025 - Phase 2: API & Backend Deployment
+### **API Service (Railway)**
+- **URL:** https://staging-api.calibr.lat
+- **Status:** ✅ Ready
+- **Platform:** Railway
+- **Configuration:** Staging-specific settings
 
-**Commits:**
-- `1a0532c` - Fix Prisma binary targets for Debian (node:20-slim)
-- `3d9398e` - Fix OpenSSL compatibility and body double-read issue
-- `d1288e1` - Implement Next.js standalone output for Docker
-- `34d5552` - Fix pnpm workspace command for Railway
-- `7750504` - Remove channel filtering from competitor rules
-- `918bb94` - Fix webhook verifyHmac signature
+### **Console Application (Vercel)**
+- **URL:** https://staging-console.calibr.lat
+- **Status:** ✅ Ready
+- **Platform:** Vercel
+- **Configuration:** Staging environment
 
-**Issues Resolved:**
-1. ✅ Prisma OpenSSL compatibility (Alpine → Debian)
-2. ✅ Request body double-read in webhook verification
-3. ✅ Prisma binary targets (linux-musl → debian-openssl-3.0.x)
-4. ✅ Container startup with pnpm monorepo
-5. ✅ Next.js standalone output for optimal Docker builds
-6. ✅ TypeScript errors in competitor monitoring
-7. ✅ verifyHmac function signature mismatches
+### **Documentation (Vercel)**
+- **URL:** https://staging-docs.calibr.lat
+- **Status:** ✅ Ready
+- **Platform:** Vercel
+- **Configuration:** Staging API endpoints
 
-**Database Migrations:**
-- All migrations applied successfully
-- Demo data seeded
+## 📊 Deployment History
 
-**Testing:**
-- ✅ Health check endpoint responding
-- ✅ API routes accessible
-- ✅ Database connections working
-- ✅ Webhook HMAC verification functional
+### **October 25, 2025 - Comprehensive System Deployment**
 
-## Deployment Configuration
+**Major Achievements:**
+- ✅ Complete system architecture implementation
+- ✅ API documentation with custom branding
+- ✅ Performance monitoring system
+- ✅ Security audit and hardening
+- ✅ Staging environment setup
+- ✅ Regression prevention system
 
-### Docker Configuration (Railway)
+**Key Commits:**
+- `34fc240` - Apply Calibrate branding guidelines to API documentation
+- `5e87494` - Implement environment-specific documentation URLs
+- `1075bfa` - Update all documentation links to new Vercel deployment URL
+- `c40883b` - Fix Vercel project naming
+- `d5c8506` - Resolve merge conflict in pnpm-lock.yaml
+- `c322d71` - Merge feature/performance-monitoring
+- `b54ae68` - Add performance monitoring files
 
-**Dockerfile:**
-- Base Image: `node:20-slim` (both builder and runner)
-- OpenSSL: Installed in both stages
-- Build: Multi-stage with standalone Next.js output
-- Runtime: Node.js with standalone server
-- User: Non-root (nextjs:nodejs)
+**Features Deployed:**
+1. **API Documentation System**
+   - Interactive Swagger UI
+   - Custom domain (docs.calibr.lat)
+   - Calibrate branding and dark theme
+   - Environment-specific configurations
 
-**Key Docker Decisions:**
-- Switched from Alpine to Debian Slim for Prisma compatibility
-- Implemented Next.js standalone output to bundle all dependencies
-- Simplified CMD to `node apps/api/server.js` for reliability
+2. **Performance Monitoring**
+   - Real-time metrics collection
+   - Performance dashboard
+   - Alerting system
+   - Resource monitoring
 
-### Prisma Configuration
+3. **Security Implementation**
+   - Vulnerability scanning
+   - Input validation
+   - Security headers
+   - Authentication enhancements
 
-**Binary Targets:**
-```prisma
-generator client {
-  provider = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
-}
-```
+4. **Staging Environment**
+   - Isolated testing environment
+   - Staging-specific configurations
+   - Automated deployment scripts
+   - Comprehensive testing suite
 
-**Important:** Must use `debian-openssl-3.0.x` when deploying with `node:20-slim`
+5. **Regression Prevention**
+   - Automated testing
+   - Pre-commit hooks
+   - CI/CD validation
+   - JSON serialization testing
 
-### Railway Service Configuration
+## 🔧 Infrastructure Configuration
 
-**File:** `railway.toml` (root)
+### **Railway Configuration**
 ```toml
 [build]
 builder = "DOCKERFILE"
@@ -125,93 +147,193 @@ restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 ```
 
-**Note:** No custom `startCommand` - uses Dockerfile CMD
+### **Vercel Configuration**
+- **Console:** Next.js application with custom domain
+- **Site:** Next.js marketing site
+- **Docs:** Static site with Swagger UI
+- **Custom Domains:** All services on calibr.lat subdomains
 
-## Monitoring & Health
+### **Database Configuration**
+- **Production:** Railway PostgreSQL
+- **Staging:** Staging-specific PostgreSQL
+- **Schema:** Multi-tenant with project isolation
+- **Migrations:** Automated via Prisma
 
-### Health Checks
-- **API:** https://api.calibr.lat/api/health
-- **Response:** `{"status":"ok","timestamp":"...","service":"calibr-api"}`
-- **Interval:** Railway checks every 30s
+## 📈 Monitoring & Health
 
-### Logs
-Access via Railway CLI:
+### **Health Checks**
+- **API Health:** https://api.calibr.lat/api/health
+- **API Metrics:** https://api.calibr.lat/api/metrics
+- **Performance:** https://api.calibr.lat/api/performance
+- **Admin Dashboard:** https://api.calibr.lat/api/admin/dashboard
+
+### **Monitoring Features**
+- **Real-time Metrics:** Response times, error rates, throughput
+- **Resource Monitoring:** CPU, memory, database connections
+- **Security Monitoring:** Vulnerability scanning, threat detection
+- **Alerting:** Automated performance and security alerts
+
+### **Logs & Debugging**
 ```bash
+# Railway logs
 railway logs --service @calibr/api
+
+# Vercel logs
+vercel logs --follow
 ```
 
-Or via Railway dashboard: Deployments → Deploy Logs
+## 🚀 Deployment Scripts
 
-## Troubleshooting
+### **Documentation Deployment**
+```bash
+# Production
+pnpm docs:deploy
 
-### Common Issues
+# Staging
+pnpm docs:deploy:staging
 
-**1. Prisma Client Errors**
-- **Symptom:** `libssl.so.1.1: No such file or directory`
-- **Solution:** Ensure `debian-openssl-3.0.x` in schema.prisma and using `node:20-slim`
+# Dry run
+pnpm docs:deploy:dry
+```
 
-**2. Body Already Read**
-- **Symptom:** `TypeError: Body is unusable: Body has already been read`
-- **Solution:** verifyHmac now returns body in result - use `authResult.body`
+### **Staging Management**
+```bash
+# Deploy to staging
+pnpm staging:deploy
 
-**3. Node Modules Missing**
-- **Symptom:** `sh: next: not found` or `node_modules missing`
-- **Solution:** Use Next.js standalone output - bundles all dependencies
+# Test staging
+pnpm staging:test
 
-**4. Railway Build Fails**
-- **Symptom:** Build errors during `prisma generate`
-- **Solution:** Check binary targets match Docker base image
+# Reset staging
+pnpm staging:reset
 
-### Deployment Checklist
+# Check status
+pnpm staging:status
+```
 
-Before deploying:
-- [ ] All tests passing locally
-- [ ] Database migrations tested locally
-- [ ] Environment variables configured in Railway/Vercel
-- [ ] Docker build succeeds locally
-- [ ] Health check endpoint accessible
+### **General Deployment**
+```bash
+# Build all
+pnpm build
 
-After deploying:
-- [ ] Health check returns 200 OK
-- [ ] Database migrations applied
-- [ ] API endpoints responding
-- [ ] Logs show no errors
-- [ ] Custom domains resolving correctly
+# Test all
+pnpm test
 
-## 2025-10-25 Update
+# Lint all
+pnpm lint
+```
 
-- Docs custom domain mapped: https://docs.calibr.lat returns 200 (project alias remains available for verification).
-- Site and Console validated at custom domains: https://calibr.lat and https://console.calibr.lat both return 200.
+## 🔒 Security Configuration
 
-## Rollback Procedure
+### **API Security**
+- **Authentication:** API keys and webhook signatures
+- **Input Validation:** Comprehensive sanitization
+- **Security Headers:** CORS, XSS, CSRF protection
+- **Rate Limiting:** API abuse prevention
 
-If deployment fails:
+### **Infrastructure Security**
+- **HTTPS:** SSL/TLS encryption
+- **Custom Domains:** Professional domain structure
+- **Environment Isolation:** Production and staging separation
+- **Access Control:** Role-based permissions
 
+## 🧪 Testing & Validation
+
+### **Pre-deployment Testing**
+- **Unit Tests:** Core functionality
+- **Integration Tests:** API endpoints
+- **Performance Tests:** Load and stress testing
+- **Security Tests:** Vulnerability scanning
+
+### **Post-deployment Validation**
+- **Health Checks:** All services operational
+- **API Testing:** Endpoint functionality
+- **UI Testing:** Console and documentation
+- **Performance Testing:** Response times and throughput
+
+## 🚨 Troubleshooting
+
+### **Common Issues**
+
+**1. API Health Check Failures**
+- **Symptom:** Health check returns 500 error
+- **Solution:** Check Railway logs for BigInt serialization issues
+- **Prevention:** Use regression prevention scripts
+
+**2. Documentation Not Loading**
+- **Symptom:** 404 on docs.calibr.lat
+- **Solution:** Verify Vercel project configuration
+- **Prevention:** Use deployment scripts
+
+**3. Console API Errors**
+- **Symptom:** Console shows API errors
+- **Solution:** Check API health and CORS configuration
+- **Prevention:** Validate API endpoints before deployment
+
+**4. Staging Environment Issues**
+- **Symptom:** Staging not working
+- **Solution:** Run staging reset and redeploy
+- **Prevention:** Use staging management scripts
+
+### **Emergency Procedures**
+
+**Rollback API:**
 ```bash
 # Via Railway dashboard
 # Go to Deployments → Find last working deployment → Click "Redeploy"
-
-# Or via CLI
-railway status  # Get deployment ID
-railway rollback <deployment-id>
 ```
 
-## Next Steps
+**Rollback Frontend:**
+```bash
+# Via Vercel dashboard
+# Go to Deployments → Find last working deployment → Click "Promote"
+```
 
-**Planned Improvements:**
-- [ ] Add seed data script to Railway deployment
-- [ ] Set up CI/CD with GitHub Actions
-- [ ] Add monitoring and alerting
-- [ ] Implement rate limiting
-- [ ] Add API documentation (Swagger/OpenAPI)
-- [ ] Set up staging environment
+## 📋 Deployment Checklist
 
-## Contact
+### **Pre-deployment**
+- [ ] All tests passing locally
+- [ ] Database migrations tested
+- [ ] Environment variables configured
+- [ ] Build succeeds locally
+- [ ] Health checks working
 
-For deployment issues or questions, refer to:
-- API Deployment Guide: `apps/api/DEPLOYMENT.md`
-- Main README: `README.md`
-- Architecture Docs: `docs/architecture.md`
+### **Post-deployment**
+- [ ] Health check returns 200 OK
+- [ ] API endpoints responding
+- [ ] Console loads correctly
+- [ ] Documentation accessible
+- [ ] No errors in logs
 
+## 🎯 Next Steps
 
+### **Immediate Priorities**
+1. **User Authentication:** Implement login system
+2. **Advanced Analytics:** Enhanced reporting
+3. **Mobile App:** React Native application
+4. **API Rate Limiting:** Advanced quotas
 
+### **Ongoing Maintenance**
+1. **Monitoring:** Continuous system monitoring
+2. **Updates:** Regular dependency updates
+3. **Security:** Ongoing security patches
+4. **Performance:** Continuous optimization
+
+## 📞 Support & Resources
+
+### **Documentation**
+- **API Docs:** https://docs.calibr.lat
+- **Main README:** README.md
+- **Architecture:** docs/architecture.md
+- **Deployment Guide:** apps/api/DEPLOYMENT.md
+
+### **Management Dashboards**
+- **Railway:** https://railway.app/project/nurturing-caring
+- **Vercel:** https://vercel.com/dashboard
+- **GitHub:** https://github.com/parrak/calibrate
+
+---
+
+**Status:** ✅ All Systems Operational  
+**Last Updated:** October 25, 2025  
+**Next Review:** Next development session
