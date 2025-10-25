@@ -40,10 +40,10 @@ COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
 # Set environment
 ENV NODE_ENV=production
-ENV PORT=3000
 
 WORKDIR /app/apps/api
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+# Use shell form to allow PORT env var from Railway
+CMD pnpm start -p ${PORT:-3000}
