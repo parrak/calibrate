@@ -45,7 +45,7 @@ async function fetchApi<T>(
 // Price Changes API
 export const priceChangesApi = {
   list: async (projectSlug: string) => {
-    return fetchApi<any[]>(`/api/v1/price-changes?projectSlug=${projectSlug}`)
+    return fetchApi<any[]>(`/api/v1/price-changes?project=${projectSlug}`)
   },
 
   approve: async (id: string) => {
