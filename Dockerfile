@@ -23,10 +23,10 @@ RUN cd packages/db && pnpm exec prisma generate
 RUN cd apps/api && pnpm run build
 
 # Production stage
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 
 # Install required libraries for Prisma
-RUN apk add --no-cache openssl1.1-compat
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
