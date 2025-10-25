@@ -5,22 +5,21 @@
   "main": "index.js",
   "prisma": {
     "schema": "prisma/schema.prisma",
-    "seed": "node seed.js"
+    "seed": "tsx prisma/seed.ts"
   },
   "scripts": {
     "prisma": "prisma",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
     "studio": "prisma studio",
-    "seed": "node seed.js"
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.15.0"
+    "@prisma/client": "^5.22.0"
   },
   "devDependencies": {
-    "prisma": "^5.15.0",
+    "prisma": "^5.22.0",
     "tsx": "^4.7.0",
-    "ts-node": "^10.9.2",
     "@types/node": "^20.0.0"
   }
 }
