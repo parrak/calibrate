@@ -1,13 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { trackPerformance } from '@/lib/performance-middleware'
+import { withSecurity } from '@/lib/security-headers'
+import { inputValidator } from '@/lib/input-validation'
 
-export const GET = trackPerformance(async (req: NextRequest) => {
-  const status = req.nextUrl.searchParams.get('status') ?? undefined
-  const projectSlug = req.nextUrl.searchParams.get('project')
-  if (!projectSlug) return NextResponse.json({ error: 'project required' }, { status: 400 })
+export const GET = withSecurity(trackPerformance(async (req: NextRequest) => {
+  // Validate query parameters
+  const validation = inputValidator.validateQueryParams(req, {
+    project: {
+      required: true,
+      type: 'string',
+      minLength: 3,
+      maxLength: 50,
+      pattern: /^[a-z0-9-]+$/,
+      sanitize: true,
+      trim: true
+    },
+    status: {
+      required: false,
+      type: 'string',
+      enum: ['pending', 'approved', 'rejected', 'applied'],
+      sanitize: true,
+      trim: true
+    }
+  })
+
+  if (!validation.valid) {
+    return NextResponse.json({ 
+      error: 'Invalid query parameters', 
+      details: validation.errors 
+    }, { status: 400 })
+  }
+
+  const { project: projectSlug, status } = validation.value
+
   const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
   if (!project) return NextResponse.json({ error: 'project not found' }, { status: 404 })
+  
   const where: any = { projectId: project.id }
   if (status) where.status = status
 
@@ -17,9 +46,5 @@ export const GET = trackPerformance(async (req: NextRequest) => {
     take: 50
   })
 
-  const response = NextResponse.json({ items })
-  response.headers.set('Access-Control-Allow-Origin', '*')
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
-  return response
-})
+  return NextResponse.json({ items })
+}))

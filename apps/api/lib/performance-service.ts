@@ -3,6 +3,7 @@
  * Centralized service for performance tracking and alerting
  */
 
+import { randomUUID } from 'crypto'
 import { 
   getPerformanceStats, 
   getResourceStats, 
@@ -221,7 +222,7 @@ export class PerformanceService {
     metadata?: Record<string, any>
   ): PerformanceAlert {
     return {
-      id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `${type}_${Date.now()}_${randomUUID()}`,
       type,
       severity,
       message,

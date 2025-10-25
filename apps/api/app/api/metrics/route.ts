@@ -7,6 +7,9 @@ import {
   startResourceMonitoring
 } from '@/lib/performance-monitor'
 
+// Track if monitoring has been started to prevent multiple intervals
+let monitoringStarted = false
+
 export async function GET(req: NextRequest) {
   try {
     const startTime = Date.now()
@@ -31,7 +34,10 @@ export async function GET(req: NextRequest) {
     }
     
     // Start resource monitoring if not already started
-    startResourceMonitoring(30000) // Every 30 seconds
+    if (!monitoringStarted) {
+      startResourceMonitoring(30000) // Every 30 seconds
+      monitoringStarted = true
+    }
     
     // Collect enhanced metrics
     const [

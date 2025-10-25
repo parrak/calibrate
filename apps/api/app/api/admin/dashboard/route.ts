@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { withAdminAuth } from '@/lib/auth-security'
+import { withSecurity } from '@/lib/security-headers'
 
-export async function GET(req: NextRequest) {
+export const GET = withSecurity(withAdminAuth(async (req: NextRequest, context) => {
   try {
     const startTime = Date.now()
     
@@ -66,7 +68,7 @@ export async function GET(req: NextRequest) {
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
-}
+}))
 
 function getTimeRangeMs(timeRange: string): number {
   const ranges: Record<string, number> = {
