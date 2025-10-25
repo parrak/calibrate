@@ -46,4 +46,5 @@ WORKDIR /app/apps/api
 EXPOSE 3000
 
 # Use shell form to allow PORT env var from Railway
-CMD pnpm start -p ${PORT:-3000}
+# pnpm needs to run from workspace root to find dependencies
+CMD cd /app && pnpm --filter @calibr/api start -- -p ${PORT:-3000}
