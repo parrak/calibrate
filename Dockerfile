@@ -32,7 +32,6 @@ WORKDIR /app
 
 # Copy built application and dependencies
 COPY --from=builder /app/apps/api/.next ./apps/api/.next
-COPY --from=builder /app/apps/api/public ./apps/api/public
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/node_modules ./node_modules
