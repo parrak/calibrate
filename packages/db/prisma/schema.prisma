@@ -1,7 +1,7 @@
 generator client {
   provider = "prisma-client-js"
-  // Support both Alpine (linux-musl) and Debian (OpenSSL 3)
-  binaryTargets = ["linux-musl", "debian-openssl-3.0.x"]
+  // Target Debian Slim (OpenSSL 3.x)
+  binaryTargets = ["debian-openssl-3.0.x"]
   engineType   = "binary"
 }
 
@@ -82,7 +82,7 @@ model Product {
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   project   Project  @relation(fields: [projectId], references: [id])
   name      String
-  code      String   @unique
+  code      String
   status    Status   @default(DRAFT)
   skus      Sku[]
   createdAt DateTime @default(now())
@@ -102,7 +102,7 @@ model Sku {
   productId  String
   product    Product  @relation(fields: [productId], references: [id])
   name       String
-  code       String   @unique
+  code       String
   attributes Json?
   status     Status   @default(DRAFT)
   prices     Price[]
