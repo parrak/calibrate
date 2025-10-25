@@ -1,5 +1,0 @@
-{
-  "buildCommand": "cd ../.. && pnpm install --no-frozen-lockfile && pnpm --filter @calibr/api... build",
-  "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile --filter @calibr/api...",
-  "framework": "nextjs"
-}
