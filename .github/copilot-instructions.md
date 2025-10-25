@@ -3,6 +3,10 @@
 ## Project Overview
 Calibrate is a multi-tenant pricing automation platform built with Next.js, Prisma, and TypeScript in a monorepo structure. The platform processes price change suggestions through a secure webhook API, evaluates them against configurable policies, and provides an admin console for review.
 
+## Applicability
+
+These instructions apply to all contributors and automated agents working on this repository — including but not limited to Codex, Claude, Code, Cursor, and Copilot-style agents. Every agent must follow these conventions, update documentation when making changes, and include verification evidence in PRs as described below.
+
 ## Key Architecture Components
 - **Monorepo Structure**: Uses `pnpm` workspaces with shared packages under `packages/` and apps under `apps/`
 - **Core Services**:
@@ -118,6 +122,52 @@ pnpm build
 - If tests or build fail in local verification, do not merge. Fix issues in the feature branch and re-run verification.
 - CI is required but not sufficient — local verification catches environment-specific issues early and speeds up iteration.
 
+## Railway local replication & deploy testing
+
+- Railway deployments can fail post-merge if changes aren't tested against a production-like environment. Agents must replicate Railway deploys locally when a change affects deployment, infra, DB migrations, or environment variables.
+- Minimal replication checklist (PowerShell):
+
+```powershell
+# 1) Get Railway variables (copy from Railway dashboard or use CLI)
+railway login
+railway variables # or inspect variables in the Railway dashboard
+
+# 2) Start local infra similar to Railway (Postgres, etc.)
+docker-compose up -d
+
+# 3) Create a local .env from example and populate values (DATABASE_URL, WEBHOOK_SECRET, etc.)
+cp .env.example .env
+cp packages/db/.env.example packages/db/.env
+# Edit the files and paste Railway-like values or the ones from the CLI/dashboard
+
+# 4) Build production artifacts and run production-style migrations locally
+pnpm build
+pnpm --filter @calibr/db prisma migrate deploy
+
+# 5) Run the services locally in a production-like mode (Railway local runner)
+railway up
+
+# 6) Run smoke tests / integration tests against the running services
+pnpm test
+```
+
+- If `railway up` is not available or you prefer Docker-only verification, build and run containers with Docker Compose:
+
+```powershell
+docker-compose -f docker-compose.yml up --build --force-recreate
+# Then run smoke tests against localhost endpoints
+pnpm test
+```
+
+- What to capture in the PR:
+  - The exact commands run to replicate Railway (copy/paste the PowerShell commands you used).
+  - Key output snippets (migration success, build logs, smoke-test results) or attached logs (`{branch}-railway-verify.log`).
+  - Any differences between local and Railway behavior and how you resolved them.
+
+- If a change touches DB schema, ensure migrations were run with `prisma migrate deploy` (production flow) and include the migration step output in the PR.
+
+- If you can't reproduce the failure locally, capture the minimal failing Railway logs (from the Railway dashboard or `railway logs`) and attach them to the PR; escalate to a human reviewer if the issue blocks merging.
+
 ## Agent Collaboration & Documentation
 
 - When multiple LLM agents or developers contribute, document the "why" for every change — not just the "what".
@@ -183,3 +233,194 @@ pnpm build
 - Use HMAC verification for webhooks (`packages/security`)
 - Implement idempotency for price change operations
 - Follow Next.js App Router conventions in all apps
+
+---
+
+## 🚨 CRITICAL: Railway Deployment Constraints
+
+These constraints MUST be followed by all agents and developers to prevent deployment regressions. Violating these will break production deployments.
+
+### Environment Variables - CRITICAL
+
+**HOSTNAME (NOT HOST!)**
+- Next.js standalone server uses `HOSTNAME` environment variable to determine bind address
+- **MUST** be set to `0.0.0.0` in `apps/api/Dockerfile` ENV section
+- **DO NOT** use `HOST` - Next.js ignores it
+- Consequence: Healthcheck failures, deployment never promoted, 404 errors on domain
+
+**PORT**
+- **MUST** be set to `8080` in `apps/api/Dockerfile` ENV section
+- Also set in Railway service variables (dashboard)
+- Consequence: Railway cannot reach healthcheck endpoint
+
+**Example (REQUIRED in apps/api/Dockerfile):**
+```dockerfile
+ENV NODE_ENV=production
+ENV PORT=8080
+ENV HOSTNAME=0.0.0.0  # CRITICAL - Next.js uses this, not HOST
+```
+
+### Prisma Binary Targets - CRITICAL
+
+**MUST use `debian-openssl-3.0.x`:**
+```prisma
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+```
+
+**NEVER use:**
+- `linux-musl` or `linux-musl-openssl-3.0.x` (Alpine)
+- `rhel-openssl-3.0.x`
+- Consequence: Prisma engine crashes with SIGILL or missing libssl errors
+
+**Required Dockerfile ENV:**
+```dockerfile
+ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-3.0.x"
+ENV PRISMA_ENGINE_BINARY_TARGET="debian-openssl-3.0.x"
+ENV PRISMA_CLIENT_ENGINE_TYPE=binary
+```
+
+### Database Schema Constraints - CRITICAL
+
+**Unique Constraints for Multi-tenant Seeding:**
+- Product: `@@unique([tenantId, projectId, code])` - allows same code across tenants
+- Sku: `@@unique([productId, code])` - allows same code across products
+- Price: `@@unique([skuId, currency])` - one price per SKU per currency
+- Policy: `@@unique([projectId])` - enables upsert by project
+
+**NEVER add:**
+- Global unique on `Product.code` or `Sku.code`
+- Consequence: Seed script fails with constraint violations, migrations fail
+
+### Railway Configuration Files
+
+**apps/api/railway.json (REQUIRED STRUCTURE):**
+```json
+{
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "/apps/api/Dockerfile"
+  },
+  "deploy": {
+    "healthcheckPath": "/api/health",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10,
+    "preDeployCommand": "prisma migrate deploy --schema=/app/prisma/schema.prisma",
+    "startCommand": "/app/start.sh"
+  }
+}
+```
+
+**DO NOT:**
+- Remove healthcheckPath
+- Change healthcheckPath without updating health endpoint
+- Remove preDeployCommand (migrations must run before app starts)
+- Remove startCommand (needed for startup logging)
+
+### Dockerfile Requirements
+
+**Base Image:**
+- Use `node:20-slim` (Debian) for both builder and runner stages
+- **DO NOT** use Alpine (`node:20-alpine`) - causes Prisma engine errors
+
+**Required Steps in Runner Stage:**
+1. Install Prisma CLI globally: `RUN npm i -g prisma@5.22.0`
+2. Copy Prisma schema/migrations to `/app/prisma`
+3. Set ENV vars (HOSTNAME, PORT, PRISMA_*)
+4. Remove musl engines (prevent wrong engine loading)
+5. Expose port 8080
+6. Use startup script: `CMD ["/app/start.sh"]`
+
+### Healthcheck Endpoint
+
+**apps/api/app/api/health/route.ts MUST exist and return:**
+```typescript
+export async function GET() {
+  return NextResponse.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'calibr-api'
+  })
+}
+```
+
+**DO NOT:**
+- Remove this file
+- Change the path (Railway expects `/api/health`)
+- Add authentication (healthcheck must be public)
+- Make it async/dependent on database (healthcheck must be fast)
+
+### Pre-Deployment Testing
+
+**Before ANY merge to master that touches:**
+- `apps/api/Dockerfile`
+- `apps/api/railway.json`
+- `packages/db/prisma/schema.prisma`
+- `apps/api/start.sh`
+- Prisma migrations
+
+**MUST verify:**
+1. Build Docker image locally and test startup
+2. Check logs show: `Starting Next.js server on 0.0.0.0:8080`
+3. Verify `/api/health` returns 200 OK
+4. Test migrations with `prisma migrate deploy`
+5. Seed script completes without errors
+
+**Testing Commands:**
+```bash
+# Build and run locally
+docker build -f apps/api/Dockerfile -t test .
+docker run -p 8080:8080 -e DATABASE_URL=postgresql://... test
+
+# Verify healthcheck
+curl http://localhost:8080/api/health
+```
+
+### Common Regression Causes
+
+| DO NOT | WHY | SYMPTOM |
+|--------|-----|---------|
+| Use `ENV HOST=0.0.0.0` | Next.js uses HOSTNAME not HOST | Healthcheck fails |
+| Use Alpine base image | Prisma needs Debian glibc | Engine crashes |
+| Add global unique on Product.code | Breaks multi-tenant seed | Seed fails |
+| Remove HOSTNAME env var | Server binds to container ID | 404 on domain |
+| Change healthcheck path | Railway can't verify deployment | Never promoted |
+| Skip preDeployCommand | Migrations don't run | App crashes on startup |
+
+### Deployment Verification
+
+**After push to master, MUST verify:**
+1. Railway build completes (check logs for `node:20-slim`)
+2. Pre-deploy migrations run: "No pending migrations"
+3. Startup logs show: `HOSTNAME: 0.0.0.0` and `PORT: 8080`
+4. Healthcheck passes (up to 5 min retry window)
+5. Test both domains:
+   - https://calibrapi-production.up.railway.app/api/health
+   - https://api.calibr.lat/api/health
+
+**Expected Success Logs:**
+```
+=== Calibr API Startup ===
+NODE_ENV: production
+PORT: 8080
+HOSTNAME: 0.0.0.0
+==========================
+Starting Next.js server on 0.0.0.0:8080...
+   ▲ Next.js 14.0.4
+   - Local:        http://0.0.0.0:8080  ← MUST show 0.0.0.0
+ ✓ Ready in 71ms
+```
+
+### Reference Commits
+
+When fixing deployment issues, refer to these commits:
+- `2d16036`: Fix HOSTNAME env var for Next.js binding (CRITICAL)
+- `35c0ca5`: Add startup logging script for diagnostics
+- `ff0e1de`: Add PORT/HOST env vars (later corrected to HOSTNAME)
+- `a71bf09`: Add explicit startCommand
+
+### Full Documentation
+
+See `apps/api/DEPLOYMENT.md` for complete deployment guide with troubleshooting table and all configuration details.

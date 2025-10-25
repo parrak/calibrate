@@ -166,6 +166,13 @@ railway run -- npx prisma migrate deploy --schema=./packages/db/prisma/schema.pr
 - Next.js standalone output mode for optimized Docker builds
 - Health check endpoint: `/api/health`
 
+**⚠️ CRITICAL Deployment Requirements:**
+Before making changes to deployment configuration, read [apps/api/DEPLOYMENT.md](apps/api/DEPLOYMENT.md) and [.github/copilot-instructions.md](.github/copilot-instructions.md#-critical-railway-deployment-constraints) to avoid breaking production. Key constraints:
+- **MUST** use `HOSTNAME=0.0.0.0` (not `HOST`) in Dockerfile for Next.js binding
+- **MUST** use `debian-openssl-3.0.x` Prisma binary target (not Alpine/musl)
+- **DO NOT** add global unique constraints on `Product.code` or `Sku.code`
+- See full constraint list in deployment docs
+
 ### Vercel Frontend Deployments
 
 Console, Site, and Docs are deployed on Vercel.
