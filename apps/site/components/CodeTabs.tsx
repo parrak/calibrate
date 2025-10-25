@@ -101,7 +101,7 @@ export function CodeTabs() {
       </pre>
       <p className="text-xs text-mute mt-2">
         Use your project slug in <code>X-Calibr-Project</code> (e.g., <code>demo</code>). 
-        <a href="https://calibrate-api-docs-phka5aqe1-rakesh-paridas-projects.vercel.app" className="text-brand hover:underline ml-1">View full API docs →</a>
+        <a href="https://docs.calibr.lat" className="text-brand hover:underline ml-1">View full API docs →</a>
       </p>
     </div>
   )

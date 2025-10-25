@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "calibrate-docs",
+  "name": "calibrate-docs-staging",
   "buildCommand": "cd ../.. && pnpm install && pnpm --filter @calibr/docs build",
   "installCommand": "corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile=false",
   "builds": [
@@ -10,9 +10,9 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "DOCS_BASE_URL": "https://docs.calibr.lat",
-    "API_BASE_URL": "https://api.calibr.lat"
+    "NODE_ENV": "staging",
+    "DOCS_BASE_URL": "https://staging-docs.calibr.lat",
+    "API_BASE_URL": "https://staging-api.calibr.lat"
   },
   "headers": [
     {
@@ -20,7 +20,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "value": "https://staging.calibr.lat,https://staging-console.calibr.lat,https://staging-docs.calibr.lat"
         },
         {
           "key": "Access-Control-Allow-Methods",

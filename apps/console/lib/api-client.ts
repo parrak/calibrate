@@ -2,7 +2,7 @@
  * API Client for Calibr Console
  * Communicates with the Calibr API backend
  * 
- * 📚 API Documentation: https://calibrate-api-docs-phka5aqe1-rakesh-paridas-projects.vercel.app
+ * 📚 API Documentation: https://docs.calibr.lat
  * 🔗 Base URL: https://api.calibr.lat
  */
 
