@@ -6,13 +6,21 @@ export default function Home() {
   return (
     <div className="space-y-6 p-6">
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Select a Project</h2>
-        <div className="space-y-2">
+        <h2 className="text-xl font-semibold mb-4">System Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link
             href="/p/demo"
-            className="block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+            className="block bg-blue-600 text-white px-4 py-3 rounded hover:bg-blue-700 transition-colors text-center"
           >
-            Demo Project
+            <div className="font-semibold">Demo Project</div>
+            <div className="text-sm opacity-90">Manage price changes</div>
+          </Link>
+          <Link
+            href="/performance"
+            className="block bg-green-600 text-white px-4 py-3 rounded hover:bg-green-700 transition-colors text-center"
+          >
+            <div className="font-semibold">Performance Dashboard</div>
+            <div className="text-sm opacity-90">Monitor system performance</div>
           </Link>
         </div>
       </div>

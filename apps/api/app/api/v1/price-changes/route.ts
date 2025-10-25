@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { trackPerformance } from '@/lib/performance-middleware'
 
-export async function GET(req: NextRequest) {
+export const GET = trackPerformance(async (req: NextRequest) => {
   const status = req.nextUrl.searchParams.get('status') ?? undefined
   const projectSlug = req.nextUrl.searchParams.get('project')
   if (!projectSlug) return NextResponse.json({ error: 'project required' }, { status: 400 })
@@ -21,4 +22,4 @@ export async function GET(req: NextRequest) {
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
   return response
-}
+})
