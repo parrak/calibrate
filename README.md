@@ -229,6 +229,17 @@ vercel --prod --yes
 Notes:
 - Ensure Tailwind/PostCSS are in dependencies. If modified, update and commit the root lockfile.
 
+Monorepo tip: if the Vercel project mis-detects the Next.js app or expects a static output directory (e.g., error about missing `public`), add a `vercel.json` to the app to force the framework and commands. Example for `apps/site/vercel.json`:
+
+```
+{
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && pnpm install",
+  "buildCommand": "cd ../.. && pnpm --filter @calibr/site build",
+  "outputDirectory": ".next"
+}
+```
+
 ### Infrastructure Overview
 
 ```
