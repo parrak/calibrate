@@ -20,12 +20,22 @@ calibrate/
 
 ## Features
 
+### Core Pricing Platform
 - **Webhook API**: Secure price suggestion submission with HMAC verification
 - **Policy Engine**: Configurable pricing rules (max delta, floors, ceilings, daily budgets)
 - **Admin Console**: Review and approve price changes
 - **Price Versioning**: Full audit trail of price changes
 - **Idempotency**: Prevent duplicate processing
 - **Multi-tenant**: Support for multiple organizations
+
+### Competitor Monitoring (Phase 2 - NEW)
+- **Web Scraping**: Automated competitor price tracking across Shopify, Amazon, Google Shopping
+- **Market Analytics**: Real-time market positioning and price comparison insights
+- **Competitor Rules**: Automated pricing strategies based on competitor data
+- **Price History**: Track competitor price changes over time
+- **Multi-channel Support**: Monitor competitors across different sales channels
+
+See [COMPETITOR_MONITORING.md](COMPETITOR_MONITORING.md) for detailed documentation.
 
 ## Quick Start
 

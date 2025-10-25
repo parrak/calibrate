@@ -149,6 +149,153 @@ async function main() {
   })
   console.log('✓ Policy created')
 
+  // Create demo competitors
+  const competitor1 = await prisma.competitor.upsert({
+    where: { id: 'demo-competitor-1' },
+    update: {},
+    create: {
+      id: 'demo-competitor-1',
+      tenantId: tenant.id,
+      projectId: project.id,
+      name: 'Competitor A',
+      domain: 'competitora.example.com',
+      channel: 'shopify',
+      isActive: true,
+    },
+  })
+  console.log('✓ Competitor created:', competitor1.name)
+
+  const competitor2 = await prisma.competitor.upsert({
+    where: { id: 'demo-competitor-2' },
+    update: {},
+    create: {
+      id: 'demo-competitor-2',
+      tenantId: tenant.id,
+      projectId: project.id,
+      name: 'Competitor B',
+      domain: 'competitorb.example.com',
+      channel: 'shopify',
+      isActive: true,
+    },
+  })
+  console.log('✓ Competitor created:', competitor2.name)
+
+  // Get SKUs for linking competitor products
+  const proMonthlySku = await prisma.sku.findFirst({
+    where: { code: 'PRO-MONTHLY' },
+  })
+
+  const entMonthlySku = await prisma.sku.findFirst({
+    where: { code: 'ENT-MONTHLY' },
+  })
+
+  // Create competitor products and prices
+  if (proMonthlySku) {
+    const comp1ProProduct = await prisma.competitorProduct.create({
+      data: {
+        competitorId: competitor1.id,
+        skuId: proMonthlySku.id,
+        name: 'Pro Monthly Plan',
+        skuCode: 'COMP-PRO-M',
+        url: 'https://competitora.example.com/products/pro-monthly',
+        isActive: true,
+      },
+    })
+
+    await prisma.competitorPrice.create({
+      data: {
+        productId: comp1ProProduct.id,
+        amount: 5900,
+        currency: 'USD',
+        isOnSale: false,
+      },
+    })
+
+    const comp2ProProduct = await prisma.competitorProduct.create({
+      data: {
+        competitorId: competitor2.id,
+        skuId: proMonthlySku.id,
+        name: 'Professional Monthly',
+        skuCode: 'B-PRO-MONTH',
+        url: 'https://competitorb.example.com/products/professional-monthly',
+        isActive: true,
+      },
+    })
+
+    await prisma.competitorPrice.create({
+      data: {
+        productId: comp2ProProduct.id,
+        amount: 4700,
+        currency: 'USD',
+        isOnSale: true,
+      },
+    })
+
+    console.log('✓ Competitor products and prices created for PRO-MONTHLY')
+  }
+
+  if (entMonthlySku) {
+    const comp1EntProduct = await prisma.competitorProduct.create({
+      data: {
+        competitorId: competitor1.id,
+        skuId: entMonthlySku.id,
+        name: 'Enterprise Monthly Plan',
+        skuCode: 'COMP-ENT-M',
+        url: 'https://competitora.example.com/products/enterprise-monthly',
+        isActive: true,
+      },
+    })
+
+    await prisma.competitorPrice.create({
+      data: {
+        productId: comp1EntProduct.id,
+        amount: 14900,
+        currency: 'USD',
+        isOnSale: false,
+      },
+    })
+
+    const comp2EntProduct = await prisma.competitorProduct.create({
+      data: {
+        competitorId: competitor2.id,
+        skuId: entMonthlySku.id,
+        name: 'Enterprise Monthly',
+        skuCode: 'B-ENT-MONTH',
+        url: 'https://competitorb.example.com/products/enterprise-monthly',
+        isActive: true,
+      },
+    })
+
+    await prisma.competitorPrice.create({
+      data: {
+        productId: comp2EntProduct.id,
+        amount: 11900,
+        currency: 'USD',
+        isOnSale: false,
+      },
+    })
+
+    console.log('✓ Competitor products and prices created for ENT-MONTHLY')
+  }
+
+  // Create demo competitor rule
+  await prisma.competitorRule.create({
+    data: {
+      tenantId: tenant.id,
+      projectId: project.id,
+      name: 'Beat Competition by 5%',
+      description: 'Always price 5% below the lowest competitor',
+      isActive: true,
+      rules: {
+        type: 'beat_by_percent',
+        value: 5,
+        minPrice: 1000,
+        minMargin: 20,
+      },
+    },
+  })
+  console.log('✓ Competitor rule created')
+
   // Create some demo price changes
   const proMonthlyUsdSku = await prisma.sku.findFirst({
     where: { code: 'PRO-MONTHLY' },
