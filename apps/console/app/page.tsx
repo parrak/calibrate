@@ -8,8 +8,8 @@ export default function Home() {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold mb-4">Select a Project</h2>
         <div className="space-y-2">
-          <Link 
-            href="/console/p/demo"
+          <Link
+            href="/p/demo"
             className="block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
           >
             Demo Project
