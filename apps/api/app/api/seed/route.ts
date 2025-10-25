@@ -107,7 +107,9 @@ export async function POST() {
           },
           update: {},
           create: {
-            ...skuInfo,
+            // Ensure required fields for Sku
+            name: (skuInfo as any).name ?? skuInfo.code,
+            code: skuInfo.code,
             productId: product.id,
           },
         })

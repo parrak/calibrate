@@ -123,7 +123,8 @@ model Price {
   status       Status         @default(ACTIVE)
   versions     PriceVersion[]
 
-  @@index([skuId, currency])
+  // Ensure upserts by (skuId, currency) work in seed scripts
+  @@unique([skuId, currency], name: "skuId_currency")
 }
 
 model PriceVersion {
