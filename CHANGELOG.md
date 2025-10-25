@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and follows semantic versioning.
 
+## [1.1.0] - 2025-10-25
+
+### Added
+- Console UX: sidebar layout, breadcrumbs, loading skeletons, and accessibility improvements across project pages.
+- Verification log documenting Vercel deploy steps and outputs (`.github/VERIFICATION.md`).
+
+### Changed
+- Site (calibrate-site): add Next.js webpack alias for `@/…`; skip CI typecheck/lint; move Tailwind/PostCSS and TypeScript packages to production dependencies; add per-app `vercel.json` to force Next.js framework and monorepo build commands.
+- Docs: move Tailwind/PostCSS to production dependencies for CI builds.
+- Agent docs: update README and `.github/copilot-instructions.md` with Vercel monorepo guidance (frozen lockfile, per-app vercel.json, Tailwind/TS requirements) and deploy steps.
+
+### Fixed
+- Stabilize Vercel monorepo deploys by committing updated root `pnpm-lock.yaml` after sub-app dependency changes.
+- All custom domains 200: `calibr.lat`, `console.calibr.lat`, `docs.calibr.lat`.
+
 ## [1.0.0] - 2025-10-24
 
 ### 🚀 Production Deployment
