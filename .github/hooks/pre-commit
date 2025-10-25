@@ -1,0 +1,118 @@
+#!/bin/bash
+# Calibrate Pre-commit Hook
+# Validates changes before commit to prevent regressions
+
+set -e
+
+echo "🔍 Calibrate Pre-commit Validation"
+echo "=================================="
+
+# Check if we're in the right directory
+if [ ! -f "package.json" ]; then
+    echo "❌ Not in project root directory"
+    exit 1
+fi
+
+# Get list of changed files
+CHANGED_FILES=$(git diff --cached --name-only)
+
+echo "📁 Changed files:"
+echo "$CHANGED_FILES"
+echo ""
+
+# Check for critical files that need special validation
+CRITICAL_FILES=(
+    "apps/api/app/api/health/route.ts"
+    "apps/api/app/api/metrics/route.ts"
+    "apps/api/app/api/admin/dashboard/route.ts"
+    "apps/api/Dockerfile"
+    "apps/api/railway.json"
+    "packages/db/prisma/schema.prisma"
+    "apps/api/start.sh"
+)
+
+# Check if any critical files are changed
+CRITICAL_CHANGED=false
+for file in "${CRITICAL_FILES[@]}"; do
+    if echo "$CHANGED_FILES" | grep -q "$file"; then
+        echo "⚠️  Critical file changed: $file"
+        CRITICAL_CHANGED=true
+    fi
+done
+
+if [ "$CRITICAL_CHANGED" = true ]; then
+    echo ""
+    echo "🚨 CRITICAL FILES CHANGED - EXTRA VALIDATION REQUIRED"
+    echo "====================================================="
+    
+    # Run TypeScript check
+    echo "🔍 Running TypeScript check..."
+    if ! pnpm type-check; then
+        echo "❌ TypeScript check failed"
+        exit 1
+    fi
+    
+    # Check for BigInt serialization issues
+    echo "🔍 Checking for BigInt serialization issues..."
+    if grep -r "BigInt\|bigint" apps/api/app/api/ --include="*.ts" | grep -v "Number(" | grep -v "toString()"; then
+        echo "❌ Potential BigInt serialization issue found"
+        echo "   Make sure to convert BigInt values to numbers before JSON serialization"
+        echo "   Use: Number(bigIntValue) or bigIntValue.toString()"
+        exit 1
+    fi
+    
+    # Check for JSON.stringify usage with potential BigInt
+    if grep -r "JSON.stringify" apps/api/app/api/ --include="*.ts" | grep -v "Number("; then
+        echo "⚠️  JSON.stringify usage detected - ensure no BigInt values"
+    fi
+    
+    # Validate health check endpoint
+    echo "🔍 Validating health check endpoint..."
+    if ! grep -q "Number(" apps/api/app/api/health/route.ts; then
+        echo "❌ Health check endpoint missing BigInt conversion"
+        echo "   Ensure all database query results are converted to numbers"
+        exit 1
+    fi
+    
+    echo "✅ Critical file validation passed"
+fi
+
+# Run basic checks
+echo ""
+echo "🔍 Running basic validation..."
+
+# TypeScript check
+echo "🔍 TypeScript check..."
+if ! pnpm type-check; then
+    echo "❌ TypeScript check failed"
+    exit 1
+fi
+
+# Lint check
+echo "🔍 Lint check..."
+if ! pnpm lint; then
+    echo "❌ Lint check failed"
+    exit 1
+fi
+
+# Check for common issues
+echo "🔍 Checking for common issues..."
+
+# Check for console.log in production code
+if grep -r "console\.log" apps/api/app/api/ --include="*.ts" | grep -v "logger\."; then
+    echo "⚠️  console.log found in API code - consider using logger instead"
+fi
+
+# Check for hardcoded values
+if grep -r "localhost\|127.0.0.1" apps/api/app/api/ --include="*.ts"; then
+    echo "⚠️  Hardcoded localhost found - ensure environment variables are used"
+fi
+
+# Check for missing error handling
+if grep -r "await.*\(" apps/api/app/api/ --include="*.ts" | grep -v "try\|catch"; then
+    echo "⚠️  Async operations without error handling detected"
+fi
+
+echo ""
+echo "✅ Pre-commit validation passed"
+echo "🚀 Safe to commit"

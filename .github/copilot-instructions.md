@@ -91,6 +91,16 @@ evaluatePolicy(currentAmount, proposedAmount, {
 
 - Agents must perform local build and test verification before merging to `master` or initiating any production deployment. Do the full local verification even if CI exists — document results in the PR.
 
+- **CRITICAL**: Use the automated validation script for comprehensive testing:
+
+```powershell
+# Run comprehensive deployment validation
+.\scripts\validate-deployment.ps1
+
+# Or run specific checks
+.\scripts\validate-deployment.ps1 -SkipBuild -SkipTests
+```
+
 - Minimal local verification steps (PowerShell):
 
 ```powershell
@@ -115,6 +125,15 @@ pnpm lint
 
 # Build production bundles for all apps/packages
 pnpm build
+
+# CRITICAL: Test JSON serialization (prevents BigInt errors)
+pnpm --filter @calibr/api run test:json-serialization
+
+# Test API endpoints locally
+pnpm dev:api &
+Start-Sleep 15
+Invoke-WebRequest -Uri "http://localhost:3000/api/health" -Method Get
+Invoke-WebRequest -Uri "http://localhost:3000/api/metrics?project=demo" -Method Get
 ```
 
 - Package-level tests: run only the package you changed for faster feedback, e.g. `pnpm --filter @calibr/pricing-engine test`.
@@ -360,6 +379,7 @@ export async function GET() {
 - `packages/db/prisma/schema.prisma`
 - `apps/api/start.sh`
 - Prisma migrations
+- **ANY API endpoint that returns JSON**
 
 **MUST verify:**
 1. Build Docker image locally and test startup
@@ -367,6 +387,7 @@ export async function GET() {
 3. Verify `/api/health` returns 200 OK
 4. Test migrations with `prisma migrate deploy`
 5. Seed script completes without errors
+6. **CRITICAL: Test JSON serialization for all API endpoints**
 
 **Testing Commands:**
 ```bash
@@ -376,7 +397,37 @@ docker run -p 8080:8080 -e DATABASE_URL=postgresql://... test
 
 # Verify healthcheck
 curl http://localhost:8080/api/health
+
+# CRITICAL: Test JSON serialization
+curl http://localhost:8080/api/health | jq .
+curl "http://localhost:8080/api/metrics?project=demo" | jq .
+curl "http://localhost:8080/api/admin/dashboard?project=demo" | jq .
 ```
+
+### 🚨 CRITICAL: Preventing JSON Serialization Regressions
+
+**BigInt Serialization Issues:**
+- PostgreSQL returns `BigInt` values that cannot be serialized to JSON
+- This causes deployment failures with "Do not know how to serialize a BigInt"
+- **MUST** convert all BigInt values to numbers before JSON response
+
+**Required Patterns:**
+```typescript
+// ❌ WRONG - Will cause BigInt serialization error
+const connections = await prisma().$queryRaw`SELECT count(*) as active_connections FROM pg_stat_activity`
+return NextResponse.json({ connections: connections[0]?.active_connections })
+
+// ✅ CORRECT - Convert BigInt to number
+const connections = await prisma().$queryRaw`SELECT count(*) as active_connections FROM pg_stat_activity`
+return NextResponse.json({ connections: Number(connections[0]?.active_connections) || 0 })
+```
+
+**Validation Checklist:**
+1. All database query results must be converted to numbers
+2. Use `Number(bigIntValue)` or `bigIntValue.toString()`
+3. Test all API endpoints return valid JSON
+4. Run `.\scripts\validate-deployment.ps1` before merging
+5. Check for BigInt in response: `response.Content | ConvertFrom-Json | ConvertTo-Json`
 
 ### Common Regression Causes
 
@@ -388,6 +439,8 @@ curl http://localhost:8080/api/health
 | Remove HOSTNAME env var | Server binds to container ID | 404 on domain |
 | Change healthcheck path | Railway can't verify deployment | Never promoted |
 | Skip preDeployCommand | Migrations don't run | App crashes on startup |
+| Return BigInt in JSON response | BigInt cannot be serialized | "Do not know how to serialize a BigInt" |
+| Skip JSON serialization testing | BigInt issues not caught locally | Deployment fails in production |
 
 ### Deployment Verification
 

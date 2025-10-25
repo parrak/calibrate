@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:json-serialization": "tsx lib/json-serialization-test.ts",
+    "dev:api": "next dev -p 3000"
   },
   "dependencies": {
     "react": "^18.2.0",
