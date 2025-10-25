@@ -28,7 +28,7 @@ calibrate/
 - **Idempotency**: Prevent duplicate processing
 - **Multi-tenant**: Support for multiple organizations
 
-### Competitor Monitoring (Phase 2 - NEW)
+### Competitor Monitoring (Phase 2 - ✅ Complete)
 - **Web Scraping**: Automated competitor price tracking across Shopify, Amazon, Google Shopping
 - **Market Analytics**: Real-time market positioning and price comparison insights
 - **Competitor Rules**: Automated pricing strategies based on competitor data
@@ -36,6 +36,15 @@ calibrate/
 - **Multi-channel Support**: Monitor competitors across different sales channels
 
 See [COMPETITOR_MONITORING.md](COMPETITOR_MONITORING.md) for detailed documentation.
+
+### Platform Integrations (Phase 3 - 🚧 In Planning)
+- **Shopify Integration**: OAuth authentication, product sync, and automated price updates
+- **Amazon Integration**: SP-API connection, catalog sync, and price feed submission
+- **Platform Abstraction**: Unified interface for connecting to any e-commerce platform
+- **Automated Sync**: Two-way synchronization between Calibrate and external platforms
+- **Multi-platform Management**: Manage pricing across multiple sales channels from one dashboard
+
+See [PHASE3_ROADMAP.md](PHASE3_ROADMAP.md) for detailed roadmap and architecture.
 
 ## Quick Start
 
