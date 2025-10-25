@@ -1,0 +1,30 @@
+{
+  "name": "@calibr/platform-connector",
+  "version": "0.1.0",
+  "description": "Platform abstraction layer for e-commerce integrations",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.4"
+  },
+  "keywords": [
+    "calibrate",
+    "platform",
+    "connector",
+    "abstraction",
+    "e-commerce"
+  ],
+  "author": "Calibrate",
+  "license": "MIT"
+}
