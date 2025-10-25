@@ -133,6 +133,38 @@ const nextConfig = {
 
 ## [Unreleased]
 
+### Added - Phase 2: Competitor Monitoring
+
+**Web Scraping Infrastructure:**
+- Implemented Shopify price scraper using JSON product API for reliable data extraction
+- Implemented Amazon price scraper (stub with API integration guidance)
+- Implemented Google Shopping price scraper (stub with Content API/SerpAPI integration guidance)
+- Created auto-detection system to identify channel from product URLs
+- Added comprehensive unit tests for all scraper utilities (31 passing tests)
+
+**UI Enhancements:**
+- Added Competitor Analytics dashboard component with market insights:
+  - Market position indicators (lowest/highest/middle)
+  - Average market price tracking
+  - Price spread analysis
+  - Per-product competitor price comparisons
+- Updated competitors page with 3-tab layout: Monitor, Analytics, Rules
+- Enhanced competitor monitoring UI with real-time price tracking
+
+**Database & Seeding:**
+- Extended seed script with demo competitor data:
+  - 2 demo competitors (Competitor A & Competitor B)
+  - Competitor products mapped to PRO-MONTHLY and ENT-MONTHLY SKUs
+  - Competitor price history with sale indicators
+  - Demo competitor rule: "Beat Competition by 5%"
+
+**Architecture:**
+- Updated `CompetitorMonitor` class to use channel-specific scrapers
+- Improved error handling and logging for scraping operations
+- Added scraper package structure: `packages/competitor-monitoring/scrapers/`
+
+See [COMPETITOR_MONITORING.md](COMPETITOR_MONITORING.md) for detailed feature documentation.
+
 ### Planned
 - CI/CD pipeline with GitHub Actions
 - Staging environment setup
@@ -140,7 +172,7 @@ const nextConfig = {
 - Rate limiting implementation
 - Monitoring and alerting setup
 - Performance optimization
-- Additional competitor monitoring features
+- Phase 3: E-commerce platform integrations (Shopify, Amazon, Google Shopping APIs)
 
 ### Fixed
 - Align PNPM version with lockfile for Docker/Railway builds.

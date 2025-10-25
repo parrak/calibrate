@@ -1,7 +1,7 @@
 generator client {
   provider = "prisma-client-js"
-  // Target Debian Slim (OpenSSL 3.x)
-  binaryTargets = ["debian-openssl-3.0.x"]
+  // Target both native (for local dev) and Debian Slim (for Railway deployment)
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
   engineType   = "binary"
 }
 

@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd ../.. && pnpm install && pnpm --filter @calibr/site build",
+  "installCommand": "corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile=false",
+  "framework": null
+}

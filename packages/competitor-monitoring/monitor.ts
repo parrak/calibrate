@@ -99,31 +99,26 @@ export class CompetitorMonitor {
   }
 
   /**
-   * Scrape price from competitor (stubbed implementation)
+   * Scrape price from competitor using channel-specific scraper
    */
   private async scrapePrice(competitor: any, product: any): Promise<CompetitorPriceData | null> {
-    // TODO: Implement actual scraping logic based on competitor channel
-    // This would typically involve:
-    // 1. Making HTTP requests to the product URL
-    // 2. Parsing HTML/JSON to extract price information
-    // 3. Handling different competitor formats and APIs
-    
-    console.log(`[MONITOR] Scraping ${competitor.name} - ${product.name}`)
-    
-    // Simulate price scraping
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    // Return mock data for now
-    return {
-      id: '',
-      productId: product.id,
-      amount: Math.floor(Math.random() * 10000) + 1000, // Random price between $10-$100
-      currency: 'USD',
-      channel: competitor.channel,
-      isOnSale: Math.random() > 0.8,
-      saleEndsAt: Math.random() > 0.8 ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : undefined,
-      stockStatus: Math.random() > 0.1 ? 'in_stock' : 'limited',
-      createdAt: new Date()
+    console.log(`[MONITOR] Scraping ${competitor.name} - ${product.name} (${competitor.channel})`)
+
+    // Import scrapers dynamically to avoid circular dependencies
+    const { scrapePrice } = await import('./scrapers')
+
+    try {
+      const result = await scrapePrice(product.url, product.id, competitor.channel)
+
+      if (result.error) {
+        console.error(`[MONITOR] Scrape error for ${product.name}: ${result.error}`)
+        return null
+      }
+
+      return result.price
+    } catch (error) {
+      console.error(`[MONITOR] Failed to scrape ${product.name}:`, error)
+      return null
     }
   }
 
