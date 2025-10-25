@@ -1,0 +1,66 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { PrismaClient } from '@prisma/client'
+import { verifyHmac } from '@calibrate/security'
+
+const db = new PrismaClient()
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const tenantId = searchParams.get('tenantId')
+    const projectId = searchParams.get('projectId')
+
+    if (!tenantId || !projectId) {
+      return NextResponse.json({ error: 'Missing tenantId or projectId' }, { status: 400 })
+    }
+
+    const competitors = await db.competitor.findMany({
+      where: {
+        tenantId,
+        projectId
+      },
+      include: {
+        products: {
+          include: {
+            prices: {
+              orderBy: { createdAt: 'desc' },
+              take: 1
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return NextResponse.json({ competitors })
+  } catch (error) {
+    console.error('Error fetching competitors:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { tenantId, projectId, name, domain, channel } = body
+
+    if (!tenantId || !projectId || !name || !domain || !channel) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    const competitor = await db.competitor.create({
+      data: {
+        tenantId,
+        projectId,
+        name,
+        domain,
+        channel
+      }
+    })
+
+    return NextResponse.json({ competitor }, { status: 201 })
+  } catch (error) {
+    console.error('Error creating competitor:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

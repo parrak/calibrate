@@ -16,6 +16,8 @@ model Tenant {
   customers Customer[]
   policies  Policy[]
   events    Event[]
+  competitors Competitor[]
+  competitorRules CompetitorRule[]
   createdAt DateTime @default(now())
 }
 
@@ -46,6 +48,8 @@ model Project {
   products    Product[]
   policies    Policy[]
   events      Event[]
+  competitors Competitor[]
+  competitorRules CompetitorRule[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -96,6 +100,7 @@ model Sku {
   attributes Json?
   status     Status   @default(DRAFT)
   prices     Price[]
+  competitorProducts CompetitorProduct[]
 }
 
 model Price {
@@ -214,4 +219,72 @@ model Event {
   kind      String
   payload   Json
   createdAt DateTime @default(now())
+}
+
+model Competitor {
+  id          String   @id @default(cuid())
+  tenantId    String
+  projectId   String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  project     Project  @relation(fields: [projectId], references: [id])
+  name        String
+  domain      String
+  channel     String   // 'shopify', 'amazon', 'google_shopping', etc.
+  isActive    Boolean  @default(true)
+  lastChecked DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  products    CompetitorProduct[]
+  
+  @@index([tenantId, projectId])
+}
+
+model CompetitorProduct {
+  id           String   @id @default(cuid())
+  competitorId String
+  competitor   Competitor @relation(fields: [competitorId], references: [id])
+  skuId        String?
+  sku          Sku?     @relation(fields: [skuId], references: [id])
+  name         String
+  skuCode      String?  // Competitor's SKU code
+  url          String
+  imageUrl     String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  prices       CompetitorPrice[]
+  
+  @@index([competitorId, skuCode])
+}
+
+model CompetitorPrice {
+  id           String   @id @default(cuid())
+  productId    String
+  product      CompetitorProduct @relation(fields: [productId], references: [id])
+  amount       Int      // Price in minor units (cents)
+  currency     String
+  channel      String?  // Specific channel within competitor
+  isOnSale     Boolean  @default(false)
+  saleEndsAt   DateTime?
+  stockStatus  String?  // 'in_stock', 'out_of_stock', 'limited'
+  createdAt    DateTime @default(now())
+  
+  @@index([productId, createdAt])
+  @@index([createdAt])
+}
+
+model CompetitorRule {
+  id           String   @id @default(cuid())
+  tenantId     String
+  projectId    String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  project      Project  @relation(fields: [projectId], references: [id])
+  name         String
+  description  String?
+  isActive     Boolean  @default(true)
+  rules        Json     // Pricing rules based on competitor data
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([tenantId, projectId])
 }

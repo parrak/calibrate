@@ -6,8 +6,25 @@ export const metadata: Metadata = {
   title: 'Calibr Docs',
   description: 'Calibr — Webhook-driven Pricing API documentation',
   metadataBase: new URL('https://docs.calibr.lat'),
-  openGraph: { title: 'Calibr Docs', description: 'Webhook-driven Pricing API', url: 'https://docs.calibr.lat' },
-  twitter: { card: 'summary_large_image', title: 'Calibr Docs', description: 'Webhook-driven Pricing API' },
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    title: 'Calibr Docs',
+    description: 'Webhook-driven Pricing API',
+    url: 'https://docs.calibr.lat',
+    images: '/og-image.png',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Calibr Docs',
+    description: 'Webhook-driven Pricing API',
+    images: '/og-image.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd ../.. && NODE_ENV=development pnpm install --frozen-lockfile && pnpm --filter @calibr/console build",
+  "installCommand": "echo 'Skipping install, using buildCommand instead'",
+  "framework": "nextjs",
+  "outputDirectory": ".next"
+}

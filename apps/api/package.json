@@ -18,6 +18,7 @@
     "@calibr/pricing-engine": "workspace:*",
     "@calibr/security": "workspace:*",
     "@calibr/connectors": "workspace:*",
+    "@calibrate/competitor-monitoring": "workspace:*",
     "zod": "^3.22.4",
     "prisma": "^5.22.0"
   },

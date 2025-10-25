@@ -83,6 +83,56 @@ evaluatePolicy(currentAmount, proposedAmount, {
   - App-specific configs for deployment settings
   - Local overrides via `.env.local` (git-ignored)
 
+## Agent Collaboration & Documentation
+
+- When multiple LLM agents or developers contribute, document the "why" for every change — not just the "what".
+- Commit messages must be explicit and follow this mini-contract:
+  - Short summary (50 chars max)
+  - Blank line
+  - One-paragraph motivation explaining why the change is needed
+  - Bullet list of files touched and a short rationale per file
+  - Agent metadata footer (optional but recommended): `Agent: <name>/<version>` `Context-ID: <uuid>`
+
+- Pull Request (PR) body should include the following sections (copy this template):
+
+  Summary
+  -------
+  One-line summary of the change.
+
+  Motivation
+  ----------
+  Explain the problem being solved and why the chosen approach is correct.
+
+  Files changed
+  -------------
+  - `packages/pricing-engine/evaluatePolicy.ts` — update to enforce daily budget check
+  - `packages/pricing-engine/evaluatePolicy.test.ts` — added tests for edge-cases
+
+  Tests
+  -----
+  Describe what tests were added/updated and how to run them locally (e.g., `pnpm test`).
+
+  How to verify
+  -------------
+  Step-by-step manual verification (endpoints to call, example payloads, expected responses).
+
+  Agent metadata
+  --------------
+  - Agent: `gpt-4.x` (optional)
+  - Prompt seed: brief description or file with the prompt used
+  - Decision notes: short bullets describing trade-offs considered
+
+- Inline code comments: prefer short comments that explain the reasoning and cite the PR/issue number. Example in code:
+
+  // Allow any positive proposedAmount when currentAmount === 0
+  // See PR #123 (example) — avoids rejecting valid initial prices for new products
+
+- Tests and changelog: update or add tests in the same package as the code change (see `packages/pricing-engine/*`) and add a short changelog entry (create `CHANGELOG.md` at repo root if none exists).
+
+- Multi-agent coordination:
+  - Assign a human reviewer or single ownership for every PR to avoid conflicting automated changes.
+  - If two agents make related changes, include cross-references in each PR and prefer one combined PR that a human merges.
+
 ## Best Practices
 - Always maintain tenant isolation in queries
 - Use HMAC verification for webhooks (`packages/security`)

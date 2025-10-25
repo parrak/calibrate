@@ -18,7 +18,11 @@
       "Bash(pnpm dev)",
       "Bash(node test-webhook.js:*)",
       "Bash(node -e:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(pnpm install:*)",
+      "Bash(unzip:*)",
+      "Read(//c/Users/rakes/Downloads/calibrate_brand_kit/**)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

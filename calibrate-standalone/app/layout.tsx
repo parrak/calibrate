@@ -5,15 +5,24 @@ export const metadata: Metadata = {
   title: 'Calibr — Real-time Pricing Precision',
   description: 'The intelligent pricing engine with guardrails, human review, and instant rollback.',
   metadataBase: new URL('https://calibr.lat'),
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
   openGraph: {
     title: 'Calibr — Real-time Pricing Precision',
     description: 'Create a project, connect your catalog, ship guarded price changes.',
     url: 'https://calibr.lat',
+    images: '/og-image.png',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Calibr',
     description: 'Real-time pricing precision for modern commerce.',
+    images: '/og-image.png',
   },
 }
 

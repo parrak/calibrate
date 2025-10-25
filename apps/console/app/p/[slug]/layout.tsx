@@ -51,6 +51,12 @@ export default function ProjectLayout({
                 >
                   Catalog
                 </Link>
+                <Link
+                  href={`/p/${params.slug}/competitors`}
+                  className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                >
+                  Competitors
+                </Link>
               </nav>
             </div>
             <div className="flex items-center">

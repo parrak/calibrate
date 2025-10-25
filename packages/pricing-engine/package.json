@@ -8,7 +8,8 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@calibr/db": "workspace:*"
+    "@calibr/db": "workspace:*",
+    "@calibrate/competitor-monitoring": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^1.0.0"

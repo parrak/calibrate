@@ -4,6 +4,18 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Calibrate Console',
   description: 'Admin console for price management',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    title: 'Calibrate Console',
+    description: 'Admin console for price management',
+    images: '/og-image.png',
+  },
 }
 
 export default function RootLayout({
@@ -13,11 +25,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50 min-h-screen">
+      <body className="bg-bg text-fg min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <header className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Calibrate Console</h1>
-            <p className="text-gray-600">Price management and approval system</p>
+            <h1 className="text-3xl font-bold">Calibrate Console</h1>
+            <p className="text-mute">Price management and approval system</p>
           </header>
           {children}
         </div>
