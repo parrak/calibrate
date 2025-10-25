@@ -403,17 +403,35 @@ function getErrorType(statusCode: number): string {
   return 'success'
 }
 
+// Track the monitoring interval to prevent memory leaks
+let resourceMonitoringInterval: NodeJS.Timeout | null = null
+
 /**
  * Start periodic resource monitoring
  */
 export function startResourceMonitoring(intervalMs: number = 30000) {
+  // Clear existing interval if it exists
+  if (resourceMonitoringInterval) {
+    clearInterval(resourceMonitoringInterval)
+  }
+  
   // Record initial metric
   recordResourceMetric()
   
-  // Set up interval
-  setInterval(() => {
+  // Set up new interval
+  resourceMonitoringInterval = setInterval(() => {
     recordResourceMetric()
   }, intervalMs)
+}
+
+/**
+ * Stop resource monitoring
+ */
+export function stopResourceMonitoring() {
+  if (resourceMonitoringInterval) {
+    clearInterval(resourceMonitoringInterval)
+    resourceMonitoringInterval = null
+  }
 }
 
 /**
