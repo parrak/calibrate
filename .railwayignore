@@ -1,0 +1,10 @@
+# Ignore other apps during Railway deployment
+apps/site
+apps/console
+apps/docs
+calibr-docs
+calibrate-standalone
+
+# Only deploy API
+!apps/api
+!packages
