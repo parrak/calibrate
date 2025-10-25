@@ -111,23 +111,110 @@ pnpm --filter @calibr/pricing-engine test
 
 ## Deployment
 
-### Vercel (Recommended)
+### 🚀 Production Status
 
-1. Create separate Vercel projects for each app:
-   - `calibr-api` → `apps/api`
-   - `calibr-console` → `apps/console`
-   - `calibr-site` → `apps/site`
-   - `calibr-docs` → `apps/docs`
+**All services are currently deployed and operational:**
 
-2. Set environment variables in each project:
-   - `DATABASE_URL`
-   - `WEBHOOK_SECRET`
-   - `NEXT_PUBLIC_API_BASE` (for console)
+| Service | Platform | URL | Status |
+|---------|----------|-----|--------|
+| API | Railway | https://api.calibr.lat | ✅ Live |
+| Console | Vercel | https://console.calibr.lat | ✅ Live |
+| Site | Vercel | https://calibr.lat | ✅ Live |
+| Docs | Vercel | https://docs.calibr.lat | ✅ Live |
+| Database | Railway PostgreSQL | (internal) | ✅ Migrated |
 
-3. Deploy:
-   ```bash
-   pnpm build
-   ```
+**Latest Deployment:** Oct 24, 2025
+**Commit:** `1a0532c` - Prisma binary targets fix for Debian
+
+### Railway API Deployment
+
+The API service runs on Railway with PostgreSQL database.
+
+**Configuration:**
+- Runtime: Node.js 20 (Debian Slim)
+- Build: Docker with Next.js standalone output
+- Database: Railway PostgreSQL with Prisma ORM
+- Environment Variables:
+  - `DATABASE_URL`: Auto-provided by Railway PostgreSQL service
+  - `WEBHOOK_SECRET`: Configured in Railway dashboard
+  - `NODE_ENV`: production
+
+**Deployment Process:**
+
+```powershell
+# Link to Railway project (one-time)
+railway login
+railway link
+
+# Deploy latest changes
+railway redeploy
+
+# Or deploy from local code
+railway up
+```
+
+**Database Migrations:**
+
+```powershell
+# Run migrations on Railway database
+railway run -- npx prisma migrate deploy --schema=./packages/db/prisma/schema.prisma
+```
+
+**Important Notes:**
+- Uses `node:20-slim` base image for Prisma compatibility
+- Prisma binary target: `debian-openssl-3.0.x`
+- Next.js standalone output mode for optimized Docker builds
+- Health check endpoint: `/api/health`
+
+### Vercel Frontend Deployments
+
+Console, Site, and Docs are deployed on Vercel.
+
+**Console Deployment:**
+
+```powershell
+cd apps/console
+vercel --prod
+```
+
+**Environment Variables (set in Vercel):**
+- `NEXT_PUBLIC_API_BASE`: https://api.calibr.lat
+
+**Build Configuration:**
+- Framework: Next.js
+- Build Command: `cd ../.. && pnpm install && pnpm --filter @calibr/console build`
+- Output Directory: `apps/console/.next`
+
+### Infrastructure Overview
+
+```
+┌─────────────────────────────────────────────┐
+│  Users                                       │
+└──────────────┬──────────────────────────────┘
+               │
+       ┌───────┴───────┐
+       │               │
+       ▼               ▼
+┌─────────────┐  ┌─────────────┐
+│   Vercel    │  │   Railway   │
+│             │  │             │
+│ - Console   │  │ - API       │
+│ - Site      │  │ - PostgreSQL│
+│ - Docs      │  │             │
+└─────────────┘  └─────────────┘
+    │                   │
+    └────────┬──────────┘
+             │
+             ▼
+    ┌─────────────────┐
+    │ Custom Domains  │
+    │                 │
+    │ console.calibr  │
+    │ api.calibr      │
+    │ calibr.lat      │
+    │ docs.calibr     │
+    └─────────────────┘
+```
 
 ## Development
 
