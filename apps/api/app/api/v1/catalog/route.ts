@@ -4,17 +4,48 @@ import { prisma } from '@calibr/db'
 export async function GET(req: NextRequest) {
   const productCode = req.nextUrl.searchParams.get('productCode')
   const projectSlug = req.nextUrl.searchParams.get('project')
-  if (!productCode) {
-    return NextResponse.json({ error: 'productCode required' }, { status: 400 })
-  }
+  
   if (!projectSlug) {
     return NextResponse.json({ error: 'project required' }, { status: 400 })
   }
   const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
   if (!project) return NextResponse.json({ error: 'project not found' }, { status: 404 })
 
-  const product = await prisma().product.findFirst({ 
-    where: { code: productCode, projectId: project.id }, 
+  // If productCode is provided, return single product
+  if (productCode) {
+    const product = await prisma().product.findFirst({ 
+      where: { code: productCode, projectId: project.id }, 
+      include: { 
+        skus: { 
+          include: { prices: true } 
+        } 
+      } 
+    })
+
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
+    const skus = product.skus.map((s: any) => ({ 
+      code: s.code, 
+      prices: s.prices.map((p: any) => ({ 
+        currency: p.currency, 
+        amount: p.amount 
+      })) 
+    }))
+
+    return NextResponse.json({ 
+      product: { 
+        code: product.code, 
+        name: product.name 
+      }, 
+      skus 
+    })
+  }
+
+  // If no productCode, return all products for the project
+  const products = await prisma().product.findMany({ 
+    where: { projectId: project.id }, 
     include: { 
       skus: { 
         include: { prices: true } 
@@ -22,23 +53,23 @@ export async function GET(req: NextRequest) {
     } 
   })
 
-  if (!product) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
+  const productsWithSkus = products.map((product: any) => {
+    const skus = product.skus.map((s: any) => ({ 
+      code: s.code, 
+      prices: s.prices.map((p: any) => ({ 
+        currency: p.currency, 
+        amount: p.amount 
+      })) 
+    }))
 
-  const skus = product.skus.map((s: any) => ({ 
-    code: s.code, 
-    prices: s.prices.map((p: any) => ({ 
-      currency: p.currency, 
-      amount: p.amount 
-    })) 
-  }))
-
-  return NextResponse.json({ 
-    product: { 
-      code: product.code, 
-      name: product.name 
-    }, 
-    skus 
+    return {
+      product: { 
+        code: product.code, 
+        name: product.name 
+      }, 
+      skus 
+    }
   })
+
+  return NextResponse.json({ products: productsWithSkus })
 }
