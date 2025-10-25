@@ -28,11 +28,11 @@ export default function ProjectDashboard({ params }: { params: { slug: string } 
 
         const stats: Stats = {
           pending: changes.filter((c: any) => c.status === 'PENDING').length,
-          approvedToday: changes.filter((c: any) =>
-            c.status === 'APPROVED' && new Date(c.updatedAt) >= todayStart
+          approvedToday: changes.filter(
+            (c: any) => c.status === 'APPROVED' && new Date(c.updatedAt) >= todayStart
           ).length,
-          appliedToday: changes.filter((c: any) =>
-            c.status === 'APPLIED' && c.appliedAt && new Date(c.appliedAt) >= todayStart
+          appliedToday: changes.filter(
+            (c: any) => c.status === 'APPLIED' && c.appliedAt && new Date(c.appliedAt) >= todayStart
           ).length,
         }
 
@@ -52,41 +52,19 @@ export default function ProjectDashboard({ params }: { params: { slug: string } 
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Overview of your pricing changes and quick actions
-        </p>
+        <p className="mt-1 text-sm text-gray-500">Overview of your pricing changes and quick actions</p>
       </div>
 
       {/* Stats Grid */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-            {error}
-          </div>
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard
-            title="Pending Changes"
-            value={stats.pending}
-            loading={loading}
-            color="blue"
-            icon="⏳"
-          />
-          <StatCard
-            title="Approved Today"
-            value={stats.approvedToday}
-            loading={loading}
-            color="green"
-            icon="✓"
-          />
-          <StatCard
-            title="Applied Today"
-            value={stats.appliedToday}
-            loading={loading}
-            color="purple"
-            icon="✨"
-          />
+          <StatCard title="Pending Changes" value={stats.pending} loading={loading} color="blue" icon="⏳" />
+          <StatCard title="Approved Today" value={stats.approvedToday} loading={loading} color="green" icon="✅" />
+          <StatCard title="Applied Today" value={stats.appliedToday} loading={loading} color="purple" icon="🚀" />
         </div>
       </div>
 
@@ -99,14 +77,14 @@ export default function ProjectDashboard({ params }: { params: { slug: string } 
             className="flex items-center justify-between bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors group"
           >
             <span className="font-medium">Review Price Changes</span>
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
+            <span aria-hidden className="group-hover:translate-x-1 transition-transform">→</span>
           </Link>
           <Link
             href={`/p/${params.slug}/catalog`}
             className="flex items-center justify-between bg-gray-700 text-white px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors group"
           >
             <span className="font-medium">View Catalog</span>
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
+            <span aria-hidden className="group-hover:translate-x-1 transition-transform">→</span>
           </Link>
         </div>
       </div>
@@ -146,8 +124,11 @@ function StatCard({ title, value, loading, color, icon }: StatCardProps) {
             <p className={`mt-2 text-3xl font-bold ${valueColorClasses[color]}`}>{value}</p>
           )}
         </div>
-        <span className="text-2xl opacity-50">{icon}</span>
+        <span className="text-2xl opacity-50" aria-hidden>
+          {icon}
+        </span>
       </div>
     </div>
   )
 }
+

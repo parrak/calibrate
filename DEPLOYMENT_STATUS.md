@@ -1,13 +1,13 @@
 # Deployment Status
 
-**Last Updated:** October 24, 2025
-**Status:** ✅ All Services Operational
+**Last Updated:** October 25, 2025
+**Status:** All Services Operational
 
 ## Production Deployments
 
 ### API Service (Railway)
 - **URL:** https://api.calibr.lat
-- **Status:** ✅ Live and healthy
+- **Status:** All Services Operational
 - **Platform:** Railway
 - **Runtime:** Node.js 20 (Debian Slim)
 - **Database:** PostgreSQL (Railway managed)
@@ -27,7 +27,7 @@
 
 ### Console (Vercel)
 - **URL:** https://console.calibr.lat
-- **Status:** ✅ Live
+- **Status:** All Services Operational
 - **Platform:** Vercel
 - **Latest Deployment:** Successful
 - **Branch:** master
@@ -43,12 +43,12 @@
 
 ### Site (Vercel)
 - **URL:** https://calibr.lat
-- **Status:** ✅ Live
+- **Status:** Live
 - **Platform:** Vercel
 
 ### Docs (Vercel)
 - **URL:** https://docs.calibr.lat
-- **Status:** ✅ Live
+- **Status:** All Services Operational
 - **Platform:** Vercel
 
 ## Recent Deployment History
@@ -178,6 +178,11 @@ After deploying:
 - [ ] Logs show no errors
 - [ ] Custom domains resolving correctly
 
+## 2025-10-25 Update
+
+- Docs custom domain mapped: https://docs.calibr.lat returns 200 (project alias remains available for verification).
+- Site and Console validated at custom domains: https://calibr.lat and https://console.calibr.lat both return 200.
+
 ## Rollback Procedure
 
 If deployment fails:
@@ -207,3 +212,6 @@ For deployment issues or questions, refer to:
 - API Deployment Guide: `apps/api/DEPLOYMENT.md`
 - Main README: `README.md`
 - Architecture Docs: `docs/architecture.md`
+
+
+

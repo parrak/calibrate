@@ -1,45 +1,49 @@
-# Current Status - Database Seeded & API Enhanced
+# Current Status - Railway Deployment & Database Seeding
 
 **Date:** October 25, 2025
-**Last Agent:** Claude Code (Session continuing)
-**Status:** ✅ Database Seeded, API Enhanced, Ready for Production
+**Last Agent:** Claude Code (Session ending)
+**Next Agent:** Should handle Railway deployment and database seeding
 
-## 🎯 COMPLETED TASKS
+## 🎯 IMMEDIATE TASK
 
-**✅ Database seeding completed successfully**
-**✅ API functionality verified and working**
-**✅ Catalog API enhanced to support listing all products**
-**✅ End-to-end testing completed**
+**The database needs to be seeded after Railway deploys the latest code.**
 
-### Database Seeding Results:
+### Steps to Complete:
 
-**✅ Successfully Completed:**
-```json
-{
-  "success": true,
-  "message": "Database seeded successfully",
-  "tenant": "Demo Company",
-  "project": "SaaS Platform",
-  "products": ["Professional Plan", "Enterprise Plan"]
-}
-```
+1. **Trigger Railway Deployment** (if not auto-deployed):
+   ```powershell
+   railway redeploy
+   ```
 
-### API Testing Results:
+2. **Wait for deployment** (check Railway dashboard for "Active" status)
+   - Project: nurturing-caring
+   - Service: @calibr/api
+   - Should deploy commit: `e3fd064` or later
 
-**✅ All Endpoints Working:**
-- Health Check: `GET /api/health` - ✅ 200 OK
-- Price Changes: `GET /api/v1/price-changes?project=demo` - ✅ 200 OK with 4 price changes
-- Catalog (Single): `GET /api/v1/catalog?project=demo&productCode=PRO` - ✅ 200 OK
-- Catalog (All): `GET /api/v1/catalog?project=demo` - ✅ 200 OK with 5 products
-- Webhook: `POST /api/v1/webhooks/price-suggestion` - ✅ 401 (requires HMAC auth - expected)
+3. **Seed the database** by calling the API endpoint:
+   ```powershell
+   Invoke-RestMethod -Uri "https://calibrapi-production.up.railway.app/api/seed" -Method Post
+   ```
 
-### Enhanced Catalog API Results:
+4. **Expected Response:**
+   ```json
+   {
+     "success": true,
+     "message": "Database seeded successfully",
+     "tenant": "Demo Company",
+     "project": "Demo Project",
+     "products": ["Professional Plan", "Enterprise Plan"]
+   }
+   ```
 
-**✅ Product Listing Working:**
-- Returns array of 5 products with complete SKU and pricing data
-- Products include: Pro Plan, Enterprise Plan, Starter Plan, Professional Plan, Enterprise Plan
-- Each product includes multiple SKUs with multi-currency pricing (USD, EUR, GBP)
-- Backward compatibility maintained for single product lookup
+5. **Test the system** after seeding:
+   ```powershell
+   # Test price changes
+   Invoke-RestMethod -Uri "https://calibrapi-production.up.railway.app/api/v1/price-changes?project=demo"
+
+   # Test catalog
+   Invoke-RestMethod -Uri "https://calibrapi-production.up.railway.app/api/v1/catalog?project=demo&productCode=PRO"
+   ```
 
 ---
 
@@ -63,37 +67,24 @@
    - Price Changes Page: ✅ Uses live API
    - Catalog Page: ✅ Uses live API
 
-### ✅ Resolved Issues
+### Current Issues
 
-1. **Database Seeded** ✅ COMPLETED
-   - Railway PostgreSQL database populated with demo data
-   - Demo tenant, project, and products created successfully
-   - API returns data correctly (200 OK responses)
+1. Docs custom domain unmapped
+   - `docs.calibr.lat` 404
+   - Action: Add domain to the `docs` project in Vercel
 
-2. **Catalog API Enhanced** ✅ COMPLETED
-   - Updated API to support listing all products
-   - Maintains backward compatibility for single product lookup
-   - Code committed and pushed to repository
-
-### ⚠️ Remaining Issues
-
-1. **DNS Not Propagated** ⚠️ NON-BLOCKING
-   - `api.calibr.lat` still points to Vercel instead of Railway
-   - **Workaround:** Use Railway URL directly: `https://calibrapi-production.up.railway.app`
-   - **Status:** Waiting for DNS propagation (can take up to 48 hours)
-
-2. **Catalog API Deployment** ⚠️ PENDING
-   - Enhanced catalog API code committed but not yet deployed
-   - **Status:** Waiting for Railway auto-deployment
-   - **ETA:** Within 5-10 minutes
+2. Catalog API Limitation (MINOR)
+   - Current API only supports fetching single product by code
+   - Console expects to list all products
+   - Impact: Catalog page may show errors or empty state
+   - Solution: Either update API to support listing OR update console
 
 ---
 
-## 📝 Recent Changes (Current Session)
+## 📝 Recent Changes (Last Session)
 
 ### Commits Pushed
-- `d98904c` - **NEW:** Fix catalog API to support listing all products
-- `e3fd064` - Added `/api/seed` endpoint for database seeding
+- `e3fd064` - **IMPORTANT:** Added `/api/seed` endpoint for database seeding
 - `576076c` - Fixed seed script to use node instead of tsx
 - `cec9d2d` - Added database seed script with demo data
 - `b321c82` - Fixed API parameter name (project instead of projectSlug)
@@ -223,25 +214,13 @@ After seeding the database, verify:
 
 ---
 
-## 💡 Next Steps
+## 💡 Next Steps After Seeding
 
-### ✅ Completed
-1. **Database seeding** - Successfully populated with demo data
-2. **API functionality testing** - All endpoints verified working
-3. **Catalog API enhancement** - Added support for listing all products
-4. **End-to-end testing** - Console workflow verified
-
-### ✅ Recently Completed
-5. **Catalog API deployment** - ✅ Successfully deployed and tested
-6. **Enhanced API testing** - ✅ All endpoints verified working
-7. **Console integration** - ✅ Console working with enhanced API
-
-### 📋 Upcoming
-6. **DNS propagation** - Verify api.calibr.lat points to Railway
-7. **Production monitoring** - Set up error tracking and alerts
-8. **Rate limiting** - Add security measures and rate limiting
-9. **API documentation** - Create comprehensive Swagger/OpenAPI docs
-10. **CI/CD pipeline** - Set up automated testing and deployment
+1. **Test end-to-end flow** - Verify console can list and act on price changes
+2. **Update catalog API** - Add support for listing all products
+3. **Fix DNS** - Verify api.calibr.lat points to Railway (or wait for propagation)
+4. **Add monitoring** - Set up error tracking and alerts
+5. **Production polish** - Add rate limiting, better error messages, etc.
 
 ---
 
@@ -257,3 +236,9 @@ After seeding the database, verify:
 **Status:** Ready for database seeding
 **Blocker:** None - just need to call the seed endpoint
 **ETA:** 5 minutes to complete seeding and testing
+
+
+## Update (2025-10-25)
+- Docs domain mapped: https://docs.calibr.lat now returns 200.
+- Site and Console remain healthy at custom domains.
+
