@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@calibrate/ui/components/card'
-import { Button } from '@calibrate/ui/components/button'
-import { Badge } from '@calibrate/ui/components/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@calibrate/ui/components/table'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../lib/components/Card'
+import { Button } from '../lib/components/Button'
+import { Badge } from '../lib/components/Badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../lib/components/Table'
 import { AlertCircle, CheckCircle, Clock, ExternalLink } from 'lucide-react'
 
 interface Competitor {

@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@calibrate/ui/components/card'
-import { Button } from '@calibrate/ui/components/button'
-import { Badge } from '@calibrate/ui/components/badge'
-import { Input } from '@calibrate/ui/components/input'
-import { Label } from '@calibrate/ui/components/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@calibrate/ui/components/select'
-import { Switch } from '@calibrate/ui/components/switch'
-import { Textarea } from '@calibrate/ui/components/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../lib/components/Card'
+import { Button } from '../lib/components/Button'
+import { Badge } from '../lib/components/Badge'
+import { Input } from '../lib/components/Input'
+import { Label } from '../lib/components/Label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../lib/components/Select'
+import { Switch } from '../lib/components/Switch'
+import { Textarea } from '../lib/components/Textarea'
 import { Plus, Edit, Trash2, Play } from 'lucide-react'
 
 interface CompetitorRule {
