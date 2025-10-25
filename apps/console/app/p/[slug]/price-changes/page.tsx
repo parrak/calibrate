@@ -540,3 +540,4 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
     </div>
   )
 }
+
