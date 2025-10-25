@@ -53,6 +53,17 @@ pnpm verify:local
 - Paste command output, or attach logs, and list any failing tests you fixed.
 - If local verification fails, do not merge; fix issues in the feature branch and re-run verification.
 
+## Railway replication (if this change affects deployment/infra)
+
+Describe steps you ran to reproduce Railway deploy locally (commands + short outputs). Attach full logs when possible (`{branch}-railway-verify.log`). Example items to include:
+
+- Commands run (e.g., `railway up`, `pnpm build`, `pnpm --filter @calibr/db prisma migrate deploy`)
+- Migration outputs
+- Smoke test results
+- Any differences observed between local run and Railway
+
+If you cannot reproduce the issue locally, add `railway logs` output and explain what you tried.
+
 ## Checklist
 - [ ] Branch created from `master` and named descriptively (e.g. `feature/...` or `fix/...`).
 - [ ] Commit messages follow the mini-contract (summary, motivation, files touched, agent metadata).

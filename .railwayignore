@@ -4,7 +4,7 @@ apps/console
 apps/docs
 calibr-docs
 calibrate-standalone
-nul
+**/nul
 
 # Only deploy API
 !apps/api
