@@ -19,7 +19,11 @@
     "docs:dev": "pnpm --filter @calibr/docs dev",
     "docs:build": "pnpm --filter @calibr/docs build",
     "docs:deploy": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-docs.ps1",
-    "docs:deploy:dry": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-docs.ps1 -DryRun"
+    "docs:deploy:dry": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-docs.ps1 -DryRun",
+    "staging:deploy": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-staging.ps1",
+    "staging:test": "powershell -ExecutionPolicy Bypass -File ./scripts/test-staging.ps1",
+    "staging:reset": "powershell -ExecutionPolicy Bypass -File ./scripts/reset-staging.ps1",
+    "staging:status": "powershell -ExecutionPolicy Bypass -File ./scripts/status-staging.ps1"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

@@ -1,0 +1,96 @@
+{
+  "version": 2,
+  "name": "calibrate-api-staging",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://staging.calibr.lat,https://staging-console.calibr.lat,https://staging-docs.calibr.lat"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Calibr-Signature, X-Calibr-Project"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://staging-api.calibr.lat; frame-ancestors 'none';"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "NODE_ENV": "staging",
+    "API_BASE_URL": "https://staging-api.calibr.lat",
+    "CORS_ORIGINS": "https://staging.calibr.lat,https://staging-console.calibr.lat,https://staging-docs.calibr.lat",
+    "MONITORING_ENABLED": "true",
+    "PERFORMANCE_MONITORING": "true",
+    "SECURITY_MONITORING": "true",
+    "LOG_LEVEL": "info",
+    "ENABLE_DEBUG_MODE": "false",
+    "ENABLE_ANALYTICS": "true",
+    "ENABLE_PERFORMANCE_TRACKING": "true",
+    "ENABLE_SECURITY_SCANNING": "true"
+  },
+  "functions": {
+    "apps/api/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["iad1"],
+  "framework": "nextjs"
+}

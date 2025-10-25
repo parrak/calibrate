@@ -66,11 +66,17 @@ export class PerformanceService {
 
       // Check error rate
       if (performanceStats.errorRate > this.thresholds.errorRate) {
-        const alert = this.createAlert('error_rate', 'high', 
-          `Error rate is ${performanceStats.errorRate.toFixed(2)}%, exceeding threshold of ${this.thresholds.errorRate}%`,
-          { errorRate: performanceStats.errorRate, threshold: this.thresholds.errorRate }
-        )
-        newAlerts.push(alert)
+        // Check if we already have an active error rate alert
+        const existingAlert = Array.from(this.alerts.values())
+          .find(alert => alert.type === 'error_rate' && !alert.resolved)
+        
+        if (!existingAlert) {
+          const alert = this.createAlert('error_rate', 'high', 
+            `Error rate is ${performanceStats.errorRate.toFixed(2)}%, exceeding threshold of ${this.thresholds.errorRate}%`,
+            { errorRate: performanceStats.errorRate, threshold: this.thresholds.errorRate }
+          )
+          newAlerts.push(alert)
+        }
       }
 
       // Check response time

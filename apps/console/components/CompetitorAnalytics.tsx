@@ -237,7 +237,7 @@ export function CompetitorAnalytics({ tenantId, projectId }: { tenantId: string;
                             {formatPrice(cp.price, cp.currency)}
                           </span>
                           {cp.price < comparison.ourPrice && (
-                            <AlertCircle className="h-4 w-4 text-amber-500" title="Competitor priced lower" />
+                            <AlertCircle className="h-4 w-4 text-amber-500" />
                           )}
                         </div>
                       </div>

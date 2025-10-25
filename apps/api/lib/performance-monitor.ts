@@ -492,3 +492,10 @@ export async function getDatabasePerformanceMetrics() {
     }
   }
 }
+
+/**
+ * Clear all resource metrics (useful for testing)
+ */
+export function clearResourceMetrics() {
+  resourceMetrics.clear()
+}

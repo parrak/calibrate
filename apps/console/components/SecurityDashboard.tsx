@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@calibr/ui'
+import { Badge } from '@calibr/ui'
+import { Button } from '@calibr/ui'
 import { 
   Shield, 
   AlertTriangle, 
@@ -162,7 +162,7 @@ export default function SecurityDashboard() {
       <div className="flex items-center justify-center h-64">
         <AlertTriangle className="h-8 w-8 text-red-500" />
         <span className="ml-2 text-red-600">Error: {error}</span>
-        <Button onClick={fetchData} className="ml-4" size="sm">
+        <Button onClick={fetchData} className="ml-4">
           Retry
         </Button>
       </div>
@@ -183,12 +183,11 @@ export default function SecurityDashboard() {
           <Button 
             onClick={() => setRunScan(true)} 
             disabled={loading}
-            size="sm"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Run Full Scan
           </Button>
-          <Button onClick={downloadReport} size="sm" variant="outline">
+          <Button onClick={downloadReport} variant="ghost">
             <Download className="h-4 w-4 mr-2" />
             Download Report
           </Button>
@@ -306,8 +305,7 @@ export default function SecurityDashboard() {
             <span>Vulnerabilities</span>
             <Button
               onClick={() => setShowDetails(!showDetails)}
-              size="sm"
-              variant="outline"
+              variant="ghost"
             >
               {showDetails ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               {showDetails ? 'Hide Details' : 'Show Details'}
@@ -364,8 +362,7 @@ export default function SecurityDashboard() {
                     </div>
                     <Button
                       onClick={() => resolveVulnerability(vulnerability.id)}
-                      size="sm"
-                      variant="outline"
+                      variant="ghost"
                     >
                       Mark as Resolved
                     </Button>
