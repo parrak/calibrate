@@ -9,13 +9,13 @@ import { ensureIdempotent } from '@calibr/security'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const raw = await req.text()
-  const sig = req.headers.get('x-calibr-signature') ?? ''
-  const secret = process.env.WEBHOOK_SECRET || 'dev'
-  
-  if (!verifyHmac(raw, sig, secret)) {
+  // Verify HMAC signature
+  const authResult = await verifyHmac(req)
+  if (!authResult.valid) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
+
+  const raw = await req.text()
 
   let body
   try { 
