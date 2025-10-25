@@ -3,33 +3,38 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button, EmptyState, StatusPill, useToast } from '@/lib/components'
 import { SimpleTable as Table } from '@/lib/components/SimpleTable'
 import { PriceChangeDrawer } from '@/components/PriceChangeDrawer'
+import { priceChangesApi, ApiError } from '@/lib/api-client'
 
 type Item = { id:string; status:string; currency:string; fromAmount:number; toAmount:number; createdAt:string; context?:any; source?:string; policyResult?:{ok:boolean; checks:any[]} }
 
-const api = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000'
 const fmt = (c:string, v:number)=> `${c} ${(v/100).toFixed(2)}`
 
 export default function ProjectPriceChanges({ params }: { params: { slug: string } }) {
   const [items,setItems] = useState<Item[]>([])
   const [status,setStatus] = useState<'PENDING'|'APPROVED'|'APPLIED'|'REJECTED'|'FAILED'|'ROLLED_BACK'|'ALL'>('PENDING')
   const [loading,setLoading] = useState(true)
+  const [error,setError] = useState<string|null>(null)
   const [open,setOpen] = useState(false)
   const [active,setActive] = useState<Item|null>(null)
   const { Toast, setMsg } = useToast()
 
   async function load() {
     setLoading(true)
-    // Mock data for demo
-    const mockData: Item[] = [
-      { id: '1', status: 'PENDING', currency: 'USD', fromAmount: 4900, toAmount: 5200, createdAt: new Date(Date.now() - 1000*60*30).toISOString(), source: 'COMPETITOR_MONITOR' },
-      { id: '2', status: 'PENDING', currency: 'USD', fromAmount: 9900, toAmount: 9500, createdAt: new Date(Date.now() - 1000*60*60).toISOString(), source: 'MANUAL' },
-      { id: '3', status: 'APPROVED', currency: 'EUR', fromAmount: 3900, toAmount: 4200, createdAt: new Date(Date.now() - 1000*60*120).toISOString(), source: 'AUTOMATED' },
-      { id: '4', status: 'APPLIED', currency: 'USD', fromAmount: 12000, toAmount: 11500, createdAt: new Date(Date.now() - 1000*60*240).toISOString(), source: 'MANUAL' },
-      { id: '5', status: 'PENDING', currency: 'GBP', fromAmount: 5500, toAmount: 5800, createdAt: new Date(Date.now() - 1000*60*15).toISOString(), source: 'COMPETITOR_MONITOR' },
-    ]
-    const filtered = status === 'ALL' ? mockData : mockData.filter(i => i.status === status)
-    setItems(filtered)
-    setLoading(false)
+    setError(null)
+    try {
+      const data = await priceChangesApi.list(params.slug)
+      const filtered = status === 'ALL' ? data : data.filter((i: Item) => i.status === status)
+      setItems(filtered)
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message)
+      } else {
+        setError('Failed to load price changes')
+      }
+      console.error('Failed to load price changes:', err)
+    } finally {
+      setLoading(false)
+    }
   }
   useEffect(()=>{ load() },[status, params.slug])
 
@@ -39,14 +44,20 @@ export default function ProjectPriceChanges({ params }: { params: { slug: string
   }),[items])
 
   async function act(id:string, op:'approve'|'apply'|'reject'|'rollback') {
-    const r = await fetch(`${api}/api/v1/price-changes/${id}/${op}`, { 
-      method:'POST',
-      headers: { 'X-Calibr-Project': params.slug }
-    })
-    if (r.ok) { setMsg(op==='apply'?'Applied':'OK'); await load() }
+    try {
+      if (op === 'approve') await priceChangesApi.approve(id)
+      else if (op === 'apply') await priceChangesApi.apply(id)
+      else if (op === 'reject') await priceChangesApi.reject(id)
+
+      setMsg(op==='apply'?'Applied':'OK')
+      await load()
+    } catch (err) {
+      setMsg('Error: ' + (err instanceof ApiError ? err.message : 'Operation failed'))
+    }
   }
 
   if (loading) return <div className="p-6">Loading…{Toast}</div>
+  if (error) return <div className="p-6 text-red-600">Error: {error} {Toast}</div>
   if (!rows.length) return (
     <div className="p-6">
       <EmptyState title="No items here." desc="Send a signed webhook to create a price suggestion.">
