@@ -67,6 +67,7 @@ export default function Projects() {
     }
   }, [session?.user?.id, apiToken])
 
+
   if (loading)
     return (
       <div className="p-6 space-y-3">
