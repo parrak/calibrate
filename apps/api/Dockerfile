@@ -52,6 +52,10 @@ COPY --from=builder /app/apps/api/.next/static ./apps/api/.next/static
 # Copy Prisma schema and migrations for migrate deploy
 COPY --from=builder /app/packages/db/prisma /app/prisma
 
+# Copy startup script
+COPY --from=builder /app/apps/api/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app
 
@@ -72,6 +76,6 @@ RUN find /app -type f -path "*/.prisma/client/*" -name "*linux-musl*" -print -de
 
 EXPOSE 8080
 
-# Start the standalone server
-CMD ["node", "apps/api/server.js"]
+# Start the standalone server with logging
+CMD ["/app/start.sh"]
 
