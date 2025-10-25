@@ -5,14 +5,14 @@
   "main": "index.js",
   "prisma": {
     "schema": "prisma/schema.prisma",
-    "seed": "tsx seed.ts"
+    "seed": "node seed.js"
   },
   "scripts": {
     "prisma": "prisma",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
     "studio": "prisma studio",
-    "seed": "tsx seed.ts"
+    "seed": "node seed.js"
   },
   "dependencies": {
     "@prisma/client": "^5.15.0"
