@@ -25,15 +25,30 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
   useEffect(() => {
     async function load() {
       setLoading(true)
-      try {
-        const res = await fetch(`${api}/api/v1/catalog?project=${params.slug}&productCode=PRO`, { 
-          cache: 'no-store' 
-        })
-        const json = await res.json()
-        setProduct(json)
-      } catch (error) {
-        console.error('Failed to load catalog:', error)
+      // Mock data for demo
+      const mockProduct: Product = {
+        code: 'PRO',
+        name: 'Professional Plan',
+        skus: [
+          {
+            code: 'PRO-MONTHLY',
+            prices: [
+              { currency: 'USD', amount: 4900 },
+              { currency: 'EUR', amount: 4500 },
+              { currency: 'GBP', amount: 3900 }
+            ]
+          },
+          {
+            code: 'PRO-ANNUAL',
+            prices: [
+              { currency: 'USD', amount: 49000 },
+              { currency: 'EUR', amount: 45000 },
+              { currency: 'GBP', amount: 39000 }
+            ]
+          }
+        ]
       }
+      setProduct(mockProduct)
       setLoading(false)
     }
     load()

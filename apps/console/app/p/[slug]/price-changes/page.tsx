@@ -19,9 +19,17 @@ export default function ProjectPriceChanges({ params }: { params: { slug: string
 
   async function load() {
     setLoading(true)
-    const qs = status==='ALL' ? '' : `&status=${status}`
-    const res = await fetch(`${api}/api/v1/price-changes?project=${params.slug}${qs}`, { cache:'no-store' })
-    const json = await res.json(); setItems(json.items ?? []); setLoading(false)
+    // Mock data for demo
+    const mockData: Item[] = [
+      { id: '1', status: 'PENDING', currency: 'USD', fromAmount: 4900, toAmount: 5200, createdAt: new Date(Date.now() - 1000*60*30).toISOString(), source: 'COMPETITOR_MONITOR' },
+      { id: '2', status: 'PENDING', currency: 'USD', fromAmount: 9900, toAmount: 9500, createdAt: new Date(Date.now() - 1000*60*60).toISOString(), source: 'MANUAL' },
+      { id: '3', status: 'APPROVED', currency: 'EUR', fromAmount: 3900, toAmount: 4200, createdAt: new Date(Date.now() - 1000*60*120).toISOString(), source: 'AUTOMATED' },
+      { id: '4', status: 'APPLIED', currency: 'USD', fromAmount: 12000, toAmount: 11500, createdAt: new Date(Date.now() - 1000*60*240).toISOString(), source: 'MANUAL' },
+      { id: '5', status: 'PENDING', currency: 'GBP', fromAmount: 5500, toAmount: 5800, createdAt: new Date(Date.now() - 1000*60*15).toISOString(), source: 'COMPETITOR_MONITOR' },
+    ]
+    const filtered = status === 'ALL' ? mockData : mockData.filter(i => i.status === status)
+    setItems(filtered)
+    setLoading(false)
   }
   useEffect(()=>{ load() },[status, params.slug])
 
