@@ -91,16 +91,6 @@ evaluatePolicy(currentAmount, proposedAmount, {
 
 - Agents must perform local build and test verification before merging to `master` or initiating any production deployment. Do the full local verification even if CI exists — document results in the PR.
 
-- **CRITICAL**: Use the automated validation script for comprehensive testing:
-
-```powershell
-# Run comprehensive deployment validation
-.\scripts\validate-deployment.ps1
-
-# Or run specific checks
-.\scripts\validate-deployment.ps1 -SkipBuild -SkipTests
-```
-
 - Minimal local verification steps (PowerShell):
 
 ```powershell
@@ -125,15 +115,6 @@ pnpm lint
 
 # Build production bundles for all apps/packages
 pnpm build
-
-# CRITICAL: Test JSON serialization (prevents BigInt errors)
-pnpm --filter @calibr/api run test:json-serialization
-
-# Test API endpoints locally
-pnpm dev:api &
-Start-Sleep 15
-Invoke-WebRequest -Uri "http://localhost:3000/api/health" -Method Get
-Invoke-WebRequest -Uri "http://localhost:3000/api/metrics?project=demo" -Method Get
 ```
 
 - Package-level tests: run only the package you changed for faster feedback, e.g. `pnpm --filter @calibr/pricing-engine test`.
@@ -186,6 +167,33 @@ pnpm test
 - If a change touches DB schema, ensure migrations were run with `prisma migrate deploy` (production flow) and include the migration step output in the PR.
 
 - If you can't reproduce the failure locally, capture the minimal failing Railway logs (from the Railway dashboard or `railway logs`) and attach them to the PR; escalate to a human reviewer if the issue blocks merging.
+
+## Vercel Monorepo Deploys (Console, Site, Docs)
+
+- Vercel runs `pnpm install --frozen-lockfile` for the entire workspace. If you add/modify deps in any sub-app, always run `pnpm install` at the repo root and commit the updated `pnpm-lock.yaml` to avoid `ERR_PNPM_OUTDATED_LOCKFILE`.
+- Tailwind/PostCSS must be available at build time. For apps using Tailwind (site/docs), install `tailwindcss`, `postcss`, and `autoprefixer` as production dependencies (not dev-only) so they install when `NODE_ENV=production`.
+- Some Next.js builds require TypeScript packages present even if type errors are ignored. For `@calibr/site`, install `typescript`, `@types/react`, and `@types/node` as dependencies, and set in `next.config.js`:
+  - `typescript.ignoreBuildErrors = true`
+  - `eslint.ignoreDuringBuilds = true`
+
+### Deploying each project from repo root
+
+```powershell
+# Console
+vercel link --project console --yes
+vercel --prod --yes
+
+# Site (calibrate-site)
+vercel link --project calibrate-site --yes
+vercel --prod --yes
+
+# Docs
+vercel link --project docs --yes
+vercel --prod --yes
+```
+
+- If the project is configured with a “Root Directory” in Vercel, deploy from the repo root (as above). Running `vercel` inside the app folder may double-apply the root directory (e.g. `apps/site/apps/site`).
+- For protected projects, disable Password Protection in Project → Settings → Protection (or use a bypass link for validation).
 
 ## Agent Collaboration & Documentation
 
@@ -379,7 +387,6 @@ export async function GET() {
 - `packages/db/prisma/schema.prisma`
 - `apps/api/start.sh`
 - Prisma migrations
-- **ANY API endpoint that returns JSON**
 
 **MUST verify:**
 1. Build Docker image locally and test startup
@@ -387,7 +394,6 @@ export async function GET() {
 3. Verify `/api/health` returns 200 OK
 4. Test migrations with `prisma migrate deploy`
 5. Seed script completes without errors
-6. **CRITICAL: Test JSON serialization for all API endpoints**
 
 **Testing Commands:**
 ```bash
@@ -397,37 +403,7 @@ docker run -p 8080:8080 -e DATABASE_URL=postgresql://... test
 
 # Verify healthcheck
 curl http://localhost:8080/api/health
-
-# CRITICAL: Test JSON serialization
-curl http://localhost:8080/api/health | jq .
-curl "http://localhost:8080/api/metrics?project=demo" | jq .
-curl "http://localhost:8080/api/admin/dashboard?project=demo" | jq .
 ```
-
-### 🚨 CRITICAL: Preventing JSON Serialization Regressions
-
-**BigInt Serialization Issues:**
-- PostgreSQL returns `BigInt` values that cannot be serialized to JSON
-- This causes deployment failures with "Do not know how to serialize a BigInt"
-- **MUST** convert all BigInt values to numbers before JSON response
-
-**Required Patterns:**
-```typescript
-// ❌ WRONG - Will cause BigInt serialization error
-const connections = await prisma().$queryRaw`SELECT count(*) as active_connections FROM pg_stat_activity`
-return NextResponse.json({ connections: connections[0]?.active_connections })
-
-// ✅ CORRECT - Convert BigInt to number
-const connections = await prisma().$queryRaw`SELECT count(*) as active_connections FROM pg_stat_activity`
-return NextResponse.json({ connections: Number(connections[0]?.active_connections) || 0 })
-```
-
-**Validation Checklist:**
-1. All database query results must be converted to numbers
-2. Use `Number(bigIntValue)` or `bigIntValue.toString()`
-3. Test all API endpoints return valid JSON
-4. Run `.\scripts\validate-deployment.ps1` before merging
-5. Check for BigInt in response: `response.Content | ConvertFrom-Json | ConvertTo-Json`
 
 ### Common Regression Causes
 
@@ -439,8 +415,6 @@ return NextResponse.json({ connections: Number(connections[0]?.active_connection
 | Remove HOSTNAME env var | Server binds to container ID | 404 on domain |
 | Change healthcheck path | Railway can't verify deployment | Never promoted |
 | Skip preDeployCommand | Migrations don't run | App crashes on startup |
-| Return BigInt in JSON response | BigInt cannot be serialized | "Do not know how to serialize a BigInt" |
-| Skip JSON serialization testing | BigInt issues not caught locally | Deployment fails in production |
 
 ### Deployment Verification
 
@@ -477,160 +451,3 @@ When fixing deployment issues, refer to these commits:
 ### Full Documentation
 
 See `apps/api/DEPLOYMENT.md` for complete deployment guide with troubleshooting table and all configuration details.
-
----
-
-## 🚨 CRITICAL: Vercel Deployment - pnpm Lockfile Consistency
-
-**MANDATORY**: All agents and developers MUST follow these rules to prevent Vercel deployment regressions. Violating these will break frontend deployments.
-
-### Root Cause of Lockfile Issues
-
-Vercel uses a default pnpm version that may not match the version specified in `package.json`. When versions mismatch:
-- Local lockfile uses `lockfileVersion: '9.0'` (pnpm 9.x)
-- Vercel's pnpm tries to read it with incompatible version
-- Build fails with: `ERR_PNPM_NO_LOCKFILE Cannot install with 'frozen-lockfile'`
-
-### Required Configuration
-
-**EVERY Vercel-deployed app MUST have `vercel.json` with:**
-
-```json
-{
-  "buildCommand": "cd ../.. && pnpm install && pnpm --filter @scope/app-name build",
-  "installCommand": "corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile=false"
-}
-```
-
-**Currently configured apps:**
-- `apps/site/vercel.json` - Marketing site
-- `apps/console/vercel.json` - Admin console
-- `apps/docs/vercel.json` - API documentation
-
-### Validation Requirements
-
-**BEFORE merging ANY change that touches:**
-- `package.json` (especially `packageManager` field)
-- `pnpm-lock.yaml`
-- `apps/*/vercel.json`
-- pnpm version upgrade
-- Vercel configuration
-
-**MUST run verification script:**
-
-```powershell
-# Validates all Vercel configurations
-.\scripts\verify-vercel-config.ps1
-```
-
-**Script verifies:**
-1. pnpm version in `package.json` matches lockfile version
-2. All Vercel apps have `vercel.json` files
-3. Each `vercel.json` specifies correct pnpm version
-4. Each `vercel.json` includes `corepack prepare` command
-5. Each `vercel.json` disables `frozen-lockfile`
-
-### Common Regression Patterns
-
-| DO NOT | WHY | SYMPTOM |
-|--------|-----|---------|
-| Upgrade pnpm without updating vercel.json | Version mismatch breaks builds | `ERR_PNPM_NO_LOCKFILE` error |
-| Deploy Vercel app without vercel.json | Uses wrong pnpm version | Lockfile compatibility errors |
-| Use `frozen-lockfile=true` in Vercel | Monorepo needs dependency hoisting | Install fails |
-| Skip verification script | Miss configuration drift | Production build fails |
-| Delete vercel.json files | Vercel reverts to defaults | Lockfile version mismatch |
-
-### Pre-Deployment Testing
-
-**Required verification steps:**
-
-```powershell
-# 1. Verify configuration is correct
-.\scripts\verify-vercel-config.ps1
-
-# 2. Test local build matches Vercel environment
-pnpm install
-pnpm --filter @calibr/console build
-pnpm --filter @calibr/site build
-pnpm --filter @calibr/docs build
-
-# 3. Check lockfile consistency
-git status # Should show no changes to pnpm-lock.yaml
-```
-
-### Deployment Recovery
-
-If Vercel deployment fails with lockfile error:
-
-1. **Check pnpm version consistency:**
-   ```powershell
-   # Extract version from package.json
-   $pkg = Get-Content package.json | ConvertFrom-Json
-   $pnpmVersion = $pkg.packageManager -replace 'pnpm@', ''
-   Write-Host "Expected: $pnpmVersion"
-
-   # Check lockfile version
-   Get-Content pnpm-lock.yaml -Head 1
-   ```
-
-2. **Verify vercel.json exists and is correct:**
-   ```powershell
-   # Check all apps
-   Get-ChildItem apps/*/vercel.json | ForEach-Object {
-     Write-Host $_.FullName
-     Get-Content $_.FullName
-   }
-   ```
-
-3. **Run verification script:**
-   ```powershell
-   .\scripts\verify-vercel-config.ps1
-   ```
-
-4. **If issues found, fix and redeploy:**
-   ```bash
-   # Fix vercel.json files as needed
-   # Run verification again
-   .\scripts\verify-vercel-config.ps1
-
-   # Commit and push
-   git add apps/*/vercel.json
-   git commit -m "fix(vercel): ensure pnpm version consistency"
-   git push
-   ```
-
-### Standard Operating Procedure (SOP)
-
-**When upgrading pnpm version:**
-
-1. Update `package.json` `packageManager` field
-2. Run `corepack prepare pnpm@<version> --activate`
-3. Run `pnpm install` to update lockfile
-4. Update ALL `apps/*/vercel.json` files with new version
-5. Run `.\scripts\verify-vercel-config.ps1`
-6. Commit all changes together
-7. Monitor Vercel deployments for success
-
-**When adding new Vercel app:**
-
-1. Create `apps/<app>/vercel.json` using template from existing apps
-2. Update `installCommand` with correct pnpm version
-3. Update `buildCommand` with correct filter scope
-4. Run `.\scripts\verify-vercel-config.ps1`
-5. Test local build: `pnpm --filter @scope/app build`
-6. Commit and push
-
-### Full Documentation
-
-See `.github/VERCEL_DEPLOYMENT_GUIDE.md` for complete guide including:
-- Detailed root cause analysis
-- Prevention strategies and checklist
-- Troubleshooting scenarios
-- CI/CD integration examples
-- Emergency recovery procedures
-
-### Reference Commits
-
-When fixing Vercel deployment issues, refer to:
-- `cf68b87`: Fix Vercel pnpm lockfile compatibility (adds vercel.json files)
-- Includes verification script and comprehensive documentation

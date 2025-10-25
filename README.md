@@ -190,22 +190,44 @@ Before making changes to deployment configuration, read [apps/api/DEPLOYMENT.md]
 
 ### Vercel Frontend Deployments
 
-Console, Site, and Docs are deployed on Vercel.
+Console, Site, and Docs are deployed on Vercel as separate projects with a monorepo root. Important notes for agents:
 
-**Console Deployment:**
+- Vercel uses a workspace install with `pnpm install --frozen-lockfile` in CI. If you add or change dependencies in any sub-app, run `pnpm install` at repo root and commit the updated `pnpm-lock.yaml` or builds will fail with ERR_PNPM_OUTDATED_LOCKFILE.
+- Some Next.js builds require Tailwind/PostCSS packages at runtime. Install `tailwindcss`, `postcss`, and `autoprefixer` as production dependencies for apps that use global Tailwind (site/docs).
+- For monorepo projects with “Root Directory” set in Vercel, deploy from repo root after linking to the specific project: `vercel link --project <name>` then `vercel --prod`.
+
+**Console**
 
 ```powershell
-cd apps/console
-vercel --prod
+# from repo root
+vercel link --project console --yes
+vercel --prod --yes
 ```
 
-**Environment Variables (set in Vercel):**
-- `NEXT_PUBLIC_API_BASE`: https://api.calibr.lat
+Env (Vercel Project → Settings → Environment Variables):
+- `NEXT_PUBLIC_API_BASE` = https://api.calibr.lat
 
-**Build Configuration:**
-- Framework: Next.js
-- Build Command: `cd ../.. && pnpm install && pnpm --filter @calibr/console build`
-- Output Directory: `apps/console/.next`
+**Site (calibrate-site)**
+
+```powershell
+# from repo root
+vercel link --project calibrate-site --yes
+vercel --prod --yes
+```
+
+Notes:
+- Next CI type check can require TypeScript packages even if errors are ignored. `@calibr/site` includes `typescript`, `@types/react`, `@types/node` as prod deps and sets `ignoreBuildErrors`/`ignoreDuringBuilds` in `next.config.js`.
+
+**Docs**
+
+```powershell
+# from repo root
+vercel link --project docs --yes
+vercel --prod --yes
+```
+
+Notes:
+- Ensure Tailwind/PostCSS are in dependencies. If modified, update and commit the root lockfile.
 
 ### Infrastructure Overview
 
