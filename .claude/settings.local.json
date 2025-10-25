@@ -23,7 +23,8 @@
       "Bash(unzip:*)",
       "Bash(mkdir:*)",
       "Bash(git checkout:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

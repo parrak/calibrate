@@ -83,6 +83,41 @@ evaluatePolicy(currentAmount, proposedAmount, {
   - App-specific configs for deployment settings
   - Local overrides via `.env.local` (git-ignored)
 
+## Build & Test Verification
+
+- Agents must perform local build and test verification before merging to `master` or initiating any production deployment. Do the full local verification even if CI exists — document results in the PR.
+
+- Minimal local verification steps (PowerShell):
+
+```powershell
+# Start local infra (Postgres, etc.)
+docker-compose up -d
+
+# Install dependencies
+pnpm install
+
+# Generate Prisma client
+pnpm db:generate
+
+# Run migrations and seed on local DB (only against a disposable dev DB)
+pnpm migrate
+pnpm seed
+
+# Run the test suite (workspace-wide)
+pnpm test
+
+# Run lint and type checks
+pnpm lint
+
+# Build production bundles for all apps/packages
+pnpm build
+```
+
+- Package-level tests: run only the package you changed for faster feedback, e.g. `pnpm --filter @calibr/pricing-engine test`.
+- Record verification: in the PR body include which commands you ran, any failing tests you fixed, and a short note that the local build succeeded (or attach logs/snippets).
+- If tests or build fail in local verification, do not merge. Fix issues in the feature branch and re-run verification.
+- CI is required but not sufficient — local verification catches environment-specific issues early and speeds up iteration.
+
 ## Agent Collaboration & Documentation
 
 - When multiple LLM agents or developers contribute, document the "why" for every change — not just the "what".
@@ -125,7 +160,7 @@ evaluatePolicy(currentAmount, proposedAmount, {
 - Inline code comments: prefer short comments that explain the reasoning and cite the PR/issue number. Example in code:
 
   // Allow any positive proposedAmount when currentAmount === 0
-  // See PR #123 (example) — avoids rejecting valid initial prices for new products
+  // See PR (example 123) — avoids rejecting valid initial prices for new products
 
 - Tests and changelog: update or add tests in the same package as the code change (see `packages/pricing-engine/*`) and add a short changelog entry (create `CHANGELOG.md` at repo root if none exists).
 

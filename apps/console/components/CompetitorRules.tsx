@@ -33,10 +33,19 @@ export function CompetitorRules({ tenantId, projectId }: { tenantId: string; pro
   const [editingRule, setEditingRule] = useState<CompetitorRule | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const [newRule, setNewRule] = useState({
+  const [newRule, setNewRule] = useState<{
+    name: string
+    description: string
+    type: 'beat_by_percent' | 'beat_by_amount' | 'match' | 'avoid_race_to_bottom'
+    value: number
+    minMargin: number
+    maxPrice: number
+    minPrice: number
+    isActive: boolean
+  }>({
     name: '',
     description: '',
-    type: 'beat_by_percent' as const,
+    type: 'beat_by_percent',
     value: 5,
     minMargin: 10,
     maxPrice: 0,
