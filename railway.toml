@@ -1,6 +1,7 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+dockerfilePath = "./Dockerfile"
+watchPaths = ["apps/api/**", "packages/**", "Dockerfile"]
 
 [deploy]
 startCommand = "cd apps/api && pnpm start"
