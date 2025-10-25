@@ -30,21 +30,21 @@ export async function POST(req: NextRequest) {
 
   const projectSlug = req.headers.get('x-calibr-project')
   if (!projectSlug) return NextResponse.json({ error: 'Missing project identifier' }, { status: 400 })
-  const project = await prisma.project.findUnique({ where: { slug: projectSlug } })
+  const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
   if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
 
-  const sku = await prisma.sku.findFirst({ 
+  const sku = await prisma().sku.findFirst({ 
     where: { code: body.skuCode, product: { projectId: project.id } }, 
     include: { product: true } 
   })
   if (!sku) return NextResponse.json({ error: 'SKU not found' }, { status: 404 })
 
-  const price = await prisma.price.findFirst({ 
+  const price = await prisma().price.findFirst({ 
     where: { skuId: sku.id, currency: body.currency } 
   })
   if (!price) return NextResponse.json({ error: 'Price not found' }, { status: 404 })
 
-  const policy = await prisma.policy.findFirst({ 
+  const policy = await prisma().policy.findFirst({ 
     where: { projectId: project.id } 
   })
   const rules: any = policy?.rules ?? {}
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   const status = (policy?.autoApply && evalRes.ok) ? 'APPROVED' : 'PENDING'
   
-  const pc = await prisma.priceChange.create({
+  const pc = await prisma().priceChange.create({
     data: {
       tenantId: sku.product.tenantId,
       projectId: project.id,
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     try { 
       await applyPriceChange(pc.id) 
     } catch { 
-      await prisma.priceChange.update({ 
+      await prisma().priceChange.update({ 
         where: { id: pc.id }, 
         data: { status: 'FAILED' } 
       }) 

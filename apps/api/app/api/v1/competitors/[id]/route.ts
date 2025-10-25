@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@calibr/db'
 import { verifyHmac } from '@calibr/security'
 
-const db = new PrismaClient()
+const db = () => prisma()
 
 export async function GET(
   request: NextRequest,
@@ -14,7 +14,7 @@ export async function GET(
     if (!authResult.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    const competitor = await db.competitor.findUnique({
+    const competitor = await db().competitor.findUnique({
       where: { id: params.id },
       include: {
         products: {
@@ -53,7 +53,7 @@ export async function PUT(
     const body = await request.json()
     const { name, domain, channel, isActive } = body
 
-    const competitor = await db.competitor.update({
+    const competitor = await db().competitor.update({
       where: { id: params.id },
       data: {
         name,
@@ -80,7 +80,7 @@ export async function DELETE(
     if (!authResult.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    await db.competitor.delete({
+    await db().competitor.delete({
       where: { id: params.id }
     })
 

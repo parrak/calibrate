@@ -4,7 +4,7 @@ export async function ensureIdempotent(
   key: string, 
   scope: string
 ): Promise<boolean> {
-  const found = await prisma.event.findFirst({ 
+  const found = await prisma().event.findFirst({ 
     where: { 
       kind: 'IDEMPOTENCY', 
       payload: { 
@@ -16,7 +16,7 @@ export async function ensureIdempotent(
   
   if (found) return false
   
-  await prisma.event.create({ 
+  await prisma().event.create({ 
     data: { 
       kind: 'IDEMPOTENCY', 
       payload: { key, scope } 

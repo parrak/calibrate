@@ -6,7 +6,7 @@ export async function POST() {
     console.log('Starting database seed...')
 
     // Create demo tenant
-    const tenant = await prisma.tenant.upsert({
+    const tenant = await prisma().tenant.upsert({
       where: { id: 'demo-tenant' },
       update: {},
       create: {
@@ -17,7 +17,7 @@ export async function POST() {
     console.log('✓ Tenant created:', tenant.name)
 
     // Create demo project
-    const project = await prisma.project.upsert({
+    const project = await prisma().project.upsert({
       where: { slug: 'demo' },
       update: {},
       create: {
@@ -83,7 +83,7 @@ export async function POST() {
     const createdProducts = []
     for (const productData of products) {
       const { skus, ...productInfo } = productData
-      const product = await prisma.product.upsert({
+      const product = await prisma().product.upsert({
         where: {
           tenantId_projectId_code: {
             tenantId: tenant.id,
@@ -98,7 +98,7 @@ export async function POST() {
 
       for (const skuData of skus) {
         const { prices, ...skuInfo } = skuData
-        const sku = await prisma.sku.upsert({
+        const sku = await prisma().sku.upsert({
           where: {
             productId_code: {
               productId: product.id,
@@ -114,7 +114,7 @@ export async function POST() {
         console.log('  ✓ SKU created:', sku.code)
 
         for (const priceData of prices) {
-          await prisma.price.upsert({
+          await prisma().price.upsert({
             where: {
               skuId_currency: {
                 skuId: sku.id,
@@ -135,7 +135,7 @@ export async function POST() {
     }
 
     // Create a demo policy
-    await prisma.policy.upsert({
+    await prisma().policy.upsert({
       where: {
         projectId: project.id,
       },
@@ -153,7 +153,7 @@ export async function POST() {
     console.log('✓ Policy created')
 
     // Create some demo price changes
-    const proMonthlyUsdSku = await prisma.sku.findFirst({
+    const proMonthlyUsdSku = await prisma().sku.findFirst({
       where: { code: 'PRO-MONTHLY' },
       include: { prices: true },
     })
@@ -161,7 +161,7 @@ export async function POST() {
     if (proMonthlyUsdSku) {
       const usdPrice = proMonthlyUsdSku.prices.find(p => p.currency === 'USD')
       if (usdPrice) {
-        await prisma.priceChange.create({
+        await prisma().priceChange.create({
           data: {
             tenantId: tenant.id,
             projectId: project.id,

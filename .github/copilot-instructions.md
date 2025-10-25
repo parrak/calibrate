@@ -168,6 +168,16 @@ pnpm build
   - Assign a human reviewer or single ownership for every PR to avoid conflicting automated changes.
   - If two agents make related changes, include cross-references in each PR and prefer one combined PR that a human merges.
 
+### Agent documentation requirements
+
+- Every agent (automated or human) that makes changes MUST update repository MD files so the next agent or reviewer can understand the context of the change.
+- Minimum documentation updates required per change:
+  - Add an entry to `CHANGELOG.md` under `Unreleased` describing the change and motivation (one-line summary + 1-2 bullets). Example: `CHANGELOG.md` — "Add daily budget policy: enforce dailyBudgetPct in evaluatePolicy, added tests.".
+  - If public-facing behavior or APIs changed, update the relevant `README.md` (root or package-level) and any `DEPLOYMENT.md` or `apps/*/README.md` that document runtime/endpoint behavior.
+  - Include verification evidence either inside the PR body (preferred) or as a small `{feature}-verification.md` file under `.github/` or the package folder. Use the PR template checklist and `.github/EXAMPLE_VERIFICATION_PR.md` as a reference.
+- When changing infra or deployment (Railway, Vercel, Docker), update `apps/*/DEPLOYMENT.md` and list required environment variables in the corresponding `.env.example` files.
+- Keep docs concise: update only the files needed to explain the change, but do not omit the changelog entry — changelog entries help other agents quickly build context.
+
 ## Best Practices
 - Always maintain tenant isolation in queries
 - Use HMAC verification for webhooks (`packages/security`)

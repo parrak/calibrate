@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@calibr/db'
 import { verifyHmac } from '@calibr/security'
 
-const db = new PrismaClient()
+const db = () => prisma()
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing tenantId or projectId' }, { status: 400 })
     }
 
-    const rules = await db.competitorRule.findMany({
+    const rules = await db().competitorRule.findMany({
       where: {
         tenantId,
         projectId
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const rule = await db.competitorRule.create({
+    const rule = await db().competitorRule.create({
       data: {
         tenantId,
         projectId,

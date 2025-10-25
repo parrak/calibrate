@@ -34,7 +34,16 @@
       "Bash(git rev-parse:*)",
       "Bash(railway login:*)",
       "Bash(railway redeploy:*)",
-      "Bash(railway variables:*)"
+      "Bash(railway variables:*)",
+      "Bash(powershell -Command \"Invoke-RestMethod -Uri ''https://api.calibr.lat/api/health'' -Method Get\")",
+      "Bash(powershell -Command \"Invoke-RestMethod -Uri ''https://calibrapi-production.up.railway.app/api/health'' -Method Get\")",
+      "Bash(powershell -Command \"Invoke-RestMethod -Uri ''https://calibrapi-production.up.railway.app/api/v1/price-changes?projectSlug=demo'' -Method Get\")",
+      "Bash(powershell -Command \"Invoke-RestMethod -Uri ''https://calibrapi-production.up.railway.app/api/v1/price-changes?project=demo'' -Method Get\")",
+      "Bash(powershell -Command \"Invoke-RestMethod -Uri ''https://calibrapi-production.up.railway.app/api/seed'' -Method Post\")",
+      "Bash(railway link:*)",
+      "Bash(railway whoami:*)",
+      "Bash(railway service:*)",
+      "Bash(powershell -Command \"if (Test-Path ''nul'') { Remove-Item ''nul'' -Force }; if (Test-Path ''packages\\db\\nul'') { Remove-Item ''packages\\db\\nul'' -Force }\")"
     ],
     "deny": [],
     "ask": []

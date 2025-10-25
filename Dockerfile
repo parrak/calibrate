@@ -1,13 +1,20 @@
-# Build stage - API only
-FROM node:20-alpine AS builder
+# Build stage - API only (Debian Slim)
+FROM node:20-slim AS builder
 
-# Install pnpm
-RUN npm install -g pnpm@latest
+# Use Corepack to install a PNPM version compatible with the lockfile
+# Lockfile is version 9.0 -> use PNPM v9
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && corepack enable \
+    && corepack prepare pnpm@9.0.0 --activate
 
 WORKDIR /app
 
 # Copy root package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Ensure Prisma fetches correct engines during install/generate (Debian OpenSSL 3)
+ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-3.0.x"
 
 # Copy all workspace packages
 COPY packages ./packages
@@ -22,11 +29,12 @@ RUN cd packages/db && pnpm exec prisma generate
 # Build the API
 RUN cd apps/api && pnpm run build
 
-# Production stage
+# Production stage (Debian Slim)
 FROM node:20-slim AS runner
 
 # Install required libraries for Prisma
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -46,6 +54,8 @@ USER nextjs
 # Set environment
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-3.0.x"
+ENV PRISMA_ENGINE_BINARY_TARGET="debian-openssl-3.0.x"
 
 EXPOSE 3000
 

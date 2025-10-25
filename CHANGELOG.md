@@ -142,4 +142,9 @@ const nextConfig = {
 - Performance optimization
 - Additional competitor monitoring features
 
+### Fixed
+- Align PNPM version with lockfile for Docker/Railway builds.
+  - Pin `packageManager` to `pnpm@9.0.0` to match `lockfileVersion: '9.0'`.
+  - Use Corepack in Dockerfile (`corepack prepare pnpm@9.0.0 --activate`) instead of `pnpm@latest` to prevent lockfile incompatibility errors.
+
 

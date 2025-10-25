@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@calibr/db'
 import { CompetitorMonitor } from '@calibrate/competitor-monitoring'
 import { verifyHmac } from '@calibr/security'
 
-const db = new PrismaClient()
+const db = () => prisma()
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,12 +20,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing tenantId or projectId' }, { status: 400 })
     }
 
-    const monitor = new CompetitorMonitor(db)
+    const monitor = new CompetitorMonitor(db())
     
     let results
     if (competitorId) {
       // Monitor specific competitor
-      const competitor = await db.competitor.findUnique({
+      const competitor = await db().competitor.findUnique({
         where: { id: competitorId },
         include: {
           products: {

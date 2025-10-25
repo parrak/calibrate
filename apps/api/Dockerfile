@@ -1,13 +1,20 @@
-# Build stage
-FROM node:20-alpine AS builder
+# Build stage (Debian Slim)
+FROM node:20-slim AS builder
 
-# Install pnpm
-RUN npm install -g pnpm@latest
+# Use Corepack to install a PNPM version compatible with the lockfile
+# Lockfile is version 9.0 -> use PNPM v9
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && corepack enable \
+    && corepack prepare pnpm@9.0.0 --activate
 
 WORKDIR /app
 
 # Copy root package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Ensure Prisma fetches correct engines during install/generate (Debian OpenSSL 3)
+ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-3.0.x"
 
 # Copy all workspace packages
 COPY packages ./packages
@@ -22,29 +29,35 @@ RUN cd packages/db && pnpm exec prisma generate
 # Build the API
 RUN cd apps/api && pnpm run build
 
-# Production stage
-FROM node:20-alpine AS runner
+# Production stage (Debian Slim)
+FROM node:20-slim AS runner
 
-# Install pnpm
-RUN npm install -g pnpm@latest
+# Required libraries for Prisma runtime and Corepack
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && corepack enable 
+RUN if [ ! -e /usr/lib/libssl.so.1.1 ] && [ -e /usr/lib/libssl.so.3 ]; then ln -s /usr/lib/libssl.so.3 /usr/lib/libssl.so.1.1; fi \
+ && if [ ! -e /usr/lib/libcrypto.so.1.1 ] && [ -e /usr/lib/libcrypto.so.3 ]; then ln -s /usr/lib/libcrypto.so.3 /usr/lib/libcrypto.so.1.1; fi
+RUN if [ ! -e /lib/libssl.so.1.1 ] && [ -e /lib/libssl.so.3 ]; then ln -s /lib/libssl.so.3 /lib/libssl.so.1.1; fi \
+ && if [ ! -e /lib/libcrypto.so.1.1 ] && [ -e /lib/libcrypto.so.3 ]; then ln -s /lib/libcrypto.so.3 /lib/libcrypto.so.1.1; fi
 
 WORKDIR /app
 
 # Copy built application and dependencies
-COPY --from=builder /app/apps/api/.next ./apps/api/.next
-COPY --from=builder /app/apps/api/public ./apps/api/public
-COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+# Prefer Next.js standalone output for smaller runtime images
+# If your build is configured for standalone, copy that; otherwise keep previous block.
+COPY --from=builder /app/apps/api/.next/standalone ./
+COPY --from=builder /app/apps/api/.next/static ./apps/api/.next/static
 
 # Set environment
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-3.0.x"
+ENV PRISMA_ENGINE_BINARY_TARGET="debian-openssl-3.0.x"
 
-WORKDIR /app/apps/api
+WORKDIR /app
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+# Start standalone server
+CMD ["node", "apps/api/server.js"]

@@ -10,10 +10,10 @@ export async function GET(req: NextRequest) {
   if (!projectSlug) {
     return NextResponse.json({ error: 'project required' }, { status: 400 })
   }
-  const project = await prisma.project.findUnique({ where: { slug: projectSlug } })
+  const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
   if (!project) return NextResponse.json({ error: 'project not found' }, { status: 404 })
 
-  const product = await prisma.product.findFirst({ 
+  const product = await prisma().product.findFirst({ 
     where: { code: productCode, projectId: project.id }, 
     include: { 
       skus: { 

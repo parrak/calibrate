@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@calibr/db'
 import { verifyHmac } from '@calibr/security'
 
-const db = new PrismaClient()
+const db = () => prisma()
 
 export async function GET(
   request: NextRequest,
@@ -17,7 +17,7 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const skuId = searchParams.get('skuId')
 
-    const products = await db.competitorProduct.findMany({
+    const products = await db().competitorProduct.findMany({
       where: {
         competitorId: params.id,
         ...(skuId && { skuId })
@@ -56,7 +56,7 @@ export async function POST(
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const product = await db.competitorProduct.create({
+    const product = await db().competitorProduct.create({
       data: {
         competitorId: params.id,
         skuId,
