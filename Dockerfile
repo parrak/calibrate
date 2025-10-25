@@ -25,6 +25,9 @@ RUN cd apps/api && pnpm run build
 # Production stage
 FROM node:20-alpine AS runner
 
+# Install required libraries for Prisma
+RUN apk add --no-cache openssl1.1-compat
+
 WORKDIR /app
 
 # Don't run as root
