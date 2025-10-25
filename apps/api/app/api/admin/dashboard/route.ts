@@ -133,7 +133,9 @@ async function getPriceChangeMetrics(projectId: string | null, startDate: Date) 
   return {
     hourlyData,
     bySource: bySource.reduce((acc, item) => {
-      acc[item.source] = item._count.source
+      // Normalize source names to avoid duplicates
+      const normalizedSource = item.source?.toLowerCase() || 'unknown'
+      acc[normalizedSource] = (acc[normalizedSource] || 0) + item._count.source
       return acc
     }, {} as Record<string, number>)
   }
