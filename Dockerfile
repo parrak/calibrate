@@ -25,26 +25,26 @@ RUN cd apps/api && pnpm run build
 # Production stage
 FROM node:20-alpine AS runner
 
-# Install pnpm
-RUN npm install -g pnpm@latest
-
 WORKDIR /app
 
-# Copy built application and dependencies
-COPY --from=builder /app/apps/api/.next ./apps/api/.next
-COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+# Don't run as root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy standalone output
+COPY --from=builder /app/apps/api/.next/standalone ./
+COPY --from=builder /app/apps/api/.next/static ./apps/api/.next/static
+
+# Set correct permissions
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
 
 # Set environment
 ENV NODE_ENV=production
-
-WORKDIR /app/apps/api
+ENV PORT=3000
 
 EXPOSE 3000
 
-# Use shell form to allow PORT env var from Railway
-# pnpm needs to run from workspace root to find dependencies
-CMD cd /app && pnpm --filter @calibr/api start -- -p ${PORT:-3000}
+# Start the standalone server
+CMD ["node", "apps/api/server.js"]
