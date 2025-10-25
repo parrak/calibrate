@@ -79,16 +79,10 @@ function evaluateRule(
     return { ok: true, applied: false, suggestedPrice }
   }
 
-  // Filter by channels if specified
-  const channelFilteredPrices = ruleConfig.channels
-    ? relevantPrices.filter(cp => ruleConfig.channels!.includes(cp.channel || ''))
-    : relevantPrices
+  // Note: Channel filtering not yet implemented in data model
+  // TODO: Add channel field to competitorPrices when needed
 
-  if (channelFilteredPrices.length === 0) {
-    return { ok: true, applied: false, suggestedPrice }
-  }
-
-  const competitorPrices = channelFilteredPrices.map(cp => cp.price)
+  const competitorPrices = relevantPrices.map(cp => cp.price)
   const minCompetitorPrice = Math.min(...competitorPrices)
   const maxCompetitorPrice = Math.max(...competitorPrices)
   const avgCompetitorPrice = competitorPrices.reduce((sum, price) => sum + price, 0) / competitorPrices.length
