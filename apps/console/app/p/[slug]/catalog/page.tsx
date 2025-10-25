@@ -16,27 +16,24 @@ type Product = {
   }>
 }
 
-const fmt = (c: string, v: number) => `${c} ${(v/100).toFixed(2)}`
+const fmt = (c: string, v: number) => `${c} ${(v / 100).toFixed(2)}`
 
 export default function ProjectCatalog({ params }: { params: { slug: string } }) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string|null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
       setLoading(true)
       setError(null)
       try {
-        // Try to load products from API
+        // Note: API may not support listing; this will evolve.
         const data = await catalogApi.listProducts(params.slug)
         setProducts(data)
       } catch (err) {
-        if (err instanceof ApiError) {
-          setError(err.message)
-        } else {
-          setError('Failed to load catalog')
-        }
+        if (err instanceof ApiError) setError(err.message)
+        else setError('Failed to load catalog')
         console.error('Failed to load catalog:', err)
       } finally {
         setLoading(false)
@@ -45,16 +42,19 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
     load()
   }, [params.slug])
 
-  if (loading) return <div className="p-6">Loading…</div>
+  if (loading)
+    return (
+      <div className="p-6 space-y-3">
+        <div className="h-6 w-48 bg-gray-200 animate-pulse rounded" />
+        <div className="h-32 w-full bg-gray-100 animate-pulse rounded" />
+      </div>
+    )
   if (error) return <div className="p-6 text-red-600">Error: {error}</div>
 
   if (!products || products.length === 0) {
     return (
       <div className="p-6">
-        <EmptyState
-          title="No products found"
-          desc="No products are available in this project."
-        />
+        <EmptyState title="No products found" desc="No products are available in this project." />
       </div>
     )
   }
@@ -71,14 +71,16 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
           </div>
 
           <div className="bg-white rounded-lg shadow">
-            <Table head={
-              <tr className="text-left">
-                <th className="px-4 py-3">SKU Code</th>
-                <th className="px-4 py-3">Currency</th>
-                <th className="px-4 py-3">Amount</th>
-                <th className="px-4 py-3">Status</th>
-              </tr>
-            }>
+            <Table
+              head={
+                <tr className="text-left">
+                  <th className="px-4 py-3">SKU Code</th>
+                  <th className="px-4 py-3">Currency</th>
+                  <th className="px-4 py-3">Amount</th>
+                  <th className="px-4 py-3">Status</th>
+                </tr>
+              }
+            >
               {product.skus.map((sku) =>
                 sku.prices.map((price) => (
                   <tr key={`${sku.code}-${price.currency}`} className="border-t border-border hover:bg-surface/60">
@@ -100,3 +102,4 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
     </main>
   )
 }
+

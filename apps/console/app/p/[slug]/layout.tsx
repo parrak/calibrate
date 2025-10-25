@@ -1,12 +1,22 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
-// For now, we'll hardcode the demo project
-// In a real app, this would fetch from the database
-const DEMO_PROJECT = {
-  id: 'demo',
-  name: 'Demo Project',
-  slug: 'demo'
+const DEMO_PROJECT = { id: 'demo', name: 'Demo Project', slug: 'demo' }
+
+function NavLink({ href, label, isActive }: { href: string; label: string; isActive: boolean }) {
+  return (
+    <Link
+      href={href}
+      aria-current={isActive ? 'page' : undefined}
+      className={`block rounded-md px-3 py-2 text-sm transition-colors ${
+        isActive
+          ? 'bg-blue-50 text-blue-700 font-medium'
+          : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+      }`}
+    >
+      {label}
+    </Link>
+  )
 }
 
 export default function ProjectLayout({
@@ -16,51 +26,42 @@ export default function ProjectLayout({
   children: React.ReactNode
   params: { slug: string }
 }) {
-  // For now, only allow the demo project
-  if (params.slug !== 'demo') {
-    notFound()
-  }
+  if (params.slug !== 'demo') notFound()
+
+  // derive current path segment for active state (client-less)
+  // Next.js layouts don’t get full pathname; use labels that match child routes
+  const nav = [
+    { href: `/p/${params.slug}`, label: 'Dashboard', key: 'dashboard' },
+    { href: `/p/${params.slug}/price-changes`, label: 'Price Changes', key: 'price-changes' },
+    { href: `/p/${params.slug}/catalog`, label: 'Catalog', key: 'catalog' },
+    { href: `/p/${params.slug}/competitors`, label: 'Competitors', key: 'competitors' },
+  ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <nav className="flex-1 flex justify-center space-x-1">
-              <Link
-                href={`/p/${params.slug}`}
-                className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-              >
-                Dashboard
-              </Link>
-              <Link
-                href={`/p/${params.slug}/price-changes`}
-                className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-              >
-                Price Changes
-              </Link>
-              <Link
-                href={`/p/${params.slug}/catalog`}
-                className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-              >
-                Catalog
-              </Link>
-              <Link
-                href={`/p/${params.slug}/competitors`}
-                className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-              >
-                Competitors
-              </Link>
-            </nav>
-            <div className="flex items-center">
-              <span className="text-sm text-gray-500">
-                {DEMO_PROJECT.name}
-              </span>
+    <div className="grid grid-cols-12 gap-6">
+      <aside className="col-span-12 lg:col-span-3 xl:col-span-2">
+        <div className="sticky top-4 space-y-4">
+          <div className="bg-white border rounded-lg p-4">
+            <div className="text-xs uppercase tracking-wide text-gray-500">Project</div>
+            <div className="mt-1 text-sm font-medium text-gray-900" aria-label="Current project">
+              {DEMO_PROJECT.name}
             </div>
           </div>
+          <nav aria-label="Primary" role="navigation" className="bg-white border rounded-lg p-2">
+            {nav.map((item) => (
+              <NavLink
+                key={item.key}
+                href={item.href}
+                label={item.label}
+                isActive={false}
+              />
+            ))}
+          </nav>
         </div>
-      </div>
-      <main>{children}</main>
+      </aside>
+      <section className="col-span-12 lg:col-span-9 xl:col-span-10">
+        {children}
+      </section>
     </div>
   )
 }

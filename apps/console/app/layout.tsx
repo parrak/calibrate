@@ -25,14 +25,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-bg text-fg min-h-screen">
-        <div className="container mx-auto px-4 py-8">
-          <header className="mb-8">
-            <h1 className="text-3xl font-bold">Calibrate Console</h1>
-            <p className="text-mute">Price management and approval system</p>
-          </header>
+      <body className="min-h-screen bg-gray-50 text-gray-900">
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 bg-white border rounded px-3 py-2 shadow">
+          Skip to content
+        </a>
+        <header className="border-b bg-white">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-semibold">Calibrate Console</span>
+              <span className="text-xs text-gray-500">Enterprise pricing ops</span>
+            </div>
+          </div>
+        </header>
+        <main id="main" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
           {children}
-        </div>
+        </main>
       </body>
     </html>
   )
