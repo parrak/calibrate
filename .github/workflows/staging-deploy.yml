@@ -1,0 +1,225 @@
+name: Staging Deployment
+
+on:
+  push:
+    branches: [ staging ]
+  pull_request:
+    branches: [ staging ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - staging-test
+
+env:
+  STAGING_API_URL: https://staging-api.calibr.lat
+  STAGING_CONSOLE_URL: https://staging-console.calibr.lat
+  STAGING_DOCS_URL: https://staging-docs.calibr.lat
+
+jobs:
+  # Job 1: Build and test
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
+      - name: Run linting
+        run: pnpm lint
+
+      - name: Run type checking
+        run: pnpm type-check
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build API
+        run: |
+          cd apps/api
+          pnpm build
+
+      - name: Build console
+        run: |
+          cd apps/console
+          pnpm build
+
+      - name: Build docs
+        run: |
+          cd apps/docs
+          pnpm build
+
+  # Job 2: Deploy to staging
+  deploy-staging:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy API to staging
+        run: |
+          cd apps/api
+          vercel deploy --prod --config vercel.staging.json --yes --token ${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy console to staging
+        run: |
+          cd apps/console
+          vercel deploy --prod --yes --token ${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy docs to staging
+        run: |
+          cd apps/docs
+          vercel deploy --prod --yes --token ${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+  # Job 3: Initialize staging database
+  initialize-staging-db:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Wait for API deployment
+        run: sleep 60
+
+      - name: Initialize staging database
+        run: |
+          # Wait for API to be ready
+          for i in {1..30}; do
+            if curl -f -s "$STAGING_API_URL/api/staging/health" > /dev/null; then
+              echo "API is ready"
+              break
+            fi
+            echo "Waiting for API to be ready... ($i/30)"
+            sleep 10
+          done
+          
+          # Initialize staging database
+          curl -X POST "$STAGING_API_URL/api/staging/manage?action=seed" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.STAGING_API_TOKEN }}"
+        env:
+          STAGING_API_URL: ${{ env.STAGING_API_URL }}
+
+  # Job 4: Run staging tests
+  test-staging:
+    needs: initialize-staging-db
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+
+      - name: Run staging tests
+        run: |
+          pwsh scripts/test-staging.ps1 -ApiUrl ${{ env.STAGING_API_URL }} -ConsoleUrl ${{ env.STAGING_CONSOLE_URL }} -DocsUrl ${{ env.STAGING_DOCS_URL }}
+
+  # Job 5: Performance testing
+  performance-test:
+    needs: test-staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run performance tests
+        run: |
+          cd apps/api
+          pnpm test:performance -- --url=${{ env.STAGING_API_URL }}
+
+  # Job 6: Security testing
+  security-test:
+    needs: test-staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+
+      - name: Run security tests
+        run: |
+          pwsh scripts/security-scan.ps1 -ApiUrl ${{ env.STAGING_API_URL }}
+
+  # Job 7: Deployment notification
+  notify-deployment:
+    needs: [performance-test, security-test]
+    runs-on: ubuntu-latest
+    if: always() && (github.ref == 'refs/heads/staging' || github.event_name == 'workflow_dispatch')
+    steps:
+      - name: Notify deployment status
+        run: |
+          if [ "${{ needs.performance-test.result }}" == "success" ] && [ "${{ needs.security-test.result }}" == "success" ]; then
+            echo "✅ Staging deployment completed successfully!"
+            echo "🔗 API: ${{ env.STAGING_API_URL }}"
+            echo "🔗 Console: ${{ env.STAGING_CONSOLE_URL }}"
+            echo "🔗 Docs: ${{ env.STAGING_DOCS_URL }}"
+          else
+            echo "❌ Staging deployment failed!"
+            echo "Performance test result: ${{ needs.performance-test.result }}"
+            echo "Security test result: ${{ needs.security-test.result }}"
+          fi
