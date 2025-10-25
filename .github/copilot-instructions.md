@@ -176,6 +176,17 @@ pnpm test
   - `typescript.ignoreBuildErrors = true`
   - `eslint.ignoreDuringBuilds = true`
 
+- If a Next.js app in a subfolder is mis-detected as static (“No Output Directory named 'public'”), add a per-app `vercel.json` to force framework and commands, for example in `apps/site/vercel.json`:
+
+```
+{
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && pnpm install",
+  "buildCommand": "cd ../.. && pnpm --filter @calibr/site build",
+  "outputDirectory": ".next"
+}
+```
+
 ### Deploying each project from repo root
 
 ```powershell
@@ -194,6 +205,12 @@ vercel --prod --yes
 
 - If the project is configured with a “Root Directory” in Vercel, deploy from the repo root (as above). Running `vercel` inside the app folder may double-apply the root directory (e.g. `apps/site/apps/site`).
 - For protected projects, disable Password Protection in Project → Settings → Protection (or use a bypass link for validation).
+
+### When things break (quick checklist)
+- Frozen lockfile error → run `pnpm install` at repo root, commit pnpm-lock.yaml.
+- Missing Tailwind plugin → ensure tailwindcss/postcss/autoprefixer are in dependencies (not dev only) for site/docs.
+- TypeScript packages missing → add typescript/@types/react/@types/node as dependencies (or install dev deps).
+- “No Output Directory named 'public'” → add per-app vercel.json to force Next.js and correct build/output.
 
 ## Agent Collaboration & Documentation
 
