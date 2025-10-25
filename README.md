@@ -94,7 +94,7 @@ This will start:
 
 ## API Documentation
 
-**📚 Interactive API Documentation:** [https://calibrate-api-docs-dg9hubd8e-rakesh-paridas-projects.vercel.app](https://calibrate-api-docs-dg9hubd8e-rakesh-paridas-projects.vercel.app)
+**📚 Interactive API Documentation:** [https://calibrate-api-docs-phka5aqe1-rakesh-paridas-projects.vercel.app](https://calibrate-api-docs-phka5aqe1-rakesh-paridas-projects.vercel.app)
 
 The complete API documentation includes:
 - Interactive Swagger UI for testing endpoints
