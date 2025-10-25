@@ -96,8 +96,8 @@ export function CompetitorMonitor({ tenantId, projectId }: { tenantId: string; p
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Competitor Monitoring</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-bold text-gray-900">Competitor Monitoring</h2>
+          <p className="text-gray-600 mt-1">
             Monitor competitor prices and track market positioning
           </p>
         </div>
@@ -139,8 +139,8 @@ export function CompetitorMonitor({ tenantId, projectId }: { tenantId: string; p
                         <AlertCircle className="h-5 w-5 text-red-500" />
                       )}
                       <div>
-                        <div className="font-medium">{competitor?.name || 'Unknown Competitor'}</div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="font-medium text-gray-900">{competitor?.name || 'Unknown Competitor'}</div>
+                        <div className="text-sm text-gray-600">
                           {result.productsChecked} products checked, {result.pricesUpdated} prices updated
                         </div>
                         {result.errors.length > 0 && (
@@ -150,7 +150,7 @@ export function CompetitorMonitor({ tenantId, projectId }: { tenantId: string; p
                         )}
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-gray-600">
                       {formatDuration(result.duration)}
                     </div>
                   </div>
@@ -171,7 +171,7 @@ export function CompetitorMonitor({ tenantId, projectId }: { tenantId: string; p
         </CardHeader>
         <CardContent>
           {competitors.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-gray-600">
               No competitors configured. Add competitors to start monitoring.
             </div>
           ) : (
@@ -191,8 +191,8 @@ export function CompetitorMonitor({ tenantId, projectId }: { tenantId: string; p
                   <TableRow key={competitor.id}>
                     <TableCell className="font-medium">
                       <div>
-                        <div>{competitor.name}</div>
-                        <div className="text-sm text-muted-foreground">{competitor.domain}</div>
+                        <div className="text-gray-900">{competitor.name}</div>
+                        <div className="text-sm text-gray-600">{competitor.domain}</div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -238,19 +238,19 @@ export function CompetitorMonitor({ tenantId, projectId }: { tenantId: string; p
                 product.prices.map((price, index) => (
                   <div key={`${product.id}-${index}`} className="flex items-center justify-between p-3 border rounded">
                     <div>
-                      <div className="font-medium">{product.name}</div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="font-medium text-gray-900">{product.name}</div>
+                      <div className="text-sm text-gray-600">
                         {competitor.name} • {product.skuCode}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium">
+                      <div className="font-medium text-gray-900">
                         {formatPrice(price.amount, price.currency)}
                         {price.isOnSale && (
                           <Badge variant="destructive" className="ml-2">Sale</Badge>
                         )}
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-gray-600">
                         {new Date(price.createdAt).toLocaleString()}
                       </div>
                     </div>

@@ -157,8 +157,8 @@ export function CompetitorRules({ tenantId, projectId }: { tenantId: string; pro
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Competitor Pricing Rules</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-bold text-gray-900">Competitor Pricing Rules</h2>
+          <p className="text-gray-600 mt-1">
             Configure automated pricing based on competitor data
           </p>
         </div>
@@ -306,7 +306,7 @@ export function CompetitorRules({ tenantId, projectId }: { tenantId: string; pro
         </CardHeader>
         <CardContent>
           {rules.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-gray-600">
               No pricing rules configured. Create your first rule to get started.
             </div>
           ) : (
@@ -315,15 +315,15 @@ export function CompetitorRules({ tenantId, projectId }: { tenantId: string; pro
                 <div key={rule.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium">{rule.name}</h3>
+                      <h3 className="font-medium text-gray-900">{rule.name}</h3>
                       <Badge variant={rule.isActive ? 'default' : 'secondary'}>
                         {rule.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
                     {rule.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{rule.description}</p>
+                      <p className="text-sm text-gray-600 mt-1">{rule.description}</p>
                     )}
-                    <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                       <span>{getRuleTypeLabel(rule.rules.type)}</span>
                       {rule.rules.value && <span>Value: {rule.rules.value}</span>}
                       {rule.rules.minMargin && <span>Min Margin: {rule.rules.minMargin}%</span>}
