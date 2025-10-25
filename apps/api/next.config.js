@@ -9,6 +9,11 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client']
+  },
+  transpilePackages: ['isomorphic-dompurify'],
+  webpack: (config) => {
+    config.externals = [...(config.externals || []), 'jsdom']
+    return config
   }
 }
 

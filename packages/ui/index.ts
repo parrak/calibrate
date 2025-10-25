@@ -1,5 +1,6 @@
 export * from './components/Button'
 export * from './components/Badge'
+export * from './components/Card'
 export * from './components/StatusPill'
 export * from './components/Drawer'
 export * from './components/DiffCard'

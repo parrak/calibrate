@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { performanceService, PerformanceService } from '../lib/performance-service'
+import * as performanceMonitor from '../lib/performance-monitor'
 
 // Mock the performance-monitor module
 vi.mock('../lib/performance-monitor', () => ({
@@ -82,7 +83,7 @@ describe('Performance Service', () => {
   describe('Performance Checking', () => {
     it('should create alerts when thresholds are exceeded', async () => {
       // Mock high error rate
-      vi.mocked(require('../lib/performance-monitor').getPerformanceStats)
+      vi.mocked(performanceMonitor.getPerformanceStats)
         .mockResolvedValueOnce({
           totalRequests: 100,
           averageResponseTime: 500,
@@ -104,7 +105,7 @@ describe('Performance Service', () => {
 
     it('should not create duplicate alerts for same issue', async () => {
       // Mock high error rate
-      vi.mocked(require('../lib/performance-monitor').getPerformanceStats)
+      vi.mocked(performanceMonitor.getPerformanceStats)
         .mockResolvedValue({
           totalRequests: 100,
           averageResponseTime: 500,
