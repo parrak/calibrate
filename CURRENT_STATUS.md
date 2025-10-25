@@ -28,9 +28,18 @@
 
 **✅ All Endpoints Working:**
 - Health Check: `GET /api/health` - ✅ 200 OK
-- Price Changes: `GET /api/v1/price-changes?project=demo` - ✅ 200 OK with data
+- Price Changes: `GET /api/v1/price-changes?project=demo` - ✅ 200 OK with 4 price changes
 - Catalog (Single): `GET /api/v1/catalog?project=demo&productCode=PRO` - ✅ 200 OK
-- Catalog (All): `GET /api/v1/catalog?project=demo` - ✅ Enhanced (pending deployment)
+- Catalog (All): `GET /api/v1/catalog?project=demo` - ✅ 200 OK with 5 products
+- Webhook: `POST /api/v1/webhooks/price-suggestion` - ✅ 401 (requires HMAC auth - expected)
+
+### Enhanced Catalog API Results:
+
+**✅ Product Listing Working:**
+- Returns array of 5 products with complete SKU and pricing data
+- Products include: Pro Plan, Enterprise Plan, Starter Plan, Professional Plan, Enterprise Plan
+- Each product includes multiple SKUs with multi-currency pricing (USD, EUR, GBP)
+- Backward compatibility maintained for single product lookup
 
 ---
 
@@ -222,8 +231,10 @@ After seeding the database, verify:
 3. **Catalog API enhancement** - Added support for listing all products
 4. **End-to-end testing** - Console workflow verified
 
-### 🔄 In Progress
-5. **Catalog API deployment** - Waiting for Railway to deploy latest changes
+### ✅ Recently Completed
+5. **Catalog API deployment** - ✅ Successfully deployed and tested
+6. **Enhanced API testing** - ✅ All endpoints verified working
+7. **Console integration** - ✅ Console working with enhanced API
 
 ### 📋 Upcoming
 6. **DNS propagation** - Verify api.calibr.lat points to Railway
