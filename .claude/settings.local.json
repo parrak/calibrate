@@ -25,7 +25,10 @@
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
       "Bash(npm run build:*)",
-      "Bash(printf:*)"
+      "Bash(printf:*)",
+      "Bash(railway --version:*)",
+      "Bash(npm install:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

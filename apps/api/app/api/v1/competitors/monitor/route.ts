@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { CompetitorMonitor } from '@calibrate/competitor-monitoring'
-import { verifyHmac } from '@calibrate/security'
+import { verifyHmac } from '@calibr/security'
 
 const db = new PrismaClient()
 

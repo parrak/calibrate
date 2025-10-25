@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { verifyHmac } from '@calibrate/security'
+import { verifyHmac } from '@calibr/security'
 
 const db = new PrismaClient()
 
