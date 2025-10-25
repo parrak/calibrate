@@ -39,6 +39,9 @@ FROM node:20-slim AS runner
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Prisma CLI globally for running migrations pre-deploy
+RUN npm i -g prisma@5.22.0
+
 WORKDIR /app
 
 # Don't run as root
@@ -48,6 +51,9 @@ RUN adduser --system --uid 1001 nextjs
 # Copy standalone output
 COPY --from=builder /app/apps/api/.next/standalone ./
 COPY --from=builder /app/apps/api/.next/static ./apps/api/.next/static
+
+# Copy Prisma schema and migrations for migrate deploy
+COPY --from=builder /app/packages/db/prisma /app/prisma
 
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app

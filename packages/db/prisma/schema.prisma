@@ -2,6 +2,7 @@ generator client {
   provider = "prisma-client-js"
   // Target Debian Slim (OpenSSL 3.x)
   binaryTargets = ["debian-openssl-3.0.x"]
+  engineType   = "binary"
 }
 
 datasource db {
@@ -85,6 +86,9 @@ model Product {
   status    Status   @default(DRAFT)
   skus      Sku[]
   createdAt DateTime @default(now())
+
+  // Allow upserts by (tenantId, projectId, code) as used in seed scripts
+  @@unique([tenantId, projectId, code], name: "tenantId_projectId_code")
 }
 
 enum Status {
@@ -103,6 +107,9 @@ model Sku {
   status     Status   @default(DRAFT)
   prices     Price[]
   competitorProducts CompetitorProduct[]
+
+  // Allow upserts by (productId, code) as used in seed scripts
+  @@unique([productId, code], name: "productId_code")
 }
 
 model Price {
