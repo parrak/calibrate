@@ -3,7 +3,6 @@
  * Centralized service for performance tracking and alerting
  */
 
-import { randomUUID } from 'crypto'
 import { 
   getPerformanceStats, 
   getResourceStats, 
@@ -66,17 +65,11 @@ export class PerformanceService {
 
       // Check error rate
       if (performanceStats.errorRate > this.thresholds.errorRate) {
-        // Check if we already have an active error rate alert
-        const existingAlert = Array.from(this.alerts.values())
-          .find(alert => alert.type === 'error_rate' && !alert.resolved)
-        
-        if (!existingAlert) {
-          const alert = this.createAlert('error_rate', 'high', 
-            `Error rate is ${performanceStats.errorRate.toFixed(2)}%, exceeding threshold of ${this.thresholds.errorRate}%`,
-            { errorRate: performanceStats.errorRate, threshold: this.thresholds.errorRate }
-          )
-          newAlerts.push(alert)
-        }
+        const alert = this.createAlert('error_rate', 'high', 
+          `Error rate is ${performanceStats.errorRate.toFixed(2)}%, exceeding threshold of ${this.thresholds.errorRate}%`,
+          { errorRate: performanceStats.errorRate, threshold: this.thresholds.errorRate }
+        )
+        newAlerts.push(alert)
       }
 
       // Check response time
@@ -228,7 +221,7 @@ export class PerformanceService {
     metadata?: Record<string, any>
   ): PerformanceAlert {
     return {
-      id: `${type}_${Date.now()}_${randomUUID()}`,
+      id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type,
       severity,
       message,

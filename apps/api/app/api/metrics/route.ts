@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { 
+  getPerformanceStats, 
+  getResourceStats, 
+  getDatabasePerformanceMetrics,
+  startResourceMonitoring
+} from '@/lib/performance-monitor'
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,19 +30,28 @@ export async function GET(req: NextRequest) {
       })
     }
     
-    // Collect metrics
+    // Start resource monitoring if not already started
+    startResourceMonitoring(30000) // Every 30 seconds
+    
+    // Collect enhanced metrics
     const [
       priceChanges,
       webhookStats,
       systemMetrics,
       databaseMetrics,
-      errorMetrics
+      errorMetrics,
+      performanceStats,
+      resourceStats,
+      databasePerformance
     ] = await Promise.all([
       getPriceChangeMetrics(project?.id, startDate),
       getWebhookMetrics(project?.id, startDate),
       getSystemMetrics(),
       getDatabaseMetrics(),
-      getErrorMetrics(startDate)
+      getErrorMetrics(startDate),
+      getPerformanceStats(timeRangeMs),
+      getResourceStats(timeRangeMs),
+      getDatabasePerformanceMetrics()
     ])
     
     const responseTime = Date.now() - startTime
@@ -56,7 +71,10 @@ export async function GET(req: NextRequest) {
         webhooks: webhookStats,
         system: systemMetrics,
         database: databaseMetrics,
-        errors: errorMetrics
+        errors: errorMetrics,
+        performance: performanceStats,
+        resources: resourceStats,
+        databasePerformance
       }
     })
   } catch (error) {

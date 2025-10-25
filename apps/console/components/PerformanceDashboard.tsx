@@ -1,16 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@calibr/ui'
-import { Badge } from '@calibr/ui'
-import { Button } from '@calibr/ui'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { 
   Activity, 
   AlertTriangle, 
   CheckCircle, 
   Clock, 
   Database, 
-  HardDrive, 
+  Memory, 
   TrendingUp, 
   TrendingDown,
   RefreshCw
@@ -192,7 +192,7 @@ export default function PerformanceDashboard() {
       <div className="flex items-center justify-center h-64">
         <AlertTriangle className="h-8 w-8 text-red-500" />
         <span className="ml-2 text-red-600">Error: {error}</span>
-        <Button onClick={fetchData} className="ml-4">
+        <Button onClick={fetchData} className="ml-4" size="sm">
           Retry
         </Button>
       </div>
@@ -220,7 +220,7 @@ export default function PerformanceDashboard() {
             <option value="24h">Last 24 Hours</option>
             <option value="7d">Last 7 Days</option>
           </select>
-          <Button onClick={fetchData} disabled={loading}>
+          <Button onClick={fetchData} size="sm" disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
