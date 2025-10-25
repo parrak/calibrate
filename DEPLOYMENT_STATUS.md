@@ -178,6 +178,11 @@ After deploying:
 - [ ] Logs show no errors
 - [ ] Custom domains resolving correctly
 
+## 2025-10-25 Update
+
+- Docs custom domain mapped: https://docs.calibr.lat returns 200 (project alias remains available for verification).
+- Site and Console validated at custom domains: https://calibr.lat and https://console.calibr.lat both return 200.
+
 ## Rollback Procedure
 
 If deployment fails:

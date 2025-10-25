@@ -237,3 +237,8 @@ After seeding the database, verify:
 **Blocker:** None - just need to call the seed endpoint
 **ETA:** 5 minutes to complete seeding and testing
 
+
+## Update (2025-10-25)
+- Docs domain mapped: https://docs.calibr.lat now returns 200.
+- Site and Console remain healthy at custom domains.
+
