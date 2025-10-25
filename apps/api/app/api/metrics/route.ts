@@ -159,8 +159,16 @@ async function getDatabaseMetrics() {
       `
     ])
     
+    // Convert BigInt values to numbers
+    const connectionData = connections[0] as any
+    const processedConnections = {
+      total_connections: Number(connectionData?.total_connections) || 0,
+      active_connections: Number(connectionData?.active_connections) || 0,
+      idle_connections: Number(connectionData?.idle_connections) || 0
+    }
+    
     return {
-      connections: connections[0],
+      connections: processedConnections,
       tableSizes: tableSizes
     }
   } catch (error) {

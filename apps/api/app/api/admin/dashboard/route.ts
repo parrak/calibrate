@@ -213,5 +213,11 @@ async function getTopProducts(projectId: string | null, startDate: Date) {
     LIMIT 10
   `
   
-  return topProducts
+  // Convert BigInt values to numbers
+  return (topProducts as any[]).map(product => ({
+    product_name: product.product_name,
+    product_code: product.product_code,
+    change_count: Number(product.change_count),
+    avg_change_amount: Number(product.avg_change_amount)
+  }))
 }

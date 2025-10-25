@@ -80,7 +80,7 @@ async function checkDatabaseHealth() {
     
     return {
       status: 'healthy',
-      connections: connections[0]?.active_connections || 0,
+      connections: Number(connections[0]?.active_connections) || 0,
       migrations: migrations.length
     }
   } catch (error) {
