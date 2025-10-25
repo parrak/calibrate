@@ -180,3 +180,17 @@ See [COMPETITOR_MONITORING.md](COMPETITOR_MONITORING.md) for detailed feature do
   - Use Corepack in Dockerfile (`corepack prepare pnpm@9.0.0 --activate`) instead of `pnpm@latest` to prevent lockfile incompatibility errors.
 
 
+
+## [Unreleased] - 2025-10-25
+
+### Added
+- Console UX: sidebar layout, breadcrumbs, loading skeletons, accessibility tweaks.
+- Site build: resolve TS path alias, skip typecheck/lint in CI, prod deps for Tailwind/TS.
+- Docs build: prod deps for Tailwind/PostCSS, lockfile guidance.
+
+### Changed
+- README and agent instructions updated with Vercel monorepo deploy steps and frozen lockfile caveat.
+
+### Fixes
+- Vercel deployments stabilized by committing updated root pnpm-lock.yaml after sub-app dependency changes.
+
