@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "calibrate-api-docs",
   "buildCommand": "cd ../.. && pnpm install && pnpm --filter @calibr/docs build",
   "installCommand": "corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile=false",
   "builds": [
