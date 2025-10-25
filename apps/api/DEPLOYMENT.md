@@ -8,7 +8,7 @@
 - **Status:** ✅ Live
 - **Database:** Railway PostgreSQL (migrated)
 - **Latest Deploy:** October 24, 2025 (commit `1a0532c`)
-- **📚 API Documentation:** https://docs.calibr.lat
+- **📚 API Documentation:** https://calibrate-api-docs-dg9hubd8e-rakesh-paridas-projects.vercel.app
 
 ## Option 1: Railway (Recommended) ⭐
 
