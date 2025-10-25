@@ -21,7 +21,6 @@
       "Bash(taskkill:*)",
       "Bash(pnpm install:*)",
       "Bash(unzip:*)",
-      "Read(//c/Users/rakes/Downloads/calibrate_brand_kit/**)",
       "Bash(mkdir:*)"
     ],
     "deny": [],
