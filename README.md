@@ -82,22 +82,27 @@ This will start:
 - Site: http://localhost:3002
 - Docs: http://localhost:3003
 
-## API Endpoints
+## API Documentation
 
-### Webhooks
+**📚 Interactive API Documentation:** [https://docs.calibr.lat](https://docs.calibr.lat)
+
+The complete API documentation includes:
+- Interactive Swagger UI for testing endpoints
+- Detailed request/response schemas
+- Authentication and rate limiting information
+- Code examples and integration guides
+
+### Quick Reference
+
+**Base URL:** `https://api.calibr.lat`
+
+**Key Endpoints:**
 - `POST /api/v1/webhooks/price-suggestion` - Submit price suggestions
-
-### Price Changes
 - `GET /api/v1/price-changes` - List price changes
-- `POST /api/v1/price-changes/{id}/approve` - Approve a change
-- `POST /api/v1/price-changes/{id}/apply` - Apply a change
-- `POST /api/v1/price-changes/{id}/reject` - Reject a change
-
-### Catalog
-- `GET /api/v1/catalog?productCode=PRO` - Get product information
-
-### Health
-- `GET /api/healthz` - Health check
+- `GET /api/v1/catalog` - Product catalog
+- `GET /api/health` - System health check
+- `GET /api/metrics` - System metrics
+- `GET /api/admin/dashboard` - Admin dashboard data
 
 ## Testing
 

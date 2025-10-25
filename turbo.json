@@ -3,7 +3,7 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build", "@calibr/db#generate"],
-      "outputs": ["dist/**", ".next/**"]
+      "outputs": ["dist/**", ".next/**", "**/*.html", "**/*.yaml"]
     },
     "dev": { "cache": false },
     "lint": {},

@@ -99,7 +99,10 @@ export function CodeTabs() {
       <pre className="mt-3 text-sm bg-black/50 border border-border rounded-lg p-3 overflow-auto">
         <code>{snippets[tab]}</code>
       </pre>
-      <p className="text-xs text-mute mt-2">Use your project slug in <code>X-Calibr-Project</code> (e.g., <code>demo</code>).</p>
+      <p className="text-xs text-mute mt-2">
+        Use your project slug in <code>X-Calibr-Project</code> (e.g., <code>demo</code>). 
+        <a href="https://docs.calibr.lat" className="text-brand hover:underline ml-1">View full API docs →</a>
+      </p>
     </div>
   )
 }

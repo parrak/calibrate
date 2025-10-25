@@ -15,7 +15,11 @@
     "migrate": "pnpm --filter @calibr/db prisma migrate dev",
     "seed": "pnpm --filter @calibr/db ts-node scripts/seed.ts",
     "db:generate": "pnpm --filter @calibr/db prisma generate",
-    "db:studio": "pnpm --filter @calibr/db prisma studio"
+    "db:studio": "pnpm --filter @calibr/db prisma studio",
+    "docs:dev": "pnpm --filter @calibr/docs dev",
+    "docs:build": "pnpm --filter @calibr/docs build",
+    "docs:deploy": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-docs.ps1",
+    "docs:deploy:dry": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-docs.ps1 -DryRun"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

@@ -1,6 +1,9 @@
 /**
  * API Client for Calibr Console
  * Communicates with the Calibr API backend
+ * 
+ * 📚 API Documentation: https://docs.calibr.lat
+ * 🔗 Base URL: https://api.calibr.lat
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'

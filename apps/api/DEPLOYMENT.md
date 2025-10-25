@@ -8,6 +8,7 @@
 - **Status:** ✅ Live
 - **Database:** Railway PostgreSQL (migrated)
 - **Latest Deploy:** October 24, 2025 (commit `1a0532c`)
+- **📚 API Documentation:** https://docs.calibr.lat
 
 ## Option 1: Railway (Recommended) ⭐
 
