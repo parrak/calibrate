@@ -139,7 +139,7 @@ model PriceVersion {
 model Policy {
   id        String   @id @default(cuid())
   tenantId  String
-  projectId String
+  projectId String   @unique
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   project   Project  @relation(fields: [projectId], references: [id])
   autoApply Boolean  @default(false)
