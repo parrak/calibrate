@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { EmptyState, Table } from '@/lib/components'
+import { EmptyState } from '@/lib/components'
+import { SimpleTable as Table } from '@/lib/components/SimpleTable'
 
 type Product = {
   code: string

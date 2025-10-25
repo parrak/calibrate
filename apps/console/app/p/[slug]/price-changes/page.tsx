@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { Button, EmptyState, StatusPill, Table, useToast } from '@/lib/components'
+import { Button, EmptyState, StatusPill, useToast } from '@/lib/components'
+import { SimpleTable as Table } from '@/lib/components/SimpleTable'
 import { PriceChangeDrawer } from '@/components/PriceChangeDrawer'
 
 type Item = { id:string; status:string; currency:string; fromAmount:number; toAmount:number; createdAt:string; context?:any; source?:string; policyResult?:{ok:boolean; checks:any[]} }
