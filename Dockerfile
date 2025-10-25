@@ -14,6 +14,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Ensure Prisma fetches correct engines during install/generate (Debian OpenSSL 3)
+ENV PRISMA_DISABLE_POSTINSTALL_GENERATE=true
 ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-3.0.x"
 
 # Copy all workspace packages
@@ -24,7 +25,9 @@ COPY apps/api ./apps/api
 RUN pnpm install --frozen-lockfile
 
 # Generate Prisma client
-RUN cd packages/db && pnpm exec prisma generate
+RUN cd packages/db && pnpm exec prisma generate \
+ && find /app -type f -path "*/.prisma/client/*" -name "*linux-musl*" -print -delete \
+ && find /app -type f -path "*/node_modules/@prisma/client/*" -name "*linux-musl*" -print -delete
 
 # Build the API
 RUN cd apps/api && pnpm run build
@@ -53,11 +56,17 @@ USER nextjs
 
 # Set environment
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PRISMA_DISABLE_POSTINSTALL_GENERATE=true
 ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-3.0.x"
 ENV PRISMA_ENGINE_BINARY_TARGET="debian-openssl-3.0.x"
+ENV PRISMA_CLIENT_ENGINE_TYPE=binary
+ENV PRISMA_QUERY_ENGINE_BINARY=/app/node_modules/@prisma/engines/query-engine-debian-openssl-3.0.x
 
-EXPOSE 3000
+# Ensure no musl engines are present in the final image
+RUN find /app -type f -path "*/.prisma/client/*" -name "*linux-musl*" -print -delete \
+ && find /app -type f -path "*/node_modules/@prisma/client/*" -name "*linux-musl*" -print -delete
+
+EXPOSE 8080
 
 # Start the standalone server
 CMD ["node", "apps/api/server.js"]
