@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { verifyHmac } from '@calibrate/security'
 
 const db = new PrismaClient()
 
@@ -8,6 +9,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Verify HMAC signature
+    const authResult = await verifyHmac(request)
+    if (!authResult.valid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const competitor = await db.competitor.findUnique({
       where: { id: params.id },
       include: {
@@ -39,6 +45,11 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Verify HMAC signature
+    const authResult = await verifyHmac(request)
+    if (!authResult.valid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const body = await request.json()
     const { name, domain, channel, isActive } = body
 
@@ -64,6 +75,11 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Verify HMAC signature
+    const authResult = await verifyHmac(request)
+    if (!authResult.valid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     await db.competitor.delete({
       where: { id: params.id }
     })

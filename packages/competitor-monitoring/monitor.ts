@@ -150,27 +150,28 @@ export class CompetitorMonitor {
     if (!sku) return []
 
     const ourPrice = sku.prices[0]?.amount || 0
-    const comparisons: PriceComparison[] = []
+    const competitorPrices = []
 
     for (const competitorProduct of sku.competitorProducts) {
       const latestPrice = competitorProduct.prices[0]
       if (latestPrice) {
-        comparisons.push({
-          skuId,
-          ourPrice,
-          competitorPrices: [{
-            competitorId: competitorProduct.competitor.id,
-            competitorName: competitorProduct.competitor.name,
-            price: latestPrice.amount,
-            currency: latestPrice.currency,
-            isOnSale: latestPrice.isOnSale,
-            stockStatus: latestPrice.stockStatus || undefined
-          }]
+        competitorPrices.push({
+          competitorId: competitorProduct.competitor.id,
+          competitorName: competitorProduct.competitor.name,
+          price: latestPrice.amount,
+          currency: latestPrice.currency,
+          isOnSale: latestPrice.isOnSale,
+          stockStatus: latestPrice.stockStatus || undefined
         })
       }
     }
 
-    return comparisons
+    // Return single comparison with all competitor prices aggregated
+    return competitorPrices.length > 0 ? [{
+      skuId,
+      ourPrice,
+      competitorPrices
+    }] : []
   }
 
   /**

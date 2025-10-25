@@ -81,7 +81,7 @@ function evaluateRule(
 
   // Filter by channels if specified
   const channelFilteredPrices = ruleConfig.channels
-    ? relevantPrices.filter(cp => ruleConfig.channels!.includes(cp.competitorId)) // Assuming channel is stored in competitorId for now
+    ? relevantPrices.filter(cp => ruleConfig.channels!.includes(cp.channel || ''))
     : relevantPrices
 
   if (channelFilteredPrices.length === 0) {

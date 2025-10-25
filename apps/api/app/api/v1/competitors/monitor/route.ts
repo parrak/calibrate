@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { CompetitorMonitor } from '@calibrate/competitor-monitoring'
+import { verifyHmac } from '@calibrate/security'
 
 const db = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify HMAC signature
+    const authResult = await verifyHmac(request)
+    if (!authResult.valid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { tenantId, projectId, competitorId } = body
 

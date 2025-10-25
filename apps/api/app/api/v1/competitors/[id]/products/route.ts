@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { verifyHmac } from '@calibrate/security'
 
 const db = new PrismaClient()
 
@@ -8,6 +9,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Verify HMAC signature
+    const authResult = await verifyHmac(request)
+    if (!authResult.valid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const { searchParams } = new URL(request.url)
     const skuId = searchParams.get('skuId')
 
@@ -38,6 +44,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Verify HMAC signature
+    const authResult = await verifyHmac(request)
+    if (!authResult.valid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const body = await request.json()
     const { skuId, name, skuCode, url, imageUrl } = body
 

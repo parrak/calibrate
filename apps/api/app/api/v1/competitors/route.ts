@@ -6,6 +6,12 @@ const db = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
+    // Verify HMAC signature
+    const authResult = await verifyHmac(request)
+    if (!authResult.valid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const tenantId = searchParams.get('tenantId')
     const projectId = searchParams.get('projectId')
@@ -41,6 +47,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify HMAC signature
+    const authResult = await verifyHmac(request)
+    if (!authResult.valid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { tenantId, projectId, name, domain, channel } = body
 
