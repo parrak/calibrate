@@ -43,6 +43,12 @@ pnpm lint
 pnpm build
 ```
 
+Or run the automated helper script (preferred):
+
+```powershell
+pnpm verify:local
+```
+
 - If you changed only a package, run only that package's tests for faster feedback, e.g. `pnpm --filter @calibr/pricing-engine test`.
 - Paste command output, or attach logs, and list any failing tests you fixed.
 - If local verification fails, do not merge; fix issues in the feature branch and re-run verification.
@@ -54,6 +60,10 @@ pnpm build
 - [ ] Local verification steps above were executed and outputs included.
 - [ ] Human reviewer assigned and PR labeled appropriately.
 - [ ] Agent metadata included (if applicable): Agent: <name>/<version>  Context-ID: <uuid>
+- [ ] `CHANGELOG.md` updated with an `Unreleased` entry describing this change.
+- [ ] Relevant docs/README/DEPLOYMENT files updated (list files below):
+	- 
+- [ ] Verification logs or evidence included in PR body or attached as `{branch}-verification.log`/`{branch}-verification.md`.
 
 ## Agent metadata (optional)
 - Agent: 

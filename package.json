@@ -1,7 +1,7 @@
 {
   "name": "calibrate",
   "private": true,
-  "packageManager": "pnpm@latest",
+  "packageManager": "pnpm@8.6.0",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -11,6 +11,7 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "verify:local": "powershell -ExecutionPolicy Bypass -File ./scripts/verify-local.ps1",
     "migrate": "pnpm --filter @calibr/db prisma migrate dev",
     "seed": "pnpm --filter @calibr/db ts-node scripts/seed.ts",
     "db:generate": "pnpm --filter @calibr/db prisma generate",

@@ -28,7 +28,13 @@
       "Bash(printf:*)",
       "Bash(railway --version:*)",
       "Bash(npm install:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(pnpm run build:*)",
+      "Bash(railway status:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(railway login:*)",
+      "Bash(railway redeploy:*)",
+      "Bash(railway variables:*)"
     ],
     "deny": [],
     "ask": []
