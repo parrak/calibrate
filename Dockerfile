@@ -1,4 +1,4 @@
-# Build stage
+# Build stage - API only
 FROM node:20-alpine AS builder
 
 # Install pnpm
