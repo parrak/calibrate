@@ -9,19 +9,20 @@ import { ensureIdempotent } from '@calibr/security'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  // Verify HMAC signature
+  // Verify HMAC signature (also returns the body to avoid double-read)
   const authResult = await verifyHmac(req)
   if (!authResult.valid) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  const raw = await req.text()
+  // Use body from authResult to avoid reading request body twice
+  const raw = authResult.body || ''
 
   let body
-  try { 
-    body = PriceSuggestionPayload.parse(JSON.parse(raw)) 
-  } catch { 
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 }) 
+  try {
+    body = PriceSuggestionPayload.parse(JSON.parse(raw))
+  } catch {
+    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
   }
 
   const ok = await ensureIdempotent(body.idempotencyKey, 'price-suggestion')

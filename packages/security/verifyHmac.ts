@@ -5,7 +5,7 @@ export async function verifyHmac(
   request: NextRequest,
   secret?: string,
   toleranceSec = 300
-): Promise<{ valid: boolean; projectId?: string }> {
+): Promise<{ valid: boolean; projectId?: string; body?: string }> {
   try {
     const sig = request.headers.get('X-Calibr-Signature')
     const projectId = request.headers.get('X-Calibr-Project')
@@ -23,10 +23,10 @@ export async function verifyHmac(
     const ts = Number(parts['t'])
     const v1 = parts['v1']
 
-    if (!ts || !v1) return { valid: false }
+    if (!ts || !v1) return { valid: false, body: rawBody }
 
     const now = Math.floor(Date.now() / 1000)
-    if (Math.abs(now - ts) > toleranceSec) return { valid: false }
+    if (Math.abs(now - ts) > toleranceSec) return { valid: false, body: rawBody }
 
     const digest = crypto
       .createHmac('sha256', webhookSecret)
@@ -38,7 +38,7 @@ export async function verifyHmac(
       Buffer.from(digest)
     )
 
-    return { valid, projectId: projectId || undefined }
+    return { valid, projectId: projectId || undefined, body: rawBody }
   } catch (error) {
     return { valid: false }
   }

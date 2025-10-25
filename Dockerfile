@@ -1,5 +1,8 @@
 # Build stage - API only
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
+
+# Install OpenSSL for Prisma
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
 RUN npm install -g pnpm@latest
