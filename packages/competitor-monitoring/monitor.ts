@@ -82,11 +82,11 @@ export class CompetitorMonitor {
             pricesUpdated++
           }
         } catch (error) {
-          errors.push(`Failed to scrape product ${product.name}: ${error}`)
+          errors.push(`Failed to scrape product ${product.name}: ${error instanceof Error ? error.message : String(error)}`)
         }
       }
     } catch (error) {
-      errors.push(`Failed to monitor competitor ${competitor.name}: ${error}`)
+      errors.push(`Failed to monitor competitor ${competitor.name}: ${error instanceof Error ? error.message : String(error)}`)
     }
 
     return {

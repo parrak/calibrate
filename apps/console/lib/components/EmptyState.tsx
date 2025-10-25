@@ -8,10 +8,10 @@ type Props = {
 
 export function EmptyState({ title, desc, children }: Props) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center space-y-6">
-      <div className="text-lg font-medium text-gray-900 w-full">{title}</div>
-      {desc && <div className="text-gray-600 max-w-md w-full">{desc}</div>}
-      {children && <div className="w-full flex justify-center">{children}</div>}
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <div className="text-lg font-medium text-gray-900 mb-2">{title}</div>
+      {desc && <div className="text-gray-600 max-w-md mb-4">{desc}</div>}
+      {children && <div className="mt-4">{children}</div>}
     </div>
   )
 }
