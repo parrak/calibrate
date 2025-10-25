@@ -43,7 +43,10 @@
       "Bash(railway link:*)",
       "Bash(railway whoami:*)",
       "Bash(railway service:*)",
-      "Bash(powershell -Command \"if (Test-Path ''nul'') { Remove-Item ''nul'' -Force }; if (Test-Path ''packages\\db\\nul'') { Remove-Item ''packages\\db\\nul'' -Force }\")"
+      "Bash(powershell -Command \"if (Test-Path ''nul'') { Remove-Item ''nul'' -Force }; if (Test-Path ''packages\\db\\nul'') { Remove-Item ''packages\\db\\nul'' -Force }\")",
+      "Bash(Select-String -Pattern \"nurturing\" -Context 2)",
+      "Bash(powershell -ExecutionPolicy Bypass -File scripts/verify-vercel-config.ps1)",
+      "Bash(powershell -ExecutionPolicy Bypass -File ./scripts/verify-vercel-config.ps1)"
     ],
     "deny": [],
     "ask": []
