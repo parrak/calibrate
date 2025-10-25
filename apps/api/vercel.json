@@ -1,5 +1,0 @@
-{
-  "buildCommand": "cd ../.. && pnpm install --no-frozen-lockfile && pnpm --filter @calibr/api... build",
-  "installCommand": "echo 'Skip'",
-  "framework": "nextjs"
-}
