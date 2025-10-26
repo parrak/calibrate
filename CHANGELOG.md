@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
+- Amazon Connector (Agent B)
+  - Initial SP-API pricing feed flow merged to master
+  - Adds feed XML builder, AES-256-GCM encryption + upload, optional submission
+  - New API endpoints: POST /api/platforms/amazon/pricing, GET /api/platforms/amazon/pricing/status
+  - Console UI page to submit/poll pricing feeds
+  - Registry bootstrap integrates with @calibr/platform-connector
 
 ### Planning
 - **Phase 3: Platform Integrations** - Roadmap and architecture planning complete

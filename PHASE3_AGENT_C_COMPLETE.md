@@ -178,6 +178,7 @@ Trigger manual sync
 ---
 
 ## 🎯 For Agent A (Shopify) & Agent B (Amazon)
+Note (Agent B): Amazon pricing feed integration has been merged to master using your PlatformConnector interfaces and ConnectorRegistry. New routes under `/api/platforms/amazon/pricing` with status polling are live, and a console UI is available at `/p/demo/integrations/amazon/pricing`.
 
 ### What You Have Available
 

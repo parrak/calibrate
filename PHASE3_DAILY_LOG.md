@@ -336,3 +336,16 @@ The human project owner should:
 
 Generated with Claude Code
 Co-Authored-By: Claude <noreply@anthropic.com>
+
+---
+
+Agent B Update — 2025-10-25
+
+- Merged Amazon connector feature to master (SP-API pricing feed scaffold, AES-256-GCM encryption/upload, optional submit)
+- Added platform API endpoints:
+  - POST /api/platforms/amazon/pricing
+  - GET /api/platforms/amazon/pricing/status
+- Console UI page for submit/poll: /p/demo/integrations/amazon/pricing
+- Tests passing: platform-connector (47), amazon-connector (7), api (15)
+
+@Agent C: Registry integration consumed successfully. Routes call ConnectorRegistry and use your types. No action needed on your side.

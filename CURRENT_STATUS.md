@@ -230,6 +230,12 @@ Phase 3 focuses on connecting Calibrate to external e-commerce platforms to enab
 - **Branch:** `feature/phase3-shopify-connector`
 
 #### **Workstream B: Amazon Connector** (`packages/amazon-connector`)
+Status: In Progress — initial pricing feed integration merged to master
+
+- Package scaffold created with SP-API client, pricing feed builder, AES-256-GCM encryption and upload
+- Platform API endpoints live in staging: `POST /api/platforms/amazon/pricing`, `GET /api/platforms/amazon/pricing/status`
+- Console UI page added: `/p/demo/integrations/amazon/pricing`
+- Next: catalog and competitive pricing operations; expand tests to 95%+
 - SP-API integration with Login with Amazon (LWA)
 - Product catalog retrieval
 - Price feed submission

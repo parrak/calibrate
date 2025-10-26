@@ -200,6 +200,7 @@ SHOPIFY_WEBHOOK_SECRET=your_webhook_secret
 ---
 
 ## 📦 Workstream B: Amazon Connector
+Update (Agent B): Initial pricing update flow merged. API endpoints and console UI available for feed submission and status checks. Next milestones: catalog retrieval and competitive pricing.
 
 **Package:** `packages/amazon-connector`
 **Agent:** Agent B
