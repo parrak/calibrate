@@ -5,12 +5,10 @@
  */
 
 import NextAuth from 'next-auth'
-import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '@calibr/db'
 import Credentials from 'next-auth/providers/credentials'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   providers: [
     Credentials({
       name: 'Email',
@@ -29,16 +27,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // For demo purposes, allow any email
         // In production, verify password or send magic link
         const email = credentials.email.toLowerCase()
+        const db = prisma()
 
         // Find or create user
-        let user = await prisma.user.findUnique({
+        let user = await db.user.findUnique({
           where: { email },
           include: { tenant: true },
         })
 
         if (!user) {
           // Create demo user with demo tenant
-          const tenant = await prisma.tenant.upsert({
+          const tenant = await db.tenant.upsert({
             where: { id: 'demo-tenant' },
             create: {
               id: 'demo-tenant',
@@ -47,7 +46,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             update: {},
           })
 
-          user = await prisma.user.create({
+          user = await db.user.create({
             data: {
               email,
               name: email.split('@')[0],

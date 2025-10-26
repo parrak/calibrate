@@ -51,7 +51,9 @@
       "Bash(pnpm test:run:*)",
       "Bash(pnpm typecheck:*)",
       "Bash(pnpm prisma generate:*)",
-      "Bash(pnpm add:*)"
+      "Bash(pnpm add:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm ls:*)"
     ],
     "deny": [],
     "ask": []
