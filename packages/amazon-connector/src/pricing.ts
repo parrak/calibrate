@@ -34,6 +34,7 @@ export interface FeedParseSummary {
   errorCount?: number
   warnings?: number
   rawSnippet?: string
+  details?: Array<{ code: string; message?: string; sku?: string }>
 }
 
 export async function applyPriceChange(
@@ -149,9 +150,10 @@ export async function pollFeedUntilDone(
   if (!sp) {
     return { status: 'DRY_RUN', done: true }
   }
-  const interval = options.intervalMs ?? 1500
-  const timeout = options.timeoutMs ?? 60_000
+  const base = options.intervalMs ?? 1000
+  const timeout = options.timeoutMs ?? 90_000
   const start = Date.now()
+  let attempt = 0
   while (Date.now() - start < timeout) {
     const res = await (sp as any).callAPI({ operation: 'getFeed', path: { feedId } })
     const status = res?.processingStatus
@@ -163,7 +165,10 @@ export async function pollFeedUntilDone(
         done: true,
       }
     }
-    await new Promise((r) => setTimeout(r, interval))
+    // Exponential backoff with jitter
+    const delay = Math.min(base * Math.pow(2, attempt++), 10_000)
+    const jitter = Math.floor(Math.random() * 250)
+    await new Promise((r) => setTimeout(r, delay + jitter))
   }
   return { status: 'TIMEOUT', feedId, done: false }
 }
@@ -201,6 +206,18 @@ export async function downloadAndParseFeedResult(
   const errorCount = (text.match(/<ResultCode>Error<\/ResultCode>/g) || []).length
   const warningCount = (text.match(/<ResultCode>Warning<\/ResultCode>/g) || []).length
   const total = successCount + errorCount + warningCount
+  const details: Array<{ code: string; message?: string; sku?: string }> = []
+  const resultRegex = /<Result>([\s\S]*?)<\/Result>/g
+  let m: RegExpExecArray | null
+  while ((m = resultRegex.exec(text))) {
+    const block = m[1]
+    const codeMatch = block.match(/<ResultCode>(.*?)<\/ResultCode>/)
+    const msgMatch = block.match(/<ResultMessage>([\s\S]*?)<\/ResultMessage>/)
+    const skuMatch = block.match(/<SKU>(.*?)<\/SKU>/)
+    if (codeMatch) {
+      details.push({ code: codeMatch[1], message: msgMatch?.[1], sku: skuMatch?.[1] })
+    }
+  }
   return {
     ok: errorCount === 0,
     totalResults: total || undefined,
@@ -208,5 +225,6 @@ export async function downloadAndParseFeedResult(
     errorCount: errorCount || undefined,
     warnings: warningCount || undefined,
     rawSnippet: text.slice(0, 300),
+    details: details.length ? details : undefined,
   }
 }
