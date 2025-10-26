@@ -1,6 +1,8 @@
 import type { AmazonRegion } from './spapi-client'
 import { createSpApiClient, loadConfigFromEnv } from './spapi-client'
 import { buildPriceFeedXML } from './feeds/priceFeed'
+import { encryptWithAes256Gcm } from './feeds/encrypt'
+import { uploadFeedDocument } from './feeds/upload'
 
 export interface PriceChangeInput {
   skuCode: string
@@ -10,6 +12,7 @@ export interface PriceChangeInput {
   sellerId?: string
   region?: AmazonRegion
   context?: any
+  submit?: boolean // if false, stop after creating document
 }
 
 export async function applyPriceChange(
@@ -53,8 +56,14 @@ export async function applyPriceChange(
     const encryptionDetails = doc?.encryptionDetails
     const url = doc?.url
 
-    // 3) TODO: Encrypt and upload feedXml to url using encryptionDetails
-    //    This step requires AES-256-GCM encryption per SP-API docs.
+    // 3) Encrypt and upload feedXml to url using encryptionDetails (AES-256-GCM)
+    if (url && encryptionDetails?.key && encryptionDetails?.initializationVector) {
+      const encrypted = encryptWithAes256Gcm(feedXml, {
+        key: encryptionDetails.key,
+        initializationVector: encryptionDetails.initializationVector,
+      })
+      await uploadFeedDocument(url, encrypted, 'text/xml; charset=UTF-8')
+    }
 
     // 4) Create feed (will fail until upload implemented, so guard)
     if (!feedDocumentId) {
@@ -69,14 +78,36 @@ export async function applyPriceChange(
       }
     }
 
-    // Ready for next step
+    // 5) Optionally submit feed now
+    if (input.submit !== false && feedDocumentId) {
+      const feed = await (sp as any).callAPI({
+        operation: 'createFeed',
+        body: {
+          inputFeedDocumentId: feedDocumentId,
+          feedType: 'POST_PRODUCT_PRICING_DATA',
+          marketplaceIds: [marketplaceId],
+        },
+      })
+
+      const feedId = feed?.feedId
+      return {
+        ok: true,
+        message: 'Feed submitted',
+        channelResult: {
+          feedId,
+          marketplaceId,
+          submittedAt: new Date().toISOString(),
+        },
+      }
+    }
+
+    // Ready but not submitted
     return {
       ok: true,
-      message:
-        'Feed document created. Encryption/upload step pending before final submission.',
+      message: 'Feed document created and uploaded (not submitted due to submit:false).',
       channelResult: {
         marketplaceId,
-        feedDocument: { feedDocumentId, url, encryptionDetails },
+        feedDocument: { feedDocumentId, url },
         previewBytes: Buffer.byteLength(feedXml, 'utf8'),
       },
     }
