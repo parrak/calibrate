@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { UserMenu } from '@/components/UserMenu'
 
 export const metadata: Metadata = {
   title: 'Calibrate Console',
@@ -35,6 +36,7 @@ export default function RootLayout({
               <span className="text-lg font-semibold">Calibrate Console</span>
               <span className="text-xs text-gray-500">Enterprise pricing ops</span>
             </div>
+            <UserMenu />
           </div>
         </header>
         <main id="main" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
