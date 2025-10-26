@@ -337,3 +337,32 @@ pnpm lint
 **Status:** ✅ All Systems Operational  
 **Last Updated:** October 25, 2025  
 **Next Review:** Next development session
+---
+
+## Staging Validation (Phase 3)
+
+How to test Phase 3 Amazon pricing flow in staging:
+
+- API Submit:
+  - POST https://staging-api.calibr.lat/api/platforms/amazon/pricing
+  - Body: { "project": "demo", "sku": "SKU123", "price": 19.99, "currency": "USD", "submit": true, "poll": false }
+- API Status:
+  - GET https://staging-api.calibr.lat/api/platforms/amazon/pricing/status?feed=FEED_ID&parse=true
+- Console UI:
+  - https://staging-console.calibr.lat/p/demo/integrations/amazon/pricing
+  - Enter SKU and price, submit, then Poll Status
+
+Deployment steps (Vercel):
+
+API (apps/api)
+- cd apps/api
+- vercel login (if needed)
+- rmdir /s /q .vercel (if invalid link)
+- vercel link (select org + calibrate-api-staging)
+- vercel deploy --prod -A vercel.staging.json --yes
+
+Console (apps/console)
+- cd apps/console
+- rmdir /s /q .vercel (if invalid link)
+- vercel link (select org + calibrate-console-staging)
+- vercel deploy --prod --yes
