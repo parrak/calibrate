@@ -15,6 +15,27 @@ export interface PriceChangeInput {
   submit?: boolean // if false, stop after creating document
 }
 
+export interface FeedPollOptions {
+  intervalMs?: number
+  timeoutMs?: number
+}
+
+export interface FeedStatusResult {
+  status: string
+  feedId?: string
+  resultDocumentId?: string
+  done: boolean
+}
+
+export interface FeedParseSummary {
+  ok: boolean
+  totalResults?: number
+  successCount?: number
+  errorCount?: number
+  warnings?: number
+  rawSnippet?: string
+}
+
 export async function applyPriceChange(
   input: PriceChangeInput,
 ): Promise<{ ok: boolean; message: string; channelResult?: any }> {
@@ -116,5 +137,76 @@ export async function applyPriceChange(
       ok: false,
       message: `Failed to create feed document: ${err?.message || err}`,
     }
+  }
+}
+
+// Poll feed status until DONE/ERROR or timeout
+export async function pollFeedUntilDone(
+  feedId: string,
+  options: FeedPollOptions = {},
+): Promise<FeedStatusResult> {
+  const sp = createSpApiClient()
+  if (!sp) {
+    return { status: 'DRY_RUN', done: true }
+  }
+  const interval = options.intervalMs ?? 1500
+  const timeout = options.timeoutMs ?? 60_000
+  const start = Date.now()
+  while (Date.now() - start < timeout) {
+    const res = await (sp as any).callAPI({ operation: 'getFeed', path: { feedId } })
+    const status = res?.processingStatus
+    if (status === 'DONE' || status === 'CANCELLED' || status === 'FATAL') {
+      return {
+        status,
+        feedId,
+        resultDocumentId: res?.resultFeedDocumentId,
+        done: true,
+      }
+    }
+    await new Promise((r) => setTimeout(r, interval))
+  }
+  return { status: 'TIMEOUT', feedId, done: false }
+}
+
+// Download and parse feed result document, returning a summary
+export async function downloadAndParseFeedResult(
+  feedDocumentId: string,
+): Promise<FeedParseSummary> {
+  const sp = createSpApiClient()
+  if (!sp) {
+    return { ok: true, rawSnippet: 'dry-run' }
+  }
+  const doc = await (sp as any).callAPI({
+    operation: 'getFeedDocument',
+    path: { feedDocumentId },
+  })
+  const url: string | undefined = doc?.url
+  const compression: string | undefined = doc?.compressionAlgorithm
+  if (!url) {
+    return { ok: false }
+  }
+  const res = await fetch(url)
+  if (!res.ok) {
+    return { ok: false }
+  }
+  let body = await res.arrayBuffer()
+  // Handle gzip if indicated
+  if (compression && String(compression).toUpperCase().includes('GZIP')) {
+    const zlib = await import('node:zlib')
+    body = zlib.gunzipSync(Buffer.from(body)).buffer
+  }
+  const text = Buffer.from(body).toString('utf8')
+  // Naive XML summary parsing (ProcessingReport)
+  const successCount = (text.match(/<ResultCode>Success<\/ResultCode>/g) || []).length
+  const errorCount = (text.match(/<ResultCode>Error<\/ResultCode>/g) || []).length
+  const warningCount = (text.match(/<ResultCode>Warning<\/ResultCode>/g) || []).length
+  const total = successCount + errorCount + warningCount
+  return {
+    ok: errorCount === 0,
+    totalResults: total || undefined,
+    successCount: successCount || undefined,
+    errorCount: errorCount || undefined,
+    warnings: warningCount || undefined,
+    rawSnippet: text.slice(0, 300),
   }
 }
