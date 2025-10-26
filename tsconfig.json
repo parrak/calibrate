@@ -24,6 +24,8 @@
       "@calibr/pricing-engine/*": ["packages/pricing-engine/*"],
       "@calibr/security/*": ["packages/security/*"],
       "@calibr/connectors/*": ["packages/connectors/*"],
+      "@calibr/amazon-connector/*": ["packages/amazon-connector/*"],
+      "@calibr/platform-connector/*": ["packages/platform-connector/src/*"],
       "@calibr/ui/*": ["packages/ui/*"]
     }
   },

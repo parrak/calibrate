@@ -257,6 +257,25 @@ importers:
         specifier: 14.0.4
         version: 14.0.4(eslint@8.57.1)(typescript@5.9.3)
 
+  packages/amazon-connector:
+    dependencies:
+      '@calibr/platform-connector':
+        specifier: workspace:*
+        version: link:../platform-connector
+      selling-partner-api:
+        specifier: ^1.0.0
+        version: 1.0.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.22
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@20.19.22)(jsdom@27.0.1(postcss@8.5.6))
+
   packages/competitor-monitoring:
     dependencies:
       '@prisma/client':
@@ -2690,6 +2709,9 @@ packages:
 
   scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
+
+  selling-partner-api@1.0.0:
+    resolution: {integrity: sha512-/Chc/grLgLyUOrRPV+RfxjeTdLqy+/V2US948fO4jaQtXrnK/bMMXOfr+QstpufjOBtwKjo6Sf+PwyVCIoSliQ==}
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
@@ -5615,6 +5637,8 @@ snapshots:
   scheduler@0.23.2:
     dependencies:
       loose-envify: 1.4.0
+
+  selling-partner-api@1.0.0: {}
 
   semver@6.3.1: {}
 
