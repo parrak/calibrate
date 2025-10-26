@@ -1,22 +1,6 @@
 {
   "version": 2,
   "name": "calibrate-api-staging",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -86,11 +70,9 @@
     "ENABLE_PERFORMANCE_TRACKING": "true",
     "ENABLE_SECURITY_SCANNING": "true"
   },
-  "functions": {
-    "apps/api/app/api/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
+  "installCommand": "pnpm -w install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @calibr/db prisma generate && pnpm --filter @calibr/api build",
+  
   "regions": ["iad1"],
   "framework": "nextjs"
 }

@@ -1,0 +1,23 @@
+FROM node:20-bullseye-slim AS base
+ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+WORKDIR /app
+
+# Enable pnpm via Corepack
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+
+# Copy repo (monorepo build)
+COPY . .
+
+# Install deps once for the workspace
+RUN pnpm install --frozen-lockfile
+
+# Build console app
+RUN pnpm --filter @calibr/db prisma generate || true
+RUN pnpm --filter @calibr/console build
+
+EXPOSE 8080
+ENV PORT=8080
+
+CMD ["sh","-c","pnpm --filter @calibr/console start -p $PORT"]
+
