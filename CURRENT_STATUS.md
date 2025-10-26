@@ -236,6 +236,11 @@ Status: In Progress — initial pricing feed integration merged to master
 - Platform API endpoints live in staging: `POST /api/platforms/amazon/pricing`, `GET /api/platforms/amazon/pricing/status`
 - Console UI page added: `/p/demo/integrations/amazon/pricing`
 - Next: catalog and competitive pricing operations; expand tests to 95%+
+
+Authentication (WIP for local dev)
+- API: added `POST /api/auth/session` to issue bearer tokens for Console→API calls (protected by `CONSOLE_INTERNAL_TOKEN`)
+- Console: on login, requests API token and attaches to session; API calls can use `Authorization: Bearer <token>`
+- Issue to resolve next: dev build errors related to NextAuth v5 import paths; production unaffected
 - SP-API integration with Login with Amazon (LWA)
 - Product catalog retrieval
 - Price feed submission

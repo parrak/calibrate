@@ -11,6 +11,10 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - New API endpoints: POST /api/platforms/amazon/pricing, GET /api/platforms/amazon/pricing/status
   - Console UI page to submit/poll pricing feeds
   - Registry bootstrap integrates with @calibr/platform-connector
+ - Auth integration groundwork (WIP)
+   - API: POST /api/auth/session issues bearer tokens for Console→API calls (guarded by CONSOLE_INTERNAL_TOKEN)
+   - Console: NextAuth wiring to request/store API token; added UI auth check
+   - Known issue: NextAuth v5 dev import paths causing build errors; to resolve next session
 
 ### Planning
 - **Phase 3: Platform Integrations** - Roadmap and architecture planning complete

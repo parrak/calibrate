@@ -349,3 +349,17 @@ Agent B Update — 2025-10-25
 - Tests passing: platform-connector (47), amazon-connector (7), api (15)
 
 @Agent C: Registry integration consumed successfully. Routes call ConnectorRegistry and use your types. No action needed on your side.
+
+---
+
+Agent B Update — 2025-10-26
+
+- Auth integration groundwork for local dev:
+  - API: added POST /api/auth/session to issue Bearer tokens for Console → API calls (guarded by CONSOLE_INTERNAL_TOKEN)
+  - Console: on sign-in, requests API token in NextAuth jwt callback; exposes session.apiToken
+- Console UI: added API auth check section on the Amazon pricing page
+- Local run scripts updated to start API on 3000 and Console on 3001; env examples updated with CONSOLE_INTERNAL_TOKEN
+
+Known issue (WIP):
+- Console login build error with NextAuth v5 import paths under dev/webpack
+- Next steps: finalize NextAuth imports (server vs client), verify providers import path, then validate end-to-end
