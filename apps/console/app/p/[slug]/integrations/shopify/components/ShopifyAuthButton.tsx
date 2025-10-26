@@ -7,7 +7,7 @@ interface ShopifyAuthButtonProps {
   projectId: string;
   onSuccess?: () => void;
   onError?: (error: string) => void;
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  variant?: 'primary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   children?: React.ReactNode;
 }

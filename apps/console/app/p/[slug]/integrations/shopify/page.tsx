@@ -98,7 +98,7 @@ export default function ShopifyIntegrationPage() {
       case 'ERROR': return 'danger';
       case 'SYNCING': return 'warning';
       case 'PARTIAL': return 'warning';
-      default: return 'secondary';
+      default: return 'info';
     }
   };
 

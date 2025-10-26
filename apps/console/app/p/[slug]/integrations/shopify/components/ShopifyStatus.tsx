@@ -67,7 +67,7 @@ export default function ShopifyStatus({ projectId, refreshInterval = 30000 }: Sh
       case 'ERROR': return 'danger';
       case 'SYNCING': return 'warning';
       case 'PARTIAL': return 'warning';
-      default: return 'secondary';
+      default: return 'info';
     }
   };
 

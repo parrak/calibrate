@@ -113,7 +113,7 @@ export default function ShopifyInstallPage() {
 
             <Button
               type="button"
-              variant="secondary"
+              variant="ghost"
               onClick={() => window.location.href = `/p/${params.slug}/integrations/shopify`}
               className="w-full"
             >
