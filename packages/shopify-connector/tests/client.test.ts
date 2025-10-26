@@ -8,21 +8,23 @@ import { ShopifyClient } from '../src/client';
 import { ShopifyConfig } from '../src/types';
 
 // Mock axios
+const mockAxiosInstance = {
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  delete: vi.fn(),
+  interceptors: {
+    request: { use: vi.fn() },
+    response: { use: vi.fn() },
+  },
+  defaults: {
+    headers: {},
+  },
+};
+
 vi.mock('axios', () => ({
   default: {
-    create: vi.fn(() => ({
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-      interceptors: {
-        request: { use: vi.fn() },
-        response: { use: vi.fn() },
-      },
-      defaults: {
-        headers: {},
-      },
-    })),
+    create: vi.fn(() => mockAxiosInstance),
   },
 }));
 
@@ -41,9 +43,8 @@ describe('ShopifyClient', () => {
 
     client = new ShopifyClient(config);
     
-    // Get the mocked axios instance
-    const axios = await import('axios');
-    mockAxios = axios.default.create();
+    // Use the mock instance directly
+    mockAxios = mockAxiosInstance;
   });
 
   describe('constructor', () => {

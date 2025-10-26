@@ -155,9 +155,9 @@ describe('ShopifyConnector', () => {
 
       expect(connector['credentials']).toBeNull();
       expect(connector['client']).toBeNull();
-      expect(connector['auth']).toBeNull();
-      expect(connector['products']).toBeNull();
-      expect(connector['pricing']).toBeNull();
+      expect(connector['authOperations']).toBeNull();
+      expect(connector['productOperations']).toBeNull();
+      expect(connector['pricingOperations']).toBeNull();
       expect(connector['webhooks']).toBeNull();
     });
   });
@@ -175,8 +175,10 @@ describe('ShopifyConnector', () => {
     it('should return healthy when connection is working', async () => {
       const connector = new ShopifyConnector(config, credentials);
       
-      // Mock successful API call
-      connector['client'].get.mockResolvedValue({ shop: { name: 'Test Shop' } });
+      // Mock successful API call with delay
+      connector['client'].get.mockImplementation(() => 
+        new Promise(resolve => setTimeout(() => resolve({ shop: { name: 'Test Shop' } }), 10))
+      );
 
       const health = await connector.healthCheck();
 

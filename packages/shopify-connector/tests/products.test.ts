@@ -226,6 +226,8 @@ describe('ShopifyProducts', () => {
 
       expect(mockClient.get).toHaveBeenCalledWith('/products.json', {
         title: 'test query',
+        limit: 50,
+        page: 1,
       });
     });
   });
@@ -239,6 +241,8 @@ describe('ShopifyProducts', () => {
 
       expect(mockClient.get).toHaveBeenCalledWith('/products.json', {
         vendor: 'Test Vendor',
+        limit: 50,
+        page: 1,
       });
     });
   });
@@ -252,6 +256,8 @@ describe('ShopifyProducts', () => {
 
       expect(mockClient.get).toHaveBeenCalledWith('/products.json', {
         product_type: 'Electronics',
+        limit: 50,
+        page: 1,
       });
     });
   });
@@ -265,6 +271,8 @@ describe('ShopifyProducts', () => {
 
       expect(mockClient.get).toHaveBeenCalledWith('/products.json', {
         updated_at_min: expect.any(String),
+        limit: 50,
+        page: 1,
       });
     });
   });
