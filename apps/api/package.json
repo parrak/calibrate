@@ -17,6 +17,7 @@
     "@calibr/connectors": "workspace:*",
     "@calibr/platform-connector": "workspace:*",
     "@calibr/amazon-connector": "workspace:*",
+    "@calibr/shopify-connector": "workspace:*",
     "@calibr/db": "workspace:*",
     "@calibr/pricing-engine": "workspace:*",
     "@calibr/security": "workspace:*",
