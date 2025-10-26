@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ConnectorRegistry } from '@calibr/platform-connector';
+import '@/lib/platforms/register'
 
 export const runtime = 'nodejs';
 
