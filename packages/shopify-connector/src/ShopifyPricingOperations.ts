@@ -27,7 +27,7 @@ export class ShopifyPricingOperations implements PricingOperations {
     }
 
     try {
-      const variant = await this.connector['products'].getVariant(externalId);
+      const variant = await this.connector.underlyingProducts!.getVariant(externalId);
 
       return {
         externalId: variant.id.toString(),

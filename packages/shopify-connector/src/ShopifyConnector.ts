@@ -56,11 +56,15 @@ export class ShopifyConnector implements PlatformConnector {
   };
 
   private client: ShopifyClient | null = null;
-  private auth: ShopifyAuth | null = null;
-  private products: ShopifyProducts | null = null;
-  private pricing: ShopifyPricing | null = null;
+  private authOperations: any = null;
+  private productOperations: any = null;
+  private pricingOperations: any = null;
   private webhooks: ShopifyWebhooks | null = null;
   private credentials: ShopifyCredentials | null = null;
+  
+  // Expose underlying Shopify classes for operations
+  private underlyingProducts: ShopifyProducts | null = null;
+  private underlyingPricing: ShopifyPricing | null = null;
 
   constructor(
     public config: ShopifyConfig,
@@ -73,36 +77,36 @@ export class ShopifyConnector implements PlatformConnector {
 
   // Implement required properties
   get auth(): any {
-    if (!this._auth) {
+    if (!this.authOperations) {
       throw new PlatformError(
         'authentication',
         'Connector not initialized. Call initialize() first.',
         'shopify'
       );
     }
-    return this._auth;
+    return this.authOperations;
   }
 
   get products(): any {
-    if (!this._products) {
+    if (!this.productOperations) {
       throw new PlatformError(
         'authentication',
         'Connector not initialized. Call initialize() first.',
         'shopify'
       );
     }
-    return this._products;
+    return this.productOperations;
   }
 
   get pricing(): any {
-    if (!this._pricing) {
+    if (!this.pricingOperations) {
       throw new PlatformError(
         'authentication',
         'Connector not initialized. Call initialize() first.',
         'shopify'
       );
     }
-    return this._pricing;
+    return this.pricingOperations;
   }
 
   // Implement required methods
@@ -132,25 +136,29 @@ export class ShopifyConnector implements PlatformConnector {
     });
 
     // Initialize operations
-    this.auth = new ShopifyAuth({
-      apiKey: this.config.apiKey,
-      apiSecret: this.config.apiSecret,
-      scopes: this.config.scopes,
-      webhookSecret: this.config.webhookSecret,
-    });
+    const { ShopifyAuthOperations } = await import('./ShopifyAuthOperations');
+    const { ShopifyProductOperations } = await import('./ShopifyProductOperations');
+    const { ShopifyPricingOperations } = await import('./ShopifyPricingOperations');
 
-    this.products = new ShopifyProducts(this.client);
-    this.pricing = new ShopifyPricing(this.client);
+    this.authOperations = new ShopifyAuthOperations(this);
+    this.productOperations = new ShopifyProductOperations(this);
+    this.pricingOperations = new ShopifyPricingOperations(this);
     this.webhooks = new ShopifyWebhooks(this.client, this.config.webhookSecret);
+    
+    // Initialize underlying Shopify classes
+    this.underlyingProducts = new ShopifyProducts(this.client);
+    this.underlyingPricing = new ShopifyPricing(this.client);
   }
 
   async disconnect(): Promise<void> {
     this.credentials = null;
     this.client = null;
-    this.auth = null;
-    this.products = null;
-    this.pricing = null;
+    this.authOperations = null;
+    this.productOperations = null;
+    this.pricingOperations = null;
     this.webhooks = null;
+    this.underlyingProducts = null;
+    this.underlyingPricing = null;
   }
 
   async healthCheck(): Promise<PlatformHealth> {

@@ -30,7 +30,7 @@ describe('ShopifyClient', () => {
   let client: ShopifyClient;
   let mockAxios: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     const config: ShopifyConfig = {
       apiKey: 'test-api-key',
       apiSecret: 'test-api-secret',

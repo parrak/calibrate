@@ -8,16 +8,20 @@ import { ShopifyAuth } from '../src/auth';
 import { ShopifyConfig } from '../src/types';
 
 // Mock crypto
-vi.mock('crypto', () => ({
-  createHmac: vi.fn(() => ({
-    update: vi.fn().mockReturnThis(),
-    digest: vi.fn(() => 'mock-hash'),
-  })),
-  randomBytes: vi.fn(() => ({
-    toString: vi.fn(() => 'mock-random-string'),
-  })),
-  timingSafeEqual: vi.fn(() => true),
-}));
+vi.mock('crypto', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('crypto')>();
+  return {
+    ...actual,
+    createHmac: vi.fn(() => ({
+      update: vi.fn().mockReturnThis(),
+      digest: vi.fn(() => 'mock-hash'),
+    })),
+    randomBytes: vi.fn(() => ({
+      toString: vi.fn(() => 'mock-random-string'),
+    })),
+    timingSafeEqual: vi.fn(() => true),
+  };
+});
 
 // Mock fetch
 global.fetch = vi.fn();

@@ -27,7 +27,7 @@ export class ShopifyProductOperations implements ProductOperations {
     }
 
     try {
-      const response = await this.connector['products'].listProducts({
+      const response = await this.connector.underlyingProducts!.listProducts({
         limit: filter?.limit || 50,
         page: filter?.page || 1,
         vendor: filter?.vendor,
@@ -40,7 +40,7 @@ export class ShopifyProductOperations implements ProductOperations {
       });
 
       return {
-        data: response.products.map(this.normalizeProduct),
+        data: response.products.map((product: any) => this.normalizeProduct(product)),
         pagination: {
           total: response.page_info ? undefined : response.products.length,
           page: filter?.page || 1,
@@ -69,7 +69,7 @@ export class ShopifyProductOperations implements ProductOperations {
     }
 
     try {
-      const product = await this.connector['products'].getProduct(externalId);
+      const product = await this.connector.underlyingProducts!.getProduct(externalId);
       return this.normalizeProduct(product);
     } catch (error) {
       throw new PlatformError(
@@ -172,7 +172,7 @@ export class ShopifyProductOperations implements ProductOperations {
     }
 
     try {
-      return await this.connector['products'].getProductCount();
+      return await this.connector.underlyingProducts!.getProductCount();
     } catch (error) {
       throw new PlatformError(
         'server',
@@ -194,7 +194,7 @@ export class ShopifyProductOperations implements ProductOperations {
       tags: shopifyProduct.tags || [],
       status: this.normalizeStatus(shopifyProduct.status),
       images: shopifyProduct.images?.map((img: any) => img.src) || [],
-      variants: shopifyProduct.variants?.map(this.normalizeVariant) || [],
+      variants: shopifyProduct.variants?.map((variant: any) => this.normalizeVariant(variant)) || [],
       createdAt: new Date(shopifyProduct.createdAt),
       updatedAt: new Date(shopifyProduct.updatedAt),
       publishedAt: shopifyProduct.publishedAt ? new Date(shopifyProduct.publishedAt) : undefined,
