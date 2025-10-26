@@ -15,9 +15,8 @@ export async function GET(req: NextRequest) {
     const startTime = Date.now()
     
     // Get query parameters
-    const url = new URL(req.url)
-    const projectSlug = url.searchParams.get('project')
-    const timeRange = url.searchParams.get('timeRange') || '24h'
+    const projectSlug = req.nextUrl.searchParams.get('project')
+    const timeRange = req.nextUrl.searchParams.get('timeRange') || '24h'
     
     // Calculate time range
     const now = new Date()

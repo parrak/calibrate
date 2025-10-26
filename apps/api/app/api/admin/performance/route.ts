@@ -8,11 +8,10 @@ import {
 export async function GET(req: NextRequest) {
   try {
     const startTime = Date.now()
-    const url = new URL(req.url)
     
     // Get query parameters
-    const timeRange = url.searchParams.get('timeRange') || '24h'
-    const projectId = url.searchParams.get('project') || undefined
+    const timeRange = req.nextUrl.searchParams.get('timeRange') || '24h'
+    const projectId = req.nextUrl.searchParams.get('project') || undefined
     
     // Calculate time range
     const timeRangeMs = getTimeRangeMs(timeRange)

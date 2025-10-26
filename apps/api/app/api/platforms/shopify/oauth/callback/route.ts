@@ -16,7 +16,7 @@ export const runtime = 'nodejs';
  */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const state = searchParams.get('state');
     const shop = searchParams.get('shop');
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     const tokenResponse = await connector.auth.handleOAuthCallback(code, {
       clientId: config.apiKey,
       clientSecret: config.apiSecret,
-      redirectUri: `${process.env.NEXT_PUBLIC_API_BASE}/api/platforms/shopify/oauth/callback`,
+      redirectUri: `${process.env.API_BASE_URL || 'http://localhost:3000'}/api/platforms/shopify/oauth/callback`,
     });
 
     // Store integration in database
