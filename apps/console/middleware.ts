@@ -4,7 +4,7 @@
  * Protects routes and redirects to login if not authenticated
  */
 
-import { auth } from 'next-auth'
+import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
 export default auth((req) => {

@@ -391,3 +391,9 @@ Agent B Update — 2025-10-26
 Known issue (WIP):
 - Console login build error with NextAuth v5 import paths under dev/webpack
 - Next steps: finalize NextAuth imports (server vs client), verify providers import path, then validate end-to-end
+
+Handoff to Agent C — 2025-10-26
+
+- Please pick up Console login stabilization per AGENT_C_HANDOFF.md
+- Goal: /login works locally; session.apiToken populated; API auth check returns 200
+- Focus: ensure imports match v5 (see handoff), single dev instance on 3001, clear caches
