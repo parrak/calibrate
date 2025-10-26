@@ -1,14 +1,17 @@
 "use client";
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { useParams } from 'next/navigation'
 
 export default function AmazonPricingPage() {
   const params = useParams() as { slug: string }
+  const { data: session } = useSession()
   const [sku, setSku] = useState('')
   const [price, setPrice] = useState('')
   const [currency, setCurrency] = useState('USD')
   const [result, setResult] = useState<any>(null)
   const [status, setStatus] = useState<any>(null)
+  const [authResult, setAuthResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
   async function submit(e: React.FormEvent) {
@@ -42,6 +45,22 @@ export default function AmazonPricingPage() {
     }
   }
 
+  async function checkAuth() {
+    setLoading(true)
+    setAuthResult(null)
+    try {
+      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const token = (session as any)?.apiToken as string | undefined
+      const res = await fetch(`${base}/api/admin/dashboard`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+      const data = await res.json().catch(() => ({}))
+      setAuthResult({ ok: res.ok, status: res.status, data })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="max-w-2xl p-6">
       <h1 className="text-xl font-semibold mb-4">Amazon Pricing Feed</h1>
@@ -60,6 +79,15 @@ export default function AmazonPricingPage() {
         </div>
         <button disabled={loading} className="bg-blue-600 text-white px-3 py-1 rounded disabled:opacity-50">{loading ? 'Working...' : 'Submit Feed'}</button>
       </form>
+
+      <div className="mt-6">
+        <h2 className="font-medium">API Auth</h2>
+        <div className="text-xs text-gray-600 mb-2">Session token present: {((session as any)?.apiToken ? 'yes' : 'no')}</div>
+        <button onClick={checkAuth} disabled={loading} className="bg-green-600 text-white px-3 py-1 rounded disabled:opacity-50">{loading ? 'Checking…' : 'Check API Auth'}</button>
+        {authResult && (
+          <pre className="mt-2 text-xs bg-gray-100 p-2 overflow-auto">{JSON.stringify(authResult, null, 2)}</pre>
+        )}
+      </div>
 
       {result && (
         <div className="mt-6">

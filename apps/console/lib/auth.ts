@@ -4,7 +4,7 @@
  * Simple email-based authentication for Calibrate Console
  */
 
-import NextAuth from 'next-auth'
+import NextAuth from 'next-auth/next'
 import { prisma } from '@calibr/db'
 import Credentials from 'next-auth/providers/credentials'
 
@@ -73,6 +73,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role
+        // Bootstrap API session token for console → API calls
+        try {
+          const apiBase = process.env.NEXT_PUBLIC_API_BASE || process.env.API_BASE_URL
+          const internal = process.env.CONSOLE_INTERNAL_TOKEN
+          if (apiBase && internal) {
+            const res = await fetch(`${apiBase}/api/auth/session`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-console-auth': internal },
+              body: JSON.stringify({ userId: token.sub, roles: [user.role] }),
+            })
+            if (res.ok) {
+              const data = await res.json()
+              ;(token as any).apiToken = data.token
+            }
+          }
+        } catch {
+          // ignore; API token optional
+        }
       }
       return token
     },
@@ -80,6 +98,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.sub as string
         session.user.role = token.role as string
+        ;(session as any).apiToken = (token as any).apiToken
       }
       return session
     },
