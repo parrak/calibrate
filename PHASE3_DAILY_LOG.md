@@ -400,6 +400,54 @@ Handoff to Agent C — 2025-10-26
 
 ---
 
+## 📅 October 27, 2025
+
+### Workstream C: Platform & Console
+**Agent:** Agent C (Claude)
+**Status:** 🟢 On Track
+
+**Today's Progress:**
+- [x] Unified integrations dashboard page created
+- [x] PlatformCard component - shows connection status, sync controls
+- [x] IntegrationStats component - overview stats (Total, Connected, Syncing, Errors)
+- [x] Platforms API client added to api-client.ts
+- [x] Navigation updated - added "Integrations" link to sidebar
+
+**Completed:**
+- `apps/console/app/p/[slug]/integrations/page.tsx` - Main integrations hub
+- `apps/console/components/platforms/PlatformCard.tsx` - Platform connection cards
+- `apps/console/components/platforms/IntegrationStats.tsx` - Stats overview
+- `apps/console/lib/api-client.ts` - platformsApi functions (list, getStatus, connect, disconnect, triggerSync)
+- `apps/console/app/p/[slug]/layout.tsx` - Added Integrations nav link
+
+**Features Delivered:**
+- Lists all available platforms (Shopify, Amazon)
+- Shows integration status per platform
+- Connect/disconnect actions
+- Manual sync trigger
+- Recent sync activity timeline
+- Responsive grid layout
+- Loading states and error handling
+
+**Build Status:**
+- ✅ Console builds successfully
+- ✅ New route: `/p/[slug]/integrations` (3.54 kB)
+- ✅ All TypeScript checks passing
+
+**Blockers:**
+- None
+
+**Questions for Other Agents:**
+- @Agent A: Shopify connector should work with the unified dashboard once OAuth is tested
+- @Agent B: Amazon pricing feeds will be accessible through the integrations page
+
+**Next Session Plan:**
+- Platform settings UI (credentials management)
+- Sync history viewer
+- Connection status indicators
+
+---
+
 All-Agents Broadcast — 2025-10-27
 
 - Console login stabilized; env configured on Vercel projects (console + staging). Added DATABASE_URL for Console to use Railway Postgres.
