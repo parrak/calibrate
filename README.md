@@ -2,6 +2,8 @@
 
 A comprehensive pricing automation platform built with Next.js, Prisma, and TypeScript in a monorepo structure.
 
+Note for AI agents: See `AGENTS.md` for repository-wide rules and per-app guides.
+
 ## Architecture
 
 ```
