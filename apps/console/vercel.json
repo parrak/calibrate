@@ -1,5 +1,6 @@
 {
-  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile=false && pnpm --filter @calibr/db generate && pnpm --filter @calibr/console build",
+  "buildCommand": "cd ../.. && pnpm install --filter @calibr/console... && pnpm --filter @calibr/db generate && pnpm --filter @calibr/console build",
   "installCommand": "corepack prepare pnpm@9.0.0 --activate",
-  "framework": null
+  "framework": null,
+  "outputDirectory": ".next"
 }
