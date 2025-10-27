@@ -61,7 +61,7 @@ export default function SecurityDashboard() {
       setLoading(true)
       setError(null)
       
-      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
       const response = await fetch(`${base}/api/admin/security?includeDetails=true&runScan=${runScan}`)
       if (!response.ok) {
         throw new Error('Failed to fetch security data')
@@ -78,7 +78,7 @@ export default function SecurityDashboard() {
 
   const resolveVulnerability = async (vulnerabilityId: string) => {
     try {
-      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
       const response = await fetch(`${base}/api/admin/security`, {
         method: 'POST',
         headers: {

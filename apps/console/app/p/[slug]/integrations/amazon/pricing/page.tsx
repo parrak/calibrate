@@ -19,7 +19,7 @@ export default function AmazonPricingPage() {
     setLoading(true)
     setResult(null)
     try {
-      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
       const token = (session as any)?.apiToken as string | undefined
       const res = await fetch(`${base}/api/platforms/amazon/pricing`, {
         method: 'POST',
@@ -42,7 +42,7 @@ export default function AmazonPricingPage() {
     if (!feedId) return
     setLoading(true)
     try {
-      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
       const token = (session as any)?.apiToken as string | undefined
       const res = await fetch(`${base}/api/platforms/amazon/pricing/status?feed=${encodeURIComponent(feedId)}&parse=true`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -58,7 +58,7 @@ export default function AmazonPricingPage() {
     setLoading(true)
     setAuthResult(null)
     try {
-      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
       const token = (session as any)?.apiToken as string | undefined
       const res = await fetch(`${base}/api/admin/dashboard`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,

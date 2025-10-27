@@ -122,7 +122,7 @@ export default function PerformanceDashboard() {
       setLoading(true)
       setError(null)
       
-      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
       const response = await fetch(`${base}/api/admin/performance?timeRange=${timeRange}`)
       if (!response.ok) {
         throw new Error('Failed to fetch performance data')
