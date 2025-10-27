@@ -9,6 +9,10 @@ import { prisma } from '@calibr/db'
 import Credentials from 'next-auth/providers/credentials'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Trust Vercel-provided host headers and allow custom domains
+  trustHost: true,
+  // Provide secret explicitly to avoid runtime env pitfalls
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   providers: [
     Credentials({
       name: 'Email',
