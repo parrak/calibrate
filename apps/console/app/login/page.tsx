@@ -7,7 +7,7 @@
 import { signIn } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: { searchParams?: { callbackUrl?: string; error?: string } }) {
   async function handleLogin(formData: FormData) {
     'use server'
 
@@ -17,9 +17,13 @@ export default function LoginPage() {
       return
     }
 
+    const callbackUrl = (searchParams?.callbackUrl && typeof searchParams.callbackUrl === 'string')
+      ? searchParams.callbackUrl
+      : '/projects'
+
     await signIn('credentials', {
       email,
-      redirectTo: '/',
+      redirectTo: callbackUrl,
     })
   }
 
@@ -65,6 +69,9 @@ export default function LoginPage() {
           <p className="text-sm text-gray-600">
             Demo mode: Enter any email to sign in
           </p>
+          {searchParams?.error && (
+            <p className="text-sm text-red-600 mt-2">{decodeURIComponent(searchParams.error)}</p>
+          )}
         </div>
 
         <div className="mt-8 pt-6 border-t border-gray-200">

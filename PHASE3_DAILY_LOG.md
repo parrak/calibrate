@@ -397,3 +397,12 @@ Handoff to Agent C — 2025-10-26
 - Please pick up Console login stabilization per AGENT_C_HANDOFF.md
 - Goal: /login works locally; session.apiToken populated; API auth check returns 200
 - Focus: ensure imports match v5 (see handoff), single dev instance on 3001, clear caches
+
+---
+
+All-Agents Broadcast — 2025-10-27
+
+- Console login stabilized; env configured on Vercel projects (console + staging). Added DATABASE_URL for Console to use Railway Postgres.
+- API on Railway updated with matching CONSOLE_INTERNAL_TOKEN; bearer token session issuance (/api/auth/session) verified.
+- Deployed/validated: console.calibr.lat / and /login return 200; sign-in succeeds; API auth check returns 200.
+- See AGENTS_BROADCAST_2025-10-27.md for full details and next steps per agent.

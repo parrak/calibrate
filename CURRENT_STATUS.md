@@ -337,3 +337,7 @@ Authentication (WIP for local dev)
 **Status**: ✅ Production Ready  
 **Last Updated**: October 25, 2025  
 **Next Review**: Next development session
+### **Recent Progress (2025-10-27)**
+- Console login stabilized with Auth.js v5; bearer token flow to API verified.
+- Env configured on Vercel (console): AUTH_URL, AUTH_SECRET, NEXT_PUBLIC_API_BASE, CONSOLE_INTERNAL_TOKEN, AUTH_TRUST_HOST, DATABASE_URL.
+- API (Railway): CONSOLE_INTERNAL_TOKEN set to match Console.
