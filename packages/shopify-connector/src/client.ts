@@ -12,14 +12,16 @@ export class ShopifyClient {
 
   constructor(config: ShopifyConfig) {
     this.config = config;
-    const shopDomain = config.shopDomain || `${config.apiKey}.myshopify.com`;
+    // shopDomain should be provided from credentials during initialization
+    if (!config.shopDomain) {
+      throw new Error('shopDomain is required for Shopify client');
+    }
     this.client = axios.create({
-      baseURL: `https://${shopDomain}/admin/api/${config.apiVersion || '2024-10'}`,
+      baseURL: `https://${config.shopDomain}/admin/api/${config.apiVersion || '2024-10'}`,
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'Calibrate-Pricing-Platform/1.0',
-        ...(config.accessToken ? { 'X-Shopify-Access-Token': config.accessToken } : {}),
       },
     });
 
@@ -32,6 +34,7 @@ export class ShopifyClient {
   private setupInterceptors(): void {
     // Request interceptor to add authentication
     this.client.interceptors.request.use((config) => {
+      // Add access token from credentials (not from apiKey)
       if (this.config.accessToken) {
         config.headers['X-Shopify-Access-Token'] = this.config.accessToken;
       }

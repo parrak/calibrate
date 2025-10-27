@@ -47,11 +47,20 @@ export async function POST(request: NextRequest) {
     // Create connector instance
     const connector = await ConnectorRegistry.createConnector('shopify', config);
 
-    // Generate authorization URL
+    // Create minimal credentials with just shop domain for URL generation
+    // This is needed because getAuthorizationUrl expects credentials to be set
+    await connector.initialize({
+      platform: 'shopify',
+      shopDomain,
+      accessToken: '', // Empty token is okay for auth URL generation
+    } as any);
+
+    // Generate authorization URL with shop parameter
     const authUrl = connector.auth.getAuthorizationUrl({
       clientId: config.apiKey,
       redirectUri,
       scopes: config.scopes,
+      shop: shopDomain,
       state: `${projectId}:${shopDomain}`, // Include project and shop info in state
     });
 
