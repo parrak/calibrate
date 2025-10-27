@@ -1,10 +1,10 @@
 import Link from 'next/link'
-import { auth } from '@/lib/auth'
+import { getServerSession, authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@calibr/db'
 
 export default async function Home() {
-  const session = await auth()
+  const session = await getServerSession(authOptions)
 
   // If not authenticated, redirect to login
   if (!session?.user) {

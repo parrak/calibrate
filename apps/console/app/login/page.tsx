@@ -4,27 +4,15 @@
  * Simple email-based login for Calibrate Console
  */
 
-import { signIn } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { getServerSession, authOptions } from '@/lib/auth'
+import LoginForm from '@/components/LoginForm'
 
-export default function LoginPage({ searchParams }: { searchParams?: { callbackUrl?: string; error?: string } }) {
-  async function handleLogin(formData: FormData) {
-    'use server'
-
-    const email = formData.get('email')
-
-    if (!email || typeof email !== 'string') {
-      return
-    }
-
-    const callbackUrl = (searchParams?.callbackUrl && typeof searchParams.callbackUrl === 'string')
-      ? searchParams.callbackUrl
-      : '/projects'
-
-    await signIn('credentials', {
-      email,
-      redirectTo: callbackUrl,
-    })
+export default async function LoginPage({ searchParams }: { searchParams?: { callbackUrl?: string; error?: string } }) {
+  // If already logged in, redirect to home
+  const session = await getServerSession(authOptions)
+  if (session) {
+    redirect('/')
   }
 
   return (
@@ -39,31 +27,7 @@ export default function LoginPage({ searchParams }: { searchParams?: { callbackU
           </p>
         </div>
 
-        <form action={handleLogin} className="space-y-6">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              required
-              placeholder="you@company.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition"
-          >
-            Sign In
-          </button>
-        </form>
+        <LoginForm callbackUrl={searchParams?.callbackUrl} />
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
