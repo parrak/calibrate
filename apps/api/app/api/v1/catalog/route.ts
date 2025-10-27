@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { withSecurity } from '@/lib/security-headers'
 
-export async function GET(req: NextRequest) {
+export const GET = withSecurity(async (req: NextRequest) => {
   const productCode = req.nextUrl.searchParams.get('productCode')
   const projectSlug = req.nextUrl.searchParams.get('project')
   
@@ -72,4 +73,4 @@ export async function GET(req: NextRequest) {
   })
 
   return NextResponse.json({ products: productsWithSkus })
-}
+})
