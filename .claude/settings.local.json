@@ -53,7 +53,10 @@
       "Bash(pnpm prisma generate:*)",
       "Bash(pnpm add:*)",
       "Bash(pnpm build:*)",
-      "Bash(pnpm ls:*)"
+      "Bash(pnpm ls:*)",
+      "Bash(git fetch:*)",
+      "Bash(git stash:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

@@ -159,23 +159,31 @@
 
 ### Agent C Tasks: Platform Management & Deployment
 
-#### Week 1: Integration Management UI
+#### Week 1: User Onboarding & Integration Management UI
 
-1. **Platform Dashboard**
+1. **Project Onboarding Flow** ⭐ NEW
+   - First-time user welcome experience
+   - Project creation wizard
+   - Quick setup vs Advanced setup paths
+   - Platform selection step (Shopify/Amazon)
+   - Initial project configuration
+   - Success state with next steps
+
+2. **Platform Dashboard**
    - Unified integrations page
    - Platform status cards
    - Connection management
    - Sync status overview
    - Error/alert display
 
-2. **Settings & Configuration**
+3. **Settings & Configuration**
    - Platform credentials management
    - Sync schedule configuration
    - Notification preferences
    - Webhook management UI
    - API key rotation
 
-3. **Monitoring & Observability**
+4. **Monitoring & Observability**
    - Sync history viewer
    - Error log display
    - Performance metrics
@@ -183,20 +191,22 @@
    - Health check dashboard
 
 **Deliverables:**
+- `apps/console/app/onboarding/` - Onboarding wizard pages ⭐ NEW
+- `apps/api/app/api/projects/route.ts` - Project CRUD operations ⭐ NEW
 - `apps/console/app/p/[slug]/integrations/page.tsx` - Main dashboard
 - `apps/console/components/platforms/` - Reusable components
 - `apps/api/app/api/platforms/health/` - Health check endpoints
 
 #### Week 2: Production Hardening
 
-4. **Security Enhancements**
+5. **Security Enhancements**
    - Credential encryption at rest
    - API token rotation
    - Audit logging
    - Rate limiting middleware
    - Input validation strengthening
 
-5. **Deployment & DevOps**
+6. **Deployment & DevOps**
    - Production environment setup
    - Environment variable documentation
    - Deployment runbooks
@@ -496,10 +506,13 @@ Each phase is complete when:
 4. Plan competitive pricing implementation
 
 ### Agent C
-1. Design integration dashboard wireframes
-2. Plan credential encryption strategy
-3. Document production deployment requirements
-4. Create monitoring/alerting plan
+1. Design project onboarding flow (wireframes + user journey) ⭐
+2. Build project creation API endpoints ⭐
+3. Implement onboarding wizard UI ⭐
+4. Design integration dashboard wireframes
+5. Plan credential encryption strategy
+6. Document production deployment requirements
+7. Create monitoring/alerting plan
 
 ---
 
