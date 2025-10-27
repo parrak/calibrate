@@ -52,3 +52,23 @@ Notes
 - The stale chunk error (e.g., './557.js') is a dev runtime cache artifact; kill port 3001 process, clear .next/.turbo, and re-run.
 - ESLint config warning during build is unrelated to runtime; can be handled later.
 
+
+## UPDATE - 2025-10-27
+
+### Status
+- Console TypeScript errors FIXED (Badge/Button variants)
+- Vercel build optimized (filtered pnpm install)
+- **BLOCKED**: Shopify connector has 45+ TypeScript errors preventing deployment
+
+### What Happened
+Console deployment fails because shopify-connector build fails during turbo build.
+Errors documented in SHOPIFY_CONNECTOR_FIXES_NEEDED.md
+
+### Agent A Action Required
+Fix TypeScript errors in packages/shopify-connector - see SHOPIFY_CONNECTOR_FIXES_NEEDED.md
+
+### Agent C Next Steps (after Shopify connector fixed)
+1. Verify console deployment succeeds
+2. Test login at app.calibr.lat/login
+3. Verify session.apiToken flow
+4. Update daily log with completion status
