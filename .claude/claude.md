@@ -87,6 +87,47 @@
 - If approaching 100k tokens, reassess strategy
 - Large file reads can consume 5-20k tokens each - be selective
 
+### Session Limit Checkpoint Protocol
+**When approaching 150k tokens (75% of budget), IMMEDIATELY:**
+
+1. **Commit Current Work**
+   - Stage and commit all changes made so far with descriptive message
+   - Include work-in-progress state if task is incomplete
+   - Use git commit message format: `wip: [description] - checkpoint at 150k tokens`
+
+2. **Document Remaining Work**
+   - Create or update a TODO.md file listing:
+     - Completed steps
+     - In-progress work and its state
+     - Remaining tasks with specific file locations
+     - Any important context or decisions made
+     - Known issues or blockers
+
+3. **Inform User**
+   - Alert user that session limit is approaching
+   - Summarize what's been completed
+   - Provide clear handoff instructions for next session
+   - Recommend starting fresh session to continue
+
+4. **Stop New Work**
+   - Do NOT start new features or major refactors
+   - Only complete critical in-progress edits
+   - Prioritize checkpoint over new tasks
+
+**Example Checkpoint Message:**
+```
+⚠️ Session approaching token limit (150k/200k used)
+
+Completed:
+- [x] Feature A implementation
+- [x] Tests for Feature A
+
+In Progress:
+- [ ] Feature B - 60% complete, see TODO.md
+
+Committed changes and created handoff doc. Ready for next session.
+```
+
 ## Examples
 
 ### Good: Targeted Search
