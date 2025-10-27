@@ -58,7 +58,8 @@
       "Bash(git stash:*)",
       "Bash(rm:*)",
       "Bash(pnpm --filter @calibr/api typecheck:*)",
-      "Bash(pnpm exec tsc:*)"
+      "Bash(pnpm exec tsc:*)",
+      "Bash(git rebase:*)"
     ],
     "deny": [],
     "ask": []

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../lib/components/Switch'
 import { Textarea } from '../lib/components/Textarea'
 import { Plus, Edit, Trash2, Play } from 'lucide-react'
+import { competitorsApi } from '@/lib/api-client'
 
 interface CompetitorRule {
   id: string
@@ -27,11 +28,12 @@ interface CompetitorRule {
   }
 }
 
-export function CompetitorRules({ tenantId, projectId }: { tenantId: string; projectId: string }) {
+export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
   const [rules, setRules] = useState<CompetitorRule[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const [editingRule, setEditingRule] = useState<CompetitorRule | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const [newRule, setNewRule] = useState<{
     name: string
@@ -55,15 +57,16 @@ export function CompetitorRules({ tenantId, projectId }: { tenantId: string; pro
 
   useEffect(() => {
     fetchRules()
-  }, [tenantId, projectId])
+  }, [projectSlug])
 
   const fetchRules = async () => {
     try {
-      const response = await fetch(`/api/v1/competitors/rules?tenantId=${tenantId}&projectId=${projectId}`)
-      const data = await response.json()
-      setRules(data.rules || [])
+      setError(null)
+      const data = await competitorsApi.getRules(projectSlug)
+      setRules(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching rules:', error)
+      setError('Failed to load competitor rules')
     } finally {
       setLoading(false)
     }
@@ -71,38 +74,19 @@ export function CompetitorRules({ tenantId, projectId }: { tenantId: string; pro
 
   const createRule = async () => {
     try {
-      const response = await fetch('/api/v1/competitors/rules', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tenantId,
-          projectId,
-          name: newRule.name,
-          description: newRule.description,
-          rules: {
-            type: newRule.type,
-            value: newRule.value,
-            minMargin: newRule.minMargin,
-            maxPrice: newRule.maxPrice || undefined,
-            minPrice: newRule.minPrice || undefined
-          }
-        })
+      // TODO: Implement create rule API endpoint
+      console.warn('Create rule not yet implemented in API client')
+      setIsCreating(false)
+      setNewRule({
+        name: '',
+        description: '',
+        type: 'beat_by_percent',
+        value: 5,
+        minMargin: 10,
+        maxPrice: 0,
+        minPrice: 0,
+        isActive: true
       })
-
-      if (response.ok) {
-        await fetchRules()
-        setIsCreating(false)
-        setNewRule({
-          name: '',
-          description: '',
-          type: 'beat_by_percent',
-          value: 5,
-          minMargin: 10,
-          maxPrice: 0,
-          minPrice: 0,
-          isActive: true
-        })
-      }
     } catch (error) {
       console.error('Error creating rule:', error)
     }

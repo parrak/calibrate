@@ -188,7 +188,7 @@ export const defaultCORSConfig: CORSConfig = {
   origin: (origin) => {
     // Allow requests from same origin
     if (!origin) return true
-    
+
     // Allow specific domains
     const allowedOrigins = [
       'https://calibr.lat',
@@ -198,7 +198,12 @@ export const defaultCORSConfig: CORSConfig = {
       'http://localhost:3001',
       'http://localhost:3002'
     ]
-    
+
+    // Allow Vercel preview deployments for console
+    if (origin.includes('.vercel.app') && origin.includes('console')) {
+      return true
+    }
+
     return allowedOrigins.includes(origin)
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],

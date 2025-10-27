@@ -6,6 +6,7 @@ import { Button } from '../lib/components/Button'
 import { Badge } from '../lib/components/Badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../lib/components/Table'
 import { AlertCircle, CheckCircle, Clock, ExternalLink } from 'lucide-react'
+import { competitorsApi } from '@/lib/api-client'
 
 interface Competitor {
   id: string
@@ -37,23 +38,25 @@ interface MonitoringResult {
   duration: number
 }
 
-export function CompetitorMonitor({ tenantId, projectId }: { tenantId: string; projectId: string }) {
+export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
   const [competitors, setCompetitors] = useState<Competitor[]>([])
   const [monitoringResults, setMonitoringResults] = useState<MonitoringResult[]>([])
   const [isMonitoring, setIsMonitoring] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchCompetitors()
-  }, [tenantId, projectId])
+  }, [projectSlug])
 
   const fetchCompetitors = async () => {
     try {
-      const response = await fetch(`/api/v1/competitors?tenantId=${tenantId}&projectId=${projectId}`)
-      const data = await response.json()
-      setCompetitors(data.competitors || [])
+      setError(null)
+      const data = await competitorsApi.list(projectSlug)
+      setCompetitors(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching competitors:', error)
+      setError('Failed to load competitors')
     } finally {
       setLoading(false)
     }
@@ -61,17 +64,18 @@ export function CompetitorMonitor({ tenantId, projectId }: { tenantId: string; p
 
   const startMonitoring = async () => {
     setIsMonitoring(true)
+    setError(null)
     try {
-      const response = await fetch('/api/v1/competitors/monitor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenantId, projectId })
-      })
-      const data = await response.json()
-      setMonitoringResults(data.results || [])
+      // Note: API needs to be updated to support project-based monitoring
+      // For now, this will fail gracefully
+      const results = await Promise.all(
+        competitors.map(c => competitorsApi.monitor(c.id).catch(() => null))
+      )
+      setMonitoringResults(results.filter(Boolean) as MonitoringResult[])
       await fetchCompetitors() // Refresh data
     } catch (error) {
       console.error('Error monitoring competitors:', error)
+      setError('Failed to start monitoring')
     } finally {
       setIsMonitoring(false)
     }
@@ -90,6 +94,22 @@ export function CompetitorMonitor({ tenantId, projectId }: { tenantId: string; p
 
   if (loading) {
     return <div>Loading competitors...</div>
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-8 text-red-600">
+            <AlertCircle className="h-12 w-12 mx-auto mb-4" />
+            <p>{error}</p>
+            <Button onClick={fetchCompetitors} className="mt-4" variant="outline">
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

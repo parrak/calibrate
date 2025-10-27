@@ -30,12 +30,15 @@ These rules guide AI coding agents (Codex CLI, etc.) working in this repo. They 
 - Use TypeScript types and Zod validation where the codebase already does so.
 - Do not add new dependencies unless strictly necessary and aligned with workspace tooling.
 
-## Validation Policy
+## Validation & Tests
+- Always add or update tests for any behavior change you introduce.
 - Start specific: run tests or type checks for only the changed package/app.
-  - Example: `pnpm --filter @calibr/api test:run`
-- Then run repo-level checks if the change could affect multiple projects.
+  - Example: `pnpm --filter @calibr/api test:run` or `pnpm --filter @calibr/amazon-connector test:run`
+- For Next.js route handlers (in `apps/*/app/api/**/route.ts`): import the handler directly in Vitest and pass a `Request` object (cast to `any`). Mock external services (e.g. Prisma via `vi.mock('@calibr/db')`).
+- For packages (e.g. connectors): place unit tests in `packages/<pkg>/tests/**` using Vitest. Prefer testing normalized outputs and error handling.
+- Then run repo-level checks if the change affects multiple projects.
 - Lint before finishing: `pnpm lint` (fix only relevant issues).
-- For Prisma-related changes, run `pnpm db:generate` and ensure no drift.
+- For Prisma-related changes, add a migration, run `pnpm db:generate`, and ensure no drift.
 
 ## Patterns To Follow
 - Next.js App Router patterns under `apps/*/app` and API route handlers under `app/api/**/route.ts`.

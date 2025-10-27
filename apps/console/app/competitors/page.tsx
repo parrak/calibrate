@@ -6,8 +6,7 @@ import { CompetitorMonitor } from '@/components/CompetitorMonitor'
 import { CompetitorRules } from '@/components/CompetitorRules'
 
 export default function CompetitorsPage() {
-  const [tenantId] = useState('tenant_1') // TODO: from auth context
-  const [projectId] = useState('project_1') // TODO: from current project selection
+  const projectSlug = 'demo' // TODO: from project selection
 
   return (
     <div className="p-6 space-y-4">
@@ -23,11 +22,11 @@ export default function CompetitorsPage() {
         </TabsList>
 
         <TabsContent value="monitor">
-          <CompetitorMonitor tenantId={tenantId} projectId={projectId} />
+          <CompetitorMonitor projectSlug={projectSlug} />
         </TabsContent>
 
         <TabsContent value="rules">
-          <CompetitorRules tenantId={tenantId} projectId={projectId} />
+          <CompetitorRules projectSlug={projectSlug} />
         </TabsContent>
       </Tabs>
     </div>
