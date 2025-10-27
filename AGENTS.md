@@ -40,6 +40,10 @@ These rules guide AI coding agents (Codex CLI, etc.) working in this repo. They 
 - Lint before finishing: `pnpm lint` (fix only relevant issues).
 - For Prisma-related changes, add a migration, run `pnpm db:generate`, and ensure no drift.
 
+## CI & Deployment Guards
+- CI enforces lockfile consistency. Before pushing, run `pnpm install --frozen-lockfile` locally to catch dependency drift.
+- If Railway deploys fail due to build or lockfile errors, do not push unrelated changes until the failure is resolved; update the lockfile or align package.json specifiers.
+
 ## Patterns To Follow
 - Next.js App Router patterns under `apps/*/app` and API route handlers under `app/api/**/route.ts`.
 - UI components live in `packages/ui`; prefer reusing existing primitives.
