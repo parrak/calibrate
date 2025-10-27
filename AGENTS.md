@@ -1,0 +1,64 @@
+# AGENTS.md
+
+These rules guide AI coding agents (Codex CLI, etc.) working in this repo. They apply to the entire repository unless a more specific AGENTS.md in a subfolder overrides them.
+
+## Goals
+- Make minimal, surgical changes that solve the user’s request.
+- Prefer clarity and safety over breadth; avoid unrelated edits.
+- Validate changes locally with focused checks before broad ones.
+
+## Monorepo Overview
+- Workspace: `pnpm` + `turbo` across `apps/*` and `packages/*`.
+- Primary stacks: Next.js (App Router) + TypeScript + Tailwind + Prisma.
+- Testing: Vitest in packages and `apps/api`.
+- Config/lint: ESLint configured at root (`.eslintrc.js`). Prettier is available but do not introduce new formatting tooling.
+
+## Core Commands (run at `calibrate/` root)
+- Dev: `pnpm dev`
+- Build: `pnpm build`
+- Lint: `pnpm lint`
+- Test (all): `pnpm test`
+- Test (one project): `pnpm --filter <pkg-name> test` or `test:run`
+- DB (Prisma): `pnpm migrate`, `pnpm seed`, `pnpm db:generate`, `pnpm db:studio`
+- Local verification: `pnpm verify:local`
+- Docs: `pnpm docs:dev` | `pnpm docs:build` | `pnpm docs:deploy`
+
+## Change Policy
+- Keep edits scoped to the files directly involved in the task.
+- Do not rename/move files unless required by the task.
+- Follow existing conventions in nearby code (naming, structure, imports).
+- Use TypeScript types and Zod validation where the codebase already does so.
+- Do not add new dependencies unless strictly necessary and aligned with workspace tooling.
+
+## Validation Policy
+- Start specific: run tests or type checks for only the changed package/app.
+  - Example: `pnpm --filter @calibr/api test:run`
+- Then run repo-level checks if the change could affect multiple projects.
+- Lint before finishing: `pnpm lint` (fix only relevant issues).
+- For Prisma-related changes, run `pnpm db:generate` and ensure no drift.
+
+## Patterns To Follow
+- Next.js App Router patterns under `apps/*/app` and API route handlers under `app/api/**/route.ts`.
+- UI components live in `packages/ui`; prefer reusing existing primitives.
+- Validation uses `zod`; schema-first where possible.
+- Data access goes through `packages/db` (Prisma). Do not edit generated files.
+
+## Security and Secrets
+- Never commit secrets. Use `.env.local` and `.env.example` as references.
+- Avoid logging PII or secrets. Scrub before output.
+- Keep third-party tokens in environment variables only.
+
+## Agent Etiquette
+- Use `apply_patch` for edits. Group related changes in one patch when possible.
+- Explain what you’re about to do before running commands.
+- Use `update_plan` for multi-step work. Mark steps complete as you go.
+- Do not add license headers or reformat large files unprompted.
+
+## Subdirectory Guides
+- See additional, more specific rules in:
+  - `apps/api/AGENTS.md`
+  - `apps/console/AGENTS.md`
+  - `apps/site/AGENTS.md`
+  - `packages/AGENTS.md`
+  - `scripts/AGENTS.md`
+
