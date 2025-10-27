@@ -151,17 +151,14 @@ export class ShopifyProductOperations implements ProductOperations {
     return results;
   }
 
-  async count(filter?: ProductFilter): Promise<{ total: number; platform: string }> {
+  async count(filter?: ProductFilter): Promise<number> {
     if (!this.connector['client']) {
       throw new PlatformError('authentication', 'Connector not initialized', 'shopify');
     }
 
     try {
       const count = await this.connector['products'].getProductCount();
-      return {
-        total: count,
-        platform: 'shopify',
-      };
+      return count;
     } catch (error) {
       throw new PlatformError(
         'server',

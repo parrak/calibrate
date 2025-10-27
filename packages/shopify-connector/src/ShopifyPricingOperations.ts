@@ -2,7 +2,7 @@
  * Shopify Pricing Operations
  * Implements PricingOperations interface for Shopify pricing
  */
-import { PricingOperations, PriceUpdate, PriceUpdateResult, BatchPriceUpdate, BatchUpdateResult } from '@calibr/platform-connector';
+import { PricingOperations, PriceUpdate, PriceUpdateResult, BatchPriceUpdate, BatchUpdateResult, NormalizedPrice } from '@calibr/platform-connector';
 import { PlatformError } from '@calibr/platform-connector';
 import { ShopifyConnector } from './ShopifyConnector';
 
@@ -13,15 +13,7 @@ export class ShopifyPricingOperations implements PricingOperations {
     this.connector = connector;
   }
 
-  async getPrice(externalId: string): Promise<{
-    externalId: string;
-    platform: string;
-    price: number;
-    compareAtPrice?: number;
-    currency: string;
-    updatedAt: Date;
-    metadata?: any;
-  }> {
+  async getPrice(externalId: string): Promise<NormalizedPrice> {
     if (!this.connector['client']) {
       throw new PlatformError('authentication', 'Connector not initialized', 'shopify');
     }
@@ -97,7 +89,7 @@ export class ShopifyPricingOperations implements PricingOperations {
       const response = await this.connector['client'].post('/graphql.json', {
         query: mutation,
         variables,
-      });
+      }) as any;
 
       if (response.data.productVariantUpdate.userErrors.length > 0) {
         const errors = response.data.productVariantUpdate.userErrors;
