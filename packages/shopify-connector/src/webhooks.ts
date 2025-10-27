@@ -33,7 +33,7 @@ export class ShopifyWebhooks {
       },
     };
 
-    const response = await this.client.post('/webhooks.json', webhookData);
+    const response = await this.client.post('/webhooks.json', webhookData) as any;
     return response.webhook;
   }
 
@@ -41,7 +41,7 @@ export class ShopifyWebhooks {
    * List all webhook subscriptions
    */
   async listWebhooks(): Promise<ShopifyWebhook[]> {
-    const response = await this.client.get('/webhooks.json');
+    const response = await this.client.get('/webhooks.json') as any;
     return response.webhooks;
   }
 
@@ -49,7 +49,7 @@ export class ShopifyWebhooks {
    * Get a specific webhook by ID
    */
   async getWebhook(webhookId: string): Promise<ShopifyWebhook> {
-    const response = await this.client.get(`/webhooks/${webhookId}.json`);
+    const response = await this.client.get(`/webhooks/${webhookId}.json`) as any;
     return response.webhook;
   }
 
@@ -64,7 +64,7 @@ export class ShopifyWebhooks {
       },
     };
 
-    const response = await this.client.put(`/webhooks/${webhookId}.json`, webhookData);
+    const response = await this.client.put(`/webhooks/${webhookId}.json`, webhookData) as any;
     return response.webhook;
   }
 

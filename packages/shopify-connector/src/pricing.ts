@@ -66,7 +66,7 @@ export class ShopifyPricing {
       const response = await this.client.post('/graphql.json', {
         query: mutation,
         variables,
-      });
+      }) as any;
 
       const { productVariantUpdate } = response.data;
 
@@ -170,7 +170,7 @@ export class ShopifyPricing {
       const response = await this.client.post('/graphql.json', {
         query,
         variables,
-      });
+      }) as any;
 
       const pricingMap = new Map<string, ShopifyVariant>();
 

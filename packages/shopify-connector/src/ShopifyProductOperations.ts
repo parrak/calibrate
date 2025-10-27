@@ -2,7 +2,7 @@
  * Shopify Product Operations
  * Implements ProductOperations interface for Shopify products
  */
-import { ProductOperations, Product, ProductFilter, ProductSyncResult, ProductCountResult } from '@calibr/platform-connector';
+import { ProductOperations, NormalizedProduct as Product, ProductFilter, ProductSyncResult } from '@calibr/platform-connector';
 import { PlatformError } from '@calibr/platform-connector';
 import { ShopifyConnector } from './ShopifyConnector';
 
@@ -151,7 +151,7 @@ export class ShopifyProductOperations implements ProductOperations {
     return results;
   }
 
-  async count(filter?: ProductFilter): Promise<ProductCountResult> {
+  async count(filter?: ProductFilter): Promise<{ total: number; platform: string }> {
     if (!this.connector['client']) {
       throw new PlatformError('authentication', 'Connector not initialized', 'shopify');
     }

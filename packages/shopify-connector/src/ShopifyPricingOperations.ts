@@ -2,7 +2,7 @@
  * Shopify Pricing Operations
  * Implements PricingOperations interface for Shopify pricing
  */
-import { PricingOperations, PriceUpdate, PriceUpdateResult, BatchPriceUpdate, BatchPriceUpdateResult, PriceValidationResult } from '@calibr/platform-connector';
+import { PricingOperations, PriceUpdate, PriceUpdateResult, BatchPriceUpdate, BatchUpdateResult } from '@calibr/platform-connector';
 import { PlatformError } from '@calibr/platform-connector';
 import { ShopifyConnector } from './ShopifyConnector';
 
@@ -130,7 +130,7 @@ export class ShopifyPricingOperations implements PricingOperations {
     }
   }
 
-  async batchUpdatePrices(batchUpdate: BatchPriceUpdate): Promise<BatchPriceUpdateResult> {
+  async batchUpdatePrices(batchUpdate: BatchPriceUpdate): Promise<BatchUpdateResult> {
     const results: PriceUpdateResult[] = [];
 
     for (const update of batchUpdate.updates) {
@@ -160,7 +160,7 @@ export class ShopifyPricingOperations implements PricingOperations {
     };
   }
 
-  async validatePriceUpdate(update: PriceUpdate): Promise<PriceValidationResult> {
+  async validatePriceUpdate(update: PriceUpdate): Promise<{ valid: boolean; errors?: string[] }> {
     const errors: string[] = [];
 
     // Validate price is positive

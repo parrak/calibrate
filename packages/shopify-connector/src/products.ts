@@ -65,7 +65,7 @@ export class ShopifyProducts {
    * Get a single product by ID
    */
   async getProduct(productId: string): Promise<ShopifyProduct> {
-    const response = await this.client.get(`/products/${productId}.json`);
+    const response = await this.client.get(`/products/${productId}.json`) as any;
     return response.product;
   }
 
@@ -74,7 +74,7 @@ export class ShopifyProducts {
    */
   async getProductByHandle(handle: string): Promise<ShopifyProduct | null> {
     try {
-      const response = await this.client.get(`/products.json?handle=${handle}`);
+      const response = await this.client.get(`/products.json?handle=${handle}`) as any;
       return response.product || null;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -96,7 +96,7 @@ export class ShopifyProducts {
    * Get a single variant by ID
    */
   async getVariant(variantId: string): Promise<ShopifyVariant> {
-    const response = await this.client.get(`/variants/${variantId}.json`);
+    const response = await this.client.get(`/variants/${variantId}.json`) as any;
     return response.variant;
   }
 
@@ -118,7 +118,7 @@ export class ShopifyProducts {
           },
         };
 
-        const response = await this.client.put(`/variants/${update.variantId}.json`, variantData);
+        const response = await this.client.put(`/variants/${update.variantId}.json`, variantData) as any;
         results.push(response.variant);
       } catch (error) {
         console.error(`Failed to update variant ${update.variantId}:`, error);
@@ -195,7 +195,7 @@ export class ShopifyProducts {
    * Get product count
    */
   async getProductCount(): Promise<number> {
-    const response = await this.client.get('/products/count.json');
+    const response = await this.client.get('/products/count.json') as any;
     return response.count;
   }
 

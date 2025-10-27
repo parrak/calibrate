@@ -1,0 +1,311 @@
+# Calibrate Platform - Cursor Rules
+
+## Project Overview
+This is a monorepo pricing automation platform built with:
+- **Frontend:** Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend:** Next.js API Routes, Prisma ORM, PostgreSQL
+- **Infrastructure:** Railway (API), Vercel (Console/Site/Docs)
+- **Package Manager:** pnpm workspaces
+- **Build System:** Turborepo
+
+## Architecture
+
+### Monorepo Structure
+```
+calibrate/
+├── packages/          # Shared packages
+│   ├── db/           # Prisma schema, migrations
+│   ├── platform-connector/  # Platform abstraction layer
+│   ├── pricing-engine/      # Policy evaluation
+│   ├── security/            # HMAC, idempotency
+│   ├── shopify-connector/   # Shopify integration
+│   ├── amazon-connector/   # Amazon SP-API integration
+│   └── ui/                  # Shared UI components
+└── apps/             # Applications
+    ├── api/          # Next.js API (port 3000)
+    ├── console/      # Admin UI (port 3001)
+    ├── site/         # Landing page (port 3002)
+    └── docs/         # Documentation (port 3003)
+```
+
+## Critical Rules
+
+### 1. NEVER Skip Database Migrations
+- ALWAYS run `pnpm migrate` after schema changes
+- ALWAYS update seed data if models change
+- Test migrations locally before deploying
+
+### 2. Environment Variables
+- Keep separate env files for different environments
+- NEVER skip adding environment variables during build
+- Check `.env.example` files for required variables
+- Production: Railway (API), Vercel (Console/Site/Docs)
+
+### 3. NEVER Break Production
+- Deployment constraints are CRITICAL - read `apps/api/DEPLOYMENT.md` first
+- MUST use `HOSTNAME=0.0.0.0` in Dockerfile (not `HOST`)
+- MUST use `debian-openssl-3.0.x` Prisma binary target
+- NEVER add global unique constraints on `Product.code` or `Sku.code`
+
+### 4. Testing Requirements
+- ALWAYS run tests for changes: `pnpm test`
+- Write new tests for missing coverage
+- Test locally before pushing: `pnpm run verify:local`
+- Integration tests in `apps/api/tests/`
+
+### 5. TypeScript Configuration
+- Use workspace paths: `@calibr/db/*`, `@calibr/platform-connector/*`, etc.
+- Root `tsconfig.json` defines all path aliases
+- Each package has its own `tsconfig.json` extending root
+
+### 6. Package Dependencies
+- Use `workspace:*` for internal packages in package.json
+- pnpm workspace protocol for monorepo dependencies
+- Run `pnpm install` at root after adding/changing dependencies
+- Commit updated `pnpm-lock.yaml` or Vercel builds will fail
+
+## Code Style & Patterns
+
+### TypeScript
+- Use strict mode (enabled in tsconfig)
+- Prefer interfaces over types for extensibility
+- Export types from `types.ts` in each package
+- Use JSDoc comments for public APIs
+
+### Naming Conventions
+- Components: PascalCase (`MyComponent.tsx`)
+- Files: kebab-case (`my-feature.tsx`)
+- Exports: Named exports preferred
+- Variables: camelCase
+- Constants: UPPER_SNAKE_CASE
+
+### File Organization
+- Group related files in folders
+- Index files (`index.ts`) for public exports
+- Tests alongside source with `.test.ts` suffix
+- Zod schemas in separate files/folders
+
+## Database (Prisma)
+
+### Schema Location
+- Schema: `packages/db/prisma/schema.prisma`
+- Migrations: `packages/db/prisma/migrations/`
+- Seed: `packages/db/seed.ts`
+
+### Migration Commands
+```bash
+# Create migration
+pnpm --filter @calibr/db prisma migrate dev
+
+# Apply migrations
+pnpm migrate
+
+# Generate Prisma Client
+pnpm db:generate
+
+# Open Prisma Studio
+pnpm db:studio
+```
+
+### Schema Rules
+- NEVER add global unique constraints on `Product.code` or `Sku.code`
+- Use `@default(uuid())` for IDs
+- Use enums for status fields
+- Include timestamps (`createdAt`, `updatedAt`)
+
+## Package Development
+
+### Adding New Packages
+1. Create directory in `packages/`
+2. Add `package.json` with proper naming (`@calibr/package-name`)
+3. Update root `pnpm-workspace.yaml` (usually not needed)
+4. Update root `tsconfig.json` paths if needed
+5. Add to `turbo.json` pipeline
+6. Create `README.md` documentation
+
+### Testing Packages
+- Use Vitest for unit tests
+- Test files: `*.test.ts` alongside source
+- Integration tests in `apps/api/tests/`
+- Run tests: `pnpm test` or `pnpm --filter @calibr/package-name test`
+
+## Connector Development
+
+### Platform Connector Interface
+All connectors MUST implement:
+- `PlatformConnector` interface
+- `AuthOperations` interface
+- `ProductOperations` interface  
+- `PricingOperations` interface
+
+### Registration
+Register connectors in `src/index.ts`:
+```typescript
+ConnectorRegistry.register('platform-name', async (config, credentials) => {
+  const connector = new PlatformConnector(config, credentials);
+  if (credentials) {
+    await connector.initialize(credentials);
+  }
+  return connector;
+});
+```
+
+### Error Handling
+- Throw `PlatformError` for platform-specific errors
+- Include error codes, messages, and context
+- Log errors appropriately
+- Return user-friendly error messages in APIs
+
+## API Development
+
+### Route Structure
+- API routes in `apps/api/app/api/`
+- Use Next.js App Router conventions
+- Separate route handlers by concern
+- Zod schemas for validation
+
+### Security
+- Use HMAC verification for webhooks (`@calibr/security`)
+- Use idempotency keys for critical operations
+- Validate all inputs with Zod
+- Sanitize user input
+
+### Response Format
+```typescript
+{
+  success: boolean;
+  data?: any;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+```
+
+## Frontend Development
+
+### Next.js App Router
+- Use server components by default
+- Use 'use client' only when needed
+- API routes in `app/api/` directory
+- Middleware for authentication
+
+### Styling
+- Tailwind CSS for styling
+- Use `@calibr/ui` components when available
+- Responsive design required
+- Dark mode support (where applicable)
+
+### State Management
+- Server components preferred
+- React hooks for client state
+- Context for global state
+- No external state management library
+
+## Deployment
+
+### Railway (API)
+- Located at: https://api.calibr.lat
+- Docker-based deployment
+- PostgreSQL database included
+- Environment variables in Railway dashboard
+- Deploy: `railway up` or `railway redeploy`
+
+### Vercel (Console/Site/Docs)
+- Console: https://console.calibr.lat
+- Site: https://calibr.lat
+- Docs: https://docs.calibr.lat
+- Deploy: `vercel --prod`
+- Link project first: `vercel link --project <project-name>`
+
+### Deployment Checklist
+- [ ] Run tests: `pnpm test`
+- [ ] Build locally: `pnpm build`
+- [ ] Update lockfile if dependencies changed
+- [ ] Check environment variables
+- [ ] Run migrations (if schema changed)
+- [ ] Test in staging before production
+
+## Common Scripts
+
+### Development
+```bash
+pnpm dev              # Start all dev servers
+pnpm build            # Build all packages
+pnpm test             # Run all tests
+pnpm lint             # Lint all code
+```
+
+### Database
+```bash
+pnpm migrate          # Run migrations
+pnpm seed             # Seed database
+pnpm db:studio        # Open Prisma Studio
+pnpm db:generate      # Generate Prisma Client
+```
+
+### Deployment
+```bash
+pnpm staging:deploy   # Deploy to staging
+pnpm staging:test     # Test staging
+pnpm docs:deploy      # Deploy documentation
+```
+
+## Troubleshooting
+
+### Build Errors
+1. Check TypeScript errors: `pnpm run typecheck`
+2. Check dependencies: `pnpm install`
+3. Clear Turbo cache: `rm -rf .turbo`
+4. Clear Next.js cache: `rm -rf apps/*/.next`
+
+### Database Issues
+1. Check connection: `pnpm db:studio`
+2. Run migrations: `pnpm migrate`
+3. Reset database: `pnpm --filter @calibr/db prisma migrate reset`
+
+### Deploy Issues
+1. Check logs in Railway/Vercel dashboard
+2. Verify environment variables
+3. Check build logs for errors
+4. Ensure lockfile committed
+
+## AI Assistant Guidelines
+
+### When Making Changes
+1. Understand the monorepo structure
+2. Respect workspace boundaries
+3. Run tests after changes
+4. Update documentation if needed
+5. Check deployment constraints
+
+### When Creating Files
+1. Follow existing patterns
+2. Place files in appropriate directories
+3. Export from index files
+4. Add TypeScript types
+5. Write tests for new code
+
+### When Refactoring
+1. Update all references
+2. Maintain backward compatibility
+3. Update tests
+4. Update documentation
+5. Test in all environments
+
+### When Fixing Bugs
+1. Identify root cause
+2. Write regression test
+3. Fix the bug
+4. Verify fix works
+5. Document the fix
+
+## References
+
+- README.md - Project overview
+- ARCHITECTURE_DIAGRAM.md - Architecture details
+- apps/api/DEPLOYMENT.md - Deployment constraints
+- PHASE3_ROADMAP.md - Development roadmap
+- COMPETITOR_MONITORING.md - Phase 2 features
+- CONNECTOR_SETUP_PLAN.md - Phase 3 implementation plan
+

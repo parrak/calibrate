@@ -12,12 +12,14 @@ export class ShopifyClient {
 
   constructor(config: ShopifyConfig) {
     this.config = config;
+    const shopDomain = config.shopDomain || `${config.apiKey}.myshopify.com`;
     this.client = axios.create({
-      baseURL: `https://${config.apiKey}.myshopify.com/admin/api/${config.apiVersion || '2024-10'}`,
+      baseURL: `https://${shopDomain}/admin/api/${config.apiVersion || '2024-10'}`,
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'Calibrate-Pricing-Platform/1.0',
+        ...(config.accessToken ? { 'X-Shopify-Access-Token': config.accessToken } : {}),
       },
     });
 
@@ -30,8 +32,8 @@ export class ShopifyClient {
   private setupInterceptors(): void {
     // Request interceptor to add authentication
     this.client.interceptors.request.use((config) => {
-      if (this.config.apiKey) {
-        config.headers['X-Shopify-Access-Token'] = this.config.apiKey;
+      if (this.config.accessToken) {
+        config.headers['X-Shopify-Access-Token'] = this.config.accessToken;
       }
       return config;
     });
