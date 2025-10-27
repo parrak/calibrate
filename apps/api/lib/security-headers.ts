@@ -252,17 +252,23 @@ export class CORSManager {
    */
   applyCORSHeaders(req: NextRequest, response: NextResponse): NextResponse {
     const origin = req.headers.get('origin')
-    
+
+    // Debug header to verify this code is running
+    response.headers.set('X-CORS-Debug', `origin=${origin}`)
+
     // Set Access-Control-Allow-Origin
     if (this.isOriginAllowed(origin)) {
       response.headers.set('Access-Control-Allow-Origin', origin || '*')
+      response.headers.set('X-CORS-Allowed', 'true')
+    } else {
+      response.headers.set('X-CORS-Allowed', 'false')
     }
 
     // Set other CORS headers
     response.headers.set('Access-Control-Allow-Methods', this.config.methods.join(', '))
     response.headers.set('Access-Control-Allow-Headers', this.config.allowedHeaders.join(', '))
     response.headers.set('Access-Control-Max-Age', this.config.maxAge.toString())
-    
+
     if (this.config.credentials) {
       response.headers.set('Access-Control-Allow-Credentials', 'true')
     }
