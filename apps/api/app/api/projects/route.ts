@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { withSecurity } from '@/lib/security-headers'
 
 /**
  * Projects API
  * Handles project creation and listing for user onboarding
  */
 
-export async function POST(req: NextRequest) {
+export const POST = withSecurity(async (req: NextRequest) => {
   try {
     const body = await req.json()
     const { name, slug, userId, tenantId } = body
@@ -94,9 +95,9 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
-export async function GET(req: NextRequest) {
+export const GET = withSecurity(async (req: NextRequest) => {
   try {
     const userId = req.nextUrl.searchParams.get('userId')
 
@@ -151,4 +152,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
