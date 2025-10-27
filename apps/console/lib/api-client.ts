@@ -107,6 +107,41 @@ export const competitorsApi = {
   },
 }
 
+// Platforms API
+export const platformsApi = {
+  list: async () => {
+    return fetchApi<{ platforms: any[]; count: number }>('/api/platforms')
+  },
+
+  getStatus: async (platform: string, projectSlug: string) => {
+    return fetchApi<{
+      platform: string
+      integration: any | null
+      isConnected: boolean
+    }>(`/api/platforms/${platform}?project=${projectSlug}`)
+  },
+
+  connect: async (platform: string, projectSlug: string, platformName: string, credentials: any) => {
+    return fetchApi(`/api/platforms/${platform}`, {
+      method: 'POST',
+      body: JSON.stringify({ projectSlug, platformName, credentials }),
+    })
+  },
+
+  disconnect: async (platform: string, projectSlug: string) => {
+    return fetchApi(`/api/platforms/${platform}?project=${projectSlug}`, {
+      method: 'DELETE',
+    })
+  },
+
+  triggerSync: async (platform: string, projectSlug: string) => {
+    return fetchApi(`/api/platforms/${platform}/sync`, {
+      method: 'POST',
+      body: JSON.stringify({ projectSlug }),
+    })
+  },
+}
+
 // Health check
 export const healthApi = {
   check: async () => {
