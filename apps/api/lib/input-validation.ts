@@ -265,8 +265,18 @@ export class InputValidator {
     // Remove null bytes
     let sanitized = input.replace(/\0/g, '')
     
-    // HTML sanitization
-    sanitized = DOMPurify.sanitize(sanitized)
+    // HTML sanitization (tolerate lack of jsdom in server env)
+    try {
+      if (typeof (DOMPurify as any)?.sanitize === 'function') {
+        sanitized = (DOMPurify as any).sanitize(sanitized)
+      } else {
+        // Fallback: strip HTML tags
+        sanitized = sanitized.replace(/<[^>]*>/g, '')
+      }
+    } catch {
+      // Fallback if DOMPurify fails (e.g., jsdom not available)
+      sanitized = sanitized.replace(/<[^>]*>/g, '')
+    }
     
     // Remove potential SQL injection patterns
     sanitized = sanitized.replace(/['";\\]/g, '')

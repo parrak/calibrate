@@ -122,7 +122,8 @@ export default function PerformanceDashboard() {
       setLoading(true)
       setError(null)
       
-      const response = await fetch(`/api/admin/performance?timeRange=${timeRange}`)
+      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const response = await fetch(`${base}/api/admin/performance?timeRange=${timeRange}`)
       if (!response.ok) {
         throw new Error('Failed to fetch performance data')
       }

@@ -48,7 +48,9 @@ async function fetchApi<T>(
 // Price Changes API
 export const priceChangesApi = {
   list: async (projectSlug: string) => {
-    return fetchApi<any[]>(`/api/v1/price-changes?project=${projectSlug}`)
+    // API returns shape: { items: [...] }
+    const res = await fetchApi<{ items?: any[] }>(`/api/v1/price-changes?project=${projectSlug}`)
+    return Array.isArray(res?.items) ? res.items : []
   },
 
   approve: async (id: string) => {
@@ -77,7 +79,13 @@ export const catalogApi = {
   },
 
   listProducts: async (projectSlug: string) => {
-    return fetchApi<any[]>(`/api/v1/catalog?projectSlug=${projectSlug}`)
+    // API expects `project` and returns { products: [{ product: {code,name}, skus: [...] }, ...] }
+    const res = await fetchApi<{ products?: Array<{ product: { code: string; name: string }; skus: any[] }> }>(
+      `/api/v1/catalog?project=${projectSlug}`
+    )
+    const products = Array.isArray(res?.products) ? res.products : []
+    // Normalize to [{ code, name, skus }]
+    return products.map((p) => ({ code: p.product.code, name: p.product.name, skus: p.skus }))
   },
 }
 

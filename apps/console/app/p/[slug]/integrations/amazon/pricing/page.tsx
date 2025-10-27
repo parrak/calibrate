@@ -19,9 +19,14 @@ export default function AmazonPricingPage() {
     setLoading(true)
     setResult(null)
     try {
-      const res = await fetch('/api/platforms/amazon/pricing', {
+      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const token = (session as any)?.apiToken as string | undefined
+      const res = await fetch(`${base}/api/platforms/amazon/pricing`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ project: params.slug, sku, price: Number(price), currency, submit: true, poll: false }),
       })
       const data = await res.json()
@@ -37,7 +42,11 @@ export default function AmazonPricingPage() {
     if (!feedId) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/platforms/amazon/pricing/status?feed=${encodeURIComponent(feedId)}&parse=true`)
+      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const token = (session as any)?.apiToken as string | undefined
+      const res = await fetch(`${base}/api/platforms/amazon/pricing/status?feed=${encodeURIComponent(feedId)}&parse=true`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
       const data = await res.json()
       setStatus(data)
     } finally {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { UserMenu } from '@/components/UserMenu'
+import Providers from './providers'
 
 export const metadata: Metadata = {
   title: 'Calibrate Console',
@@ -40,7 +41,7 @@ export default function RootLayout({
           </div>
         </header>
         <main id="main" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-          {children}
+          <Providers>{children}</Providers>
         </main>
       </body>
     </html>

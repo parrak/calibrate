@@ -61,7 +61,8 @@ export default function SecurityDashboard() {
       setLoading(true)
       setError(null)
       
-      const response = await fetch(`/api/admin/security?includeDetails=true&runScan=${runScan}`)
+      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const response = await fetch(`${base}/api/admin/security?includeDetails=true&runScan=${runScan}`)
       if (!response.ok) {
         throw new Error('Failed to fetch security data')
       }
@@ -77,7 +78,8 @@ export default function SecurityDashboard() {
 
   const resolveVulnerability = async (vulnerabilityId: string) => {
     try {
-      const response = await fetch('/api/admin/security', {
+      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const response = await fetch(`${base}/api/admin/security`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
