@@ -2,8 +2,15 @@
   "name": "@calibr/shopify-connector",
   "version": "0.1.0",
   "description": "Shopify Admin API connector for Calibrate pricing platform",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "require": "./src/index.ts"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
