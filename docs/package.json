@@ -1,0 +1,25 @@
+{
+  "name": "@calibr/docs",
+  "version": "1.0.0",
+  "description": "Calibrate API Documentation",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve . -p 3001",
+    "build": "echo 'Static site - no build needed'",
+    "start": "npx serve . -p 3001",
+    "deploy": "echo 'Deploy to Vercel or similar static hosting'"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  },
+  "keywords": [
+    "api",
+    "documentation",
+    "swagger",
+    "openapi",
+    "calibrate",
+    "pricing"
+  ],
+  "author": "Calibrate Team",
+  "license": "MIT"
+}

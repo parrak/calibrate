@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calibrate API Documentation</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.9.0/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.9.0/favicon-16x16.png" sizes="16x16" />
+  <style>
+    html {
+      box-sizing: border-box;
+      overflow: -moz-scrollbars-vertical;
+      overflow-y: scroll;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+    body {
+      margin:0;
+      background: #fafafa;
+    }
+    .swagger-ui .topbar {
+      background-color: #1f2937;
+    }
+    .swagger-ui .topbar .download-url-wrapper {
+      display: none;
+    }
+    .custom-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem 0;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .custom-header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      font-weight: 300;
+    }
+    .custom-header p {
+      margin: 0.5rem 0 0 0;
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+    .custom-header .version {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.9rem;
+      margin-left: 1rem;
+      display: inline-block;
+    }
+    .api-info {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .quick-link {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: #374151;
+      transition: all 0.2s;
+    }
+    .quick-link:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+    .quick-link h3 {
+      margin: 0 0 0.5rem 0;
+      color: #667eea;
+      font-size: 1.1rem;
+    }
+    .quick-link p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-left: 0.5rem;
+    }
+    .status-live {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-dev {
+      background: #fef3c7;
+      color: #92400e;
+    }
+  </style>
+</head>
+<body>
+  <div class="custom-header">
+    <div class="api-info">
+      <h1>Calibrate API Documentation</h1>
+      <p>Smart Pricing Platform API for automated price change management and policy evaluation</p>
+      <span class="version">v1.0.0</span>
+      <span class="status-badge status-live">LIVE</span>
+    </div>
+  </div>
+
+  <div class="api-info">
+    <div class="quick-links">
+      <a href="#/Health" class="quick-link">
+        <h3>🏥 Health & Monitoring</h3>
+        <p>System health checks, metrics, and performance monitoring endpoints</p>
+      </a>
+      <a href="#/Webhooks" class="quick-link">
+        <h3>🔗 Webhooks</h3>
+        <p>Submit price suggestions and receive real-time updates</p>
+      </a>
+      <a href="#/Price%20Changes" class="quick-link">
+        <h3>💰 Price Management</h3>
+        <p>Approve, apply, and manage price changes across your products</p>
+      </a>
+      <a href="#/Catalog" class="quick-link">
+        <h3>📦 Product Catalog</h3>
+        <p>Access product information and pricing data</p>
+      </a>
+      <a href="#/Analytics" class="quick-link">
+        <h3>📊 Analytics</h3>
+        <p>Detailed metrics and insights for your pricing strategy</p>
+      </a>
+      <a href="#/Admin" class="quick-link">
+        <h3>⚙️ Administration</h3>
+        <p>Admin dashboard and system management tools</p>
+      </a>
+    </div>
+  </div>
+
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function() {
+      const ui = SwaggerUIBundle({
+        url: './api/openapi.yaml',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout",
+        tryItOutEnabled: true,
+        requestInterceptor: (request) => {
+          // Add common headers for testing
+          if (request.url.includes('api.calibr.lat') || request.url.includes('calibrapi-production.up.railway.app')) {
+            request.headers['X-Calibr-Project'] = 'demo';
+          }
+          return request;
+        },
+        onComplete: () => {
+          // Add custom styling after Swagger UI loads
+          const style = document.createElement('style');
+          style.textContent = `
+            .swagger-ui .info .title {
+              display: none;
+            }
+            .swagger-ui .info .description {
+              display: none;
+            }
+            .swagger-ui .scheme-container {
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 0.5rem;
+              padding: 1rem;
+              margin: 1rem 0;
+            }
+            .swagger-ui .opblock.opblock-post {
+              border-color: #10b981;
+            }
+            .swagger-ui .opblock.opblock-get {
+              border-color: #3b82f6;
+            }
+            .swagger-ui .opblock.opblock-put {
+              border-color: #f59e0b;
+            }
+            .swagger-ui .opblock.opblock-delete {
+              border-color: #ef4444;
+            }
+          `;
+          document.head.appendChild(style);
+        }
+      });
+    };
+  </script>
+</body>
+</html>
