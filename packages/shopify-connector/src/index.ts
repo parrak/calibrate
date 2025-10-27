@@ -3,7 +3,9 @@
  * Complete Shopify Admin API integration for Calibrate pricing platform
  */
 
-export { ShopifyConnector, ShopifyCredentials, ShopifyConfig } from './ShopifyConnector';
+export { ShopifyConnector } from './ShopifyConnector';
+export type { ShopifyCredentials, ShopifyConfig } from './ShopifyConnector';
+export { ShopifyAuthManager as ShopifyAuth } from './auth';
 export { ShopifyAuthOperations } from './ShopifyAuthOperations';
 export { ShopifyProductOperations } from './ShopifyProductOperations';
 export { ShopifyPricingOperations } from './ShopifyPricingOperations';

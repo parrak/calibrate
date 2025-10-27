@@ -5,6 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ShopifyAuth } from '@calibr/shopify-connector';
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 import { prisma } from '@calibr/db';
 
 export async function GET(request: NextRequest) {
