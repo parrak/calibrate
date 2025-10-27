@@ -28,6 +28,13 @@ export class ShopifyAuthOperations implements AuthOperations {
     }
 
     const credentials = this.connector['credentials'];
+    
+    if (!credentials) {
+      return {
+        isAuthenticated: false,
+        error: 'No credentials available',
+      };
+    }
 
     return {
       isAuthenticated: true,

@@ -53,8 +53,8 @@ export class ShopifyProducts {
 
     // Remove undefined values
     Object.keys(params).forEach(key => {
-      if (params[key] === undefined) {
-        delete params[key];
+      if (params[key as keyof typeof params] === undefined) {
+        delete params[key as keyof typeof params];
       }
     });
 
