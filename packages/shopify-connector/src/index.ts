@@ -1,8 +1,5 @@
-/**
- * Shopify Connector - Main Export
- * Complete Shopify Admin API integration for Calibrate pricing platform
- */
-export { ShopifyConnector, ShopifyCredentials, ShopifyConfig } from './ShopifyConnector';
+export type { ShopifyConnector } from './ShopifyConnector';
+export type { ShopifyConfig, ShopifyCredentials } from './ShopifyConnector';
 export { ShopifyAuthOperations } from './ShopifyAuthOperations';
 export { ShopifyProductOperations } from './ShopifyProductOperations';
 export { ShopifyPricingOperations } from './ShopifyPricingOperations';
@@ -13,14 +10,11 @@ export { ShopifyPricing } from './pricing';
 export { ShopifyWebhooks } from './webhooks';
 export * from './types';
 
-// Register the connector with the platform registry
 import { ConnectorRegistry } from '@calibr/platform-connector';
-import { ShopifyConnector, ShopifyConfig } from './ShopifyConnector';
+import { ShopifyConnector } from './ShopifyConnector';
 
 ConnectorRegistry.register('shopify', async (config, credentials) => {
-  const connector = new ShopifyConnector(config as ShopifyConfig, credentials as any);
-  if (credentials) {
-    await connector.initialize(credentials);
-  }
+  const connector = new ShopifyConnector(config as any, credentials as any);
+  if (credentials) await connector.initialize(credentials);
   return connector;
 });

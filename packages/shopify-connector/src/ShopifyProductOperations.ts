@@ -34,10 +34,6 @@ export class ShopifyProductOperations implements ProductOperations {
         vendor: filter?.vendor,
         product_type: filter?.productType,
         title: filter?.search,
-        created_at_min: filter?.createdAfter?.toISOString(),
-        created_at_max: filter?.createdBefore?.toISOString(),
-        updated_at_min: filter?.updatedAfter?.toISOString(),
-        updated_at_max: filter?.updatedBefore?.toISOString(),
       });
 
       return {
