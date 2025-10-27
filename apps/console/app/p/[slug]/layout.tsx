@@ -31,13 +31,13 @@ export default function ProjectLayout({
   if (params.slug !== 'demo') notFound()
 
   // derive current path segment for active state (client-less)
-  // Next.js layouts don’t get full pathname; use labels that match child routes
+  // Next.js layouts don't get full pathname; use labels that match child routes
   const nav = [
     { href: `/p/${params.slug}`, label: 'Dashboard', key: 'dashboard' },
     { href: `/p/${params.slug}/price-changes`, label: 'Price Changes', key: 'price-changes' },
     { href: `/p/${params.slug}/catalog`, label: 'Catalog', key: 'catalog' },
     { href: `/p/${params.slug}/competitors`, label: 'Competitors', key: 'competitors' },
-    { href: `/p/${params.slug}/integrations/amazon/pricing`, label: 'Amazon Pricing (Beta)', key: 'amazon-pricing' },
+    { href: `/p/${params.slug}/integrations`, label: 'Integrations', key: 'integrations' },
   ]
 
   return (
