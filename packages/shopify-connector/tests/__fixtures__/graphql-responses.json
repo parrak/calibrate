@@ -1,0 +1,33 @@
+{
+  "productVariantUpdate": {
+    "data": {
+      "productVariantUpdate": {
+        "productVariant": {
+          "id": "gid://shopify/ProductVariant/201",
+          "price": "34.99",
+          "compareAtPrice": "44.99"
+        },
+        "userErrors": []
+      }
+    }
+  },
+  "nodes": {
+    "data": {
+      "nodes": [
+        {
+          "id": "gid://shopify/ProductVariant/201",
+          "price": "29.99",
+          "compareAtPrice": "39.99",
+          "sku": "TEST-SKU-001",
+          "title": "Default Title",
+          "inventoryQuantity": 10,
+          "product": {
+            "id": "gid://shopify/Product/101",
+            "title": "Test Product 1"
+          }
+        }
+      ]
+    }
+  }
+}
+
