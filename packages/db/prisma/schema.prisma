@@ -53,7 +53,7 @@ model Project {
   events      Event[]
   competitors Competitor[]
   competitorRules CompetitorRule[]
-  platformIntegrations PlatformIntegration[]
+  shopifyIntegrations ShopifyIntegration[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -166,21 +166,6 @@ model PriceChange {
   createdAt    DateTime          @default(now())
 
   @@index([tenantId, projectId, status])
-}
-
-// Stores snapshots of Amazon competitive pricing for analysis
-model AmazonCompetitivePrice {
-  id              String   @id @default(cuid())
-  asin            String
-  marketplaceId   String
-  lowestPriceCents Int?
-  buyBoxPriceCents Int?
-  offerCount      Int      @default(0)
-  data            Json?
-  retrievedAt     DateTime @default(now())
-
-  @@index([asin, marketplaceId])
-  @@index([retrievedAt])
 }
 
 enum PriceChangeStatus {
@@ -311,66 +296,40 @@ model CompetitorRule {
   rules        Json     // Pricing rules based on competitor data
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-
+  
   @@index([tenantId, projectId])
 }
 
-// Platform Integration Models (Phase 3)
-
-model PlatformIntegration {
+model ShopifyIntegration {
   id              String   @id @default(cuid())
   projectId       String
-  project         Project  @relation(fields: [projectId], references: [id])
-  platform        String   // 'shopify', 'amazon', 'google_shopping', etc.
-  platformName    String   // User-friendly name (e.g., "My Shopify Store")
-  externalId      String?  // Platform-specific identifier
-  status          PlatformConnectionStatus @default(DISCONNECTED)
+  shopDomain      String   @unique
+  accessToken     String   @db.Text
+  scope           String
+  installedAt     DateTime @default(now())
   isActive        Boolean  @default(true)
-  connectedAt     DateTime @default(now())
   lastSyncAt      DateTime?
-  lastHealthCheck DateTime?
-  syncStatus      PlatformSyncStatus?
+  syncStatus      String?  // 'success', 'error', 'in_progress'
   syncError       String?  @db.Text
-  metadata        Json?    // Platform-specific metadata (credentials, config)
+  webhookSubscriptions ShopifyWebhookSubscription[]
 
-  syncLogs        PlatformSyncLog[]
+  project         Project  @relation(fields: [projectId], references: [id])
 
-  @@unique([projectId, platform])
   @@index([projectId])
-  @@index([platform])
-  @@index([status])
+  @@index([shopDomain])
 }
 
-enum PlatformConnectionStatus {
-  CONNECTED
-  DISCONNECTED
-  ERROR
-  PENDING
-  EXPIRED
-}
-
-enum PlatformSyncStatus {
-  IDLE
-  SYNCING
-  SUCCESS
-  ERROR
-  PARTIAL
-}
-
-model PlatformSyncLog {
+model ShopifyWebhookSubscription {
   id              String   @id @default(cuid())
   integrationId   String
-  integration     PlatformIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
-  syncType        String   // 'full', 'incremental', 'manual'
-  status          String   // 'started', 'completed', 'failed'
-  startedAt       DateTime @default(now())
-  completedAt     DateTime?
-  itemsSynced     Int      @default(0)
-  itemsFailed     Int      @default(0)
-  errors          Json?    // Array of error objects
-  metadata        Json?    // Additional sync metadata
+  topic           String
+  address         String
+  webhookId       String   @unique
+  createdAt       DateTime @default(now())
+  isActive        Boolean  @default(true)
+
+  integration     ShopifyIntegration @relation(fields: [integrationId], references: [id])
 
   @@index([integrationId])
-  @@index([startedAt])
-  @@index([status])
+  @@index([webhookId])
 }

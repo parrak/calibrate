@@ -1,86 +1,85 @@
-"use client";
+/**
+ * Shopify Auth Button Component
+ * Handles OAuth installation flow
+ */
+
+'use client';
 
 import { useState } from 'react';
 import { Button } from '@calibr/ui';
 
 interface ShopifyAuthButtonProps {
   projectId: string;
-  onSuccess?: () => void;
-  onError?: (error: string) => void;
-  variant?: 'primary' | 'danger' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  children?: React.ReactNode;
+  onSuccess: (integration: any) => void;
 }
 
-export default function ShopifyAuthButton({
-  projectId,
-  onSuccess,
-  onError,
-  variant = 'primary',
-  size = 'md',
-  children = 'Connect Shopify Store',
-}: ShopifyAuthButtonProps) {
+export function ShopifyAuthButton({ projectId, onSuccess }: ShopifyAuthButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleConnect = async () => {
-    setLoading(true);
-
+  const handleInstall = async () => {
     try {
+      setLoading(true);
+      setError(null);
+
       // Get shop domain from user
-      const shopDomain = prompt('Enter your Shopify store domain (e.g., my-store):');
+      const shopDomain = prompt('Enter your Shopify store domain (e.g., mystore.myshopify.com):');
       
       if (!shopDomain) {
-        setLoading(false);
         return;
       }
 
-      // Normalize shop domain
-      let normalizedDomain = shopDomain.trim().toLowerCase();
-      if (!normalizedDomain.endsWith('.myshopify.com')) {
-        normalizedDomain = `${normalizedDomain}.myshopify.com`;
-      }
-
-      // Validate domain format
-      const shopifyDomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/;
-      if (!shopifyDomainRegex.test(normalizedDomain)) {
-        onError?.('Invalid Shopify store domain format');
-        setLoading(false);
+      // Validate shop domain format
+      if (!shopDomain.endsWith('.myshopify.com')) {
+        setError('Please enter a valid Shopify store domain (e.g., mystore.myshopify.com)');
         return;
       }
 
-      const response = await fetch('/api/platforms/shopify/oauth/install', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId,
-          shopDomain: normalizedDomain,
-          redirectUri: `${window.location.origin}/api/platforms/shopify/oauth/callback`,
-        }),
+      // Start OAuth flow
+      const response = await fetch('/api/integrations/shopify/oauth/install', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Add shop domain as query parameter
+        // Note: This is a simplified approach. In production, you'd want a proper form
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        // Redirect to Shopify OAuth
-        window.location.href = data.authUrl;
-      } else {
-        onError?.(data.message || 'Failed to initiate Shopify installation');
+      if (!response.ok) {
+        throw new Error('Failed to start OAuth flow');
       }
-    } catch (error) {
-      console.error('Shopify connection error:', error);
-      onError?.('Failed to connect to Shopify. Please try again.');
+
+      const data = await response.json();
+      
+      // Redirect to Shopify OAuth
+      window.location.href = data.authUrl;
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start installation');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Button
-      variant={variant}
-      onClick={handleConnect}
-      disabled={loading}
-    >
-      {loading ? 'Connecting...' : children}
-    </Button>
+    <div className="space-y-4">
+      <Button 
+        onClick={handleInstall}
+        disabled={loading}
+        className="w-full"
+      >
+        {loading ? 'Starting Installation...' : 'Install Shopify App'}
+      </Button>
+      
+      {error && (
+        <div className="text-red-600 dark:text-red-400 text-sm text-center">
+          {error}
+        </div>
+      )}
+      
+      <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+        You'll be redirected to Shopify to authorize the app installation
+      </div>
+    </div>
   );
 }

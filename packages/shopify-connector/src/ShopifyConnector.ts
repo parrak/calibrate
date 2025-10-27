@@ -2,9 +2,19 @@
  * Shopify Connector - Main Implementation
  * Implements the PlatformConnector interface for Shopify integration
  */
-import { PlatformConnector, PlatformType, PlatformConfig, PlatformCredentials, PlatformHealth, PlatformCapabilities } from '@calibr/platform-connector';
-import { PlatformError } from '@calibr/platform-connector';
+
+import {
+  PlatformConnector,
+  PlatformType,
+  PlatformConfig,
+  PlatformCredentials,
+  PlatformHealth,
+  PlatformCapabilities,
+  PlatformError,
+  PlatformErrorType,
+} from '@calibr/platform-connector';
 import { ShopifyClient } from './client';
+import { ShopifyAuth } from './auth';
 import { ShopifyProducts } from './products';
 import { ShopifyPricing } from './pricing';
 import { ShopifyWebhooks } from './webhooks';
@@ -27,10 +37,10 @@ export interface ShopifyConfig extends PlatformConfig {
 }
 
 export class ShopifyConnector implements PlatformConnector {
-  config: ShopifyConfig;
   readonly platform: PlatformType = 'shopify';
   readonly name = 'Shopify';
   readonly version = '1.0.0';
+
   readonly capabilities: PlatformCapabilities = {
     supportsOAuth: true,
     supportsWebhooks: true,
@@ -51,36 +61,50 @@ export class ShopifyConnector implements PlatformConnector {
   private pricingOperations: any = null;
   private webhooks: ShopifyWebhooks | null = null;
   private credentials: ShopifyCredentials | null = null;
+  
+  // Expose underlying Shopify classes for operations
+  private underlyingProducts: ShopifyProducts | null = null;
+  private underlyingPricing: ShopifyPricing | null = null;
 
-  // Private internal references to underlying Shopify classes
-  private _products: ShopifyProducts | null = null;
-  private _pricing: ShopifyPricing | null = null;
-
-  constructor(config: ShopifyConfig, credentials?: ShopifyCredentials) {
-    this.config = config;
+  constructor(
+    public config: ShopifyConfig,
+    credentials?: ShopifyCredentials
+  ) {
     if (credentials) {
       this.initialize(credentials);
     }
   }
 
   // Implement required properties
-  get auth() {
+  get auth(): any {
     if (!this.authOperations) {
-      throw new PlatformError('authentication', 'Connector not initialized. Call initialize() first.', 'shopify');
+      throw new PlatformError(
+        'authentication',
+        'Connector not initialized. Call initialize() first.',
+        'shopify'
+      );
     }
     return this.authOperations;
   }
 
-  get products() {
+  get products(): any {
     if (!this.productOperations) {
-      throw new PlatformError('authentication', 'Connector not initialized. Call initialize() first.', 'shopify');
+      throw new PlatformError(
+        'authentication',
+        'Connector not initialized. Call initialize() first.',
+        'shopify'
+      );
     }
     return this.productOperations;
   }
 
-  get pricing() {
+  get pricing(): any {
     if (!this.pricingOperations) {
-      throw new PlatformError('authentication', 'Connector not initialized. Call initialize() first.', 'shopify');
+      throw new PlatformError(
+        'authentication',
+        'Connector not initialized. Call initialize() first.',
+        'shopify'
+      );
     }
     return this.pricingOperations;
   }
@@ -92,10 +116,14 @@ export class ShopifyConnector implements PlatformConnector {
 
   async initialize(credentials: PlatformCredentials): Promise<void> {
     this.credentials = credentials as ShopifyCredentials;
-
+    
     // Validate credentials
     if (!this.credentials.shopDomain || !this.credentials.accessToken) {
-      throw new PlatformError('validation', 'Shop domain and access token are required', 'shopify');
+      throw new PlatformError(
+        'validation',
+        'Shop domain and access token are required',
+        'shopify'
+      );
     }
 
     // Initialize Shopify client
@@ -105,8 +133,6 @@ export class ShopifyConnector implements PlatformConnector {
       scopes: this.config.scopes,
       webhookSecret: this.config.webhookSecret,
       apiVersion: this.config.apiVersion || '2024-10',
-      shopDomain: this.credentials.shopDomain, // Required for client to work
-      accessToken: this.credentials.accessToken, // Required for authentication
     });
 
     // Initialize operations
@@ -118,10 +144,10 @@ export class ShopifyConnector implements PlatformConnector {
     this.productOperations = new ShopifyProductOperations(this);
     this.pricingOperations = new ShopifyPricingOperations(this);
     this.webhooks = new ShopifyWebhooks(this.client, this.config.webhookSecret);
-
+    
     // Initialize underlying Shopify classes
-    this._products = new ShopifyProducts(this.client);
-    this._pricing = new ShopifyPricing(this.client);
+    this.underlyingProducts = new ShopifyProducts(this.client);
+    this.underlyingPricing = new ShopifyPricing(this.client);
   }
 
   async disconnect(): Promise<void> {
@@ -131,8 +157,8 @@ export class ShopifyConnector implements PlatformConnector {
     this.productOperations = null;
     this.pricingOperations = null;
     this.webhooks = null;
-    this._products = null;
-    this._pricing = null;
+    this.underlyingProducts = null;
+    this.underlyingPricing = null;
   }
 
   async healthCheck(): Promise<PlatformHealth> {
@@ -158,7 +184,7 @@ export class ShopifyConnector implements PlatformConnector {
         lastChecked: new Date(),
         latency: Date.now() - startTime,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         isHealthy: false,
         status: 'error',
@@ -172,6 +198,7 @@ export class ShopifyConnector implements PlatformConnector {
   async testConnection(): Promise<boolean> {
     try {
       if (!this.client) return false;
+      
       await this.client.get('/shop.json');
       return true;
     } catch {
@@ -188,8 +215,8 @@ export class ShopifyConnector implements PlatformConnector {
     try {
       const connected = await this.testConnection();
       const rateLimit = this.client?.getRateLimit() || null;
+      
       let shopInfo;
-
       if (connected && this.client) {
         try {
           shopInfo = await this.client.get('/shop.json');
@@ -211,29 +238,20 @@ export class ShopifyConnector implements PlatformConnector {
     }
   }
 
-  // Getter methods for internal access to underlying Shopify classes
-  getAuthInstance() {
+  // Getter methods for operations
+  private get _auth() {
     return this.auth;
   }
 
-  getProductsInstance() {
-    if (!this._products) {
-      throw new PlatformError('authentication', 'Products instance not initialized', 'shopify');
-    }
-    return this._products;
+  private get _products() {
+    return this.products;
   }
 
-  getPricingInstance() {
-    if (!this._pricing) {
-      throw new PlatformError('authentication', 'Pricing instance not initialized', 'shopify');
-    }
-    return this._pricing;
+  private get _pricing() {
+    return this.pricing;
   }
 
-  getWebhooksInstance() {
-    if (!this.webhooks) {
-      throw new PlatformError('authentication', 'Webhooks instance not initialized', 'shopify');
-    }
+  private get _webhooks() {
     return this.webhooks;
   }
 }

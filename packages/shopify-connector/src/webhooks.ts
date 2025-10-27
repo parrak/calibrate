@@ -2,7 +2,7 @@
  * Shopify Webhooks Management
  * Handles webhook subscription, verification, and processing
  */
-import crypto from 'crypto';
+
 import { ShopifyClient } from './client';
 import { ShopifyWebhook, ShopifyWebhookPayload, ShopifyWebhookVerification } from './types';
 
@@ -33,7 +33,7 @@ export class ShopifyWebhooks {
       },
     };
 
-    const response = await this.client.post('/webhooks.json', webhookData) as any;
+    const response = await this.client.post<{ webhook: ShopifyWebhook }>('/webhooks.json', webhookData);
     return response.webhook;
   }
 
@@ -41,7 +41,7 @@ export class ShopifyWebhooks {
    * List all webhook subscriptions
    */
   async listWebhooks(): Promise<ShopifyWebhook[]> {
-    const response = await this.client.get('/webhooks.json') as any;
+    const response = await this.client.get<{ webhooks: ShopifyWebhook[] }>('/webhooks.json');
     return response.webhooks;
   }
 
@@ -49,7 +49,7 @@ export class ShopifyWebhooks {
    * Get a specific webhook by ID
    */
   async getWebhook(webhookId: string): Promise<ShopifyWebhook> {
-    const response = await this.client.get(`/webhooks/${webhookId}.json`) as any;
+    const response = await this.client.get<{ webhook: ShopifyWebhook }>(`/webhooks/${webhookId}.json`);
     return response.webhook;
   }
 
@@ -64,7 +64,7 @@ export class ShopifyWebhooks {
       },
     };
 
-    const response = await this.client.put(`/webhooks/${webhookId}.json`, webhookData) as any;
+    const response = await this.client.put<{ webhook: ShopifyWebhook }>(`/webhooks/${webhookId}.json`, webhookData);
     return response.webhook;
   }
 
@@ -80,10 +80,11 @@ export class ShopifyWebhooks {
    */
   verifyWebhookSignature(payload: string, signature: string): ShopifyWebhookVerification {
     try {
+      const crypto = require('crypto');
       const hmac = crypto.createHmac('sha256', this.webhookSecret);
       hmac.update(payload, 'utf8');
       const hash = hmac.digest('base64');
-
+      
       const isValid = crypto.timingSafeEqual(
         Buffer.from(hash, 'base64'),
         Buffer.from(signature, 'base64')
@@ -101,7 +102,7 @@ export class ShopifyWebhooks {
           error: 'Invalid signature',
         };
       }
-    } catch (error: any) {
+    } catch (error) {
       return {
         isValid: false,
         payload: null,
@@ -157,7 +158,7 @@ export class ShopifyWebhooks {
    */
   async cleanupWebhooks(keepTopics: string[]): Promise<void> {
     const webhooks = await this.listWebhooks();
-
+    
     for (const webhook of webhooks) {
       if (!keepTopics.includes(webhook.topic)) {
         try {

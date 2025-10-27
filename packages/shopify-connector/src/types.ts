@@ -8,8 +8,6 @@ export interface ShopifyConfig {
   scopes: string[];
   webhookSecret: string;
   apiVersion?: string;
-  shopDomain?: string; // Required for client initialization
-  accessToken?: string; // Required for authentication
 }
 
 export interface ShopifyAuth {

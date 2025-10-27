@@ -2,16 +2,19 @@
  * Shopify Auth Operations
  * Implements AuthOperations interface for Shopify OAuth
  */
-import { AuthOperations, AuthStatus, OAuthConfig, OAuthTokenResponse, PlatformCredentials } from '@calibr/platform-connector';
-import { PlatformError } from '@calibr/platform-connector';
-import { ShopifyConnector } from './ShopifyConnector';
+
+import {
+  AuthOperations,
+  AuthStatus,
+  OAuthConfig,
+  OAuthTokenResponse,
+  PlatformCredentials,
+  PlatformError,
+} from '@calibr/platform-connector';
+import { ShopifyConnector, ShopifyCredentials } from './ShopifyConnector';
 
 export class ShopifyAuthOperations implements AuthOperations {
-  private connector: ShopifyConnector;
-
-  constructor(connector: ShopifyConnector) {
-    this.connector = connector;
-  }
+  constructor(private connector: ShopifyConnector) {}
 
   async isAuthenticated(): Promise<boolean> {
     return this.connector.isAuthenticated();
@@ -27,14 +30,7 @@ export class ShopifyAuthOperations implements AuthOperations {
       };
     }
 
-    const credentials = this.connector['credentials'];
-    
-    if (!credentials) {
-      return {
-        isAuthenticated: false,
-        error: 'No credentials available',
-      };
-    }
+    const credentials = this.connector['credentials'] as ShopifyCredentials;
 
     return {
       isAuthenticated: true,
@@ -54,11 +50,15 @@ export class ShopifyAuthOperations implements AuthOperations {
   // OAuth flow methods
   getAuthorizationUrl(config: OAuthConfig): string {
     const { clientId, redirectUri, scopes, state } = config;
-    const credentials = this.connector['credentials'];
+    const credentials = this.connector['credentials'] as ShopifyCredentials;
     const shop = credentials?.shopDomain || '';
 
     if (!shop) {
-      throw new PlatformError('validation', 'Shop domain is required for OAuth authorization', 'shopify');
+      throw new PlatformError(
+        'validation',
+        'Shop domain is required for OAuth authorization',
+        'shopify'
+      );
     }
 
     const params = new URLSearchParams({
@@ -71,26 +71,36 @@ export class ShopifyAuthOperations implements AuthOperations {
     return `https://${shop}/admin/oauth/authorize?${params.toString()}`;
   }
 
-  async handleOAuthCallback(code: string, config: OAuthConfig): Promise<OAuthTokenResponse> {
+  async handleOAuthCallback(
+    code: string,
+    config: OAuthConfig
+  ): Promise<OAuthTokenResponse> {
     const { clientId, clientSecret, redirectUri } = config;
-    const credentials = this.connector['credentials'];
+    const credentials = this.connector['credentials'] as ShopifyCredentials;
     const shop = credentials?.shopDomain || '';
 
     if (!shop) {
-      throw new PlatformError('validation', 'Shop domain is required for OAuth callback', 'shopify');
+      throw new PlatformError(
+        'validation',
+        'Shop domain is required for OAuth callback',
+        'shopify'
+      );
     }
 
     try {
-      const response = await fetch(`https://${shop}/admin/oauth/access_token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: clientId,
-          client_secret: clientSecret,
-          code,
-          redirect_uri: redirectUri,
-        }),
-      });
+      const response = await fetch(
+        `https://${shop}/admin/oauth/access_token`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id: clientId,
+            client_secret: clientSecret,
+            code,
+            redirect_uri: redirectUri,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -113,7 +123,7 @@ export class ShopifyAuthOperations implements AuthOperations {
       if (error instanceof PlatformError) {
         throw error;
       }
-
+      
       throw new PlatformError(
         'network',
         `OAuth callback failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -125,13 +135,17 @@ export class ShopifyAuthOperations implements AuthOperations {
 
   async refreshToken(): Promise<OAuthTokenResponse> {
     // Shopify doesn't support token refresh
-    throw new PlatformError('authentication', 'Shopify does not support token refresh. Re-authentication required.', 'shopify');
+    throw new PlatformError(
+      'authentication',
+      'Shopify does not support token refresh. Re-authentication required.',
+      'shopify'
+    );
   }
 
   async validateCredentials(credentials: PlatformCredentials): Promise<boolean> {
     try {
-      const shopifyCredentials = credentials as any;
-
+      const shopifyCredentials = credentials as ShopifyCredentials;
+      
       if (!shopifyCredentials.shopDomain || !shopifyCredentials.accessToken) {
         return false;
       }
@@ -149,10 +163,14 @@ export class ShopifyAuthOperations implements AuthOperations {
     expiresAt?: Date;
     shopDomain: string;
   }> {
-    const credentials = this.connector['credentials'];
-
+    const credentials = this.connector['credentials'] as ShopifyCredentials;
+    
     if (!credentials) {
-      throw new PlatformError('authentication', 'No credentials available', 'shopify');
+      throw new PlatformError(
+        'authentication',
+        'No credentials available',
+        'shopify'
+      );
     }
 
     return {

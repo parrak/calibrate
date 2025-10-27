@@ -1,18 +1,27 @@
 {
   "name": "@calibr/shopify-connector",
   "version": "0.1.0",
-  "description": "Shopify platform connector for Calibrate",
+  "description": "Shopify Admin API connector for Calibrate pricing platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest",
-    "test:run": "vitest run",
+    "test:coverage": "vitest --coverage",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src/**/*.ts",
     "clean": "rm -rf dist"
   },
+  "keywords": [
+    "shopify",
+    "ecommerce",
+    "pricing",
+    "api",
+    "connector"
+  ],
+  "author": "Calibrate Team",
+  "license": "MIT",
   "dependencies": {
     "@calibr/platform-connector": "workspace:*",
     "@shopify/admin-api-client": "^1.0.0",
@@ -21,20 +30,14 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
+    "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.55.0",
-    "typescript": "^5.3.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0",
     "vitest": "^1.0.0"
   },
-  "keywords": [
-    "shopify",
-    "connector",
-    "ecommerce",
-    "platform",
-    "calibrate"
-  ],
-  "author": "Calibrate Team",
-  "license": "MIT"
+  "peerDependencies": {
+    "@calibr/platform-connector": "workspace:*"
+  }
 }

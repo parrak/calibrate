@@ -2,22 +2,19 @@
  * Shopify Admin API Client
  * Handles HTTP requests to Shopify Admin API with rate limiting and error handling
  */
-import axios from 'axios';
-import { ShopifyConfig, ShopifyRateLimit } from './types';
+
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { ShopifyConfig, ShopifyApiError, ShopifyRateLimit } from './types';
 
 export class ShopifyClient {
-  private client;
+  private client: AxiosInstance;
   private config: ShopifyConfig;
   private rateLimit: ShopifyRateLimit | null = null;
 
   constructor(config: ShopifyConfig) {
     this.config = config;
-    // shopDomain should be provided from credentials during initialization
-    if (!config.shopDomain) {
-      throw new Error('shopDomain is required for Shopify client');
-    }
     this.client = axios.create({
-      baseURL: `https://${config.shopDomain}/admin/api/${config.apiVersion || '2024-10'}`,
+      baseURL: `https://${config.apiKey}.myshopify.com/admin/api/${config.apiVersion || '2024-10'}`,
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -34,9 +31,8 @@ export class ShopifyClient {
   private setupInterceptors(): void {
     // Request interceptor to add authentication
     this.client.interceptors.request.use((config) => {
-      // Add access token from credentials (not from apiKey)
-      if (this.config.accessToken) {
-        config.headers['X-Shopify-Access-Token'] = this.config.accessToken;
+      if (this.config.apiKey) {
+        config.headers['X-Shopify-Access-Token'] = this.config.apiKey;
       }
       return config;
     });
@@ -68,7 +64,7 @@ export class ShopifyClient {
   /**
    * Update rate limit information from response headers
    */
-  private updateRateLimit(response: any): void {
+  private updateRateLimit(response: AxiosResponse): void {
     const limit = response.headers['x-shopify-shop-api-call-limit'];
     if (limit) {
       const [used, total] = limit.split('/').map(Number);
@@ -83,7 +79,7 @@ export class ShopifyClient {
   /**
    * Handle API errors and convert to standardized format
    */
-  private handleError(error: any): any {
+  private handleError(error: any): ShopifyApiError {
     if (error.response?.data) {
       return {
         errors: error.response.data.errors || {

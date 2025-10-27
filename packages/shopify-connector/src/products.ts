@@ -2,6 +2,7 @@
  * Shopify Products Operations
  * Handles reading, creating, and updating Shopify products and variants
  */
+
 import { ShopifyClient } from './client';
 import { ShopifyProduct, ShopifyVariant, ShopifyPriceUpdate } from './types';
 
@@ -53,19 +54,19 @@ export class ShopifyProducts {
 
     // Remove undefined values
     Object.keys(params).forEach(key => {
-      if (params[key as keyof typeof params] === undefined) {
-        delete params[key as keyof typeof params];
+      if (params[key] === undefined) {
+        delete params[key];
       }
     });
 
-    return await this.client.get('/products.json', params);
+    return await this.client.get<ProductListResponse>('/products.json', params);
   }
 
   /**
    * Get a single product by ID
    */
   async getProduct(productId: string): Promise<ShopifyProduct> {
-    const response = await this.client.get(`/products/${productId}.json`) as any;
+    const response = await this.client.get<{ product: ShopifyProduct }>(`/products/${productId}.json`);
     return response.product;
   }
 
@@ -74,9 +75,9 @@ export class ShopifyProducts {
    */
   async getProductByHandle(handle: string): Promise<ShopifyProduct | null> {
     try {
-      const response = await this.client.get(`/products.json?handle=${handle}`) as any;
+      const response = await this.client.get<{ product: ShopifyProduct }>(`/products.json?handle=${handle}`);
       return response.product || null;
-    } catch (error: any) {
+    } catch (error) {
       if (error.response?.status === 404) {
         return null;
       }
@@ -96,7 +97,7 @@ export class ShopifyProducts {
    * Get a single variant by ID
    */
   async getVariant(variantId: string): Promise<ShopifyVariant> {
-    const response = await this.client.get(`/variants/${variantId}.json`) as any;
+    const response = await this.client.get<{ variant: ShopifyVariant }>(`/variants/${variantId}.json`);
     return response.variant;
   }
 
@@ -109,7 +110,7 @@ export class ShopifyProducts {
     for (const update of updates) {
       try {
         await this.client.waitIfNeeded();
-
+        
         const variantData = {
           variant: {
             id: update.variantId,
@@ -118,7 +119,11 @@ export class ShopifyProducts {
           },
         };
 
-        const response = await this.client.put(`/variants/${update.variantId}.json`, variantData) as any;
+        const response = await this.client.put<{ variant: ShopifyVariant }>(
+          `/variants/${update.variantId}.json`,
+          variantData
+        );
+
         results.push(response.variant);
       } catch (error) {
         console.error(`Failed to update variant ${update.variantId}:`, error);
@@ -140,10 +145,7 @@ export class ShopifyProducts {
   /**
    * Search products by query
    */
-  async searchProducts(
-    query: string,
-    options: Omit<ProductListOptions, 'title'> = {}
-  ): Promise<ProductListResponse> {
+  async searchProducts(query: string, options: Omit<ProductListOptions, 'title'> = {}): Promise<ProductListResponse> {
     return await this.listProducts({
       ...options,
       title: query,
@@ -153,10 +155,7 @@ export class ShopifyProducts {
   /**
    * Get products by vendor
    */
-  async getProductsByVendor(
-    vendor: string,
-    options: Omit<ProductListOptions, 'vendor'> = {}
-  ): Promise<ProductListResponse> {
+  async getProductsByVendor(vendor: string, options: Omit<ProductListOptions, 'vendor'> = {}): Promise<ProductListResponse> {
     return await this.listProducts({
       ...options,
       vendor,
@@ -166,10 +165,7 @@ export class ShopifyProducts {
   /**
    * Get products by product type
    */
-  async getProductsByType(
-    productType: string,
-    options: Omit<ProductListOptions, 'product_type'> = {}
-  ): Promise<ProductListResponse> {
+  async getProductsByType(productType: string, options: Omit<ProductListOptions, 'product_type'> = {}): Promise<ProductListResponse> {
     return await this.listProducts({
       ...options,
       product_type: productType,
@@ -179,12 +175,9 @@ export class ShopifyProducts {
   /**
    * Get recently updated products
    */
-  async getRecentlyUpdatedProducts(
-    hours: number = 24,
-    options: Omit<ProductListOptions, 'updated_at_min'> = {}
-  ): Promise<ProductListResponse> {
+  async getRecentlyUpdatedProducts(hours: number = 24, options: Omit<ProductListOptions, 'updated_at_min'> = {}): Promise<ProductListResponse> {
     const updatedAtMin = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
-
+    
     return await this.listProducts({
       ...options,
       updated_at_min: updatedAtMin,
@@ -195,7 +188,7 @@ export class ShopifyProducts {
    * Get product count
    */
   async getProductCount(): Promise<number> {
-    const response = await this.client.get('/products/count.json') as any;
+    const response = await this.client.get<{ count: number }>('/products/count.json');
     return response.count;
   }
 
@@ -206,7 +199,7 @@ export class ShopifyProducts {
     try {
       await this.getProduct(productId);
       return true;
-    } catch (error: any) {
+    } catch (error) {
       if (error.response?.status === 404) {
         return false;
       }
@@ -221,7 +214,7 @@ export class ShopifyProducts {
     try {
       await this.getVariant(variantId);
       return true;
-    } catch (error: any) {
+    } catch (error) {
       if (error.response?.status === 404) {
         return false;
       }

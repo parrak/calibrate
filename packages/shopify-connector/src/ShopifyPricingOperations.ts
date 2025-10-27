@@ -2,24 +2,32 @@
  * Shopify Pricing Operations
  * Implements PricingOperations interface for Shopify pricing
  */
-import { PricingOperations, PriceUpdate, PriceUpdateResult, BatchPriceUpdate, BatchUpdateResult, NormalizedPrice } from '@calibr/platform-connector';
-import { PlatformError } from '@calibr/platform-connector';
+
+import {
+  PricingOperations,
+  NormalizedPrice,
+  PriceUpdate,
+  PriceUpdateResult,
+  BatchPriceUpdate,
+  BatchUpdateResult,
+  PlatformError,
+} from '@calibr/platform-connector';
 import { ShopifyConnector } from './ShopifyConnector';
 
 export class ShopifyPricingOperations implements PricingOperations {
-  private connector: ShopifyConnector;
-
-  constructor(connector: ShopifyConnector) {
-    this.connector = connector;
-  }
+  constructor(private connector: ShopifyConnector) {}
 
   async getPrice(externalId: string): Promise<NormalizedPrice> {
     if (!this.connector['client']) {
-      throw new PlatformError('authentication', 'Connector not initialized', 'shopify');
+      throw new PlatformError(
+        'authentication',
+        'Connector not initialized',
+        'shopify'
+      );
     }
 
     try {
-      const variant = await this.connector.products.getVariant(externalId);
+      const variant = await this.connector.underlyingProducts!.getVariant(externalId);
 
       return {
         externalId: variant.id.toString(),
@@ -44,14 +52,20 @@ export class ShopifyPricingOperations implements PricingOperations {
     }
   }
 
-  async getPrices(externalIds: string[]): Promise<any[]> {
-    const prices = await Promise.all(externalIds.map((id) => this.getPrice(id)));
+  async getPrices(externalIds: string[]): Promise<NormalizedPrice[]> {
+    const prices = await Promise.all(
+      externalIds.map((id) => this.getPrice(id))
+    );
     return prices;
   }
 
   async updatePrice(update: PriceUpdate): Promise<PriceUpdateResult> {
     if (!this.connector['client']) {
-      throw new PlatformError('authentication', 'Connector not initialized', 'shopify');
+      throw new PlatformError(
+        'authentication',
+        'Connector not initialized',
+        'shopify'
+      );
     }
 
     try {
@@ -89,11 +103,15 @@ export class ShopifyPricingOperations implements PricingOperations {
       const response = await this.connector['client'].post('/graphql.json', {
         query: mutation,
         variables,
-      }) as any;
+      });
 
       if (response.data.productVariantUpdate.userErrors.length > 0) {
         const errors = response.data.productVariantUpdate.userErrors;
-        throw new PlatformError('validation', errors.map((e: any) => e.message).join(', '), 'shopify');
+        throw new PlatformError(
+          'validation',
+          errors.map((e: any) => e.message).join(', '),
+          'shopify'
+        );
       }
 
       return {
@@ -152,7 +170,10 @@ export class ShopifyPricingOperations implements PricingOperations {
     };
   }
 
-  async validatePriceUpdate(update: PriceUpdate): Promise<{ valid: boolean; errors?: string[] }> {
+  async validatePriceUpdate(update: PriceUpdate): Promise<{
+    valid: boolean;
+    errors?: string[];
+  }> {
     const errors: string[] = [];
 
     // Validate price is positive

@@ -1,165 +1,184 @@
-"use client";
+/**
+ * Shopify Status Component
+ * Displays integration status and connection information
+ */
 
-import { useState, useEffect } from 'react';
-import { Badge, Card } from '@calibr/ui';
+'use client';
+
+import { useState } from 'react';
+import { Card, Badge, Button } from '@calibr/ui';
+
+interface ShopifyIntegration {
+  id: string;
+  shopDomain: string;
+  isActive: boolean;
+  lastSyncAt: string | null;
+  syncStatus: string | null;
+  syncError: string | null;
+  installedAt: string;
+}
 
 interface ShopifyStatusProps {
-  projectId: string;
-  refreshInterval?: number; // in milliseconds
+  integration: ShopifyIntegration;
+  onUpdate: (integration: ShopifyIntegration) => void;
 }
 
-interface IntegrationStatus {
-  id: string;
-  platform: string;
-  platformName: string;
-  status: string;
-  connectedAt: string;
-  lastSyncAt?: string;
-  syncStatus?: string;
-  syncError?: string;
-}
+export function ShopifyStatus({ integration, onUpdate }: ShopifyStatusProps) {
+  const [testing, setTesting] = useState(false);
 
-export default function ShopifyStatus({ projectId, refreshInterval = 30000 }: ShopifyStatusProps) {
-  const [status, setStatus] = useState<IntegrationStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const loadStatus = async () => {
+  const handleTestConnection = async () => {
     try {
-      const response = await fetch(`/api/platforms/shopify/sync/status?projectId=${projectId}`);
+      setTesting(true);
+      
+      const response = await fetch('/api/integrations/shopify/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          project_id: integration.id.split('_')[0], // Extract project ID from integration ID
+          action: 'test_connection',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Connection test failed');
+      }
+
       const data = await response.json();
       
-      if (data.success) {
-        setStatus(data.integration);
-        setError('');
-      } else {
-        setError(data.message || 'Failed to load status');
-      }
+      // Update integration status
+      onUpdate({
+        ...integration,
+        syncStatus: data.result.connected ? 'success' : 'error',
+        syncError: data.result.connected ? null : 'Connection failed',
+      });
+
     } catch (error) {
-      console.error('Failed to load Shopify status:', error);
-      setError('Failed to load status');
+      onUpdate({
+        ...integration,
+        syncStatus: 'error',
+        syncError: error instanceof Error ? error.message : 'Connection test failed',
+      });
     } finally {
-      setLoading(false);
+      setTesting(false);
     }
   };
 
-  useEffect(() => {
-    loadStatus();
-
-    if (refreshInterval > 0) {
-      const interval = setInterval(loadStatus, refreshInterval);
-      return () => clearInterval(interval);
+  const getStatusBadge = () => {
+    if (!integration.isActive) {
+      return <Badge variant="danger">Inactive</Badge>;
     }
-  }, [projectId, refreshInterval]);
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'CONNECTED': return 'success';
-      case 'DISCONNECTED': return 'danger';
-      case 'ERROR': return 'danger';
-      default: return 'warning';
-    }
-  };
-
-  const getSyncStatusBadgeVariant = (status?: string) => {
-    switch (status) {
-      case 'SUCCESS': return 'success';
-      case 'ERROR': return 'danger';
-      case 'SYNCING': return 'warning';
-      case 'PARTIAL': return 'warning';
-      default: return 'info';
+    
+    switch (integration.syncStatus) {
+      case 'success':
+        return <Badge variant="primary">Connected</Badge>;
+      case 'error':
+        return <Badge variant="danger">Error</Badge>;
+      case 'in_progress':
+        return <Badge variant="primary">Syncing</Badge>;
+      default:
+        return <Badge>Unknown</Badge>;
     }
   };
 
-  if (loading) {
-    return (
-      <Card className="p-4">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
-          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-        </div>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="p-4">
-        <div className="text-center">
-          <p className="text-red-600 text-sm">{error}</p>
-        </div>
-      </Card>
-    );
-  }
-
-  if (!status) {
-    return (
-      <Card className="p-4">
-        <div className="text-center">
-          <p className="text-gray-600 text-sm">No Shopify integration found</p>
-        </div>
-      </Card>
-    );
-  }
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleString();
+  };
 
   return (
-    <Card className="p-4">
-      <div className="space-y-3">
-        {/* Connection Status */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium text-sm">{status.platformName}</h3>
-            <p className="text-xs text-gray-600">
-              Connected {new Date(status.connectedAt).toLocaleDateString()}
-            </p>
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Integration Status
+        </h2>
+        {getStatusBadge()}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Connection Info */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+            Connection Details
+          </h3>
+          <div className="space-y-2">
+            <div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Store:</span>
+              <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
+                {integration.shopDomain}
+              </span>
+            </div>
+            <div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Installed:</span>
+              <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
+                {formatDate(integration.installedAt)}
+              </span>
+            </div>
+            <div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Last Sync:</span>
+              <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
+                {formatDate(integration.lastSyncAt)}
+              </span>
+            </div>
           </div>
-          <Badge variant={getStatusBadgeVariant(status.status)}>
-            {status.status}
-          </Badge>
         </div>
 
-        {/* Sync Status */}
-        {status.lastSyncAt && (
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium">Last Sync</p>
-              <p className="text-xs text-gray-600">
-                {new Date(status.lastSyncAt).toLocaleString()}
-              </p>
-            </div>
-            {status.syncStatus && (
-              <Badge variant={getSyncStatusBadgeVariant(status.syncStatus)}>
-                {status.syncStatus}
-              </Badge>
-            )}
+        {/* Actions */}
+        <div>
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+            Actions
+          </h3>
+          <div className="space-y-2">
+            <Button 
+              onClick={handleTestConnection}
+              disabled={testing}
+              variant="ghost"
+              className="w-full justify-start"
+            >
+              {testing ? 'Testing...' : 'Test Connection'}
+            </Button>
           </div>
-        )}
-
-        {/* Error Message */}
-        {status.syncError && (
-          <div className="bg-red-50 border border-red-200 rounded p-2">
-            <p className="text-xs text-red-800">
-              <strong>Error:</strong> {status.syncError}
-            </p>
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        <div className="flex space-x-2 pt-2 border-t">
-          <button
-            onClick={() => window.location.href = `/p/${projectId}/integrations/shopify`}
-            className="text-xs text-blue-600 hover:text-blue-800"
-          >
-            Manage
-          </button>
-          <button
-            onClick={() => window.location.href = `/p/${projectId}/integrations/shopify/install`}
-            className="text-xs text-blue-600 hover:text-blue-800"
-          >
-            Reconnect
-          </button>
         </div>
       </div>
+
+      {/* Error Display */}
+      {integration.syncError && (
+        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-start">
+            <svg className="w-5 h-5 text-red-400 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
+                Sync Error
+              </h4>
+              <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                {integration.syncError}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {integration.syncStatus === 'success' && !integration.syncError && (
+        <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <div className="flex items-start">
+            <svg className="w-5 h-5 text-green-400 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h4 className="text-sm font-medium text-green-800 dark:text-green-200">
+                Connection Successful
+              </h4>
+              <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                Your Shopify store is connected and ready for syncing.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

@@ -2,38 +2,41 @@
  * Shopify Product Operations
  * Implements ProductOperations interface for Shopify products
  */
-import { ProductOperations, NormalizedProduct as Product, ProductFilter, ProductSyncResult } from '@calibr/platform-connector';
-import { PlatformError } from '@calibr/platform-connector';
+
+import {
+  ProductOperations,
+  NormalizedProduct,
+  NormalizedVariant,
+  ProductFilter,
+  ProductSyncResult,
+  PaginatedResponse,
+  PlatformError,
+} from '@calibr/platform-connector';
 import { ShopifyConnector } from './ShopifyConnector';
 
 export class ShopifyProductOperations implements ProductOperations {
-  private connector: ShopifyConnector;
+  constructor(private connector: ShopifyConnector) {}
 
-  constructor(connector: ShopifyConnector) {
-    this.connector = connector;
-  }
-
-  async list(filter?: ProductFilter): Promise<{
-    data: Product[];
-    pagination: {
-      total?: number;
-      page: number;
-      limit: number;
-      hasNext: boolean;
-      hasPrev: boolean;
-    };
-  }> {
+  async list(filter?: ProductFilter): Promise<PaginatedResponse<NormalizedProduct>> {
     if (!this.connector['client']) {
-      throw new PlatformError('authentication', 'Connector not initialized', 'shopify');
+      throw new PlatformError(
+        'authentication',
+        'Connector not initialized',
+        'shopify'
+      );
     }
 
     try {
-      const response = await this.connector['products'].listProducts({
+      const response = await this.connector.underlyingProducts!.listProducts({
         limit: filter?.limit || 50,
         page: filter?.page || 1,
         vendor: filter?.vendor,
         product_type: filter?.productType,
         title: filter?.search,
+        created_at_min: filter?.createdAfter?.toISOString(),
+        created_at_max: filter?.createdBefore?.toISOString(),
+        updated_at_min: filter?.updatedAfter?.toISOString(),
+        updated_at_max: filter?.updatedBefore?.toISOString(),
       });
 
       return {
@@ -56,13 +59,17 @@ export class ShopifyProductOperations implements ProductOperations {
     }
   }
 
-  async get(externalId: string): Promise<Product> {
+  async get(externalId: string): Promise<NormalizedProduct> {
     if (!this.connector['client']) {
-      throw new PlatformError('authentication', 'Connector not initialized', 'shopify');
+      throw new PlatformError(
+        'authentication',
+        'Connector not initialized',
+        'shopify'
+      );
     }
 
     try {
-      const product = await this.connector['products'].getProduct(externalId);
+      const product = await this.connector.underlyingProducts!.getProduct(externalId);
       return this.normalizeProduct(product);
     } catch (error) {
       throw new PlatformError(
@@ -74,18 +81,22 @@ export class ShopifyProductOperations implements ProductOperations {
     }
   }
 
-  async getBySku(sku: string): Promise<Product | null> {
+  async getBySku(sku: string): Promise<NormalizedProduct | null> {
     if (!this.connector['client']) {
-      throw new PlatformError('authentication', 'Connector not initialized', 'shopify');
+      throw new PlatformError(
+        'authentication',
+        'Connector not initialized',
+        'shopify'
+      );
     }
 
     try {
       // Search for products with the SKU
       const response = await this.list({ search: sku });
-
+      
       // Find the product with matching SKU in variants
       for (const product of response.data) {
-        const variant = product.variants.find((v: any) => v.sku === sku);
+        const variant = product.variants.find(v => v.sku === sku);
         if (variant) {
           return product;
         }
@@ -108,6 +119,7 @@ export class ShopifyProductOperations implements ProductOperations {
 
       // In a real implementation, this would update the local database
       // For now, we'll just return a success result
+
       return {
         productId,
         externalId,
@@ -136,7 +148,10 @@ export class ShopifyProductOperations implements ProductOperations {
       const response = await this.list({ ...filter, page, limit: 50 });
 
       for (const product of response.data) {
-        const result = await this.sync(`cal-${product.externalId}`, product.externalId);
+        const result = await this.sync(
+          `cal-${product.externalId}`,
+          product.externalId
+        );
         results.push(result);
       }
 
@@ -149,12 +164,15 @@ export class ShopifyProductOperations implements ProductOperations {
 
   async count(filter?: ProductFilter): Promise<number> {
     if (!this.connector['client']) {
-      throw new PlatformError('authentication', 'Connector not initialized', 'shopify');
+      throw new PlatformError(
+        'authentication',
+        'Connector not initialized',
+        'shopify'
+      );
     }
 
     try {
-      const count = await this.connector['products'].getProductCount();
-      return count;
+      return await this.connector.underlyingProducts!.getProductCount();
     } catch (error) {
       throw new PlatformError(
         'server',
@@ -165,7 +183,7 @@ export class ShopifyProductOperations implements ProductOperations {
     }
   }
 
-  private normalizeProduct(shopifyProduct: any): Product {
+  private normalizeProduct(shopifyProduct: any): NormalizedProduct {
     return {
       externalId: shopifyProduct.id.toString(),
       platform: 'shopify',
@@ -187,7 +205,7 @@ export class ShopifyProductOperations implements ProductOperations {
     };
   }
 
-  private normalizeVariant(shopifyVariant: any): any {
+  private normalizeVariant(shopifyVariant: any): NormalizedVariant {
     return {
       externalId: shopifyVariant.id.toString(),
       sku: shopifyVariant.sku || '',

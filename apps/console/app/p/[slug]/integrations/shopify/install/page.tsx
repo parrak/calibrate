@@ -1,184 +1,156 @@
-"use client";
+/**
+ * Shopify Installation Page
+ * Handles the OAuth installation flow
+ */
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
-import { Button, Card } from '@calibr/ui';
+'use client';
 
-export default function ShopifyInstallPage() {
-  const params = useParams() as { slug: string };
-  const [shopDomain, setShopDomain] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Card, Button, Badge } from '@calibr/ui';
 
-  const handleInstall = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!shopDomain.trim()) {
-      setError('Please enter your Shopify store domain');
-      return;
+interface ShopifyInstallPageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export default function ShopifyInstallPage({ params }: ShopifyInstallPageProps) {
+  const searchParams = useSearchParams();
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [message, setMessage] = useState<string>('');
+
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const error = searchParams.get('error');
+
+    if (success === 'true') {
+      setStatus('success');
+      setMessage('Shopify integration installed successfully!');
+    } else if (error) {
+      setStatus('error');
+      setMessage('Installation failed. Please try again.');
+    } else {
+      setStatus('loading');
+      setMessage('Processing installation...');
     }
+  }, [searchParams]);
 
-    // Normalize shop domain
-    let normalizedDomain = shopDomain.trim().toLowerCase();
-    if (!normalizedDomain.endsWith('.myshopify.com')) {
-      normalizedDomain = `${normalizedDomain}.myshopify.com`;
-    }
-
-    // Validate domain format
-    const shopifyDomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/;
-    if (!shopifyDomainRegex.test(normalizedDomain)) {
-      setError('Invalid Shopify store domain format');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch('/api/platforms/shopify/oauth/install', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId: params.slug,
-          shopDomain: normalizedDomain,
-          redirectUri: `${window.location.origin}/api/platforms/shopify/oauth/callback`,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Redirect to Shopify OAuth
-        window.location.href = data.authUrl;
-      } else {
-        setError(data.message || 'Failed to initiate Shopify installation');
-      }
-    } catch (error) {
-      console.error('Installation error:', error);
-      setError('Failed to connect to Shopify. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const handleRetry = () => {
+    window.location.href = `/p/${params.slug}/integrations/shopify`;
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Connect Shopify Store</h1>
-        <p className="text-gray-600">
-          Connect your Shopify store to start syncing products and managing pricing
-        </p>
-      </div>
-
-      <Card className="p-8">
-        <form onSubmit={handleInstall} className="space-y-6">
-          <div>
-            <label htmlFor="shopDomain" className="block text-sm font-medium text-gray-700 mb-2">
-              Shopify Store Domain
-            </label>
-            <div className="flex">
-              <input
-                type="text"
-                id="shopDomain"
-                value={shopDomain}
-                onChange={(e) => setShopDomain(e.target.value)}
-                placeholder="your-store"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={loading}
-              />
-              <span className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-gray-500">
-                .myshopify.com
-              </span>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card className="p-8">
+          <div className="text-center">
+            {/* Status Icon */}
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4">
+              {status === 'loading' && (
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              )}
+              {status === 'success' && (
+                <div className="rounded-full h-12 w-12 bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                  <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              )}
+              {status === 'error' && (
+                <div className="rounded-full h-12 w-12 bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                  <svg className="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              )}
             </div>
-            <p className="text-sm text-gray-500 mt-1">
-              Enter your store name (e.g., "my-store" for my-store.myshopify.com)
+
+            {/* Status Message */}
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              {status === 'loading' && 'Installing Shopify Integration'}
+              {status === 'success' && 'Installation Complete'}
+              {status === 'error' && 'Installation Failed'}
+            </h1>
+
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {message}
             </p>
-          </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3">
-              <p className="text-sm text-red-800">{error}</p>
+            {/* Status Badge */}
+            <div className="mb-6">
+              {status === 'loading' && <Badge>Installing</Badge>}
+              {status === 'success' && <Badge variant="primary">Success</Badge>}
+              {status === 'error' && <Badge variant="danger">Error</Badge>}
             </div>
-          )}
 
-          <div className="space-y-4">
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? 'Connecting...' : 'Connect Shopify Store'}
-            </Button>
+            {/* Actions */}
+            <div className="space-y-4">
+              {status === 'success' && (
+                <div className="space-y-2">
+                  <Button 
+                    onClick={() => window.location.href = `/p/${params.slug}/integrations/shopify`}
+                    className="w-full"
+                  >
+                    Go to Integration Dashboard
+                  </Button>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    You can now sync products and manage pricing from your Shopify store.
+                  </p>
+                </div>
+              )}
 
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => window.location.href = `/p/${params.slug}/integrations/shopify`}
-              className="w-full"
-            >
-              Back to Integration
-            </Button>
-          </div>
-        </form>
-      </Card>
+              {status === 'error' && (
+                <div className="space-y-2">
+                  <Button 
+                    onClick={handleRetry}
+                    className="w-full"
+                  >
+                    Try Again
+                  </Button>
+                  <Button 
+                    onClick={() => window.location.href = `/p/${params.slug}/integrations`}
+                    variant="ghost"
+                    className="w-full"
+                  >
+                    Back to Integrations
+                  </Button>
+                </div>
+              )}
 
-      {/* Information Section */}
-      <Card className="p-6 mt-8">
-        <h2 className="text-lg font-semibold mb-4">What happens next?</h2>
-        <div className="space-y-3 text-sm text-gray-600">
-          <div className="flex items-start space-x-3">
-            <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">
-              1
+              {status === 'loading' && (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Please wait while we complete the installation...
+                  </p>
+                  <Button 
+                    onClick={() => window.location.href = `/p/${params.slug}/integrations/shopify`}
+                    variant="ghost"
+                    className="w-full"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
             </div>
-            <p>You'll be redirected to Shopify to authorize the Calibrate app</p>
-          </div>
-          <div className="flex items-start space-x-3">
-            <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">
-              2
-            </div>
-            <p>Review and approve the requested permissions</p>
-          </div>
-          <div className="flex items-start space-x-3">
-            <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">
-              3
-            </div>
-            <p>You'll be redirected back to Calibrate with your store connected</p>
-          </div>
-          <div className="flex items-start space-x-3">
-            <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">
-              4
-            </div>
-            <p>Start syncing products and managing your pricing strategy</p>
-          </div>
-        </div>
-      </Card>
 
-      {/* Permissions Section */}
-      <Card className="p-6 mt-6">
-        <h2 className="text-lg font-semibold mb-4">Required Permissions</h2>
-        <div className="space-y-2 text-sm text-gray-600">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Read products and variants</span>
+            {/* Help Text */}
+            <div className="mt-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                Need Help?
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                If you're experiencing issues with the installation, please check that:
+              </p>
+              <ul className="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+                <li>• You have admin access to your Shopify store</li>
+                <li>• Your store is not in development mode</li>
+                <li>• You're using a supported Shopify plan</li>
+              </ul>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Update product prices</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Read inventory levels</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Receive webhook notifications</span>
-          </div>
-        </div>
-        <p className="text-xs text-gray-500 mt-3">
-          Calibrate only requests the minimum permissions needed to manage your pricing strategy.
-        </p>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
