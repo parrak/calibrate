@@ -46,14 +46,14 @@ export class ShopifyProducts {
    * List products with optional filtering
    */
   async listProducts(options: ProductListOptions = {}): Promise<ProductListResponse> {
-    const params = {
+    const params: any = {
       limit: options.limit || 50,
       page: options.page || 1,
       ...options,
     };
 
     // Remove undefined values
-    Object.keys(params).forEach(key => {
+    Object.keys(params).forEach((key: string) => {
       if (params[key] === undefined) {
         delete params[key];
       }
@@ -77,8 +77,8 @@ export class ShopifyProducts {
     try {
       const response = await this.client.get<{ product: ShopifyProduct }>(`/products.json?handle=${handle}`);
       return response.product || null;
-    } catch (error) {
-      if (error.response?.status === 404) {
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
         return null;
       }
       throw error;
@@ -199,8 +199,8 @@ export class ShopifyProducts {
     try {
       await this.getProduct(productId);
       return true;
-    } catch (error) {
-      if (error.response?.status === 404) {
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
         return false;
       }
       throw error;
@@ -214,8 +214,8 @@ export class ShopifyProducts {
     try {
       await this.getVariant(variantId);
       return true;
-    } catch (error) {
-      if (error.response?.status === 404) {
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
         return false;
       }
       throw error;

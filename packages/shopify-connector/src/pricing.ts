@@ -69,7 +69,7 @@ export class ShopifyPricing {
         variables,
       });
 
-      const { productVariantUpdate } = response.data;
+      const { productVariantUpdate } = (response as any).data;
 
       if (productVariantUpdate.userErrors.length > 0) {
         return {
@@ -84,11 +84,11 @@ export class ShopifyPricing {
         variantId: update.variantId,
         updatedVariant: this.convertGraphQLVariant(productVariantUpdate.productVariant),
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         success: false,
         variantId: update.variantId,
-        error: error.message || 'Unknown error occurred',
+        error: error?.message || 'Unknown error occurred',
       };
     }
   }
@@ -175,7 +175,7 @@ export class ShopifyPricing {
 
       const pricingMap = new Map<string, ShopifyVariant>();
       
-      response.data.nodes.forEach((node: any) => {
+      (response as any).data.nodes.forEach((node: any) => {
         if (node) {
           const variantId = node.id.split('/').pop();
           pricingMap.set(variantId, this.convertGraphQLVariant(node));
@@ -183,8 +183,8 @@ export class ShopifyPricing {
       });
 
       return pricingMap;
-    } catch (error) {
-      throw new Error(`Failed to get variant pricing: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to get variant pricing: ${error?.message || 'Unknown error'}`);
     }
   }
 

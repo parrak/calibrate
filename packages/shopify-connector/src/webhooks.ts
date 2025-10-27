@@ -102,11 +102,11 @@ export class ShopifyWebhooks {
           error: 'Invalid signature',
         };
       }
-    } catch (error) {
+    } catch (error: any) {
       return {
         isValid: false,
         payload: null,
-        error: `Verification failed: ${error.message}`,
+        error: `Verification failed: ${error?.message || 'Unknown error'}`,
       };
     }
   }

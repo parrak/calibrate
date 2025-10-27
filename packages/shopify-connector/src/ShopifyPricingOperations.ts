@@ -100,7 +100,7 @@ export class ShopifyPricingOperations implements PricingOperations {
         },
       };
 
-      const response = await this.connector['client'].post('/graphql.json', {
+      const response: any = await this.connector['client'].post('/graphql.json', {
         query: mutation,
         variables,
       });

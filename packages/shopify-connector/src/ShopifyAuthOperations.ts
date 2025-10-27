@@ -103,7 +103,7 @@ export class ShopifyAuthOperations implements AuthOperations {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData: any = await response.json();
         throw new PlatformError(
           'authentication',
           `OAuth token exchange failed: ${errorData.error_description || errorData.error}`,
@@ -111,7 +111,7 @@ export class ShopifyAuthOperations implements AuthOperations {
         );
       }
 
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         accessToken: data.access_token,

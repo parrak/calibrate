@@ -8,7 +8,7 @@ export { ShopifyAuthOperations } from './ShopifyAuthOperations';
 export { ShopifyProductOperations } from './ShopifyProductOperations';
 export { ShopifyPricingOperations } from './ShopifyPricingOperations';
 export { ShopifyClient } from './client';
-export { ShopifyAuth } from './auth';
+export { ShopifyAuthManager } from './auth';
 export { ShopifyProducts } from './products';
 export { ShopifyPricing } from './pricing';
 export { ShopifyWebhooks } from './webhooks';

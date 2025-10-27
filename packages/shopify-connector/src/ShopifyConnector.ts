@@ -14,7 +14,7 @@ import {
   PlatformErrorType,
 } from '@calibr/platform-connector';
 import { ShopifyClient } from './client';
-import { ShopifyAuth } from './auth';
+import { ShopifyAuthManager } from './auth';
 import { ShopifyProducts } from './products';
 import { ShopifyPricing } from './pricing';
 import { ShopifyWebhooks } from './webhooks';
@@ -63,7 +63,7 @@ export class ShopifyConnector implements PlatformConnector {
   private credentials: ShopifyCredentials | null = null;
   
   // Expose underlying Shopify classes for operations
-  private underlyingProducts: ShopifyProducts | null = null;
+  public underlyingProducts: ShopifyProducts | null = null;
   private underlyingPricing: ShopifyPricing | null = null;
 
   constructor(
