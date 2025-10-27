@@ -4,10 +4,12 @@
  * Displays user info and sign out button
  */
 
-import { auth, signOut } from '@/lib/auth'
+import { getServerSession, authOptions } from '@/lib/auth'
+import { signOut } from 'next-auth/react'
+import SignOutButton from './SignOutButton'
 
 export async function UserMenu() {
-  const session = await auth()
+  const session = await getServerSession(authOptions)
 
   if (!session?.user) {
     return null
@@ -22,19 +24,7 @@ export async function UserMenu() {
         <div className="text-xs text-gray-500">{session.user.role}</div>
       </div>
 
-      <form
-        action={async () => {
-          'use server'
-          await signOut({ redirectTo: '/login' })
-        }}
-      >
-        <button
-          type="submit"
-          className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded hover:bg-gray-100 transition"
-        >
-          Sign Out
-        </button>
-      </form>
+      <SignOutButton />
     </div>
   )
 }

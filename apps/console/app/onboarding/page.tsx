@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import { auth } from '@/lib/auth'
+import { getServerSession, authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
 export default async function OnboardingWelcome() {
-  const session = await auth()
+  const session = await getServerSession(authOptions)
 
   if (!session?.user) {
     redirect('/login')

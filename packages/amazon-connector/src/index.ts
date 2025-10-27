@@ -1,4 +1,5 @@
 export * from './spapi-client'
 export * from './pricing'
+export * from './competitive'
 export * from './connector'
 export * from './register'

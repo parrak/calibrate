@@ -4,17 +4,14 @@
  * Simple email-based authentication for Calibrate Console
  */
 
-import NextAuth from 'next-auth'
+import NextAuth, { NextAuthOptions } from 'next-auth'
 import { prisma } from '@calibr/db'
-import Credentials from 'next-auth/providers/credentials'
+import CredentialsProvider from 'next-auth/providers/credentials'
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  // Trust Vercel-provided host headers and allow custom domains
-  trustHost: true,
-  // Provide secret explicitly to avoid runtime env pitfalls
+export const authOptions: NextAuthOptions = {
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   providers: [
-    Credentials({
+    CredentialsProvider({
       name: 'Email',
       credentials: {
         email: {
@@ -110,4 +107,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: 'jwt',
   },
-})
+}
+
+const handler = NextAuth(authOptions)
+
+export default handler
+
+// Export helper to get session on server
+export { getServerSession } from 'next-auth'
+
+// For use in server components: getServerSession(authOptions)
