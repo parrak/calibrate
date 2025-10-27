@@ -61,9 +61,32 @@ These rules guide AI coding agents (Codex CLI, etc.) working in this repo. They 
 - Use `update_plan` for multi-step work. Mark steps complete as you go.
 - Do not add license headers or reformat large files unprompted.
 
+## Critical API Requirements
+
+**⚠️ MANDATORY for ALL agents working on `apps/api`:**
+
+When creating or modifying API routes, you MUST:
+1. Use `withSecurity` middleware on ALL route handlers
+2. Export an explicit `OPTIONS` handler wrapped with `withSecurity`
+3. Test CORS preflight requests
+
+**Why**: The console runs on a different domain and requires CORS headers. Missing OPTIONS handlers cause preflight failures that break the console.
+
+**Full details**: [apps/api/CORS_MIDDLEWARE_REQUIRED.md](apps/api/CORS_MIDDLEWARE_REQUIRED.md)
+
+**Example pattern**:
+```typescript
+import { withSecurity } from '@/lib/security-headers'
+
+export const GET = withSecurity(async (req: NextRequest) => { /* ... */ })
+export const OPTIONS = withSecurity(async (req: NextRequest) => {
+  return new NextResponse(null, { status: 204 })
+})
+```
+
 ## Subdirectory Guides
 - See additional, more specific rules in:
-  - `apps/api/AGENTS.md`
+  - `apps/api/AGENTS.md` — **Read CORS_MIDDLEWARE_REQUIRED.md before editing routes**
   - `apps/console/AGENTS.md`
   - `apps/site/AGENTS.md`
   - `packages/AGENTS.md`

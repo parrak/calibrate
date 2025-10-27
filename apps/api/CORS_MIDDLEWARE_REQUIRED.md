@@ -25,7 +25,14 @@ export const POST = withSecurity(async (req: NextRequest) => {
   // Your handler code
   return NextResponse.json({ data })
 })
+
+// CRITICAL: Always add OPTIONS handler for CORS preflight
+export const OPTIONS = withSecurity(async (req: NextRequest) => {
+  return new NextResponse(null, { status: 204 })
+})
 ```
+
+**⚠️ CRITICAL**: You MUST export an OPTIONS handler wrapped with `withSecurity`. Without it, Next.js will use its default OPTIONS handler which does NOT include CORS headers, causing preflight requests to fail.
 
 ### What withSecurity Does
 
@@ -41,7 +48,7 @@ export const POST = withSecurity(async (req: NextRequest) => {
    - X-Frame-Options
    - etc.
 
-3. **Handles preflight** (OPTIONS requests)
+3. **Handles preflight** (OPTIONS requests) - **BUT ONLY if you export an OPTIONS handler!**
 
 ## CORS Configuration
 
@@ -63,12 +70,15 @@ if (origin.includes('.vercel.app') && origin.includes('console')) {
 
 ## Endpoints Status
 
-### ✅ Has withSecurity
-- `/api/v1/price-changes` - GET
+### ✅ Has withSecurity + OPTIONS Handler
+- `/api/projects` - GET, POST, OPTIONS *(Fixed Oct 27, 2025)*
+- `/api/v1/catalog` - GET, OPTIONS *(Fixed Oct 27, 2025)*
+- `/api/v1/price-changes` - GET, OPTIONS *(Fixed Oct 27, 2025)*
+- `/api/staging/manage` - GET, POST, OPTIONS *(Fixed Oct 27, 2025)*
+- `/api/admin/dashboard` - GET, OPTIONS *(Fixed Oct 27, 2025)*
 - `/api/v1/price-changes/[id]/approve` - POST
 - `/api/v1/price-changes/[id]/reject` - POST
 - `/api/v1/price-changes/[id]/apply` - POST
-- `/api/v1/catalog` - GET *(Fixed Oct 27, 2025)*
 
 ### ❌ Needs withSecurity
 - `/api/v1/competitors` - GET
@@ -121,20 +131,58 @@ Should include:
 Access-Control-Allow-Origin: https://console-xxx.vercel.app
 ```
 
+## The OPTIONS Handler Issue (CRITICAL LEARNING)
+
+**Problem Discovered**: Oct 27, 2025 (commit 7227171)
+
+Even with `withSecurity` wrapping GET/POST handlers, **CORS was still failing** because:
+
+1. Browser sends **OPTIONS preflight request** before actual request
+2. Next.js has a **built-in OPTIONS handler** that returns 204
+3. This built-in handler **does NOT run middleware** like withSecurity
+4. Preflight returns 204 **without CORS headers**
+5. Browser **blocks the actual request** due to failed preflight
+
+**Solution**: ALWAYS export an explicit OPTIONS handler:
+
+```typescript
+export const OPTIONS = withSecurity(async (req: NextRequest) => {
+  return new NextResponse(null, { status: 204 })
+})
+```
+
+This ensures withSecurity runs for OPTIONS requests and adds CORS headers.
+
+**Testing**: After adding OPTIONS handler, verify with:
+```bash
+curl -X OPTIONS -H "Origin: https://console-xxx.vercel.app" \
+  -H "Access-Control-Request-Method: GET" \
+  -i "https://api.calibr.lat/api/endpoint"
+```
+
+You should see:
+- `Access-Control-Allow-Origin: https://console-xxx.vercel.app`
+- `X-Cors-Allowed: true`
+- `X-Cors-Debug: origin=https://console-xxx.vercel.app`
+
 ## Related Issues Fixed
 
 - **Oct 27, 2025**: NextAuth 500 errors (commit 32adfc4)
 - **Oct 27, 2025**: Redirect loops (commit b5cb4d0)
 - **Oct 27, 2025**: Catalog CORS (commit a05ea57)
 - **Oct 27, 2025**: CORS for Vercel previews (commit 321d43f)
+- **Oct 27, 2025**: Missing withSecurity on /projects (commit 4340d8b)
+- **Oct 27, 2025**: **Missing OPTIONS handlers** (commit 7227171) ⚠️ CRITICAL
 
 ## For Other Agents
 
 **BEFORE creating new v1 endpoints:**
 1. ✅ Import `withSecurity` from `@/lib/security-headers`
-2. ✅ Wrap ALL route handlers (GET, POST, PUT, DELETE, PATCH)
-3. ✅ Test with browser console to verify CORS works
-4. ✅ Update this document's "Endpoints Status" section
+2. ✅ Wrap ALL route handlers (GET, POST, PUT, DELETE, PATCH, **OPTIONS**)
+3. ✅ **ALWAYS export OPTIONS handler** with withSecurity wrapper
+4. ✅ Test with browser console to verify CORS works
+5. ✅ Test OPTIONS request with curl to verify preflight works
+6. ✅ Update this document's "Endpoints Status" section
 
 **WHEN modifying existing endpoints:**
 1. ⚠️ DO NOT remove `withSecurity` wrapper

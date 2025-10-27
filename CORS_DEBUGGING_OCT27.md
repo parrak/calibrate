@@ -1,6 +1,48 @@
 # CORS Debugging Session - Oct 27, 2025
 
-## Current Status: CORS Still Failing
+## ✅ RESOLVED - Oct 27, 2025 (Commit 7227171)
+
+### Root Cause Found
+**Missing explicit OPTIONS handlers!**
+
+Even with `withSecurity` wrapping GET/POST handlers, Next.js was using its **built-in OPTIONS handler** which does NOT run middleware. This caused preflight requests to return 204 **without CORS headers**, causing the browser to block actual requests.
+
+### The Fix
+Added explicit OPTIONS export to all routes using withSecurity:
+
+```typescript
+export const OPTIONS = withSecurity(async (req: NextRequest) => {
+  return new NextResponse(null, { status: 204 })
+})
+```
+
+Applied to:
+- `/api/projects` (commit 7227171)
+- `/api/v1/catalog` (commit 7227171)
+- `/api/v1/price-changes` (commit 7227171)
+- `/api/staging/manage` (commit 7227171)
+- `/api/admin/dashboard` (commit 7227171)
+
+### Verification
+After deploying commit 7227171, CORS headers now appear in OPTIONS responses:
+```bash
+$ curl -X OPTIONS -H "Origin: https://console-xxx.vercel.app" \
+  -i "https://api.calibr.lat/api/projects"
+
+Access-Control-Allow-Origin: https://console-xxx.vercel.app
+X-Cors-Allowed: true
+X-Cors-Debug: origin=https://console-xxx.vercel.app
+```
+
+Console now works without CORS errors!
+
+**Full documentation**: [apps/api/CORS_MIDDLEWARE_REQUIRED.md](apps/api/CORS_MIDDLEWARE_REQUIRED.md)
+
+---
+
+## Original Debugging Session (For Reference)
+
+### Current Status: CORS Still Failing
 
 ### Symptoms (Latest)
 - Preflight (OPTIONS) succeeds: 204
