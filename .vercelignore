@@ -1,9 +1,7 @@
-node_modules
-.git
-.env*
-*.log
-.DS_Store
-coverage
-.turbo
-apps/*/node_modules
-packages/*/node_modules
+# Ignore root-level Vercel linking
+.vercel
+
+# Each app has its own Vercel project:
+# - apps/console → console project
+# - apps/site → site project
+# - apps/docs → docs project
