@@ -74,3 +74,8 @@ export const GET = withSecurity(async (req: NextRequest) => {
 
   return NextResponse.json({ products: productsWithSkus })
 })
+
+// Handle OPTIONS preflight requests
+export const OPTIONS = withSecurity(async (req: NextRequest) => {
+  return new NextResponse(null, { status: 204 })
+})

@@ -225,3 +225,8 @@ async function getTopProducts(projectId: string | null, startDate: Date) {
     avg_change_amount: Number(product.avg_change_amount)
   }))
 }
+
+// Handle OPTIONS preflight requests
+export const OPTIONS = withSecurity(async (req: NextRequest) => {
+  return new NextResponse(null, { status: 204 })
+})

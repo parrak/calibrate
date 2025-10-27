@@ -160,7 +160,7 @@ async function seedStagingData() {
 async function cleanupStagingData() {
   try {
     await stagingDatabase.cleanupTestData()
-    
+
     return NextResponse.json({
       success: true,
       message: 'Staging data cleaned up successfully',
@@ -170,3 +170,8 @@ async function cleanupStagingData() {
     throw new Error(`Failed to cleanup staging data: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
+
+// Handle OPTIONS preflight requests
+export const OPTIONS = withSecurity(async (req: NextRequest) => {
+  return new NextResponse(null, { status: 204 })
+})

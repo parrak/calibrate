@@ -48,3 +48,8 @@ export const GET = withSecurity(trackPerformance(async (req: NextRequest) => {
 
   return NextResponse.json({ items })
 }))
+
+// Handle OPTIONS preflight requests
+export const OPTIONS = withSecurity(async (req: NextRequest) => {
+  return new NextResponse(null, { status: 204 })
+})
