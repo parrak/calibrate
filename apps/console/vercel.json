@@ -1,6 +1,6 @@
 {
-  "buildCommand": "cd ../.. && pnpm install --filter @calibr/console... && pnpm --filter @calibr/db generate && pnpm --filter @calibr/console build",
-  "installCommand": "corepack prepare pnpm@9.0.0 --activate",
+  "buildCommand": "pnpm --filter @calibr/console... --prod install && cd ../.. && pnpm --filter @calibr/db generate && pnpm --filter @calibr/console build",
+  "installCommand": "corepack enable && corepack prepare pnpm@9.0.0 --activate",
   "framework": null,
   "outputDirectory": ".next"
 }
