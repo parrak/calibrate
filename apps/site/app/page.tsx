@@ -23,7 +23,7 @@ export default function Home() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <a
-                href="https://app.calibr.lat/login"
+                href="https://console.calibr.lat/login"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-brand text-black font-semibold hover:bg-brand/90 transition-all shadow-lg shadow-brand/25 hover:shadow-xl hover:shadow-brand/30 hover:-translate-y-0.5"
               >
                 Get Started Free
