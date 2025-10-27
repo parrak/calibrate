@@ -4,41 +4,37 @@
  * Protects routes and redirects to login if not authenticated
  */
 
-import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-export default withAuth(
-  function middleware(req) {
-    const { pathname } = req.nextUrl
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl
 
-    // If authenticated and trying to access login page
-    if (req.nextauth.token && pathname === '/login') {
-      return NextResponse.redirect(new URL('/', req.url))
-    }
+  // Public paths that don't require authentication
+  const publicPaths = ['/login', '/api/auth']
+  const isPublicPath = publicPaths.some((path) => pathname.startsWith(path))
 
-    return NextResponse.next()
-  },
-  {
-    callbacks: {
-      authorized: ({ req, token }) => {
-        const { pathname } = req.nextUrl
+  // Get token to check authentication
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  })
 
-        // Public paths that don't require authentication
-        const publicPaths = ['/login', '/api/auth']
-        const isPublicPath = publicPaths.some((path) => pathname.startsWith(path))
-
-        // Allow public paths
-        if (isPublicPath) return true
-
-        // Require token for all other paths
-        return !!token
-      },
-    },
-    pages: {
-      signIn: '/login',
-    },
+  // If authenticated and trying to access login page, redirect to home
+  if (token && pathname === '/login') {
+    return NextResponse.redirect(new URL('/', req.url))
   }
-)
+
+  // If not authenticated and trying to access protected route, redirect to login
+  if (!token && !isPublicPath) {
+    const loginUrl = new URL('/login', req.url)
+    loginUrl.searchParams.set('callbackUrl', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  return NextResponse.next()
+}
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'],

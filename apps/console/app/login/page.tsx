@@ -4,16 +4,10 @@
  * Simple email-based login for Calibrate Console
  */
 
-import { redirect } from 'next/navigation'
-import { getServerSession, authOptions } from '@/lib/auth'
 import LoginForm from '@/components/LoginForm'
 
-export default async function LoginPage({ searchParams }: { searchParams?: { callbackUrl?: string; error?: string } }) {
-  // If already logged in, redirect to home
-  const session = await getServerSession(authOptions)
-  if (session) {
-    redirect('/')
-  }
+export default function LoginPage({ searchParams }: { searchParams?: { callbackUrl?: string; error?: string } }) {
+  // Middleware handles redirect if already authenticated
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
