@@ -7,25 +7,33 @@ export const runtime = 'nodejs'
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const limit = Math.min(Math.max(Number(searchParams.get('limit') || '50'), 1), 200)
+    const limit = Math.min(Math.max(Number(searchParams.get('limit') || '20'), 1), 200)
+    const page = Math.max(Number(searchParams.get('page') || '1'), 1)
+    const q = searchParams.get('q') || undefined
 
     // Fetch last N rows, then de-duplicate by ASIN in code (latest wins)
     const rows = await prisma().amazonCompetitivePrice.findMany({
+      where: q
+        ? { asin: { contains: q, mode: 'insensitive' } }
+        : undefined,
       orderBy: { retrievedAt: 'desc' },
-      take: Math.max(limit * 3, limit), // oversample to increase uniqueness chances
+      take: Math.max(limit * 4, limit), // oversample to increase uniqueness chances
     })
 
     const seen = new Set<string>()
-    const unique: any[] = []
+    const uniquesAll: any[] = []
     for (const row of rows) {
       if (!seen.has(row.asin)) {
         seen.add(row.asin)
-        unique.push(row)
-        if (unique.length >= limit) break
+        uniquesAll.push(row)
       }
     }
 
-    return NextResponse.json({ items: unique })
+    const start = (page - 1) * limit
+    const items = uniquesAll.slice(start, start + limit)
+    const hasMore = uniquesAll.length > start + items.length
+
+    return NextResponse.json({ items, page, limit, hasMore })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to load recent ASINs', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }

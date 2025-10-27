@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useParams } from 'next/navigation'
 
@@ -13,6 +13,10 @@ export default function AmazonCompetitivePage() {
   const [trackResult, setTrackResult] = useState<any>(null)
   const [latest, setLatest] = useState<any>(null)
   const [recent, setRecent] = useState<any[]>([])
+  const [recentPage, setRecentPage] = useState(1)
+  const [recentHasMore, setRecentHasMore] = useState(false)
+  const [recentQuery, setRecentQuery] = useState('')
+  const [cardView, setCardView] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
@@ -70,20 +74,28 @@ export default function AmazonCompetitivePage() {
   async function loadRecent() {
     setLoading(true)
     try {
-      const res = await fetch(`${base}/api/platforms/amazon/competitive/recent?limit=20`, {
+      const params = new URLSearchParams()
+      params.set('limit', '20')
+      params.set('page', String(recentPage))
+      if (recentQuery) params.set('q', recentQuery)
+      const res = await fetch(`${base}/api/platforms/amazon/competitive/recent?${params.toString()}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         cache: 'no-store',
       })
       const data = await res.json()
       setRecent(Array.isArray(data?.items) ? data.items : [])
+      setRecentHasMore(Boolean(data?.hasMore))
     } finally {
       setLoading(false)
     }
   }
 
-  // Load recent on first render
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  useState(() => { loadRecent() })
+  // Load recent on mount and when filters change (debounced)
+  useEffect(() => {
+    const t = setTimeout(() => { loadRecent() }, 250)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recentPage, recentQuery, token])
 
   return (
     <div className="max-w-3xl p-6 space-y-6">
@@ -91,22 +103,38 @@ export default function AmazonCompetitivePage() {
 
       <section className="space-y-3">
         <h2 className="font-medium">Track Batch</h2>
-        <textarea
-          className="border w-full p-2 h-32"
-          placeholder="Enter ASINs, one per line"
-          value={asinInput}
-          onChange={(e) => setAsinInput(e.target.value)}
-        />
+        <BatchInput value={asinInput} onChange={setAsinInput} />
         <button onClick={trackBatch} disabled={loading} className="bg-blue-600 text-white px-3 py-1 rounded disabled:opacity-50">
           {loading ? 'Working...' : 'Track Now'}
         </button>
         {trackResult && (
-          <pre className="text-xs bg-gray-100 p-2 overflow-auto">{JSON.stringify(trackResult, null, 2)}</pre>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {(trackResult.results || []).map((r: any) => (
+              <span key={r.asin} className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${r.ok ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {r.asin}{!r.ok && `: ${r.error || 'error'}`}
+              </span>
+            ))}
+          </div>
         )}
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-medium">Recent ASINs</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-medium">Recent ASINs</h2>
+          <div className="flex items-center gap-2">
+            <input
+              value={recentQuery}
+              onChange={(e) => { setRecentPage(1); setRecentQuery(e.target.value) }}
+              placeholder="Search ASIN"
+              className="border px-2 py-1 text-sm"
+            />
+            <button
+              className={`text-sm px-2 py-1 rounded border ${cardView ? 'bg-gray-900 text-white' : ''}`}
+              onClick={() => setCardView(!cardView)}
+            >{cardView ? 'Table' : 'Cards'}</button>
+          </div>
+        </div>
+        {!cardView ? (
         <div className="overflow-auto border rounded">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
@@ -159,6 +187,55 @@ export default function AmazonCompetitivePage() {
               )}
             </tbody>
           </table>
+        </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {recent.map((row: any) => (
+              <div key={row.id} className="border rounded p-3 bg-white">
+                <div className="flex items-center justify-between">
+                  <div className="font-mono text-sm">{row.asin}</div>
+                  <TrendBadge asin={row.asin} base={base} token={token} />
+                </div>
+                <div className="mt-2 text-sm text-gray-700">
+                  <div>Buy Box: {row.buyBoxPriceCents != null ? `$ ${(row.buyBoxPriceCents/100).toFixed(2)}` : '-'}</div>
+                  <div>Lowest: {row.lowestPriceCents != null ? `$ ${(row.lowestPriceCents/100).toFixed(2)}` : '-'}</div>
+                  <div>Offers: {row.offerCount}</div>
+                </div>
+                <div className="mt-2 flex items-center justify-between">
+                  <Sparkline asin={row.asin} base={base} token={token} />
+                  <button
+                    className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
+                    onClick={async () => {
+                      setSingleAsin(row.asin)
+                      setLoading(true)
+                      try {
+                        await fetch(`${base}/api/platforms/amazon/competitive`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                          },
+                          body: JSON.stringify({ asin: row.asin })
+                        })
+                        await loadRecent()
+                        await fetchHistory()
+                      } finally {
+                        setLoading(false)
+                      }
+                    }}
+                  >Track Now</button>
+                </div>
+              </div>
+            ))}
+            {recent.length === 0 && (
+              <div className="text-gray-500">No data yet</div>
+            )}
+          </div>
+        )}
+        <div className="flex items-center justify-between mt-2">
+          <button disabled={recentPage<=1} onClick={() => setRecentPage(p => Math.max(1, p-1))} className="px-2 py-1 border rounded disabled:opacity-50">Prev</button>
+          <div className="text-xs text-gray-600">Page {recentPage}</div>
+          <button disabled={!recentHasMore} onClick={() => setRecentPage(p => p+1)} className="px-2 py-1 border rounded disabled:opacity-50">Next</button>
         </div>
       </section>
 
@@ -268,5 +345,60 @@ function Sparkline({ asin, base, token }: { asin: string; base: string; token?: 
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="text-blue-600">
       <path d={path} fill="none" stroke="currentColor" strokeWidth="1.5" />
     </svg>
+  )
+}
+
+function TrendBadge({ asin, base, token }: { asin: string; base: string; token?: string }) {
+  const [dir, setDir] = useState<'up'|'down'|'flat'>('flat')
+  const color = dir === 'up' ? 'text-red-600' : dir === 'down' ? 'text-green-600' : 'text-gray-500'
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${base}/api/platforms/amazon/competitive?asin=${encodeURIComponent(asin)}&limit=2`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          cache: 'no-store'
+        })
+        const data = await res.json()
+        const items = Array.isArray(data?.items) ? data.items : []
+        if (items.length >= 2) {
+          const a = items[0].lowestPriceCents ?? items[0].buyBoxPriceCents
+          const b = items[1].lowestPriceCents ?? items[1].buyBoxPriceCents
+          if (a != null && b != null) setDir(b > a ? 'up' : b < a ? 'down' : 'flat')
+        }
+      } catch {}
+    })()
+  }, [asin, base, token])
+
+  return <span className={`text-xs ${color}`}>{dir === 'up' ? '↑' : dir === 'down' ? '↓' : '→'}</span>
+}
+
+function BatchInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [local, setLocal] = useState(value)
+  useEffect(() => setLocal(value), [value])
+
+  // Debounce propagate
+  useEffect(() => {
+    const t = setTimeout(() => onChange(local), 300)
+    return () => clearTimeout(t)
+  }, [local, onChange])
+
+  const chips = useMemo(() => local.split(/\s+/).map(s => s.trim()).filter(Boolean).slice(0, 100), [local])
+
+  return (
+    <div>
+      <textarea
+        className="border w-full p-2 h-28"
+        placeholder="Enter ASINs, one per line"
+        value={local}
+        onChange={(e) => setLocal(e.target.value)}
+      />
+      <div className="mt-2 flex flex-wrap gap-1">
+        {chips.map(c => (
+          <span key={c} className="px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-mono">{c}</span>
+        ))}
+        {chips.length === 0 && <span className="text-xs text-gray-500">No ASINs parsed</span>}
+      </div>
+    </div>
   )
 }
