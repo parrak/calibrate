@@ -3,7 +3,7 @@ import { clsx } from 'clsx'
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info'
+  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'primary'
 }
 
 export function Badge({ children, className, variant = 'default', ...props }: BadgeProps) {
@@ -14,7 +14,8 @@ export function Badge({ children, className, variant = 'default', ...props }: Ba
     success: "bg-green-100 text-green-800 border border-green-200",
     warning: "bg-yellow-100 text-yellow-800 border border-yellow-200",
     danger: "bg-red-100 text-red-800 border border-red-200",
-    info: "bg-blue-100 text-blue-800 border border-blue-200"
+    info: "bg-blue-100 text-blue-800 border border-blue-200",
+    primary: "bg-blue-100 text-blue-800 border border-blue-200"
   }
   
   return (
