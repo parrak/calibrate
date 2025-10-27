@@ -6,9 +6,6 @@ import { CompetitorMonitor } from '@/components/CompetitorMonitor'
 import { CompetitorRules } from '@/components/CompetitorRules'
 
 export default function CompetitorsPage({ params }: { params: { slug: string } }) {
-  const [tenantId] = useState('tenant_1') // TODO: from auth/tenant context
-  const [projectId] = useState('project_1') // TODO: from current project context
-
   return (
     <div className="p-6 space-y-4">
       <div>
@@ -25,11 +22,11 @@ export default function CompetitorsPage({ params }: { params: { slug: string } }
         </TabsList>
 
         <TabsContent value="monitor">
-          <CompetitorMonitor tenantId={tenantId} projectId={projectId} />
+          <CompetitorMonitor projectSlug={params.slug} />
         </TabsContent>
 
         <TabsContent value="rules">
-          <CompetitorRules tenantId={tenantId} projectId={projectId} />
+          <CompetitorRules projectSlug={params.slug} />
         </TabsContent>
       </Tabs>
     </div>
