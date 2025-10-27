@@ -52,9 +52,9 @@ export class ShopifyConnector implements PlatformConnector {
   private webhooks: ShopifyWebhooks | null = null;
   private credentials: ShopifyCredentials | null = null;
 
-  // Expose underlying Shopify classes for operations
-  products: ShopifyProducts | null = null;
-  pricing: ShopifyPricing | null = null;
+  // Private internal references to underlying Shopify classes
+  private _products: ShopifyProducts | null = null;
+  private _pricing: ShopifyPricing | null = null;
 
   constructor(config: ShopifyConfig, credentials?: ShopifyCredentials) {
     this.config = config;
@@ -105,6 +105,8 @@ export class ShopifyConnector implements PlatformConnector {
       scopes: this.config.scopes,
       webhookSecret: this.config.webhookSecret,
       apiVersion: this.config.apiVersion || '2024-10',
+      shopDomain: this.credentials.shopDomain, // Required for client to work
+      accessToken: this.credentials.accessToken, // Required for authentication
     });
 
     // Initialize operations
@@ -118,8 +120,8 @@ export class ShopifyConnector implements PlatformConnector {
     this.webhooks = new ShopifyWebhooks(this.client, this.config.webhookSecret);
 
     // Initialize underlying Shopify classes
-    this.products = new ShopifyProducts(this.client);
-    this.pricing = new ShopifyPricing(this.client);
+    this._products = new ShopifyProducts(this.client);
+    this._pricing = new ShopifyPricing(this.client);
   }
 
   async disconnect(): Promise<void> {
@@ -129,8 +131,8 @@ export class ShopifyConnector implements PlatformConnector {
     this.productOperations = null;
     this.pricingOperations = null;
     this.webhooks = null;
-    this.products = null;
-    this.pricing = null;
+    this._products = null;
+    this._pricing = null;
   }
 
   async healthCheck(): Promise<PlatformHealth> {
@@ -209,20 +211,29 @@ export class ShopifyConnector implements PlatformConnector {
     }
   }
 
-  // Getter methods for operations
-  get _auth() {
+  // Getter methods for internal access to underlying Shopify classes
+  getAuthInstance() {
     return this.auth;
   }
 
-  get _products() {
-    return this.products;
+  getProductsInstance() {
+    if (!this._products) {
+      throw new PlatformError('authentication', 'Products instance not initialized', 'shopify');
+    }
+    return this._products;
   }
 
-  get _pricing() {
-    return this.pricing;
+  getPricingInstance() {
+    if (!this._pricing) {
+      throw new PlatformError('authentication', 'Pricing instance not initialized', 'shopify');
+    }
+    return this._pricing;
   }
 
-  get _webhooks() {
+  getWebhooksInstance() {
+    if (!this.webhooks) {
+      throw new PlatformError('authentication', 'Webhooks instance not initialized', 'shopify');
+    }
     return this.webhooks;
   }
 }

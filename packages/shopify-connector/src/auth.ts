@@ -3,9 +3,9 @@
  * Handles OAuth 2.0 flow for Shopify app installation and token management
  */
 import crypto from 'crypto';
-import { ShopifyConfig, ShopifyAuth, ShopifyOAuthResponse } from './types';
+import { ShopifyConfig, ShopifyAuth as ShopifyAuthType, ShopifyOAuthResponse } from './types';
 
-export class ShopifyAuth {
+export class ShopifyAuthManager {
   private config: ShopifyConfig;
 
   constructor(config: ShopifyConfig) {
@@ -50,11 +50,11 @@ export class ShopifyAuth {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error: any = await response.json();
       throw new Error(`OAuth token exchange failed: ${error.error_description || error.error}`);
     }
 
-    return await response.json();
+    return await response.json() as ShopifyOAuthResponse;
   }
 
   /**
@@ -107,7 +107,7 @@ export class ShopifyAuth {
   /**
    * Create ShopifyAuth object from OAuth response
    */
-  createAuthFromResponse(shopDomain: string, response: ShopifyOAuthResponse): ShopifyAuth {
+  createAuthFromResponse(shopDomain: string, response: ShopifyOAuthResponse): ShopifyAuthType {
     return {
       shopDomain,
       accessToken: response.access_token,
@@ -121,7 +121,7 @@ export class ShopifyAuth {
   /**
    * Check if access token is expired
    */
-  isTokenExpired(auth: ShopifyAuth): boolean {
+  isTokenExpired(auth: ShopifyAuthType): boolean {
     if (!auth.expiresAt) return false;
     return new Date() >= auth.expiresAt;
   }
@@ -130,7 +130,7 @@ export class ShopifyAuth {
    * Refresh access token (if supported by Shopify)
    * Note: Shopify doesn't support token refresh, this is for future compatibility
    */
-  async refreshToken(auth: ShopifyAuth): Promise<ShopifyAuth> {
+  async refreshToken(auth: ShopifyAuthType): Promise<ShopifyAuthType> {
     // Shopify doesn't support token refresh
     // This method is here for interface compatibility
     throw new Error('Shopify does not support token refresh. Re-authentication required.');
