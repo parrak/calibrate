@@ -200,11 +200,20 @@ export const defaultCORSConfig: CORSConfig = {
     ]
 
     // Allow Vercel preview deployments for console
-    if (origin.includes('.vercel.app') && origin.includes('console')) {
-      return true
+    // Check for both "console" pattern and rakesh-paridas-projects pattern
+    if (origin.includes('.vercel.app')) {
+      // Allow if contains "console" OR "rakesh-paridas-projects"
+      if (origin.includes('console') || origin.includes('rakesh-paridas-projects')) {
+        console.log('[CORS] Allowing Vercel origin:', origin)
+        return true
+      }
     }
 
-    return allowedOrigins.includes(origin)
+    const allowed = allowedOrigins.includes(origin)
+    if (!allowed) {
+      console.log('[CORS] Rejecting origin:', origin)
+    }
+    return allowed
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
