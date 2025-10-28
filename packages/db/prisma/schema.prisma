@@ -300,6 +300,33 @@ model CompetitorRule {
   @@index([tenantId, projectId])
 }
 
+// Amazon competitive pricing snapshot storage
+model AmazonCompetitivePrice {
+  id                String   @id @default(cuid())
+  asin              String
+  marketplaceId     String
+  lowestPriceCents  Int?
+  buyBoxPriceCents  Int?
+  offerCount        Int      @default(0)
+  data              Json?
+  retrievedAt       DateTime @default(now())
+
+  @@index([asin, marketplaceId])
+  @@index([retrievedAt])
+}
+
+// Amazon watchlist of ASINs to track
+model AmazonWatchlist {
+  asin          String
+  marketplaceId String
+  active        Boolean  @default(true)
+  notes         String?
+  addedAt       DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@id([asin, marketplaceId])
+}
+
 model ShopifyIntegration {
   id              String   @id @default(cuid())
   projectId       String
