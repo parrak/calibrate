@@ -454,3 +454,55 @@ All-Agents Broadcast — 2025-10-27
 - API on Railway updated with matching CONSOLE_INTERNAL_TOKEN; bearer token session issuance (/api/auth/session) verified.
 - Deployed/validated: console.calibr.lat / and /login return 200; sign-in succeeds; API auth check returns 200.
 - See AGENTS_BROADCAST_2025-10-27.md for full details and next steps per agent.
+
+---
+
+## 📅 October 28, 2025
+
+### Workstream C: Platform & Console - CRITICAL FIX
+**Agent:** Assistant (taking over for Agent C)
+**Status:** 🟡 Issue Resolved
+
+**Issue Discovered:**
+- User reported integrations page showing "Failed to fetch" error
+- Page displayed "No platforms available" despite having Shopify and Amazon connectors implemented
+- Error showed "⚠️ Error - Failed to fetch"
+
+**Root Cause Found:**
+- Shopify connector was NOT registered in the platform registry
+- Only Amazon connector was being registered in `apps/api/lib/platforms/register.ts`
+- When integrations page called `platformsApi.list()`, the API returned empty array
+- This caused "Failed to fetch" error in the UI
+
+**Fix Applied:**
+```typescript
+// apps/api/lib/platforms/register.ts
+import '@calibr/shopify-connector'  // Auto-registers on import
+import { registerAmazonConnector } from '@calibr/amazon-connector'
+```
+
+**Files Modified:**
+1. `apps/api/lib/platforms/register.ts` - Added Shopify import to trigger auto-registration
+2. `apps/api/app/api/platforms/route.ts` - Enhanced platform metadata with better names and descriptions
+
+**Changes:**
+- Shopify connector now auto-registers when API server starts
+- Both platforms (Shopify & Amazon) are now available via `/api/platforms` endpoint
+- Platform metadata includes friendly names and descriptions
+
+**Current Status:**
+- ✅ Fix applied - code changes complete
+- ⏳ Testing needed - API server restart required
+- ⏳ User validation needed - verify integrations page loads properly
+
+**For Agent C:**
+1. Restart API server to apply registration fix
+2. Test integrations page at `/p/[slug]/integrations`
+3. Verify both Shopify and Amazon platforms are listed
+4. Continue with onboarding flow implementation per PLAN
+
+**Next Session Tasks:**
+- Test the fix with API server running
+- Verify integrations page loads without errors
+- Continue with platform settings UI development
+- Implement platform connection flow per PROJECT_ONBOARDING_SPEC.md

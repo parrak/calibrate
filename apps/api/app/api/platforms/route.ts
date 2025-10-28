@@ -21,10 +21,27 @@ export async function GET(request: NextRequest) {
 
     // Get platform capabilities for each registered platform
     const platformsWithInfo = platforms.map((platform) => {
-      // Platform metadata - this would be enhanced by each connector
+      // Platform metadata with better naming
+      let name = platform;
+      let description = '';
+      
+      switch (platform) {
+        case 'shopify':
+          name = 'Shopify';
+          description = 'Connect your Shopify store to manage products and pricing';
+          break;
+        case 'amazon':
+          name = 'Amazon';
+          description = 'Connect to Amazon Seller Central for product and pricing management';
+          break;
+        default:
+          name = platform.charAt(0).toUpperCase() + platform.slice(1);
+      }
+      
       return {
         platform,
-        name: platform.charAt(0).toUpperCase() + platform.slice(1),
+        name,
+        description,
         available: true,
       };
     });

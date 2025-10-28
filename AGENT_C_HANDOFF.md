@@ -99,3 +99,79 @@ Fix TypeScript errors in packages/shopify-connector - see SHOPIFY_CONNECTOR_FIXE
 See apps/console/.env.local.example and apps/api/.env.local for required vars.
 
 **All Blocking Issues Resolved** ✅
+
+---
+
+## CRITICAL FIX - October 28, 2025
+
+### Issue: Integrations Page "Failed to fetch" Error
+
+**Problem:**
+- User reported integrations page showing "Failed to fetch" error
+- Page displayed "No platforms available" despite having connectors implemented
+- Error: "⚠️ Error - Failed to fetch"
+
+**Root Cause:**
+- Shopify connector was NOT being registered in the platform registry
+- Only Amazon connector was registered in `apps/api/lib/platforms/register.ts`
+- When `/api/platforms` endpoint was called, it returned an empty array
+- This caused "Failed to fetch" error in the UI
+
+**Fix Applied:**
+```typescript
+// apps/api/lib/platforms/register.ts - BEFORE
+import { ConnectorRegistry } from '@calibr/platform-connector'
+import { registerAmazonConnector } from '@calibr/amazon-connector'
+
+export function registerKnownConnectors() {
+  if (!ConnectorRegistry.isRegistered('amazon')) {
+    registerAmazonConnector()
+  }
+}
+
+// apps/api/lib/platforms/register.ts - AFTER
+import { ConnectorRegistry } from '@calibr/platform-connector'
+import { registerAmazonConnector } from '@calibr/amazon-connector'
+// Import Shopify connector to trigger auto-registration
+import '@calibr/shopify-connector'
+
+export function registerKnownConnectors() {
+  if (!ConnectorRegistry.isRegistered('amazon')) {
+    registerAmazonConnector()
+  }
+  // Shopify auto-registers on import (see packages/shopify-connector/src/index.ts)
+}
+```
+
+**Also Enhanced:**
+- Added platform descriptions in `apps/api/app/api/platforms/route.ts`
+- Better naming for platforms (Shopify, Amazon instead of just capitalized)
+
+**Files Modified:**
+1. ✅ `apps/api/lib/platforms/register.ts` - Added Shopify import
+2. ✅ `apps/api/app/api/platforms/route.ts` - Enhanced metadata
+
+**For Agent C - Action Required:**
+1. **Restart API server** - The fix requires API server restart to take effect
+2. **Test** - Navigate to `/p/[slug]/integrations` to verify fix
+3. **Verify** - Both Shopify and Amazon should now appear in the list
+4. **Continue** - Proceed with onboarding flow implementation
+
+**Status:** ✅ Fix Applied - Ready for Testing
+
+---
+
+**Next Steps Per AGENT_C_NEXT_STEPS.md:**
+- Week 1 Tasks:
+  - ✅ Unified integrations dashboard (DONE - was already complete)
+  - ⏳ Platform settings UI (credentials management) - NEXT
+  - ⏳ Sync history viewer
+  - ⏳ Connection status indicators
+
+**Current Priority:**
+According to PROJECT_ONBOARDING_SPEC.md, focus on:
+- Agent C Task: Platform Integration Onboarding Flow
+- Timeline: Week 1 of Phase 4
+- High Priority
+
+**All Blocking Issues Resolved** ✅

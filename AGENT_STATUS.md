@@ -1,7 +1,7 @@
 # Agent Status - Calibrate Platform
 
-**Last Updated:** October 27, 2025  
-**Status:** Phase 3 Complete - Ready for Deployment
+**Last Updated:** October 28, 2025  
+**Status:** Phase 3 Complete - Integration Fix Applied
 
 ---
 
@@ -32,18 +32,29 @@
 - Console UI for pricing management
 - Platform API endpoints live
 
-### Agent C (Platform Abstraction) - ✅ COMPLETE
-**Status:** Infrastructure complete
+### Agent C (Platform Abstraction) - 🟡 CRITICAL FIX APPLIED
+**Status:** Integration fix applied, needs testing
+**Latest Activity:** October 28, 2025
 **Achievements:**
 - Complete connector registry system
 - All interfaces defined and implemented
 - Generic API routes working
 - Database models ready
+- **Fixed:** Shopify connector registration issue (see AGENT_C_INTEGRATIONS_FIX.md)
+**Current Task:** Test integrations page fix
+**Next Steps:** Continue onboarding flow implementation
 
 ---
 
-## 🚀 Next Steps
+## 🚀 Current Priority: Agent C
 
+### Immediate Action Required
+1. **Restart API server** to apply integration fix
+2. **Test integrations page** at `/p/[slug]/integrations`
+3. **Verify** both Shopify and Amazon platforms appear
+4. **Continue** with onboarding flow per PLAN
+
+### Long-Term Next Steps
 1. **Deploy to Production** - Test on Vercel/Railway
 2. **Verify Console Login** - Test session.apiToken flow
 3. **Test Integrations** - Verify Shopify & Amazon connectors
