@@ -10,12 +10,14 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(Math.max(Number(searchParams.get('limit') || '20'), 1), 200)
     const page = Math.max(Number(searchParams.get('page') || '1'), 1)
     const q = searchParams.get('q') || undefined
+    const marketplaceId = searchParams.get('marketplaceId') || undefined
 
     // Fetch last N rows, then de-duplicate by ASIN in code (latest wins)
+    const where: any = {}
+    if (q) where.asin = { contains: q, mode: 'insensitive' }
+    if (marketplaceId) where.marketplaceId = marketplaceId
     const rows = await prisma().amazonCompetitivePrice.findMany({
-      where: q
-        ? { asin: { contains: q, mode: 'insensitive' } }
-        : undefined,
+      where,
       orderBy: { retrievedAt: 'desc' },
       take: Math.max(limit * 4, limit), // oversample to increase uniqueness chances
     })

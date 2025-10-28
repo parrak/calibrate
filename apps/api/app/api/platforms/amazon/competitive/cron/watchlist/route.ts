@@ -3,9 +3,16 @@ import { prisma } from '@calibr/db'
 import { getCompetitivePrice } from '@calibr/amazon-connector'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
+    const authHeader = req.headers.get('x-cron-auth')
+    const expected = process.env.CRON_TOKEN || process.env.CRON_SECRET
+    if (!expected || authHeader !== expected) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const watch = await prisma().amazonWatchlist.findMany({ where: { active: true } })
     let ok = 0
     let failed = 0

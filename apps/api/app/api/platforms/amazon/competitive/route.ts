@@ -9,11 +9,12 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const asin = searchParams.get('asin')
+    const marketplaceId = searchParams.get('marketplaceId') || undefined
     const limit = Number(searchParams.get('limit') || '50')
     if (!asin) return NextResponse.json({ error: 'asin required' }, { status: 400 })
 
     const rows = await prisma().amazonCompetitivePrice.findMany({
-      where: { asin },
+      where: { asin, ...(marketplaceId ? { marketplaceId } : {}) },
       orderBy: { retrievedAt: 'desc' },
       take: Math.min(Math.max(limit, 1), 200),
     })
@@ -49,4 +50,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to track competitive price', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }
-

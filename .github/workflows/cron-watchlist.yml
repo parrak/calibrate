@@ -1,0 +1,16 @@
+name: Watchlist Cron
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call API cron endpoint
+        run: |
+          curl -sS -X POST \
+            -H "x-cron-auth: ${{ secrets.CRON_TOKEN }}" \
+            https://api.calibr.lat/api/platforms/amazon/competitive/cron/watchlist
