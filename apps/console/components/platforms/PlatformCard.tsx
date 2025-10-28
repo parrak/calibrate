@@ -3,11 +3,13 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { platformsApi } from '@/lib/api-client'
+import { PlatformSettings } from './PlatformSettings'
 
 interface PlatformCardProps {
   platform: {
     platform: string
     name: string
+    description?: string
     available: boolean
   }
   integration: any | null
@@ -18,6 +20,7 @@ interface PlatformCardProps {
 export function PlatformCard({ platform, integration, projectSlug, onUpdate }: PlatformCardProps) {
   const [syncing, setSyncing] = useState(false)
   const [disconnecting, setDisconnecting] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
   const handleSync = async () => {
     try {
@@ -49,7 +52,8 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
   const platformUrl = `/p/${projectSlug}/integrations/${platform.platform}`
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+    <>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="p-5 border-b border-gray-100">
         <div className="flex items-start justify-between">
@@ -123,16 +127,14 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
               >
                 {syncing || integration.syncStatus === 'SYNCING' ? 'Syncing...' : 'Sync Now'}
               </button>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium"
+                title="Settings"
+              >
+                ⚙️
+              </button>
             </div>
-
-            {/* Disconnect */}
-            <button
-              onClick={handleDisconnect}
-              disabled={disconnecting}
-              className="w-full text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
-            >
-              {disconnecting ? 'Disconnecting...' : 'Disconnect'}
-            </button>
           </div>
         ) : (
           <div className="space-y-3">
@@ -148,6 +150,20 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
           </div>
         )}
       </div>
-    </div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <PlatformSettings
+          platform={{ ...platform, description: platform.description || '' }}
+          integration={integration}
+          projectSlug={projectSlug}
+          onClose={() => setShowSettings(false)}
+          onUpdate={() => {
+            onUpdate?.()
+            setShowSettings(false)
+          }}
+        />
+      )}
+    </>
   )
 }
