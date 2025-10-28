@@ -76,13 +76,13 @@ if (origin.includes('.vercel.app') && origin.includes('console')) {
 - `/api/v1/price-changes` - GET, OPTIONS *(Fixed Oct 27, 2025)*
 - `/api/staging/manage` - GET, POST, OPTIONS *(Fixed Oct 27, 2025)*
 - `/api/admin/dashboard` - GET, OPTIONS *(Fixed Oct 27, 2025)*
-- `/api/platforms` - GET, OPTIONS *(Fixed Oct 28, 2025)* ⭐ NEW
+- `/api/platforms` - GET, OPTIONS *(Fixed Oct 28, 2025)*
+- `/api/v1/competitors` - GET, POST, OPTIONS *(Fixed Oct 28, 2025)* ⭐ NEW
 - `/api/v1/price-changes/[id]/approve` - POST
 - `/api/v1/price-changes/[id]/reject` - POST
 - `/api/v1/price-changes/[id]/apply` - POST
 
 ### ❌ Needs withSecurity
-- `/api/v1/competitors` - GET
 - `/api/v1/competitors/[id]` - GET
 - `/api/v1/competitors/[id]/products` - GET
 - `/api/v1/competitors/rules` - GET, POST
@@ -174,7 +174,8 @@ You should see:
 - **Oct 27, 2025**: CORS for Vercel previews (commit 321d43f)
 - **Oct 27, 2025**: Missing withSecurity on /projects (commit 4340d8b)
 - **Oct 27, 2025**: **Missing OPTIONS handlers** (commit 7227171) ⚠️ CRITICAL
-- **Oct 28, 2025**: **Platforms endpoint CORS** (commit 3d6d114) ⭐ LATEST
+- **Oct 28, 2025**: **Platforms endpoint CORS** (commit 3d6d114)
+- **Oct 28, 2025**: **Competitors endpoint CORS** (commit 60432b1) ⭐ LATEST
 
 ## For Other Agents
 
