@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { platformsApi } from '@/lib/api-client'
 import { PlatformCard } from '@/components/platforms/PlatformCard'
 import { IntegrationStats } from '@/components/platforms/IntegrationStats'
+import { SyncHistoryViewer } from '@/components/platforms/SyncHistoryViewer'
 
 export default function IntegrationsPage({ params }: { params: { slug: string } }) {
   const [platforms, setPlatforms] = useState<any[]>([])
@@ -138,63 +139,98 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
         )}
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent Sync Activity */}
       {allIntegrations.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
-            Recent Sync Activity
-          </h2>
-
-          <div className="space-y-3">
-            {allIntegrations.slice(0, 5).map((integration, index) => (
-              <div
-                key={integration.id}
-                className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                    <span className="text-xl">
-                      {integration.platform === 'shopify' && '🛍️'}
-                      {integration.platform === 'amazon' && '📦'}
-                      {integration.platform === 'google_shopping' && '🔍'}
-                    </span>
+        <div>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Sync Activity</h2>
+          
+          {/* Show sync history for the first connected integration */}
+          {allIntegrations.filter(i => i.status === 'CONNECTED').length > 0 && (
+            <div className="space-y-4 mb-6">
+              {allIntegrations
+                .filter(i => i.status === 'CONNECTED')
+                .slice(0, 1)
+                .map((integration) => (
+                  <div key={integration.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                        <span className="text-xl">
+                          {integration.platform === 'shopify' && '🛍️'}
+                          {integration.platform === 'amazon' && '📦'}
+                          {integration.platform === 'google_shopping' && '🔍'}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{integration.platformName}</h3>
+                        <p className="text-sm text-gray-500">
+                          {integration.platform.charAt(0).toUpperCase() + integration.platform.slice(1)}
+                        </p>
+                      </div>
+                    </div>
+                    <SyncHistoryViewer
+                      platform={integration.platform}
+                      integrationId={integration.id}
+                      projectSlug={params.slug}
+                    />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {integration.platformName}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {integration.lastSyncAt
-                        ? `Last synced ${new Date(integration.lastSyncAt).toLocaleString()}`
-                        : 'Never synced'}
-                    </p>
+                ))}
+            </div>
+          )}
+
+          {/* Integration Status Overview */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-sm font-medium text-gray-900 mb-4">Integration Status</h3>
+            <div className="space-y-3">
+              {allIntegrations.map((integration) => (
+                <div
+                  key={integration.id}
+                  className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                      <span className="text-xl">
+                        {integration.platform === 'shopify' && '🛍️'}
+                        {integration.platform === 'amazon' && '📦'}
+                        {integration.platform === 'google_shopping' && '🔍'}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {integration.platformName}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {integration.lastSyncAt
+                          ? `Last synced ${new Date(integration.lastSyncAt).toLocaleString()}`
+                          : 'Never synced'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    {integration.syncStatus === 'SUCCESS' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        ✓ Success
+                      </span>
+                    )}
+                    {integration.syncStatus === 'SYNCING' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        ⟳ Syncing
+                      </span>
+                    )}
+                    {integration.syncStatus === 'ERROR' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        ⚠ Error
+                      </span>
+                    )}
+                    {!integration.syncStatus && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        – Idle
+                      </span>
+                    )}
                   </div>
                 </div>
-
-                <div className="text-right">
-                  {integration.syncStatus === 'SUCCESS' && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      ✓ Success
-                    </span>
-                  )}
-                  {integration.syncStatus === 'SYNCING' && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      ⟳ Syncing
-                    </span>
-                  )}
-                  {integration.syncStatus === 'ERROR' && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      ⚠ Error
-                    </span>
-                  )}
-                  {!integration.syncStatus && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      – Idle
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}

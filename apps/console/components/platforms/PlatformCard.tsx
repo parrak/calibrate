@@ -54,8 +54,8 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
   return (
     <>
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-      {/* Header */}
-      <div className="p-5 border-b border-gray-100">
+        {/* Header */}
+        <div className="p-5 border-b border-gray-100">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
@@ -84,10 +84,10 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
             </span>
           )}
         </div>
-      </div>
+        </div>
 
-      {/* Body */}
-      <div className="p-5">
+        {/* Body */}
+        <div className="p-5">
         {isConnected ? (
           <div className="space-y-3">
             {/* Connection Info */}
@@ -149,6 +149,7 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
             </Link>
           </div>
         )}
+        </div>
       </div>
 
       {/* Settings Modal */}
