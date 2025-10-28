@@ -36,7 +36,8 @@ export function ShopifyAuthButton({ projectId, onSuccess }: ShopifyAuthButtonPro
       }
 
       // Start OAuth flow
-      const response = await fetch('/api/integrations/shopify/oauth/install', {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
+      const response = await fetch(`${apiBase}/api/integrations/shopify/oauth/install`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
