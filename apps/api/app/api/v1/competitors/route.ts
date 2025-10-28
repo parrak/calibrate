@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { verifyHmac } from '@calibr/security'
+import { withSecurity } from '@/lib/security-headers'
 
 const db = () => prisma()
 
-export async function GET(request: NextRequest) {
+export const GET = withSecurity(async (request: NextRequest) => {
   try {
     // Verify HMAC signature
     const authResult = await verifyHmac(request)
@@ -43,9 +44,9 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching competitors:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request: NextRequest) => {
   try {
     // Verify HMAC signature
     const authResult = await verifyHmac(request)
