@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     if (!asin) return NextResponse.json({ error: 'asin required' }, { status: 400 })
 
     const saved = await prisma().amazonWatchlist.upsert({
-      where: { asin_marketplace_unique: { asin, marketplaceId } },
+      where: { asin_marketplaceId: { asin, marketplaceId } },
       create: { asin, marketplaceId, active: true },
       update: { active: true },
     })
@@ -52,10 +52,10 @@ export async function DELETE(req: NextRequest) {
     const marketplaceId = searchParams.get('marketplaceId') || 'ATVPDKIKX0DER'
     if (!asin) return NextResponse.json({ error: 'asin required' }, { status: 400 })
 
-    await prisma().amazonWatchlist.delete({ where: { asin_marketplace_unique: { asin, marketplaceId } } }).catch(async () => {
+    await prisma().amazonWatchlist.delete({ where: { asin_marketplaceId: { asin, marketplaceId } } }).catch(async () => {
       // If row does not exist, ensure idempotency by upserting inactive
       await prisma().amazonWatchlist.upsert({
-        where: { asin_marketplace_unique: { asin, marketplaceId } },
+        where: { asin_marketplaceId: { asin, marketplaceId } },
         create: { asin, marketplaceId, active: false },
         update: { active: false },
       })
