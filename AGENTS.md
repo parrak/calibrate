@@ -84,6 +84,30 @@ export const OPTIONS = withSecurity(async (req: NextRequest) => {
 })
 ```
 
+## Agent Status & Updates
+
+### Current Status (Oct 28, 2025)
+- **Platform Integration**: ✅ Complete - Shopify and Amazon connectors registered and functional
+- **CORS Issues**: ✅ Resolved - All critical API endpoints now have proper CORS middleware
+- **Console Integration**: ✅ Working - Platform cards display correctly, no more "Failed to fetch" errors
+- **API Stability**: ✅ Stable - All platform endpoints responding with proper CORS headers
+
+### Recent Fixes (Oct 28, 2025)
+- **Platform Registration**: Fixed missing Shopify connector import in `apps/api/lib/platforms/register.ts`
+- **CORS Middleware**: Added `withSecurity` middleware to `/api/platforms/[platform]` endpoint
+- **Build Issues**: Resolved JSX syntax errors in `PlatformCard.tsx`
+- **Railway Deployment**: Fixed "Unexpected eof" build errors
+
+### For Other Agents
+- **Agent A (Shopify)**: ✅ No action needed - connector working correctly
+- **Agent B (Amazon)**: ✅ No action needed - pricing feed functional
+- **Agent C (Platform)**: ✅ Handoff complete - all platform infrastructure stable
+
+### Documentation
+- **CORS Requirements**: [apps/api/CORS_MIDDLEWARE_REQUIRED.md](apps/api/CORS_MIDDLEWARE_REQUIRED.md)
+- **Platform Integration**: [AGENT_C_INTEGRATIONS_FIX.md](AGENT_C_INTEGRATIONS_FIX.md)
+- **Latest Status**: [AGENT_C_OCT28_SUMMARY.md](AGENT_C_OCT28_SUMMARY.md)
+
 ## Subdirectory Guides
 - See additional, more specific rules in:
   - `apps/api/AGENTS.md` — **Read CORS_MIDDLEWARE_REQUIRED.md before editing routes**
