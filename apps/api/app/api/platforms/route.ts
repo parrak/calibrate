@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ConnectorRegistry } from '@calibr/platform-connector';
+import { withSecurity } from '@/lib/security-headers';
 import '@/lib/platforms/register'
 
 export const runtime = 'nodejs';
@@ -15,7 +16,7 @@ export const runtime = 'nodejs';
  *
  * List all registered platform connectors
  */
-export async function GET(request: NextRequest) {
+export const GET = withSecurity(async (request: NextRequest) => {
   try {
     const platforms = ConnectorRegistry.getRegisteredPlatforms();
 
@@ -60,4 +61,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
+
+/**
+ * OPTIONS handler for CORS preflight
+ */
+export const OPTIONS = withSecurity(async (req: NextRequest) => {
+  return new NextResponse(null, { status: 204 });
+});
