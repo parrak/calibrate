@@ -5,10 +5,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ShopifyAuth } from '@calibr/shopify-connector';
+import { withSecurity } from '@/lib/security-headers';
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-export async function GET(request: NextRequest) {
+export const GET = withSecurity(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('project_id');
@@ -62,4 +64,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
+
+/**
+ * OPTIONS handler for CORS preflight
+ */
+export const OPTIONS = withSecurity(async (req: NextRequest) => {
+  return new NextResponse(null, { status: 204 });
+});
