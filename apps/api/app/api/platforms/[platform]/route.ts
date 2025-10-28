@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ConnectorRegistry } from '@calibr/platform-connector';
 import '@/lib/platforms/register'
 import { prisma } from '@calibr/db';
+import { withSecurity } from '@/lib/security-headers';
 
 export const runtime = 'nodejs';
 
@@ -24,7 +25,7 @@ interface RouteParams {
  *
  * Get platform information and connection status for a project
  */
-export async function GET(
+export const GET = withSecurity(async function GET(
   request: NextRequest,
   { params }: RouteParams
 ) {
@@ -91,14 +92,14 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/platforms/[platform]
  *
  * Connect to a platform
  */
-export async function POST(
+export const POST = withSecurity(async function POST(
   request: NextRequest,
   { params }: RouteParams
 ) {
@@ -202,14 +203,14 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * DELETE /api/platforms/[platform]
  *
  * Disconnect from a platform
  */
-export async function DELETE(
+export const DELETE = withSecurity(async function DELETE(
   request: NextRequest,
   { params }: RouteParams
 ) {
@@ -263,4 +264,11 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});
+
+/**
+ * OPTIONS handler for CORS preflight
+ */
+export const OPTIONS = withSecurity(async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, { status: 204 });
+});

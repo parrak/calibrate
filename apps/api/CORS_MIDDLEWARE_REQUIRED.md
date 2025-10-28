@@ -77,7 +77,8 @@ if (origin.includes('.vercel.app') && origin.includes('console')) {
 - `/api/staging/manage` - GET, POST, OPTIONS *(Fixed Oct 27, 2025)*
 - `/api/admin/dashboard` - GET, OPTIONS *(Fixed Oct 27, 2025)*
 - `/api/platforms` - GET, OPTIONS *(Fixed Oct 28, 2025)*
-- `/api/v1/competitors` - GET, POST, OPTIONS *(Fixed Oct 28, 2025)* ⭐ NEW
+- `/api/platforms/[platform]` - GET, POST, DELETE, OPTIONS *(Fixed Oct 28, 2025)* ⭐ NEW
+- `/api/v1/competitors` - GET, POST, OPTIONS *(Fixed Oct 28, 2025)*
 - `/api/v1/price-changes/[id]/approve` - POST
 - `/api/v1/price-changes/[id]/reject` - POST
 - `/api/v1/price-changes/[id]/apply` - POST
@@ -175,7 +176,8 @@ You should see:
 - **Oct 27, 2025**: Missing withSecurity on /projects (commit 4340d8b)
 - **Oct 27, 2025**: **Missing OPTIONS handlers** (commit 7227171) ⚠️ CRITICAL
 - **Oct 28, 2025**: **Platforms endpoint CORS** (commit 3d6d114)
-- **Oct 28, 2025**: **Competitors endpoint CORS** (commit 60432b1) ⭐ LATEST
+- **Oct 28, 2025**: **Competitors endpoint CORS** (commit 60432b1)
+- **Oct 28, 2025**: **Platform-specific endpoints CORS** (/api/platforms/[platform]) ⭐ LATEST
 
 ## For Other Agents
 
@@ -202,6 +204,6 @@ If console shows CORS errors after your changes:
 
 ---
 
-**Last Updated**: Oct 27, 2025
+**Last Updated**: Oct 28, 2025
 **Maintained By**: Agent C
 **Critical Priority**: ⚠️ HIGH
