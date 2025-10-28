@@ -325,6 +325,7 @@ model AmazonWatchlist {
   updatedAt     DateTime @updatedAt
 
   @@id([asin, marketplaceId])
+  @@unique([asin, marketplaceId], name: "asin_marketplace_unique")
 }
 
 model ShopifyIntegration {
