@@ -58,6 +58,8 @@ COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
 COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
 COPY --from=builder /app/packages/db/node_modules/@prisma /app/node_modules/@prisma
 COPY --from=builder /app/packages/db/node_modules/.prisma /app/node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma /app/apps/api/node_modules/@prisma
+COPY --from=builder /app/node_modules/.prisma /app/apps/api/node_modules/.prisma
 
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app
