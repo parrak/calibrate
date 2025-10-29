@@ -52,6 +52,13 @@ COPY --from=builder /app/apps/api/.next/static ./apps/api/.next/static
 # Copy Prisma schema and migrations for migrate deploy
 COPY --from=builder /app/packages/db/prisma /app/prisma
 
+# Ensure Prisma Client and engines are available at runtime
+# Copy from both root and workspace package locations to be safe
+COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
+COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
+COPY --from=builder /app/packages/db/node_modules/@prisma /app/node_modules/@prisma
+COPY --from=builder /app/packages/db/node_modules/.prisma /app/node_modules/.prisma
+
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app
 
