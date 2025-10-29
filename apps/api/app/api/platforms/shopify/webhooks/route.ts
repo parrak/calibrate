@@ -61,10 +61,9 @@ export async function POST(request: NextRequest) {
     const payload = JSON.parse(body);
 
     // Find the integration for this shop
-    const integration = await prisma.platformIntegration.findFirst({
+    const integration = await prisma.shopifyIntegration.findFirst({
       where: {
-        platform: 'shopify',
-        externalId: shop,
+        shopDomain: shop,
         isActive: true,
       },
     });

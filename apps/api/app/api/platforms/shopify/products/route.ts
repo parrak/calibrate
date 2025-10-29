@@ -29,10 +29,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Find the Shopify integration
-    const integration = await prisma.platformIntegration.findFirst({
+    const integration = await prisma.shopifyIntegration.findFirst({
       where: {
         projectId,
-        platform: 'shopify',
         isActive: true,
       },
     });
@@ -57,9 +56,9 @@ export async function GET(request: NextRequest) {
     // Create connector with stored credentials
     const credentials = {
       platform: 'shopify' as const,
-      shopDomain: integration.externalId!,
-      accessToken: integration.metadata.accessToken,
-      scope: integration.metadata.scope,
+      shopDomain: integration.shopDomain,
+      accessToken: integration.accessToken,
+      scope: integration.scope,
     };
 
     const connector = await ConnectorRegistry.createConnector('shopify', config);
@@ -111,10 +110,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the Shopify integration
-    const integration = await prisma.platformIntegration.findFirst({
+    const integration = await prisma.shopifyIntegration.findFirst({
       where: {
         projectId,
-        platform: 'shopify',
         isActive: true,
       },
     });
@@ -139,9 +137,9 @@ export async function POST(request: NextRequest) {
     // Create connector with stored credentials
     const credentials = {
       platform: 'shopify' as const,
-      shopDomain: integration.externalId!,
-      accessToken: integration.metadata.accessToken,
-      scope: integration.metadata.scope,
+      shopDomain: integration.shopDomain,
+      accessToken: integration.accessToken,
+      scope: integration.scope,
     };
 
     const connector = await ConnectorRegistry.createConnector('shopify', config);
