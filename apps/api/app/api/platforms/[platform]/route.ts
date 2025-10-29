@@ -50,7 +50,7 @@ export const GET = withSecurity(async function GET(
     }
 
     // Get project
-    const project = await prisma.project.findUnique({
+    const project = await prisma().project.findUnique({
       where: { slug: projectSlug },
     });
 
@@ -62,7 +62,7 @@ export const GET = withSecurity(async function GET(
     }
 
     // Get platform integration
-    const integration = await prisma.platformIntegration.findUnique({
+    const integration = await prisma().platformIntegration.findUnique({
       where: {
         projectId_platform: {
           projectId: project.id,
@@ -124,7 +124,7 @@ export const POST = withSecurity(async function POST(
     }
 
     // Get project
-    const project = await prisma.project.findUnique({
+    const project = await prisma().project.findUnique({
       where: { slug: projectSlug },
     });
 
@@ -159,7 +159,7 @@ export const POST = withSecurity(async function POST(
     }
 
     // Create or update integration
-    const integration = await prisma.platformIntegration.upsert({
+    const integration = await prisma().platformIntegration.upsert({
       where: {
         projectId_platform: {
           projectId: project.id,
@@ -227,7 +227,7 @@ export const DELETE = withSecurity(async function DELETE(
     }
 
     // Get project
-    const project = await prisma.project.findUnique({
+    const project = await prisma().project.findUnique({
       where: { slug: projectSlug },
     });
 
@@ -239,7 +239,7 @@ export const DELETE = withSecurity(async function DELETE(
     }
 
     // Update integration status
-    await prisma.platformIntegration.updateMany({
+    await prisma().platformIntegration.updateMany({
       where: {
         projectId: project.id,
         platform,
