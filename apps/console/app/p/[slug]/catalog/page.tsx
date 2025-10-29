@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { EmptyState } from '@/lib/components'
 import { SimpleTable as Table } from '@/lib/components/SimpleTable'
 import { catalogApi, ApiError } from '@/lib/api-client'
+import { useToast } from '@/components/Toast'
 
 type Product = {
   code: string
@@ -22,6 +23,7 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const toast = useToast()
 
   useEffect(() => {
     async function load() {
@@ -32,9 +34,9 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
         const data = await catalogApi.listProducts(params.slug)
         setProducts(data)
       } catch (err) {
-        if (err instanceof ApiError) setError(err.message)
-        else setError('Failed to load catalog')
-        console.error('Failed to load catalog:', err)
+        const msg = err instanceof ApiError ? err.message : 'Failed to load catalog'
+        setError(msg)
+        toast.error(msg)
       } finally {
         setLoading(false)
       }

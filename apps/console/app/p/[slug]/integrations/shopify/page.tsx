@@ -11,6 +11,7 @@ import { ShopifyAuthButton } from './components/ShopifyAuthButton';
 import { ShopifyStatus } from './components/ShopifyStatus';
 import { ShopifySyncControls } from './components/ShopifySyncControls';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { DisconnectConfirm } from '@/components/DisconnectConfirm';
 import { useToast } from '@/components/Toast';
 
 interface ShopifyIntegration {
@@ -148,30 +149,8 @@ export default function ShopifyIntegrationPage({ params }: ShopifyIntegrationPag
               onUpdate={handleIntegrationUpdate}
             />
             <div>
-              <button
-                onClick={() => setShowConfirm(true)}
-                className="text-sm px-3 py-1.5 rounded-md border border-red-200 text-red-700 hover:bg-red-50"
-              >
-                Disconnect
-              </button>
+              <DisconnectConfirm projectSlug={params.slug} platform="shopify" onDone={fetchIntegration} />
             </div>
-            <ConfirmModal
-              open={showConfirm}
-              title="Disconnect Shopify?"
-              message="This will disable syncing and pricing updates for Shopify until reconnected."
-              confirmText="Disconnect"
-              onCancel={() => setShowConfirm(false)}
-              onConfirm={async () => {
-                try {
-                  setShowConfirm(false)
-                  await fetch(`${process.env.NEXT_PUBLIC_API_BASE || ''}/api/platforms/shopify?project=${encodeURIComponent(params.slug)}`, { method: 'DELETE' })
-                  toast.success('Shopify integration disconnected.')
-                  fetchIntegration()
-                } catch (e: any) {
-                  toast.error(e?.message || 'Failed to disconnect Shopify')
-                }
-              }}
-            />
           </div>
         ) : (
           <Card className="p-6">

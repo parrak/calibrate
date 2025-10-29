@@ -5,6 +5,7 @@ import { platformsApi } from '@/lib/api-client'
 import Link from 'next/link'
 import { Notice } from '@/components/Notice'
 import { useToast } from '@/components/Toast'
+import { DisconnectConfirm } from '@/components/DisconnectConfirm'
 import { ConfirmModal } from '@/components/ConfirmModal'
 
 interface AmazonIntegration {
@@ -30,7 +31,6 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   const [error, setError] = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
-  const [showConfirm, setShowConfirm] = useState(false)
   const toast = useToast()
 
   useEffect(() => {
@@ -156,30 +156,8 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
                 </span>
               </div>
               <div className="flex items-center gap-3 mb-4">
-                <button
-                  onClick={() => setShowConfirm(true)}
-                  className="text-sm px-3 py-1.5 rounded-md border border-red-200 text-red-700 hover:bg-red-50"
-                >
-                  Disconnect
-                </button>
+                <DisconnectConfirm projectSlug={params.slug} platform="amazon" onDone={fetchIntegration} />
               </div>
-              <ConfirmModal
-                open={showConfirm}
-                title="Disconnect Amazon?"
-                message="This will disable syncing and pricing updates for Amazon until reconnected."
-                confirmText="Disconnect"
-                onCancel={() => setShowConfirm(false)}
-                onConfirm={async () => {
-                  try {
-                    setShowConfirm(false)
-                    await fetch(`${process.env.NEXT_PUBLIC_API_BASE || ''}/api/platforms/amazon?project=${encodeURIComponent(params.slug)}`, { method: 'DELETE' })
-                    toast.success('Amazon integration disconnected.')
-                    fetchIntegration()
-                  } catch (e: any) {
-                    toast.error(e?.message || 'Failed to disconnect Amazon')
-                  }
-                }}
-              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
