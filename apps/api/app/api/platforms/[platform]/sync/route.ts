@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ConnectorRegistry } from '@calibr/platform-connector';
 import '@/lib/platforms/register'
 import { prisma } from '@calibr/db';
+import { withSecurity } from '@/lib/security-headers';
 
 export const runtime = 'nodejs';
 
@@ -22,7 +23,7 @@ interface RouteParams {
  *
  * Trigger a sync operation for a platform integration
  */
-export async function POST(
+export const POST = withSecurity(async function POST(
   request: NextRequest,
   { params }: RouteParams
 ) {
@@ -39,7 +40,7 @@ export async function POST(
     }
 
     // Get project
-    const project = await prisma.project.findUnique({
+    const project = await prisma().project.findUnique({
       where: { slug: projectSlug },
     });
 
@@ -51,7 +52,7 @@ export async function POST(
     }
 
     // Get platform integration
-    const integration = await prisma.platformIntegration.findUnique({
+    const integration = await prisma().platformIntegration.findUnique({
       where: {
         projectId_platform: {
           projectId: project.id,
@@ -75,7 +76,7 @@ export async function POST(
     }
 
     // Create sync log
-    const syncLog = await prisma.platformSyncLog.create({
+    const syncLog = await prisma().platformSyncLog.create({
       data: {
         integrationId: integration.id,
         syncType,
@@ -84,7 +85,7 @@ export async function POST(
     });
 
     // Update integration sync status
-    await prisma.platformIntegration.update({
+    await prisma().platformIntegration.update({
       where: { id: integration.id },
       data: {
         syncStatus: 'SYNCING',
@@ -128,7 +129,9 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});
+
+export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
 
 /**
  * Perform the actual sync operation
@@ -147,7 +150,7 @@ async function performSync(
     const failed = result.filter((r: any) => !r.success).length;
 
     // Update sync log
-    await prisma.platformSyncLog.update({
+    await prisma().platformSyncLog.update({
       where: { id: syncLogId },
       data: {
         status: 'completed',
@@ -158,7 +161,7 @@ async function performSync(
     });
 
     // Update integration status
-    await prisma.platformIntegration.update({
+    await prisma().platformIntegration.update({
       where: { id: integrationId },
       data: {
         syncStatus: failed > 0 ? 'PARTIAL' : 'SUCCESS',
@@ -167,7 +170,7 @@ async function performSync(
     });
   } catch (error) {
     // Update sync log with error
-    await prisma.platformSyncLog.update({
+    await prisma().platformSyncLog.update({
       where: { id: syncLogId },
       data: {
         status: 'failed',
@@ -179,7 +182,7 @@ async function performSync(
     });
 
     // Update integration status
-    await prisma.platformIntegration.update({
+    await prisma().platformIntegration.update({
       where: { id: integrationId },
       data: {
         syncStatus: 'ERROR',
