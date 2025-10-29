@@ -80,8 +80,11 @@ ENCRYPTION_KEY=base64-encoded-32-byte-key
 WEBHOOK_SECRET=webhook-hmac-secret
 
 # External Services
-SHOPIFY_API_KEY=xxx
-SHOPIFY_API_SECRET=xxx
+# Shopify OAuth App Credentials (get from Shopify Partners Dashboard)
+SHOPIFY_API_KEY=your_shopify_app_client_id
+SHOPIFY_API_SECRET=your_shopify_app_client_secret
+
+# Amazon SP-API Credentials
 AMAZON_SP_API_CLIENT_ID=xxx
 AMAZON_SP_API_CLIENT_SECRET=xxx
 
@@ -126,6 +129,57 @@ NEXT_PUBLIC_API_BASE=https://api.calibr.lat
 NEXT_PUBLIC_CONSOLE_URL=https://console.calibr.lat
 NEXT_PUBLIC_DOCS_URL=https://docs.calibr.lat
 ```
+
+---
+
+## OAuth Application Setup
+
+### Shopify OAuth App Configuration
+
+**Required for Shopify integration to work:**
+
+1. **Create Shopify App:**
+   - Go to [Shopify Partners Dashboard](https://partners.shopify.com/)
+   - Create new app or select existing app
+   - Note the **Client ID** (API Key) and **Client Secret** (API Secret)
+
+2. **Configure App Settings:**
+   - **App URL:** `https://app.calibr.lat`
+   - **Allowed redirection URL(s):** `https://api.calibr.lat/api/platforms/shopify/oauth/callback`
+   - **Scopes:** `read_products,write_products,read_orders,read_inventory,write_inventory`
+
+3. **Environment Variables:**
+   ```bash
+   SHOPIFY_API_KEY=your_app_client_id
+   SHOPIFY_API_SECRET=your_app_client_secret
+   ```
+
+4. **Test OAuth Flow:**
+   - Navigate to `/p/demo/integrations/shopify`
+   - Click "Connect Shopify Store"
+   - Enter test store domain
+   - Verify redirect to Shopify consent screen
+   - Complete OAuth flow
+   - Verify redirect back to console with success
+
+### Amazon SP-API Configuration
+
+**Required for Amazon integration:**
+
+1. **Register SP-API Application:**
+   - Go to Amazon Seller Central Developer Console
+   - Create new application
+   - Configure LWA (Login with Amazon) credentials
+
+2. **Environment Variables:**
+   ```bash
+   AMAZON_SP_APP_ID=amzn1.sp.solution.xxx
+   AMAZON_LWA_CLIENT_ID=amzn1.application-oa2-client.xxx
+   AMAZON_LWA_CLIENT_SECRET=amzn1.oa2-cs.xxx
+   ```
+
+3. **OAuth Redirect URL:**
+   - Configure: `https://api.calibr.lat/api/platforms/amazon/oauth/callback`
 
 ---
 

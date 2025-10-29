@@ -3,81 +3,73 @@
  * Initiates the Shopify OAuth installation flow
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { ConnectorRegistry } from '@calibr/platform-connector';
-import '@/lib/platforms/register';
+import { withSecurity } from '@/lib/security-headers';
 
 export const runtime = 'nodejs';
 
 /**
- * POST /api/platforms/shopify/oauth/install
- * 
- * Initiates Shopify OAuth installation flow
+ * GET /api/platforms/shopify/oauth/install
+ * Generates Shopify OAuth authorization URL
+ *
+ * Query params:
+ * - project: project slug (required)
+ * - shop: Shopify shop domain (required)
  */
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { projectId, shopDomain, redirectUri } = body;
+export const GET = withSecurity(async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const projectSlug = searchParams.get('project');
+  const shop = searchParams.get('shop');
 
-    if (!projectId || !shopDomain || !redirectUri) {
-      return NextResponse.json(
-        { error: 'Missing required fields: projectId, shopDomain, redirectUri' },
-        { status: 400 }
-      );
-    }
-
-    // Validate shop domain format
-    const shopifyDomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/;
-    if (!shopifyDomainRegex.test(shopDomain)) {
-      return NextResponse.json(
-        { error: 'Invalid shop domain format' },
-        { status: 400 }
-      );
-    }
-
-    // Get Shopify connector configuration
-    const config = {
-      platform: 'shopify' as const,
-      apiKey: process.env.SHOPIFY_API_KEY!,
-      apiSecret: process.env.SHOPIFY_API_SECRET!,
-      scopes: (process.env.SHOPIFY_SCOPES || 'read_products,write_products').split(','),
-      webhookSecret: process.env.SHOPIFY_WEBHOOK_SECRET!,
-      apiVersion: process.env.SHOPIFY_API_VERSION || '2024-10',
-    };
-
-    // Create connector instance
-    const connector = await ConnectorRegistry.createConnector('shopify', config);
-
-    // Create minimal credentials with just shop domain for URL generation
-    // This is needed because getAuthorizationUrl expects credentials to be set
-    await connector.initialize({
-      platform: 'shopify',
-      shopDomain,
-      accessToken: '', // Empty token is okay for auth URL generation
-    } as any);
-
-    // Generate authorization URL with shop parameter
-    const authUrl = connector.auth.getAuthorizationUrl({
-      clientId: config.apiKey,
-      redirectUri,
-      scopes: config.scopes,
-      shop: shopDomain,
-      state: `${projectId}:${shopDomain}`, // Include project and shop info in state
-    });
-
-    return NextResponse.json({
-      success: true,
-      authUrl,
-      shopDomain,
-      projectId,
-    });
-  } catch (error) {
-    console.error('Shopify OAuth install error:', error);
+  if (!projectSlug || !shop) {
     return NextResponse.json(
-      {
-        error: 'Failed to initiate Shopify OAuth',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Project slug and shop domain are required' },
+      { status: 400 }
+    );
+  }
+
+  // Validate shop domain format
+  if (!shop.endsWith('.myshopify.com') && !shop.includes('.')) {
+    return NextResponse.json(
+      { error: 'Invalid shop domain. Must be in format: mystore.myshopify.com' },
+      { status: 400 }
+    );
+  }
+
+  // Shopify OAuth scopes
+  const scopes = [
+    'read_products',
+    'write_products',
+    'read_orders',
+    'read_inventory',
+    'write_inventory',
+  ].join(',');
+
+  const apiKey = process.env.SHOPIFY_API_KEY;
+  const redirectUri = `${process.env.NEXT_PUBLIC_API_URL}/api/platforms/shopify/oauth/callback`;
+
+  if (!apiKey) {
+    console.error('SHOPIFY_API_KEY not configured');
+    return NextResponse.json(
+      { error: 'Shopify integration not configured' },
       { status: 500 }
     );
   }
-}
+
+  // Build Shopify OAuth URL
+  const authUrl = new URL(`https://${shop}/admin/oauth/authorize`);
+  authUrl.searchParams.set('client_id', apiKey);
+  authUrl.searchParams.set('scope', scopes);
+  authUrl.searchParams.set('redirect_uri', redirectUri);
+  authUrl.searchParams.set('state', projectSlug); // Use state to track project
+  authUrl.searchParams.set('grant_options[]', 'per-user');
+
+  return NextResponse.json({
+    installUrl: authUrl.toString(),
+    shop,
+    scopes: scopes.split(','),
+  });
+});
+
+export const OPTIONS = withSecurity(async () => {
+  return new NextResponse(null, { status: 204 });
+});
