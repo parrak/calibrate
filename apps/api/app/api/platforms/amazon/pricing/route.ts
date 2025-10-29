@@ -33,11 +33,11 @@ export const POST = withSecurity(async (request: NextRequest) => {
     }
 
     // Validate project and integration
-    const project = await prisma.project.findUnique({ where: { slug: projectSlug } })
+    const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
-    const integration = await prisma.platformIntegration.findUnique({
+    const integration = await prisma().platformIntegration.findUnique({
       where: {
         projectId_platform: { projectId: project.id, platform: 'amazon' },
       },

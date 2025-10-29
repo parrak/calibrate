@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     const shopifyAuth = auth.createAuthFromResponse(shopDomain, oauthResponse);
 
     // Store integration in database
-    const integration = await prisma.shopifyIntegration.upsert({
+    const integration = await prisma().shopifyIntegration.upsert({
       where: { shopDomain },
       update: {
         accessToken: shopifyAuth.accessToken,

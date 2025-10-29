@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the Shopify integration
-    const integration = await prisma.platformIntegration.findFirst({
+    const integration = await prisma().platformIntegration.findFirst({
       where: {
         projectId,
         platform: 'shopify',
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update sync status to in progress
-    await prisma.platformIntegration.update({
+    await prisma().platformIntegration.update({
       where: { id: integration.id },
       data: {
         syncStatus: 'SYNCING',
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create sync log entry
-    const syncLog = await prisma.platformSyncLog.create({
+    const syncLog = await prisma().platformSyncLog.create({
       data: {
         integrationId: integration.id,
         syncType,
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Update sync log with results
-      await prisma.platformSyncLog.update({
+      await prisma().platformSyncLog.update({
         where: { id: syncLog.id },
         data: {
           status: summary.failed === 0 ? 'SUCCESS' : 'PARTIAL',
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Update integration status
-      await prisma.platformIntegration.update({
+      await prisma().platformIntegration.update({
         where: { id: integration.id },
         data: {
           lastSyncAt: new Date(),
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
       });
     } catch (error) {
       // Update sync log with error
-      await prisma.platformSyncLog.update({
+      await prisma().platformSyncLog.update({
         where: { id: syncLog.id },
         data: {
           status: 'ERROR',
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Update integration status
-      await prisma.platformIntegration.update({
+      await prisma().platformIntegration.update({
         where: { id: integration.id },
         data: {
           syncStatus: 'ERROR',
@@ -211,7 +211,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Find the Shopify integration
-    const integration = await prisma.platformIntegration.findFirst({
+    const integration = await prisma().platformIntegration.findFirst({
       where: {
         projectId,
         platform: 'shopify',
@@ -227,7 +227,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get recent sync logs
-    const syncLogs = await prisma.platformSyncLog.findMany({
+    const syncLogs = await prisma().platformSyncLog.findMany({
       where: { integrationId: integration.id },
       orderBy: { startedAt: 'desc' },
       take: 10,
