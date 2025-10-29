@@ -30,6 +30,11 @@ export const GET = withSecurity(async function GET(
   { params }: RouteParams
 ) {
   try {
+    const db = prisma()
+    if (!(db as any)?.project) {
+      console.error('[platform GET] Prisma client missing model accessors')
+      return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
+    }
     const { platform } = params;
     const { searchParams } = new URL(request.url);
     const projectSlug = searchParams.get('project');
@@ -50,7 +55,7 @@ export const GET = withSecurity(async function GET(
     }
 
     // Get project
-    const project = await prisma().project.findUnique({
+    const project = await db.project.findUnique({
       where: { slug: projectSlug },
     });
 
@@ -62,7 +67,7 @@ export const GET = withSecurity(async function GET(
     }
 
     // Get platform integration
-    const integration = await prisma().platformIntegration.findUnique({
+    const integration = await db.platformIntegration.findUnique({
       where: {
         projectId_platform: {
           projectId: project.id,
@@ -104,6 +109,7 @@ export const POST = withSecurity(async function POST(
   { params }: RouteParams
 ) {
   try {
+    const db = prisma()
     const { platform } = params;
     const body = await request.json();
     const { projectSlug, platformName, credentials } = body;
@@ -124,7 +130,7 @@ export const POST = withSecurity(async function POST(
     }
 
     // Get project
-    const project = await prisma().project.findUnique({
+    const project = await db.project.findUnique({
       where: { slug: projectSlug },
     });
 
@@ -159,7 +165,7 @@ export const POST = withSecurity(async function POST(
     }
 
     // Create or update integration
-    const integration = await prisma().platformIntegration.upsert({
+    const integration = await db.platformIntegration.upsert({
       where: {
         projectId_platform: {
           projectId: project.id,
@@ -215,6 +221,7 @@ export const DELETE = withSecurity(async function DELETE(
   { params }: RouteParams
 ) {
   try {
+    const db = prisma()
     const { platform } = params;
     const { searchParams } = new URL(request.url);
     const projectSlug = searchParams.get('project');
@@ -227,7 +234,7 @@ export const DELETE = withSecurity(async function DELETE(
     }
 
     // Get project
-    const project = await prisma().project.findUnique({
+    const project = await db.project.findUnique({
       where: { slug: projectSlug },
     });
 
@@ -239,7 +246,7 @@ export const DELETE = withSecurity(async function DELETE(
     }
 
     // Update integration status
-    await prisma().platformIntegration.updateMany({
+    await db.platformIntegration.updateMany({
       where: {
         projectId: project.id,
         platform,
