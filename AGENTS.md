@@ -146,6 +146,7 @@ Use this repo’s docs to broadcast your status and handoffs so other agents can
   - For cross-cutting updates. Example: `AGENTS_BROADCAST_2025-10-27.md`.
 - Handoffs: `AGENT_*_HANDOFF.md`
   - Capture acceptance criteria, file references, and next steps.
+  - Resolved: `AGENT_C_RAILWAY_RUNTIME_HANDOFF.md` (Railway Prisma runtime investigation)
 - Low-level event log (optional): `agents/events/YYYYMMDD/<agent>.jsonl`
   - Append JSON objects for fine-grained progress; see `agents/README.md`.
 
