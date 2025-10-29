@@ -52,6 +52,10 @@ COPY --from=builder /app/apps/api/.next/static ./apps/api/.next/static
 # Copy Prisma schema and migrations for migrate deploy
 COPY --from=builder /app/packages/db/prisma /app/prisma
 
+# Copy startup script
+COPY --from=builder /app/apps/api/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Ensure Prisma Client and engines are available at runtime
 # Copy from both root and workspace package locations to be safe
 COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
@@ -68,6 +72,8 @@ USER nextjs
 
 # Set environment
 ENV NODE_ENV=production
+ENV PORT=8080
+ENV HOSTNAME=0.0.0.0
 ENV PRISMA_DISABLE_POSTINSTALL_GENERATE=true
 ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-3.0.x"
 ENV PRISMA_ENGINE_BINARY_TARGET="debian-openssl-3.0.x"
@@ -79,6 +85,5 @@ RUN find /app -type f -path "*/.prisma/client/*" -name "*linux-musl*" -print -de
 
 EXPOSE 8080
 
-# Start the standalone server
-CMD ["node", "apps/api/server.js"]
-# redeploy-bump 2025-10-25T00:28:18.3814808-07:00
+# Start the standalone server with logging
+CMD ["/app/start.sh"]
