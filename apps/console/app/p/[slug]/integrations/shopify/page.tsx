@@ -31,9 +31,28 @@ export default function ShopifyIntegrationPage({ params }: ShopifyIntegrationPag
   const [integration, setIntegration] = useState<ShopifyIntegration | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     fetchIntegration();
+    // Detect Shopify OAuth callback indicators
+    try {
+      const q = new URLSearchParams(window.location.search)
+      if (q.get('success') === 'true') {
+        setNotice('Shopify store connected successfully.')
+        const url = new URL(window.location.href)
+        url.searchParams.delete('success')
+        window.history.replaceState({}, '', url.toString())
+        fetchIntegration()
+      }
+      const err = q.get('error')
+      if (err) {
+        setError(err)
+        const url = new URL(window.location.href)
+        url.searchParams.delete('error')
+        window.history.replaceState({}, '', url.toString())
+      }
+    } catch { /* ignore */ }
   }, [params.slug]);
 
   const fetchIntegration = async () => {
@@ -96,6 +115,11 @@ export default function ShopifyIntegrationPage({ params }: ShopifyIntegrationPag
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {notice && (
+          <div className="mb-4 rounded-md border border-green-200 bg-green-50 p-4 text-green-800">
+            {notice}
+          </div>
+        )}
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">

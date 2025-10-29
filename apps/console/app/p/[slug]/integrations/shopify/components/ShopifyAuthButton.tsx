@@ -37,13 +37,10 @@ export function ShopifyAuthButton({ projectId, onSuccess }: ShopifyAuthButtonPro
 
       // Start OAuth flow
       const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
-      const response = await fetch(`${apiBase}/api/integrations/shopify/oauth/install`, {
+      const qs = new URLSearchParams({ project_id: projectId, shop: shopDomain })
+      const response = await fetch(`${apiBase}/api/integrations/shopify/oauth/install?${qs.toString()}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Add shop domain as query parameter
-        // Note: This is a simplified approach. In production, you'd want a proper form
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (!response.ok) {
@@ -51,9 +48,10 @@ export function ShopifyAuthButton({ projectId, onSuccess }: ShopifyAuthButtonPro
       }
 
       const data = await response.json();
-      
+      const authUrl = data?.authUrl as string | undefined
+      if (!authUrl) throw new Error('Auth URL not returned from API')
       // Redirect to Shopify OAuth
-      window.location.href = data.authUrl;
+      window.location.href = authUrl;
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start installation');
