@@ -19,6 +19,7 @@ export async function GET() {
     // Test 2: Can we call prisma()?
     let prismaCallTest = 'NOT_ATTEMPTED'
     let clientInfo: any = {}
+    let dbConnectionTest = 'NOT_ATTEMPTED'
 
     if (prismaFunction) {
       try {
@@ -29,6 +30,14 @@ export async function GET() {
             hasProject: !!(client as any).project,
             hasUser: !!(client as any).user,
             keys: Object.keys(client).filter(k => !k.startsWith('_') && !k.startsWith('$')).slice(0, 10)
+          }
+
+          // Test 2b: Try to actually query the database
+          try {
+            await client.$queryRaw`SELECT 1 as test`
+            dbConnectionTest = 'SUCCESS'
+          } catch (e) {
+            dbConnectionTest = `QUERY_ERROR: ${e instanceof Error ? e.message : String(e)}`
           }
         }
       } catch (e) {
@@ -53,7 +62,8 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       tests: {
         import: importTest,
-        call: prismaCallTest
+        call: prismaCallTest,
+        dbConnection: dbConnectionTest
       },
       clientInfo,
       envInfo
