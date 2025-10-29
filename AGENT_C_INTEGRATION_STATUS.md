@@ -1,11 +1,41 @@
 # Agent C - Integration Status Update
 
-**Date:** October 27, 2025
-**Context:** User seeing "No platforms available" on integrations page
+**Date:** October 28, 2025 (Updated)
+**Context:** ~~User seeing "No platforms available" on integrations page~~ **RESOLVED - Platform Routes Runtime Error**
 
 ---
 
-## Current Situation
+## ✅ LATEST UPDATE (Oct 28, 2025)
+
+### Production Deployment Crisis - RESOLVED
+
+**Error:** `TypeError: Cannot read properties of undefined (reading 'findUnique')` on Railway deployment
+
+**Root Causes Found:**
+1. **Shell Syntax Error** - start.sh used bash-specific `${var:0:20}` causing "Bad substitution" error in `/bin/sh`
+2. **Next.js 15 Dynamic Routes** - 11 route handlers using synchronous params instead of awaiting Promise
+3. **Non-existent Prisma Model** - Routes calling `db.platformIntegration.findUnique()` but schema only has `ShopifyIntegration`
+
+**Fixes Applied (3 commits):**
+1. **Commit d27e3ff** - Fixed start.sh POSIX shell compatibility
+2. **Commit 4f5c3da** - Added debug endpoints (/api/debug/prisma, /api/debug/env)
+3. **Commit 0c03db3** - Added AmazonIntegration model + fixed platform routes
+
+**Results:**
+- ✅ Database connection working (DATABASE_URL properly set)
+- ✅ Prisma client initializes successfully
+- ✅ Platform routes return 200 (Amazon returns null integration correctly)
+- ✅ No more undefined errors
+
+**Key Learnings:**
+- Railway containers use `/bin/sh`, not bash - always use POSIX-compliant syntax
+- Next.js 15 dynamic segments return `params: Promise<{}>`, must await
+- Schema must match code - can't call models that don't exist
+- Debug endpoints critical for diagnosing production issues
+
+---
+
+## Previous Context (Oct 27, 2025)
 
 ### What User Sees
 The integrations dashboard at `/p/[slug]/integrations` shows:
