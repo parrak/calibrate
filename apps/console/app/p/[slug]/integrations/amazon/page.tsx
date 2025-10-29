@@ -26,9 +26,30 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
     fetchIntegration()
+    // Detect callback success or error query params
+    try {
+      const q = new URLSearchParams(window.location.search)
+      if (q.get('connected') === '1') {
+        setNotice('Amazon account connected successfully.')
+        // Clean up query param in URL without reloading
+        const url = new URL(window.location.href)
+        url.searchParams.delete('connected')
+        window.history.replaceState({}, '', url.toString())
+        // Refresh status to reflect new connection
+        fetchIntegration()
+      }
+      const err = q.get('error')
+      if (err) {
+        setError(err)
+        const url = new URL(window.location.href)
+        url.searchParams.delete('error')
+        window.history.replaceState({}, '', url.toString())
+      }
+    } catch {}
   }, [params.slug])
 
   const fetchIntegration = async () => {
@@ -108,6 +129,11 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {notice && (
+          <div className="mb-4 rounded-md border border-green-200 bg-green-50 p-4 text-green-800">
+            {notice}
+          </div>
+        )}
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Amazon Integration</h1>
