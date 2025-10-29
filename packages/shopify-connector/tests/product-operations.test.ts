@@ -35,6 +35,24 @@ describe('ShopifyProductOperations', () => {
     // Get the operations instance
     operations = connector.products as ShopifyProductOperations
 
+    // Mock the underlying services
+    const mockUnderlyingProducts = {
+      listProducts: vi.fn(),
+      getProduct: vi.fn(),
+      getProductByHandle: vi.fn(),
+      getProductCount: vi.fn(),
+      searchProducts: vi.fn(),
+    }
+
+    const mockUnderlyingPricing = {
+      updateVariantPrice: vi.fn(),
+      updateVariantPrices: vi.fn(),
+    }
+
+    // Set the mocked underlying services
+    connector['underlyingProducts'] = mockUnderlyingProducts
+    connector['underlyingPricing'] = mockUnderlyingPricing
+
     // Mock the client
     mockClient = {
       get: vi.fn(),
@@ -51,12 +69,11 @@ describe('ShopifyProductOperations', () => {
         ],
       }
 
-      mockClient.get.mockResolvedValue(mockResponse)
+      connector['underlyingProducts'].listProducts.mockResolvedValue(mockResponse)
 
       const result = await operations.list()
 
-      expect(mockClient.get).toHaveBeenCalledWith(
-        '/products.json',
+      expect(connector['underlyingProducts'].listProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           limit: 50,
           page: 1,
@@ -68,12 +85,11 @@ describe('ShopifyProductOperations', () => {
 
     it('should list products with custom limit', async () => {
       const mockResponse = { products: [] }
-      mockClient.get.mockResolvedValue(mockResponse)
+      connector['underlyingProducts'].listProducts.mockResolvedValue(mockResponse)
 
       await operations.list({ limit: 10 })
 
-      expect(mockClient.get).toHaveBeenCalledWith(
-        '/products.json',
+      expect(connector['underlyingProducts'].listProducts).toHaveBeenCalledWith(
         expect.objectContaining({ limit: 10 })
       )
     })
@@ -81,20 +97,20 @@ describe('ShopifyProductOperations', () => {
     it('should handle pagination', async () => {
       const mockResponse = {
         products: [],
-        pagination: { hasNext: true },
+        page_info: { has_next_page: true },
       }
-      mockClient.get.mockResolvedValue(mockResponse)
+      connector['underlyingProducts'].listProducts.mockResolvedValue(mockResponse)
 
       const result = await operations.list({ page: 2 })
 
-      expect(mockClient.get).toHaveBeenCalledWith(
-        '/products.json',
+      expect(connector['underlyingProducts'].listProducts).toHaveBeenCalledWith(
         expect.objectContaining({ page: 2 })
       )
+      expect(result.pagination.hasNext).toBe(true)
     })
 
     it('should handle errors', async () => {
-      mockClient.get.mockRejectedValue(new Error('Network error'))
+      connector['underlyingProducts'].listProducts.mockRejectedValue(new Error('Network error'))
 
       await expect(operations.list()).rejects.toThrow()
     })
@@ -103,33 +119,31 @@ describe('ShopifyProductOperations', () => {
   describe('get', () => {
     it('should get a single product by ID', async () => {
       const mockResponse = {
-        product: {
-          id: 101,
-          title: 'Test Product',
-          body_html: '<p>Description</p>',
-          vendor: 'Test Vendor',
-          product_type: 'Test Type',
-          tags: 'test, product',
-          status: 'active',
-          handle: 'test-product',
-          variants: [],
-          images: [],
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-02T00:00:00Z',
-        },
+        id: 101,
+        title: 'Test Product',
+        body_html: '<p>Description</p>',
+        vendor: 'Test Vendor',
+        product_type: 'Test Type',
+        tags: 'test, product',
+        status: 'active',
+        handle: 'test-product',
+        variants: [],
+        images: [],
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-02T00:00:00Z',
       }
 
-      mockClient.get.mockResolvedValue(mockResponse)
+      connector['underlyingProducts'].getProduct.mockResolvedValue(mockResponse)
 
       const product = await operations.get('101')
 
-      expect(mockClient.get).toHaveBeenCalledWith('/products/101.json')
+      expect(connector['underlyingProducts'].getProduct).toHaveBeenCalledWith('101')
       expect(product.externalId).toBe('101')
       expect(product.title).toBe('Test Product')
     })
 
     it('should throw error when product not found', async () => {
-      mockClient.get.mockRejectedValue(new Error('Product not found'))
+      connector['underlyingProducts'].getProduct.mockRejectedValue(new Error('Product not found'))
 
       await expect(operations.get('999')).rejects.toThrow()
     })
@@ -138,44 +152,41 @@ describe('ShopifyProductOperations', () => {
   describe('getBySku', () => {
     it('should find product by SKU', async () => {
       const searchResponse = {
-        variants: [
+        products: [
           {
-            id: 201,
-            product_id: 101,
-            sku: 'TEST-SKU-001',
+            id: 101,
+            title: 'Test Product',
+            vendor: 'Test',
+            status: 'active',
+            tags: 'test',
+            body_html: '<p>Description</p>',
+            product_type: 'Test Type',
+            handle: 'test-product',
+            variants: [
+              {
+                id: 201,
+                product_id: 101,
+                sku: 'TEST-SKU-001',
+              },
+            ],
+            images: [],
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-02T00:00:00Z',
           },
         ],
       }
 
-      const productResponse = {
-        product: {
-          id: 101,
-          title: 'Test Product',
-          vendor: 'Test',
-          status: 'active',
-          tags: 'test',
-          body_html: '<p>Description</p>',
-          product_type: 'Test Type',
-          handle: 'test-product',
-          variants: [],
-          images: [],
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-02T00:00:00Z',
-        },
-      }
-
-      mockClient.get
-        .mockResolvedValueOnce(searchResponse)
-        .mockResolvedValueOnce(productResponse)
+      connector['underlyingProducts'].searchProducts.mockResolvedValue(searchResponse)
 
       const product = await operations.getBySku('TEST-SKU-001')
 
+      expect(connector['underlyingProducts'].searchProducts).toHaveBeenCalledWith('TEST-SKU-001')
       expect(product).toBeDefined()
       expect(product?.externalId).toBe('101')
     })
 
     it('should return null when SKU not found', async () => {
-      mockClient.get.mockResolvedValue({ variants: [] })
+      connector['underlyingProducts'].searchProducts.mockResolvedValue({ products: [] })
 
       const product = await operations.getBySku('NONEXISTENT-SKU')
 
@@ -186,40 +197,39 @@ describe('ShopifyProductOperations', () => {
   describe('sync', () => {
     it('should sync a single product', async () => {
       const mockProductResponse = {
-        product: {
-          id: 101,
-          title: 'Test Product',
-          vendor: 'Test',
-          status: 'active',
-          tags: 'test',
-          body_html: '<p>Description</p>',
-          product_type: 'Test Type',
-          handle: 'test-product',
-          variants: [
-            {
-              id: 201,
-              price: '29.99',
-              sku: 'TEST-SKU-001',
-              inventory_quantity: 10,
-            },
-          ],
-          images: [],
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-02T00:00:00Z',
-        },
+        id: 101,
+        title: 'Test Product',
+        vendor: 'Test',
+        status: 'active',
+        tags: 'test',
+        body_html: '<p>Description</p>',
+        product_type: 'Test Type',
+        handle: 'test-product',
+        variants: [
+          {
+            id: 201,
+            price: '29.99',
+            sku: 'TEST-SKU-001',
+            inventory_quantity: 10,
+          },
+        ],
+        images: [],
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-02T00:00:00Z',
       }
 
-      mockClient.get.mockResolvedValue(mockProductResponse)
+      connector['underlyingProducts'].getProduct.mockResolvedValue(mockProductResponse)
 
       const result = await operations.sync('cal-101', '101')
 
+      expect(connector['underlyingProducts'].getProduct).toHaveBeenCalledWith('101')
       expect(result.externalId).toBe('101')
       expect(result.platform).toBe('shopify')
       expect(result.success).toBe(true)
     })
 
     it('should handle sync errors', async () => {
-      mockClient.get.mockRejectedValue(new Error('Sync failed'))
+      connector['underlyingProducts'].getProduct.mockRejectedValue(new Error('Sync failed'))
 
       const result = await operations.sync('cal-101', '101')
 
@@ -261,13 +271,16 @@ describe('ShopifyProductOperations', () => {
             updated_at: '2024-01-04T00:00:00Z',
           },
         ],
-        pagination: { hasNext: false },
+        page_info: { has_next_page: false },
       }
 
-      mockClient.get.mockResolvedValue(mockListResponse)
+      connector['underlyingProducts'].listProducts.mockResolvedValue(mockListResponse)
 
       const results = await operations.syncAll({ limit: 50 })
 
+      expect(connector['underlyingProducts'].listProducts).toHaveBeenCalledWith(
+        expect.objectContaining({ limit: 50 })
+      )
       expect(results).toHaveLength(2)
       expect(results[0].externalId).toBe('101')
       expect(results[1].externalId).toBe('102')
@@ -276,15 +289,14 @@ describe('ShopifyProductOperations', () => {
     it('should respect limit parameter', async () => {
       const mockResponse = {
         products: [],
-        pagination: { hasNext: false },
+        page_info: { has_next_page: false },
       }
 
-      mockClient.get.mockResolvedValue(mockResponse)
+      connector['underlyingProducts'].listProducts.mockResolvedValue(mockResponse)
 
       await operations.syncAll({ limit: 25 })
 
-      expect(mockClient.get).toHaveBeenCalledWith(
-        '/products.json',
+      expect(connector['underlyingProducts'].listProducts).toHaveBeenCalledWith(
         expect.objectContaining({ limit: 25 })
       )
     })
@@ -292,25 +304,20 @@ describe('ShopifyProductOperations', () => {
 
   describe('count', () => {
     it('should count products', async () => {
-      const mockResponse = { count: 42 }
-      mockClient.get.mockResolvedValue(mockResponse)
+      connector['underlyingProducts'].getProductCount.mockResolvedValue(42)
 
       const count = await operations.count()
 
-      expect(mockClient.get).toHaveBeenCalledWith(
-        '/products/count.json',
-        expect.any(Object)
-      )
+      expect(connector['underlyingProducts'].getProductCount).toHaveBeenCalled()
       expect(count).toBe(42)
     })
 
     it('should handle count with filters', async () => {
-      const mockResponse = { count: 10 }
-      mockClient.get.mockResolvedValue(mockResponse)
+      connector['underlyingProducts'].getProductCount.mockResolvedValue(10)
 
       const count = await operations.count({ vendor: 'Test Vendor' })
 
-      expect(mockClient.get).toHaveBeenCalled()
+      expect(connector['underlyingProducts'].getProductCount).toHaveBeenCalled()
       expect(count).toBe(10)
     })
   })

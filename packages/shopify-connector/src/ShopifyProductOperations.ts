@@ -88,14 +88,14 @@ export class ShopifyProductOperations implements ProductOperations {
     }
 
     try {
-      // Search for products with the SKU
-      const response = await this.list({ search: sku });
+      // Search for products with the SKU using searchProducts
+      const response = await this.connector.underlyingProducts!.searchProducts(sku);
       
       // Find the product with matching SKU in variants
-      for (const product of response.data) {
-        const variant = product.variants.find(v => v.sku === sku);
+      for (const product of response.products) {
+        const variant = product.variants.find((v: any) => v.sku === sku);
         if (variant) {
-          return product;
+          return this.normalizeProduct(product);
         }
       }
 
@@ -142,7 +142,7 @@ export class ShopifyProductOperations implements ProductOperations {
     let hasMore = true;
 
     while (hasMore) {
-      const response = await this.list({ ...filter, page, limit: 50 });
+      const response = await this.list({ ...filter, page, limit: filter?.limit || 50 });
 
       for (const product of response.data) {
         const result = await this.sync(
