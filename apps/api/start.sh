@@ -12,24 +12,37 @@ echo "PORT: ${PORT}"
 echo "HOSTNAME: ${HOSTNAME}"
 echo "Working directory: $(pwd)"
 
-# Auto-detect and log all sensitive environment variables
-# This ensures any new Railway variables are automatically passed through
+# Create .env file for Prisma (Next.js standalone doesn't pass env vars to Prisma properly)
+# Prisma looks for .env file in current directory at runtime
 echo ""
-echo "Environment Variables Status:"
-for var in DATABASE_URL DATABASE_PUBLIC_URL ENCRYPTION_KEY WEBHOOK_SECRET \
-           CONSOLE_INTERNAL_TOKEN CRON_TOKEN RAILWAY_ENVIRONMENT \
-           RAILWAY_DEPLOYMENT_ID RAILWAY_SERVICE_NAME; do
-  if [ -n "$(eval echo \$$var)" ]; then
-    # For DATABASE_URL, show prefix; for others just show [SET]
-    if [ "$var" = "DATABASE_URL" ]; then
-      echo "  $var: [SET - $(eval echo \$$var | cut -c1-20)...]"
-    else
-      echo "  $var: [SET]"
-    fi
-  else
-    echo "  $var: [NOT SET]"
-  fi
-done
+echo "Creating .env file for Prisma..."
+cat > .env <<EOF
+DATABASE_URL="${DATABASE_URL}"
+EOF
+echo "DATABASE_URL written to .env: ${DATABASE_URL:+[YES - ${DATABASE_URL:0:20}...]}"
+
+# Log all environment variables (excluding system/shell vars)
+# This automatically shows any new Railway variables without code changes
+echo ""
+echo "Environment Variables:"
+env | grep -v '^_' | grep -v '^SHLVL' | grep -v '^PWD' | grep -v '^OLDPWD' | \
+  while IFS='=' read -r name value; do
+    # Redact sensitive values, show only that they're set
+    case "$name" in
+      *PASSWORD*|*SECRET*|*KEY*|*TOKEN*|DATABASE_URL|DATABASE_PUBLIC_URL)
+        # Show prefix for DATABASE_URL, just [SET] for others
+        if [ "$name" = "DATABASE_URL" ]; then
+          echo "  $name: [SET - ${value:0:20}...]"
+        else
+          echo "  $name: [SET]"
+        fi
+        ;;
+      *)
+        # Show full value for non-sensitive vars
+        echo "  $name: $value"
+        ;;
+    esac
+  done
 
 echo ""
 echo "Checking server.js..."
