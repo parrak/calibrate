@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { withSecurity } from '@/lib/security-headers'
 
 export const runtime = 'nodejs'
 
 // GET /api/platforms/amazon/competitive/recent?limit=50
-export async function GET(req: NextRequest) {
+export const GET = withSecurity(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url)
     const limit = Math.min(Math.max(Number(searchParams.get('limit') || '20'), 1), 200)
@@ -39,5 +40,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return NextResponse.json({ error: 'Failed to load recent ASINs', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
-}
+})
+
+export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
 

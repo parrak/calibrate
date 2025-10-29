@@ -3,8 +3,9 @@
   "version": "0.0.1",
   "type": "module",
   "main": "index.js",
-  "dependencies": {
-    "@calibr/db": "workspace:*",
-    "next": "^14.0.4"
+  "dependencies": {},
+  "devDependencies": {
+    "@vitest/ui": "^4.0.4",
+    "vitest": "^4.0.4"
   }
 }

@@ -28,7 +28,9 @@
     "staging:reset": "powershell -ExecutionPolicy Bypass -File ./scripts/reset-staging.ps1",
     "staging:status": "powershell -ExecutionPolicy Bypass -File ./scripts/status-staging.ps1",
     "agents:cli": "node agents/bin/agents-cli.mjs",
-    "agents:list": "node agents/bin/agents-cli.mjs list-inbox"
+    "agents:list": "node agents/bin/agents-cli.mjs list-inbox",
+    "encrypt:credentials": "tsx scripts/encrypt-credentials.ts",
+    "encrypt:credentials:dry": "tsx scripts/encrypt-credentials.ts --dry-run --verbose"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -38,6 +40,7 @@
     "eslint": "^8.55.0",
     "prettier": "^3.1.0",
     "supertest": "^6.3.0",
+    "tsx": "^4.7.0",
     "turbo": "^1.11.0",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0"

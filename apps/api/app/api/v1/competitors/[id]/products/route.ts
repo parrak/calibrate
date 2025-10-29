@@ -6,7 +6,7 @@ const db = () => prisma()
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify HMAC signature
@@ -14,12 +14,13 @@ export async function GET(
     if (!authResult.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const { id } = await context.params
     const { searchParams } = new URL(request.url)
     const skuId = searchParams.get('skuId')
 
     const products = await db().competitorProduct.findMany({
       where: {
-        competitorId: params.id,
+        competitorId: id,
         ...(skuId && { skuId })
       },
       include: {
@@ -41,7 +42,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify HMAC signature
@@ -51,6 +52,7 @@ export async function POST(
     }
     const body = await request.json()
     const { skuId, name, skuCode, url, imageUrl } = body
+    const { id } = await context.params
 
     if (!name || !url) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -58,7 +60,7 @@ export async function POST(
 
     const product = await db().competitorProduct.create({
       data: {
-        competitorId: params.id,
+        competitorId: id,
         skuId,
         name,
         skuCode,

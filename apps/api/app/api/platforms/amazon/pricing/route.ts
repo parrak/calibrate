@@ -3,10 +3,11 @@ import { prisma } from '@calibr/db'
 import { ConnectorRegistry } from '@calibr/platform-connector'
 import { applyPriceChange, pollFeedUntilDone, downloadAndParseFeedResult } from '@calibr/amazon-connector'
 import '@/lib/platforms/register'
+import { withSecurity } from '@/lib/security-headers'
 
 export const runtime = 'nodejs'
 
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request: NextRequest) => {
   try {
     const body = await request.json()
     const projectSlug: string | undefined = body?.project
@@ -32,11 +33,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate project and integration
-    const project = await prisma.project.findUnique({ where: { slug: projectSlug } })
+    const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
-    const integration = await prisma.platformIntegration.findUnique({
+    const integration = await prisma().platformIntegration.findUnique({
       where: {
         projectId_platform: { projectId: project.id, platform: 'amazon' },
       },
@@ -88,5 +89,7 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})
+
+export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
 

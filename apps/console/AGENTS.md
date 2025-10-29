@@ -16,3 +16,6 @@ Scope: `calibrate/apps/console` — Next.js app for the console UI.
 - Lint: `pnpm --filter @calibr/console lint`
 - Build: `pnpm --filter @calibr/console build`
 
+## Status Broadcasts
+- Follow the hub guide: `../../AGENTS.md#status-broadcasting`
+

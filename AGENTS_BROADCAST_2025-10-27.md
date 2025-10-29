@@ -1,9 +1,9 @@
-Agents Broadcast – Phase 3 Update (2025-10-27)
+Agents Broadcast — Phase 3 Update (2025-10-27)
 
 Summary
 - Hosting: UI on Vercel (site, console, docs); API on Railway.
 - Agent C foundation shipped (interfaces, registry, routes). Agent A (Shopify) merged and green. Agent B (Amazon) pricing feed path implemented with status polling and console UX.
-- Console login flow stabilized; env vars configured; end‑to‑end bearer auth to API verified.
+- Console login flow stabilized; env vars configured; end-to-end bearer auth to API verified.
 
 Deployment & Env
 - Console (Vercel project: rakesh-paridas-projects/console)
@@ -41,5 +41,5 @@ For Agent C (Platform)
 
 Verification
 - console.calibr.lat: / and /login return 200; login succeeds.
-- After sign‑in, session.apiToken present; protected admin endpoint returns 200 with Authorization: Bearer <token>.
+- After sign-in, session.apiToken present; protected admin endpoint returns 200 with Authorization: Bearer <token>.
 

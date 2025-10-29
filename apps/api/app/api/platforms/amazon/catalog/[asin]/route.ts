@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import '@/lib/platforms/register'
 import { ConnectorRegistry } from '@calibr/platform-connector'
+import { withSecurity } from '@/lib/security-headers'
 
 export const runtime = 'nodejs'
 
-interface Params { params: { asin: string } }
+interface Params { params: Promise<{ asin: string }> }
 
-export async function GET(req: NextRequest, { params }: Params) {
+export const GET = withSecurity(async (req: NextRequest, context: Params) => {
   try {
-    const { asin } = params
+    const { asin } = await context.params
     if (!asin) return NextResponse.json({ error: 'asin required' }, { status: 400 })
 
     if (!ConnectorRegistry.isRegistered('amazon')) {
@@ -20,5 +21,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch item', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
-}
+})
+
+export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
 

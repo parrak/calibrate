@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { getCompetitivePrice } from '@calibr/amazon-connector'
+import { withSecurity } from '@/lib/security-headers'
 
 export const runtime = 'nodejs'
 
 // POST /api/platforms/amazon/competitive/batch  { asins: string[] }
-export async function POST(req: NextRequest) {
+export const POST = withSecurity(async (req: NextRequest) => {
   try {
     const body = await req.json().catch(() => ({}))
     const asins: string[] = Array.isArray(body?.asins) ? body.asins : []
@@ -37,5 +38,6 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json({ error: 'Batch track failed', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
-}
+})
 
+export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))

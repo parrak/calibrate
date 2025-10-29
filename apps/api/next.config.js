@@ -10,7 +10,7 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client']
   },
-  transpilePackages: ['isomorphic-dompurify', '@calibr/shopify-connector', '@calibr/amazon-connector'],
+  transpilePackages: ['isomorphic-dompurify', '@calibr/shopify-connector', '@calibr/amazon-connector', '@calibr/db'],
   webpack: (config) => {
     config.externals = [...(config.externals || []), 'jsdom']
     return config

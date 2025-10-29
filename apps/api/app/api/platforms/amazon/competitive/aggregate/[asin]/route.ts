@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { withSecurity } from '@/lib/security-headers'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 // GET /api/platforms/amazon/competitive/aggregate/:asin?days=7&marketplaceId=ATVPDKIKX0DER
-export async function GET(req: NextRequest, { params }: { params: { asin: string } }) {
+export const GET = withSecurity(async (req: NextRequest, context: { params: Promise<{ asin: string }> }) => {
   try {
-    const { asin } = params
+    const { asin } = await context.params
     const { searchParams } = new URL(req.url)
     const days = Math.max(1, Math.min(90, Number(searchParams.get('days') || '7')))
     const marketplaceId = searchParams.get('marketplaceId') || undefined
@@ -47,5 +48,7 @@ export async function GET(req: NextRequest, { params }: { params: { asin: string
   } catch (error) {
     return NextResponse.json({ error: 'Failed to compute aggregates', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
-}
+})
+
+export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
 

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { getCompetitivePrice } from '@calibr/amazon-connector'
+import { withSecurity } from '@/lib/security-headers'
 
 export const runtime = 'nodejs'
 
 // GET /api/platforms/amazon/competitive?asin=...&limit=50
-export async function GET(req: NextRequest) {
+export const GET = withSecurity(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url)
     const asin = searchParams.get('asin')
@@ -23,10 +24,10 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return NextResponse.json({ error: 'Failed to load history', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
-}
+})
 
 // POST /api/platforms/amazon/competitive  { asin: string }
-export async function POST(req: NextRequest) {
+export const POST = withSecurity(async (req: NextRequest) => {
   try {
     const body = await req.json().catch(() => ({}))
     const asin = body?.asin as string | undefined
@@ -49,4 +50,6 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json({ error: 'Failed to track competitive price', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
-}
+})
+
+export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))

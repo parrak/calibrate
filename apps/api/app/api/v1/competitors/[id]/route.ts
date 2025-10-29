@@ -6,7 +6,7 @@ const db = () => prisma()
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify HMAC signature
@@ -14,8 +14,9 @@ export async function GET(
     if (!authResult.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const { id } = await context.params
     const competitor = await db().competitor.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         products: {
           include: {
@@ -42,7 +43,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify HMAC signature
@@ -52,9 +53,10 @@ export async function PUT(
     }
     const body = await request.json()
     const { name, domain, channel, isActive } = body
+    const { id } = await context.params
 
     const competitor = await db().competitor.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name,
         domain,
@@ -72,7 +74,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify HMAC signature
@@ -80,8 +82,9 @@ export async function DELETE(
     if (!authResult.valid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const { id } = await context.params
     await db().competitor.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({ success: true })

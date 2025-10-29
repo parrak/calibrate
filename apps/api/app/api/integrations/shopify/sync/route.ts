@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the Shopify integration
-    const integration = await prisma.shopifyIntegration.findFirst({
+    const integration = await prisma().shopifyIntegration.findFirst({
       where: { 
         projectId,
         isActive: true,
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     await connector.initialize(integration.shopDomain, integration.accessToken);
 
     // Update sync status to in progress
-    await prisma.shopifyIntegration.update({
+    await prisma().shopifyIntegration.update({
       where: { id: integration.id },
       data: {
         syncStatus: 'in_progress',
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     // Update sync status with error
     if (projectId) {
       try {
-        await prisma.shopifyIntegration.updateMany({
+        await prisma().shopifyIntegration.updateMany({
           where: { 
             projectId,
             isActive: true,
@@ -128,7 +128,7 @@ async function syncProducts(connector: ShopifyConnector, integration: any) {
   const products = await connector.products.listProducts({ limit: 100 });
   
   // Log sync event
-  await prisma.event.create({
+  await prisma().event.create({
     data: {
       tenantId: integration.project.tenantId,
       projectId: integration.projectId,
@@ -165,7 +165,7 @@ async function updatePrices(connector: ShopifyConnector, integration: any, data:
   });
 
   // Log price update event
-  await prisma.event.create({
+  await prisma().event.create({
     data: {
       tenantId: integration.project.tenantId,
       projectId: integration.projectId,
@@ -204,7 +204,7 @@ async function setupWebhooks(connector: ShopifyConnector, integration: any) {
   
   // Store webhook subscriptions in database
   for (const webhook of webhooks) {
-    await prisma.shopifyWebhookSubscription.upsert({
+    await prisma().shopifyWebhookSubscription.upsert({
       where: { webhookId: webhook.id },
       update: {
         topic: webhook.topic,

@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Find the Shopify integration
-    const integration = await prisma.shopifyIntegration.findFirst({
+    const integration = await prisma().shopifyIntegration.findFirst({
       where: { 
         projectId,
         isActive: true,
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     }));
 
     // Update sync status
-    await prisma.shopifyIntegration.update({
+    await prisma().shopifyIntegration.update({
       where: { id: integration.id },
       data: {
         lastSyncAt: new Date(),
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
     // Update sync status with error
     if (projectId) {
       try {
-        await prisma.shopifyIntegration.updateMany({
+        await prisma().shopifyIntegration.updateMany({
           where: { 
             projectId,
             isActive: true,
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the Shopify integration
-    const integration = await prisma.shopifyIntegration.findFirst({
+    const integration = await prisma().shopifyIntegration.findFirst({
       where: { 
         projectId,
         isActive: true,

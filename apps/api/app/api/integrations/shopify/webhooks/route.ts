@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the integration
-    const integration = await prisma.shopifyIntegration.findUnique({
+    const integration = await prisma().shopifyIntegration.findUnique({
       where: { shopDomain },
       include: { project: true },
     });
@@ -108,7 +108,7 @@ async function processWebhookByTopic(
 async function handleProductUpdate(payload: any, integration: any): Promise<void> {
   try {
     // Log the product update
-    await prisma.event.create({
+    await prisma().event.create({
       data: {
         tenantId: integration.project.tenantId,
         projectId: integration.projectId,
@@ -135,7 +135,7 @@ async function handleProductUpdate(payload: any, integration: any): Promise<void
 async function handleProductDelete(payload: any, integration: any): Promise<void> {
   try {
     // Log the product deletion
-    await prisma.event.create({
+    await prisma().event.create({
       data: {
         tenantId: integration.project.tenantId,
         projectId: integration.projectId,
@@ -160,7 +160,7 @@ async function handleProductDelete(payload: any, integration: any): Promise<void
 async function handleInventoryUpdate(payload: any, integration: any): Promise<void> {
   try {
     // Log the inventory update
-    await prisma.event.create({
+    await prisma().event.create({
       data: {
         tenantId: integration.project.tenantId,
         projectId: integration.projectId,
@@ -186,7 +186,7 @@ async function handleInventoryUpdate(payload: any, integration: any): Promise<vo
 async function handleOrderUpdate(payload: any, integration: any): Promise<void> {
   try {
     // Log the order update
-    await prisma.event.create({
+    await prisma().event.create({
       data: {
         tenantId: integration.project.tenantId,
         projectId: integration.projectId,

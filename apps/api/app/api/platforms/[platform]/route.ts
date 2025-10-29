@@ -15,9 +15,9 @@ import { withSecurity } from '@/lib/security-headers';
 export const runtime = 'nodejs';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     platform: string;
-  };
+  }>;
 }
 
 /**
@@ -27,10 +27,29 @@ interface RouteParams {
  */
 export const GET = withSecurity(async function GET(
   request: NextRequest,
-  { params }: RouteParams
+  context: RouteParams
 ) {
   try {
-    const { platform } = params;
+    let db;
+    try {
+      db = prisma()
+    } catch (prismaError) {
+      console.error('[platform GET] Failed to get Prisma client:', prismaError)
+      return NextResponse.json({
+        error: 'Database initialization failed',
+        details: prismaError instanceof Error ? prismaError.message : 'Unknown error'
+      }, { status: 500 })
+    }
+
+    if (!db) {
+      console.error('[platform GET] Prisma client is undefined')
+      return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
+    }
+    if (!(db as any)?.project) {
+      console.error('[platform GET] Prisma client missing model accessors', { hasDb: !!db, dbKeys: Object.keys(db || {}) })
+      return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
+    }
+    const { platform } = await context.params;
     const { searchParams } = new URL(request.url);
     const projectSlug = searchParams.get('project');
 
@@ -50,7 +69,7 @@ export const GET = withSecurity(async function GET(
     }
 
     // Get project
-    const project = await prisma.project.findUnique({
+    const project = await db.project.findUnique({
       where: { slug: projectSlug },
     });
 
@@ -62,25 +81,52 @@ export const GET = withSecurity(async function GET(
     }
 
     // Get platform integration
-    const integration = await prisma.platformIntegration.findUnique({
-      where: {
-        projectId_platform: {
-          projectId: project.id,
-          platform,
-        },
-      },
-      include: {
-        syncLogs: {
-          orderBy: { startedAt: 'desc' },
-          take: 5,
-        },
-      },
-    });
+    // Check platform-specific integration models
+    let integration = null;
+    let isConnected = false;
+
+    if (platform === 'shopify') {
+      const shopifyIntegration = await db.shopifyIntegration.findFirst({
+        where: { projectId: project.id },
+      });
+      if (shopifyIntegration) {
+        integration = {
+          id: shopifyIntegration.id,
+          platform: 'shopify',
+          platformName: shopifyIntegration.shopDomain,
+          status: shopifyIntegration.isActive ? 'CONNECTED' : 'DISCONNECTED',
+          lastSyncAt: shopifyIntegration.lastSyncAt,
+          syncStatus: shopifyIntegration.syncStatus,
+        };
+        isConnected = shopifyIntegration.isActive;
+      }
+    } else if (platform === 'amazon') {
+      const amazonIntegration = await db.amazonIntegration.findFirst({
+        where: { projectId: project.id },
+      });
+      if (amazonIntegration) {
+        integration = {
+          id: amazonIntegration.id,
+          platform: 'amazon',
+          platformName: `Amazon ${amazonIntegration.sellerId}`,
+          status: amazonIntegration.isActive ? 'CONNECTED' : 'DISCONNECTED',
+          lastSyncAt: amazonIntegration.lastSyncAt,
+          syncStatus: amazonIntegration.syncStatus,
+          metadata: {
+            sellerId: amazonIntegration.sellerId,
+            marketplaceId: amazonIntegration.marketplaceId,
+            region: amazonIntegration.region,
+          },
+        };
+        isConnected = amazonIntegration.isActive;
+      }
+    }
+    // Other platforms will be added as needed
 
     return NextResponse.json({
       platform,
-      integration: integration || null,
-      isConnected: integration?.status === 'CONNECTED',
+      integration,
+      isConnected,
     });
   } catch (error) {
     console.error('Error getting platform info:', error);
@@ -101,10 +147,11 @@ export const GET = withSecurity(async function GET(
  */
 export const POST = withSecurity(async function POST(
   request: NextRequest,
-  { params }: RouteParams
+  context: RouteParams
 ) {
   try {
-    const { platform } = params;
+    const db = prisma()
+    const { platform } = await context.params;
     const body = await request.json();
     const { projectSlug, platformName, credentials } = body;
 
@@ -124,7 +171,7 @@ export const POST = withSecurity(async function POST(
     }
 
     // Get project
-    const project = await prisma.project.findUnique({
+    const project = await db.project.findUnique({
       where: { slug: projectSlug },
     });
 
@@ -158,41 +205,15 @@ export const POST = withSecurity(async function POST(
       );
     }
 
-    // Create or update integration
-    const integration = await prisma.platformIntegration.upsert({
-      where: {
-        projectId_platform: {
-          projectId: project.id,
-          platform,
-        },
+    // TODO: Create platform-specific integration
+    // Schema only has ShopifyIntegration currently, not generic PlatformIntegration
+    return NextResponse.json(
+      {
+        error: 'Platform integration not implemented',
+        message: `Creating ${platform} integrations requires adding ${platform}Integration model to schema`,
       },
-      create: {
-        projectId: project.id,
-        platform,
-        platformName,
-        status: 'CONNECTED',
-        isActive: true,
-        metadata: credentials, // In production, encrypt this!
-      },
-      update: {
-        platformName,
-        status: 'CONNECTED',
-        isActive: true,
-        metadata: credentials, // In production, encrypt this!
-        lastHealthCheck: new Date(),
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      integration: {
-        id: integration.id,
-        platform: integration.platform,
-        platformName: integration.platformName,
-        status: integration.status,
-        connectedAt: integration.connectedAt,
-      },
-    });
+      { status: 501 } // Not Implemented
+    );
   } catch (error) {
     console.error('Error connecting to platform:', error);
     return NextResponse.json(
@@ -212,10 +233,11 @@ export const POST = withSecurity(async function POST(
  */
 export const DELETE = withSecurity(async function DELETE(
   request: NextRequest,
-  { params }: RouteParams
+  context: RouteParams
 ) {
   try {
-    const { platform } = params;
+    const db = prisma()
+    const { platform } = await context.params;
     const { searchParams } = new URL(request.url);
     const projectSlug = searchParams.get('project');
 
@@ -227,7 +249,7 @@ export const DELETE = withSecurity(async function DELETE(
     }
 
     // Get project
-    const project = await prisma.project.findUnique({
+    const project = await db.project.findUnique({
       where: { slug: projectSlug },
     });
 
@@ -239,7 +261,7 @@ export const DELETE = withSecurity(async function DELETE(
     }
 
     // Update integration status
-    await prisma.platformIntegration.updateMany({
+    await db.platformIntegration.updateMany({
       where: {
         projectId: project.id,
         platform,

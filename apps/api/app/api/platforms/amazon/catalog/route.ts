@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import '@/lib/platforms/register'
 import { ConnectorRegistry } from '@calibr/platform-connector'
+import { withSecurity } from '@/lib/security-headers'
 
 export const runtime = 'nodejs'
 
-export async function GET(req: NextRequest) {
+export const GET = withSecurity(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url)
     const search = searchParams.get('search') || undefined
@@ -22,5 +23,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return NextResponse.json({ error: 'Failed to list Amazon catalog', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
-}
+})
+
+export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
 
