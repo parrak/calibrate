@@ -6,9 +6,9 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 // GET /api/platforms/amazon/competitive/aggregate/:asin?days=7&marketplaceId=ATVPDKIKX0DER
-export const GET = withSecurity(async (req: NextRequest, { params }: { params: { asin: string } }) => {
+export const GET = withSecurity(async (req: NextRequest, context: { params: Promise<{ asin: string }> }) => {
   try {
-    const { asin } = params
+    const { asin } = await context.params
     const { searchParams } = new URL(req.url)
     const days = Math.max(1, Math.min(90, Number(searchParams.get('days') || '7')))
     const marketplaceId = searchParams.get('marketplaceId') || undefined

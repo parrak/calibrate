@@ -13,9 +13,9 @@ import { withSecurity } from '@/lib/security-headers';
 export const runtime = 'nodejs';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     platform: string;
-  };
+  }>;
 }
 
 /**
@@ -25,10 +25,10 @@ interface RouteParams {
  */
 export const POST = withSecurity(async function POST(
   request: NextRequest,
-  { params }: RouteParams
+  context: RouteParams
 ) {
   try {
-    const { platform } = params;
+    const { platform } = await context.params;
     const body = await request.json();
     const { projectSlug, syncType = 'manual' } = body;
 

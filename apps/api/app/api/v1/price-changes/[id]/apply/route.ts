@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { applyPriceChange } from '@calibr/pricing-engine'
 
-export async function POST(_: Request, { params }: { params: { id: string } }) {
-  const res = await applyPriceChange(params.id)
+export async function POST(_: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params
+  const res = await applyPriceChange(id)
   const response = NextResponse.json({ priceId: res.id, amount: res.amount })
   response.headers.set('Access-Control-Allow-Origin', '*')
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')

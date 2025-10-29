@@ -5,11 +5,11 @@ import { withSecurity } from '@/lib/security-headers'
 
 export const runtime = 'nodejs'
 
-interface Params { params: { asin: string } }
+interface Params { params: Promise<{ asin: string }> }
 
-export const GET = withSecurity(async (req: NextRequest, { params }: Params) => {
+export const GET = withSecurity(async (req: NextRequest, context: Params) => {
   try {
-    const { asin } = params
+    const { asin } = await context.params
     if (!asin) return NextResponse.json({ error: 'asin required' }, { status: 400 })
 
     if (!ConnectorRegistry.isRegistered('amazon')) {

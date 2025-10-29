@@ -15,9 +15,9 @@ import { withSecurity } from '@/lib/security-headers';
 export const runtime = 'nodejs';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     platform: string;
-  };
+  }>;
 }
 
 /**
@@ -27,7 +27,7 @@ interface RouteParams {
  */
 export const GET = withSecurity(async function GET(
   request: NextRequest,
-  { params }: RouteParams
+  context: RouteParams
 ) {
   try {
     const db = prisma()
@@ -35,7 +35,7 @@ export const GET = withSecurity(async function GET(
       console.error('[platform GET] Prisma client missing model accessors')
       return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
     }
-    const { platform } = params;
+    const { platform } = await context.params;
     const { searchParams } = new URL(request.url);
     const projectSlug = searchParams.get('project');
 
@@ -106,11 +106,11 @@ export const GET = withSecurity(async function GET(
  */
 export const POST = withSecurity(async function POST(
   request: NextRequest,
-  { params }: RouteParams
+  context: RouteParams
 ) {
   try {
     const db = prisma()
-    const { platform } = params;
+    const { platform } = await context.params;
     const body = await request.json();
     const { projectSlug, platformName, credentials } = body;
 
@@ -218,11 +218,11 @@ export const POST = withSecurity(async function POST(
  */
 export const DELETE = withSecurity(async function DELETE(
   request: NextRequest,
-  { params }: RouteParams
+  context: RouteParams
 ) {
   try {
     const db = prisma()
-    const { platform } = params;
+    const { platform } = await context.params;
     const { searchParams } = new URL(request.url);
     const projectSlug = searchParams.get('project');
 

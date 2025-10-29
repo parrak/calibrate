@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 
-export async function POST(_: Request, { params }: { params: { id: string } }) {
+export async function POST(_: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params
   const pc = await prisma().priceChange.update({
-    where: { id: params.id },
+    where: { id },
     data: { status: 'APPROVED' }
   })
 
