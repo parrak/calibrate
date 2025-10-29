@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET() {
   try {
@@ -58,8 +60,9 @@ export async function GET() {
       )
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       timestamp: new Date().toISOString(),
+      serverTime: Date.now(),
       tests: {
         import: importTest,
         call: prismaCallTest,
@@ -68,6 +71,13 @@ export async function GET() {
       clientInfo,
       envInfo
     })
+
+    // Disable all caching
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+
+    return response
   } catch (error) {
     return NextResponse.json({
       error: 'Debug endpoint failed',
