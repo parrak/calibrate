@@ -225,3 +225,21 @@ Tomorrow's Plan:
 
 Refs: `AGENTS.md:1`, `STATUS_BROADCASTING.md:1`, `AGENT_STATUS.md:1`, `CURRENT_STATUS.md:1`
 
+### Platform Routes Runtime
+Agent: Codex
+Status: Resolved by Agent C
+
+Today's Progress:
+- Investigated 500s on `/api/platforms/[platform]` in Railway (Prisma undefined models).
+- Ensured routes use `prisma()`; forwarded Next context; added guards.
+- Copied Prisma Client/engines into runtime image and standalone tree in Dockerfile.
+- Created handoff with investigation steps and acceptance criteria.
+
+Blockers:
+- None.
+
+Next:
+- Close out investigation; monitor deployment.
+
+Refs: `AGENT_C_RAILWAY_RUNTIME_HANDOFF.md:1`, `apps/api/app/api/platforms/[platform]/route.ts:1`, `Dockerfile:1`
+

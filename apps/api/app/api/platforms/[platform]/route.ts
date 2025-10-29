@@ -27,8 +27,11 @@ interface RouteParams {
  */
 export const GET = withSecurity(async function GET(
   request: NextRequest,
-  context: RouteParams
+  context?: RouteParams
 ) {
+  if (!context) {
+    return NextResponse.json({ error: 'Missing route context' }, { status: 500 });
+  }
   try {
     let db;
     try {
@@ -147,8 +150,11 @@ export const GET = withSecurity(async function GET(
  */
 export const POST = withSecurity(async function POST(
   request: NextRequest,
-  context: RouteParams
+  context?: RouteParams
 ) {
+  if (!context) {
+    return NextResponse.json({ error: 'Missing route context' }, { status: 500 });
+  }
   try {
     const db = prisma()
     const { platform } = await context.params;
@@ -205,14 +211,97 @@ export const POST = withSecurity(async function POST(
       );
     }
 
-    // TODO: Create platform-specific integration
-    // Schema only has ShopifyIntegration currently, not generic PlatformIntegration
+    // Create platform-specific integration
+    if (platform === 'shopify') {
+      // Shopify requires: shopDomain, accessToken, scope
+      if (!credentials.shopDomain || !credentials.accessToken) {
+        return NextResponse.json(
+          { error: 'Shopify credentials require shopDomain and accessToken' },
+          { status: 400 }
+        );
+      }
+
+      const integration = await db.shopifyIntegration.upsert({
+        where: { shopDomain: credentials.shopDomain },
+        create: {
+          projectId: project.id,
+          shopDomain: credentials.shopDomain,
+          accessToken: credentials.accessToken,
+          scope: credentials.scope || 'read_products,write_products',
+          isActive: true,
+        },
+        update: {
+          projectId: project.id,
+          accessToken: credentials.accessToken,
+          scope: credentials.scope || 'read_products,write_products',
+          isActive: true,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        integration: {
+          id: integration.id,
+          platform: 'shopify',
+          platformName: integration.shopDomain,
+          isActive: integration.isActive,
+          installedAt: integration.installedAt,
+        },
+      });
+    } else if (platform === 'amazon') {
+      // Amazon requires: sellerId, refreshToken
+      if (!credentials.sellerId || !credentials.refreshToken) {
+        return NextResponse.json(
+          { error: 'Amazon credentials require sellerId and refreshToken' },
+          { status: 400 }
+        );
+      }
+
+      const integration = await db.amazonIntegration.upsert({
+        where: {
+          projectId_sellerId: {
+            projectId: project.id,
+            sellerId: credentials.sellerId,
+          },
+        },
+        create: {
+          projectId: project.id,
+          sellerId: credentials.sellerId,
+          marketplaceId: credentials.marketplaceId || 'ATVPDKIKX0DER',
+          region: credentials.region || 'us-east-1',
+          refreshToken: credentials.refreshToken,
+          accessToken: credentials.accessToken,
+          tokenExpiresAt: credentials.tokenExpiresAt,
+          isActive: true,
+        },
+        update: {
+          refreshToken: credentials.refreshToken,
+          accessToken: credentials.accessToken,
+          tokenExpiresAt: credentials.tokenExpiresAt,
+          isActive: true,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        integration: {
+          id: integration.id,
+          platform: 'amazon',
+          platformName: `Amazon ${integration.sellerId}`,
+          isActive: integration.isActive,
+          installedAt: integration.installedAt,
+          metadata: {
+            sellerId: integration.sellerId,
+            marketplaceId: integration.marketplaceId,
+            region: integration.region,
+          },
+        },
+      });
+    }
+
     return NextResponse.json(
-      {
-        error: 'Platform integration not implemented',
-        message: `Creating ${platform} integrations requires adding ${platform}Integration model to schema`,
-      },
-      { status: 501 } // Not Implemented
+      { error: `Platform '${platform}' not supported for integration creation` },
+      { status: 400 }
     );
   } catch (error) {
     console.error('Error connecting to platform:', error);
@@ -233,8 +322,11 @@ export const POST = withSecurity(async function POST(
  */
 export const DELETE = withSecurity(async function DELETE(
   request: NextRequest,
-  context: RouteParams
+  context?: RouteParams
 ) {
+  if (!context) {
+    return NextResponse.json({ error: 'Missing route context' }, { status: 500 });
+  }
   try {
     const db = prisma()
     const { platform } = await context.params;
@@ -260,22 +352,55 @@ export const DELETE = withSecurity(async function DELETE(
       );
     }
 
-    // Update integration status
-    await db.platformIntegration.updateMany({
-      where: {
-        projectId: project.id,
-        platform,
-      },
-      data: {
-        status: 'DISCONNECTED',
-        isActive: false,
-      },
-    });
+    // Deactivate platform-specific integration (soft delete)
+    if (platform === 'shopify') {
+      const result = await db.shopifyIntegration.updateMany({
+        where: {
+          projectId: project.id,
+        },
+        data: {
+          isActive: false,
+        },
+      });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Platform disconnected successfully',
-    });
+      if (result.count === 0) {
+        return NextResponse.json(
+          { error: 'No Shopify integration found for this project' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Shopify integration disconnected successfully',
+      });
+    } else if (platform === 'amazon') {
+      const result = await db.amazonIntegration.updateMany({
+        where: {
+          projectId: project.id,
+        },
+        data: {
+          isActive: false,
+        },
+      });
+
+      if (result.count === 0) {
+        return NextResponse.json(
+          { error: 'No Amazon integration found for this project' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Amazon integration disconnected successfully',
+      });
+    }
+
+    return NextResponse.json(
+      { error: `Platform '${platform}' not supported for disconnection` },
+      { status: 400 }
+    );
   } catch (error) {
     console.error('Error disconnecting platform:', error);
     return NextResponse.json(
