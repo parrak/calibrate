@@ -37,10 +37,16 @@ export async function GET() {
     }
 
     // Test 3: Check environment
+    const dbUrl = process.env.DATABASE_URL
     const envInfo = {
       NODE_ENV: process.env.NODE_ENV,
-      DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT_SET',
-      hasPrismaClient: typeof (globalThis as any).prisma !== 'undefined'
+      DATABASE_URL: dbUrl ? 'SET' : 'NOT_SET',
+      DATABASE_URL_PREFIX: dbUrl ? dbUrl.substring(0, 15) : 'N/A',
+      DATABASE_URL_LENGTH: dbUrl ? dbUrl.length : 0,
+      hasPrismaClient: typeof (globalThis as any).prisma !== 'undefined',
+      allEnvKeys: Object.keys(process.env).filter(k =>
+        k.includes('DATABASE') || k.includes('PRISMA') || k === 'NODE_ENV' || k === 'PORT'
+      )
     }
 
     return NextResponse.json({
