@@ -159,14 +159,14 @@ export class SecurityHeadersManager {
 /**
  * Middleware to apply security headers
  */
-export function withSecurityHeaders(
-  handler: (req: NextRequest) => Promise<NextResponse>,
+export function withSecurityHeaders<TCtx = any>(
+  handler: (req: NextRequest, ctx?: TCtx) => Promise<NextResponse>,
   config?: SecurityHeadersConfig
 ) {
   const securityManager = SecurityHeadersManager.getInstance(config)
 
-  return async (req: NextRequest): Promise<NextResponse> => {
-    const response = await handler(req)
+  return async (req: NextRequest, ctx?: TCtx): Promise<NextResponse> => {
+    const response = await handler(req, ctx)
     return securityManager.applySecurityHeaders(response)
   }
 }
@@ -321,13 +321,13 @@ export class CORSManager {
 /**
  * Middleware to apply CORS
  */
-export function withCORS(
-  handler: (req: NextRequest) => Promise<NextResponse>,
+export function withCORS<TCtx = any>(
+  handler: (req: NextRequest, ctx?: TCtx) => Promise<NextResponse>,
   config?: CORSConfig
 ) {
   const corsManager = CORSManager.getInstance(config)
 
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (req: NextRequest, ctx?: TCtx): Promise<NextResponse> => {
     // Handle preflight requests
     const preflightResponse = corsManager.handlePreflight(req)
     if (preflightResponse) {
@@ -335,7 +335,7 @@ export function withCORS(
     }
 
     // Process the request
-    const response = await handler(req)
+    const response = await handler(req, ctx)
     
     // Apply CORS headers
     return corsManager.applyCORSHeaders(req, response)
@@ -345,15 +345,15 @@ export function withCORS(
 /**
  * Combined security middleware
  */
-export function withSecurity(
-  handler: (req: NextRequest) => Promise<NextResponse>,
+export function withSecurity<TCtx = any>(
+  handler: (req: NextRequest, ctx?: TCtx) => Promise<NextResponse>,
   options?: {
     securityHeaders?: SecurityHeadersConfig
     cors?: CORSConfig
   }
 ) {
-  const securityHandler = withSecurityHeaders(handler, options?.securityHeaders)
-  return withCORS(securityHandler, options?.cors)
+  const securityHandler = withSecurityHeaders<TCtx>(handler, options?.securityHeaders)
+  return withCORS<TCtx>(securityHandler, options?.cors)
 }
 
 // Export singleton instances
