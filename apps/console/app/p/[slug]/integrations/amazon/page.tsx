@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { platformsApi } from '@/lib/api-client'
 import Link from 'next/link'
 import { Notice } from '@/components/Notice'
+import { useToast } from '@/components/Toast'
 import { ConfirmModal } from '@/components/ConfirmModal'
 
 interface AmazonIntegration {
@@ -30,6 +31,7 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   const [connecting, setConnecting] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     fetchIntegration()
@@ -37,7 +39,7 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
     try {
       const q = new URLSearchParams(window.location.search)
       if (q.get('connected') === '1') {
-        setNotice('Amazon account connected successfully.')
+        toast.success('Amazon account connected successfully.')
         // Clean up query param in URL without reloading
         const url = new URL(window.location.href)
         url.searchParams.delete('connected')
@@ -86,7 +88,7 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
       if (!installUrl) throw new Error('Install URL not returned from API')
       window.location.href = installUrl
     } catch (e: any) {
-      setError(e?.message || 'Failed to start Amazon connection')
+      toast.error(e?.message || 'Failed to start Amazon connection')
       setConnecting(false)
     }
   }
@@ -171,10 +173,10 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
                   try {
                     setShowConfirm(false)
                     await fetch(`${process.env.NEXT_PUBLIC_API_BASE || ''}/api/platforms/amazon?project=${encodeURIComponent(params.slug)}`, { method: 'DELETE' })
-                    setNotice('Amazon integration disconnected.')
+                    toast.success('Amazon integration disconnected.')
                     fetchIntegration()
                   } catch (e: any) {
-                    setError(e?.message || 'Failed to disconnect Amazon')
+                    toast.error(e?.message || 'Failed to disconnect Amazon')
                   }
                 }}
               />

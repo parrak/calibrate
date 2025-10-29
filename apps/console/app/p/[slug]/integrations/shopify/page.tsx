@@ -11,6 +11,7 @@ import { ShopifyAuthButton } from './components/ShopifyAuthButton';
 import { ShopifyStatus } from './components/ShopifyStatus';
 import { ShopifySyncControls } from './components/ShopifySyncControls';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { useToast } from '@/components/Toast';
 
 interface ShopifyIntegration {
   id: string;
@@ -33,6 +34,7 @@ export default function ShopifyIntegrationPage({ params }: ShopifyIntegrationPag
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     fetchIntegration();
@@ -40,7 +42,7 @@ export default function ShopifyIntegrationPage({ params }: ShopifyIntegrationPag
     try {
       const q = new URLSearchParams(window.location.search)
       if (q.get('success') === 'true') {
-        setNotice('Shopify store connected successfully.')
+        toast.success('Shopify store connected successfully.')
         const url = new URL(window.location.href)
         url.searchParams.delete('success')
         window.history.replaceState({}, '', url.toString())
@@ -48,7 +50,7 @@ export default function ShopifyIntegrationPage({ params }: ShopifyIntegrationPag
       }
       const err = q.get('error')
       if (err) {
-        setError(err)
+        toast.error(err)
         const url = new URL(window.location.href)
         url.searchParams.delete('error')
         window.history.replaceState({}, '', url.toString())
@@ -163,10 +165,10 @@ export default function ShopifyIntegrationPage({ params }: ShopifyIntegrationPag
                 try {
                   setShowConfirm(false)
                   await fetch(`${process.env.NEXT_PUBLIC_API_BASE || ''}/api/platforms/shopify?project=${encodeURIComponent(params.slug)}`, { method: 'DELETE' })
-                  setNotice('Shopify integration disconnected.')
+                  toast.success('Shopify integration disconnected.')
                   fetchIntegration()
                 } catch (e: any) {
-                  setError(e?.message || 'Failed to disconnect Shopify')
+                  toast.error(e?.message || 'Failed to disconnect Shopify')
                 }
               }}
             />
