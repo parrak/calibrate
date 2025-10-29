@@ -14,3 +14,6 @@ Scope: `calibrate/scripts` — operational scripts for local, staging, and docs.
 - Do not edit scripts unless the user task requires it. These are operationally sensitive.
 - If you must change a script, keep behavior backward compatible and document flags in the file header.
 
+## Status Broadcasts
+- Follow the hub guide: `../AGENTS.md#status-broadcasting`
+
