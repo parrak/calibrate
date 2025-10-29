@@ -19,7 +19,11 @@ echo "Creating .env file for Prisma..."
 cat > .env <<EOF
 DATABASE_URL="${DATABASE_URL}"
 EOF
-echo "DATABASE_URL written to .env: ${DATABASE_URL:+[YES - ${DATABASE_URL:0:20}...]}"
+if [ -n "$DATABASE_URL" ]; then
+  echo "DATABASE_URL written to .env: [YES - $(echo "$DATABASE_URL" | cut -c1-20)...]"
+else
+  echo "DATABASE_URL written to .env: [NOT SET]"
+fi
 
 # Log all environment variables (excluding system/shell vars)
 # This automatically shows any new Railway variables without code changes
@@ -32,7 +36,7 @@ env | grep -v '^_' | grep -v '^SHLVL' | grep -v '^PWD' | grep -v '^OLDPWD' | \
       *PASSWORD*|*SECRET*|*KEY*|*TOKEN*|DATABASE_URL|DATABASE_PUBLIC_URL)
         # Show prefix for DATABASE_URL, just [SET] for others
         if [ "$name" = "DATABASE_URL" ]; then
-          echo "  $name: [SET - ${value:0:20}...]"
+          echo "  $name: [SET - $(echo "$value" | cut -c1-20)...]"
         else
           echo "  $name: [SET]"
         fi
