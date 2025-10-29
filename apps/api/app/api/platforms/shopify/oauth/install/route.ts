@@ -28,7 +28,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
   }
 
   // Validate shop domain format
-  if (!shop.endsWith('.myshopify.com') && !shop.includes('.')) {
+  if (!shop.includes('.') || !shop.endsWith('.myshopify.com')) {
     return NextResponse.json(
       { error: 'Invalid shop domain. Must be in format: mystore.myshopify.com' },
       { status: 400 }

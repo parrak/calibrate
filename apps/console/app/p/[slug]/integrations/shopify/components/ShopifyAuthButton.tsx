@@ -27,7 +27,7 @@ export function ShopifyAuthButton({ projectSlug, onSuccess }: ShopifyAuthButtonP
     }
 
     // Validate shop domain format
-    if (!shopDomain.includes('.') && !shopDomain.endsWith('.myshopify.com')) {
+    if (!shopDomain.includes('.') || !shopDomain.endsWith('.myshopify.com')) {
       setError('Invalid format. Enter: mystore.myshopify.com');
       return;
     }

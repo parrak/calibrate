@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update sync status to in progress
-    await prisma().platformIntegration.update({
+    await prisma().shopifyIntegration.update({
       where: { id: integration.id },
       data: {
         syncStatus: 'SYNCING',
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Update integration status
-      await prisma().platformIntegration.update({
+      await prisma().shopifyIntegration.update({
         where: { id: integration.id },
         data: {
           lastSyncAt: new Date(),
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Update integration status
-      await prisma().platformIntegration.update({
+      await prisma().shopifyIntegration.update({
         where: { id: integration.id },
         data: {
           syncStatus: 'ERROR',

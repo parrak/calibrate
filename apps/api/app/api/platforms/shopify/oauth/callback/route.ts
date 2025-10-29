@@ -134,10 +134,11 @@ function verifyShopifyHMAC(
     .update(params)
     .digest('hex');
 
+  // Shopify OAuth HMAC is hex-encoded, not base64
   // Compare using timing-safe comparison
   return crypto.timingSafeEqual(
-    Buffer.from(hash),
-    Buffer.from(receivedHmac)
+    Buffer.from(hash, 'hex'),
+    Buffer.from(receivedHmac, 'hex')
   );
 }
 
