@@ -59,7 +59,17 @@
       "Bash(rm:*)",
       "Bash(pnpm --filter @calibr/api typecheck:*)",
       "Bash(pnpm exec tsc:*)",
-      "Bash(git rebase:*)"
+      "Bash(git rebase:*)",
+      "Bash(powershell -Command \"$response = Invoke-WebRequest -Uri ''https://api.calibr.lat/api/v1/catalog?project=demo'' -Headers @{''Origin''=''https://console-9pyiio15k-rakesh-paridas-projects.vercel.app''} -Method Get -UseBasicParsing; $response.Headers[''Access-Control-Allow-Origin'']\")",
+      "Bash(powershell -Command \"Invoke-RestMethod -Uri ''''https://api.calibr.lat/api/v1/catalog?project=demo'''' -Headers @{''''Origin''''=''''https://console-9pyiio15k-rakesh-paridas-projects.vercel.app''''} -Method Options\")",
+      "Bash(powershell -Command \"Invoke-RestMethod -Uri ''''https://api.calibr.lat/api/v1/catalog?project=demo'''' -Headers @{''''Origin''''=''''https://console-9pyiio15k-rakesh-paridas-projects.vercel.app''''} -Method Get\")",
+      "Bash(Select-String -Pattern \"Access-Control\")",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm vitest:*)",
+      "Bash(git log:*)",
+      "Bash(pnpm list:*)",
+      "Bash(ENCRYPTION_KEY=NtxoLQbx7XMqZqmqfN3Nla2DmY2vsCDmELzSNlE5N2Y= pnpm exec tsx:*)",
+      "Bash(ENCRYPTION_KEY=NtxoLQbx7XMqZqmqfN3Nla2DmY2vsCDmELzSNlE5N2Y= pnpm encrypt:credentials:dry:*)"
     ],
     "deny": [],
     "ask": []

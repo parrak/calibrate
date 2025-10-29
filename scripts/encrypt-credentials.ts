@@ -5,7 +5,11 @@
  * This script should be run ONCE after deploying the encryption middleware.
  *
  * Usage:
- *   ENCRYPTION_KEY=xxx pnpm tsx scripts/encrypt-credentials.ts
+ *   ENCRYPTION_KEY=xxx pnpm encrypt:credentials
+ *
+ * Or via Railway:
+ *   railway run pnpm encrypt:credentials:dry
+ *   railway run pnpm encrypt:credentials --verbose
  *
  * Safety:
  *   - Checks if credentials are already encrypted (skips if detected)

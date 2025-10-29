@@ -39,6 +39,9 @@ importers:
       supertest:
         specifier: ^6.3.0
         version: 6.3.4
+      tsx:
+        specifier: ^4.7.0
+        version: 4.20.6
       turbo:
         specifier: ^1.11.0
         version: 1.13.4

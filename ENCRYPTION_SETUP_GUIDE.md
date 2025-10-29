@@ -47,10 +47,10 @@ railway variables set ENCRYPTION_KEY=[paste-key-here]
 railway link
 
 # Dry run (no changes)
-railway run pnpm tsx scripts/encrypt-credentials.ts --dry-run --verbose
+railway run pnpm encrypt:credentials:dry
 
 # Review output, then run for real
-railway run pnpm tsx scripts/encrypt-credentials.ts --verbose
+railway run pnpm encrypt:credentials --verbose
 ```
 
 **Expected Output:**
@@ -98,7 +98,7 @@ DEV_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('base6
 echo "ENCRYPTION_KEY=$DEV_KEY" >> .env.local
 
 # Then migrate dev database with dev key
-ENCRYPTION_KEY=$DEV_KEY pnpm tsx scripts/encrypt-credentials.ts
+ENCRYPTION_KEY=$DEV_KEY pnpm encrypt:credentials
 ```
 
 **Recommendation:** Use separate dev key, migrate dev database separately.
@@ -115,7 +115,7 @@ STAGING_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('b
 railway variables set ENCRYPTION_KEY=$STAGING_KEY
 
 # Migrate staging database
-railway run pnpm tsx scripts/encrypt-credentials.ts
+railway run pnpm encrypt:credentials
 ```
 
 ---
