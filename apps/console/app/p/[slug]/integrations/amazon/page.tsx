@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { platformsApi } from '@/lib/api-client'
 import Link from 'next/link'
+import { Notice } from '@/components/Notice'
 
 interface AmazonIntegration {
   id: string
@@ -129,11 +130,8 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {notice && (
-          <div className="mb-4 rounded-md border border-green-200 bg-green-50 p-4 text-green-800">
-            {notice}
-          </div>
-        )}
+        {notice && <Notice type="success" message={notice} onClose={() => setNotice(null)} />}
+        {error && !loading && <Notice type="error" message={error} onClose={() => setError(null)} />}
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Amazon Integration</h1>
@@ -152,6 +150,22 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                   Connected
                 </span>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <button
+                  onClick={async () => {
+                    try {
+                      await fetch(`${process.env.NEXT_PUBLIC_API_BASE || ''}/api/platforms/amazon?project=${encodeURIComponent(params.slug)}`, { method: 'DELETE' })
+                      setNotice('Amazon integration disconnected.')
+                      fetchIntegration()
+                    } catch (e: any) {
+                      setError(e?.message || 'Failed to disconnect Amazon')
+                    }
+                  }}
+                  className="text-sm px-3 py-1.5 rounded-md border border-red-200 text-red-700 hover:bg-red-50"
+                >
+                  Disconnect
+                </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
