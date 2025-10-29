@@ -86,12 +86,13 @@ export const OPTIONS = withSecurity(async (req: NextRequest) => {
 
 ## Agent Status & Updates
 
-### Current Status (Oct 28, 2025)
+### Current Status (Oct 28, 2025 - Updated)
 - **Production Deployment**: ✅ RESOLVED - Railway deployment fully operational after critical fixes
 - **Platform Routes**: ✅ Working - All 11 dynamic route handlers fixed for Next.js 15
-- **Database Schema**: ✅ Updated - AmazonIntegration model added, migrations applied
+- **Database Schema**: ✅ Updated - AmazonIntegration + ShopifyIntegration models added, migrations applied
 - **Prisma Client**: ✅ Operational - DATABASE_URL properly configured, all models accessible
 - **API Stability**: ✅ Stable - No more undefined errors, 200 responses on all platform endpoints
+- **Integration Creation**: ✅ COMPLETE - POST/DELETE endpoints fully functional for both platforms
 
 ### Recent Crisis Resolution (Oct 28, 2025) - Agent C Week 2
 **Problem:** `TypeError: Cannot read properties of undefined (reading 'findUnique')` on all Railway deployments
@@ -116,9 +117,24 @@ export const OPTIONS = withSecurity(async (req: NextRequest) => {
 - **Build Issues**: Resolved JSX syntax errors in `PlatformCard.tsx`
 - **Railway Deployment**: Fixed "Unexpected eof" build errors
 
+### Latest Update (Oct 28, 2025 - Agent C Priority 1 Complete)
+
+**Agent C completed POST/DELETE endpoints:**
+- ✅ POST /api/platforms/[platform] - Save integration credentials (commit 730cb91)
+- ✅ DELETE /api/platforms/[platform] - Deactivate integrations (commit 730cb91)
+- ✅ Platform-specific handling for Shopify and Amazon
+- ✅ Upsert pattern allows reconnecting
+- ✅ Connection tested before saving
+- ✅ TypeScript errors fixed
+
+**This unblocks:**
+- 🟢 **Agent A** - Can now complete Shopify OAuth callback (see [AGENT_A_IMMEDIATE_TASKS.md](AGENT_A_IMMEDIATE_TASKS.md))
+- 🟢 **Agent B** - Can now implement Amazon SP-API OAuth (see [AGENT_B_IMMEDIATE_TASKS.md](AGENT_B_IMMEDIATE_TASKS.md))
+
 ### For Other Agents
-- **Agent A (Shopify)**: ✅ No action needed - connector working correctly
-- **Agent B (Amazon)**: ✅ No action needed - pricing feed functional
+- **Agent A (Shopify)**: 🟢 READY TO START - Complete OAuth flow using POST endpoint (estimated 4-6 hours)
+- **Agent B (Amazon)**: 🟢 READY TO START - Implement SP-API OAuth using POST endpoint (estimated 6-8 hours)
+- **Agent C (Security)**: ⏸️ NEXT - Implement credential encryption (Priority 4)
 - **Agent C (Platform)**: ✅ Handoff complete - all platform infrastructure stable
 
 ### Documentation
