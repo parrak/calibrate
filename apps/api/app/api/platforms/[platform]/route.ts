@@ -31,8 +31,12 @@ export const GET = withSecurity(async function GET(
 ) {
   try {
     const db = prisma()
+    if (!db) {
+      console.error('[platform GET] Prisma client is undefined')
+      return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
+    }
     if (!(db as any)?.project) {
-      console.error('[platform GET] Prisma client missing model accessors')
+      console.error('[platform GET] Prisma client missing model accessors', { hasDb: !!db, dbKeys: Object.keys(db || {}) })
       return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
     }
     const { platform } = await context.params;
