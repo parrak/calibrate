@@ -1,25 +1,25 @@
 Agents Collaboration Protocol
 
-This folder provides a lightweight, file‑backed protocol for coordinating multiple AI coding agents (e.g., Codex CLI, Claude, Cursor) working in this repo.
+This folder provides a lightweight, file-backed protocol for coordinating multiple AI coding agents (e.g., Codex CLI, Claude, Cursor) working in this repo.
 
-Why files? All agents can read/write the repo. JSONL append‑only logs are simple, merge‑resistant, and easy to parse.
+Why files? All agents can read/write the repo. JSONL append-only logs are simple, merge-resistant, and easy to parse.
 
 Folders
 - tasks/: inbox and tracking for work items
-- events/: append‑only activity logs per agent per day
-- locks/: optional per‑task lock files
-- plans/: short, human‑readable plans per agent
+- events/: append-only activity logs per agent per day
+- locks/: optional per-task lock files
+- plans/: short, human-readable plans per agent
 - context/: shared notes and summaries
 
 Files
-- tasks/inbox.jsonl: one JSON per line — unclaimed tasks
-- tasks/done.jsonl: one JSON per line — completed tasks
-- tasks/in_progress/: <id>.json — exactly one owner working a task
-- events/YYYYMMDD/<agent>.jsonl: one JSON per line — events
+- tasks/inbox.jsonl: one JSON per line - unclaimed tasks
+- tasks/done.jsonl: one JSON per line - completed tasks
+- tasks/in_progress/: <id>.json - exactly one owner working a task
+- events/YYYYMMDD/<agent>.jsonl: one JSON per line - events
 - locks/<task-id>.lock: JSON with owner and since timestamp
 
 Task object (JSON)
-- id: string (ULID or timestamp‑id)
+- id: string (ULID or timestamp-id)
 - title: short summary
 - status: "inbox" | "claimed" | "blocked" | "done"
 - owner: "codex" | "claude" | "cursor" | null
@@ -27,7 +27,7 @@ Task object (JSON)
 - context_refs: array of file paths with optional line numbers (e.g., "apps/api/app/api/widgets/route.ts:1")
 - inputs: arbitrary notes and constraints (object)
 - outputs: results, file refs changed, commit/pr ids (array or object)
-- next_steps: array of follow‑up suggestions (objects with title, refs)
+- next_steps: array of follow-up suggestions (objects with title, refs)
 - created_at, updated_at: ISO strings
 
 Event object (JSON)
@@ -39,14 +39,14 @@ Event object (JSON)
 - ts: ISO timestamp
 
 Conventions
-- Append‑only writes for JSONL files (inbox, done, events).
-- For in‑progress, use one JSON file per task in tasks/in_progress/.
+- Append-only writes for JSONL files (inbox, done, events).
+- For in-progress, use one JSON file per task in tasks/in_progress/.
 - Acquire a task by creating a lock file at locks/<id>.lock; release on completion or when returning to inbox.
 - Atomic writes: write to a temp file then rename.
 - Always include precise file references (path:line) in tasks and events when possible.
 
 CLI helper
-- See bin/agents-cli.mjs for simple operations: list, claim, handoff, complete, log‑event.
+- See bin/agents-cli.mjs for simple operations: list, claim, handoff, complete, log-event.
 
 Example: add a task
   node agents/bin/agents-cli.mjs new-task \

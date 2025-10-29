@@ -5,7 +5,7 @@ Purpose
 
 Core Channels
 - Daily log (required): PHASE3_DAILY_LOG.md
-  - Format: One dated section per day, per agent. Keep it concise (what changed, what’s next, blockers).
+  - Format: One dated section per day, per agent. Keep it concise (what changed, what's next, blockers).
   - Handoffs: Add a short Handoff section with clear acceptance criteria.
 - GitHub issues (required for work items):
   - Use project-specific templates (e.g., Agent C Handoff). Title with prefix [Agent X].
@@ -36,7 +36,7 @@ Configuration & Env Changes
 Testing & Validation
 - Unit tests: run affected workspaces with pnpm --filter <pkg> test:run.
 - Smoke validation: list endpoints you hit (URL + expected status) in PR body.
-- Don’t merge with red tests.
+- Don't merge with red tests.
 
 Deployment Rules
 - UI (site, console, docs): Vercel
@@ -44,7 +44,7 @@ Deployment Rules
 - Never change hosting split without explicit approval; document deploy steps in apps/<app>/DEPLOYMENT.md or DEPLOYMENT_STATUS.md.
 
 Decision Logging
-- Non-trivial decisions → add a short entry in PHASE3_DAILY_LOG.md and reference from the PR (what/why/options).
+- Non-trivial decisions - add a short entry in PHASE3_DAILY_LOG.md and reference from the PR (what/why/options).
 
 How to Start/Stop Work
 1) Create/assign a GitHub issue using the correct template & labels.
