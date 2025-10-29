@@ -49,9 +49,22 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   }
 
   const handleConnect = async () => {
-    // For now, just redirect to a connection form
-    // This will be implemented with actual Amazon connection flow
-    window.location.href = `/p/${params.slug}/integrations/amazon/connect`
+    try {
+      setConnecting(true)
+      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const res = await fetch(`${base}/api/platforms/amazon/oauth/install?project=${encodeURIComponent(params.slug)}`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error || `Failed to start Amazon OAuth (${res.status})`)
+      }
+      const data = await res.json()
+      const installUrl = data?.installUrl as string | undefined
+      if (!installUrl) throw new Error('Install URL not returned from API')
+      window.location.href = installUrl
+    } catch (e: any) {
+      setError(e?.message || 'Failed to start Amazon connection')
+      setConnecting(false)
+    }
   }
 
   if (loading) {
