@@ -76,6 +76,35 @@ cp apps/api/.env.local.example apps/api/.env.local
 cp apps/console/.env.local.example apps/console/.env.local
 
 # Update DATABASE_URL in all .env files
+
+## OAuth & Platform Integration Env Vars
+
+Add these to `apps/api/.env.local` (and Railway for production):
+
+Shopify
+- `SHOPIFY_API_KEY=...`
+- `SHOPIFY_API_SECRET=...`
+- `SHOPIFY_SCOPES=read_products,write_products,read_orders,write_orders` (adjust as needed)
+- `SHOPIFY_WEBHOOK_SECRET=...`
+
+Amazon SP-API (LWA)
+- `AMAZON_SP_APP_ID=amzn1.sp.solution.xxxxx` (Seller Central App ID)
+- `AMAZON_LWA_CLIENT_ID=amzn1.application-oa2-client.xxxxx`
+- `AMAZON_LWA_CLIENT_SECRET=amzn1.oa2-cs.xxxxx`
+
+Console/URLs
+- `NEXT_PUBLIC_API_BASE=https://api.calibr.lat` (or local API URL)
+- `NEXT_PUBLIC_CONSOLE_URL=https://console.calibr.lat` (for redirects)
+
+## OAuth Flows
+
+Shopify
+- Install URL: `GET /api/integrations/shopify/oauth/install?project_id=<slug>&shop=<shopDomain>`
+- Callback: `GET /api/integrations/shopify/oauth/callback?...` — exchanges code, upserts integration, redirects back to Console.
+
+Amazon (LWA)
+- Install URL: `GET /api/platforms/amazon/oauth/install?project=<slug>` — returns Seller Central consent URL.
+- Callback: `GET /api/platforms/amazon/oauth/callback?...` — exchanges code via LWA, upserts integration, redirects back to Console.
 ```
 
 ### 4. Install Dependencies

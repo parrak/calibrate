@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { platformsApi } from '@/lib/api-client'
 import Link from 'next/link'
 import { Notice } from '@/components/Notice'
+import { ConfirmModal } from '@/components/ConfirmModal'
 
 interface AmazonIntegration {
   id: string
@@ -28,6 +29,7 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   const [error, setError] = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   useEffect(() => {
     fetchIntegration()
@@ -153,20 +155,29 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
               </div>
               <div className="flex items-center gap-3 mb-4">
                 <button
-                  onClick={async () => {
-                    try {
-                      await fetch(`${process.env.NEXT_PUBLIC_API_BASE || ''}/api/platforms/amazon?project=${encodeURIComponent(params.slug)}`, { method: 'DELETE' })
-                      setNotice('Amazon integration disconnected.')
-                      fetchIntegration()
-                    } catch (e: any) {
-                      setError(e?.message || 'Failed to disconnect Amazon')
-                    }
-                  }}
+                  onClick={() => setShowConfirm(true)}
                   className="text-sm px-3 py-1.5 rounded-md border border-red-200 text-red-700 hover:bg-red-50"
                 >
                   Disconnect
                 </button>
               </div>
+              <ConfirmModal
+                open={showConfirm}
+                title="Disconnect Amazon?"
+                message="This will disable syncing and pricing updates for Amazon until reconnected."
+                confirmText="Disconnect"
+                onCancel={() => setShowConfirm(false)}
+                onConfirm={async () => {
+                  try {
+                    setShowConfirm(false)
+                    await fetch(`${process.env.NEXT_PUBLIC_API_BASE || ''}/api/platforms/amazon?project=${encodeURIComponent(params.slug)}`, { method: 'DELETE' })
+                    setNotice('Amazon integration disconnected.')
+                    fetchIntegration()
+                  } catch (e: any) {
+                    setError(e?.message || 'Failed to disconnect Amazon')
+                  }
+                }}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
