@@ -30,7 +30,17 @@ export const GET = withSecurity(async function GET(
   context: RouteParams
 ) {
   try {
-    const db = prisma()
+    let db;
+    try {
+      db = prisma()
+    } catch (prismaError) {
+      console.error('[platform GET] Failed to get Prisma client:', prismaError)
+      return NextResponse.json({
+        error: 'Database initialization failed',
+        details: prismaError instanceof Error ? prismaError.message : 'Unknown error'
+      }, { status: 500 })
+    }
+
     if (!db) {
       console.error('[platform GET] Prisma client is undefined')
       return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
