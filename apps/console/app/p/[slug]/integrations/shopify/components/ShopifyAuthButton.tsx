@@ -47,7 +47,6 @@ export function ShopifyAuthButton({ projectSlug, onSuccess }: ShopifyAuthButtonP
       }
 
       const { installUrl } = await response.json();
-
       // Redirect to Shopify OAuth consent screen
       window.location.href = installUrl;
     } catch (err) {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { platformsApi } from '@/lib/api-client'
 import Link from 'next/link'
+import { Notice } from '@/components/Notice'
 
 interface AmazonIntegration {
   id: string
@@ -26,9 +27,30 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
     fetchIntegration()
+    // Detect callback success or error query params
+    try {
+      const q = new URLSearchParams(window.location.search)
+      if (q.get('connected') === '1') {
+        setNotice('Amazon account connected successfully.')
+        // Clean up query param in URL without reloading
+        const url = new URL(window.location.href)
+        url.searchParams.delete('connected')
+        window.history.replaceState({}, '', url.toString())
+        // Refresh status to reflect new connection
+        fetchIntegration()
+      }
+      const err = q.get('error')
+      if (err) {
+        setError(err)
+        const url = new URL(window.location.href)
+        url.searchParams.delete('error')
+        window.history.replaceState({}, '', url.toString())
+      }
+    } catch {}
   }, [params.slug])
 
   const fetchIntegration = async () => {
@@ -49,9 +71,22 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   }
 
   const handleConnect = async () => {
-    // For now, just redirect to a connection form
-    // This will be implemented with actual Amazon connection flow
-    window.location.href = `/p/${params.slug}/integrations/amazon/connect`
+    try {
+      setConnecting(true)
+      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const res = await fetch(`${base}/api/platforms/amazon/oauth/install?project=${encodeURIComponent(params.slug)}`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error || `Failed to start Amazon OAuth (${res.status})`)
+      }
+      const data = await res.json()
+      const installUrl = data?.installUrl as string | undefined
+      if (!installUrl) throw new Error('Install URL not returned from API')
+      window.location.href = installUrl
+    } catch (e: any) {
+      setError(e?.message || 'Failed to start Amazon connection')
+      setConnecting(false)
+    }
   }
 
   if (loading) {
@@ -95,6 +130,8 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {notice && <Notice type="success" message={notice} onClose={() => setNotice(null)} />}
+        {error && !loading && <Notice type="error" message={error} onClose={() => setError(null)} />}
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Amazon Integration</h1>
@@ -113,6 +150,22 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                   Connected
                 </span>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <button
+                  onClick={async () => {
+                    try {
+                      await fetch(`${process.env.NEXT_PUBLIC_API_BASE || ''}/api/platforms/amazon?project=${encodeURIComponent(params.slug)}`, { method: 'DELETE' })
+                      setNotice('Amazon integration disconnected.')
+                      fetchIntegration()
+                    } catch (e: any) {
+                      setError(e?.message || 'Failed to disconnect Amazon')
+                    }
+                  }}
+                  className="text-sm px-3 py-1.5 rounded-md border border-red-200 text-red-700 hover:bg-red-50"
+                >
+                  Disconnect
+                </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

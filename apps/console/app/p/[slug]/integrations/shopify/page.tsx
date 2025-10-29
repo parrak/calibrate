@@ -1,8 +1,4 @@
-/**
- * Shopify Integration Page
- * Main page for managing Shopify integration
- */
-
+// Shopify Integration Page - Server Component
 import { ShopifyAuthButton } from './components/ShopifyAuthButton';
 import { ShopifyStatus } from './components/ShopifyStatus';
 
@@ -30,16 +26,12 @@ export default async function ShopifyIntegrationPage({
         Connect your Shopify store to sync products and manage pricing.
       </p>
 
-      {/* Success message */}
       {searchParams.success && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-          <p className="text-green-800 font-medium">
-            ✓ Successfully connected to Shopify!
-          </p>
+          <p className="text-green-800 font-medium">✓ Successfully connected to Shopify!</p>
         </div>
       )}
 
-      {/* Error message */}
       {searchParams.error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <p className="text-red-800 font-medium">
