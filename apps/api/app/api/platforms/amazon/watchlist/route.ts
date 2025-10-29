@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { withSecurity } from '@/lib/security-headers'
 
 export const runtime = 'nodejs'
 
 // GET /api/platforms/amazon/watchlist?q=&limit=&page=
-export async function GET(req: NextRequest) {
+export const GET = withSecurity(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url)
     const q = searchParams.get('q') || undefined
@@ -23,10 +24,10 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return NextResponse.json({ error: 'Failed to load watchlist', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
-}
+})
 
 // POST /api/platforms/amazon/watchlist { asin, marketplaceId }
-export async function POST(req: NextRequest) {
+export const POST = withSecurity(async (req: NextRequest) => {
   try {
     const body = await req.json().catch(() => ({}))
     const asin = body?.asin as string | undefined
@@ -42,10 +43,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update watchlist', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
-}
+})
 
 // DELETE /api/platforms/amazon/watchlist?asin=&marketplaceId=
-export async function DELETE(req: NextRequest) {
+export const DELETE = withSecurity(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url)
     const asin = searchParams.get('asin')
@@ -65,5 +66,7 @@ export async function DELETE(req: NextRequest) {
   } catch (error) {
     return NextResponse.json({ error: 'Failed to remove from watchlist', message: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
-}
+})
+
+export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
 

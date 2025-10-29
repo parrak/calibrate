@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ConnectorRegistry } from '@calibr/platform-connector'
 import { pollFeedUntilDone, downloadAndParseFeedResult } from '@calibr/amazon-connector'
 import '@/lib/platforms/register'
+import { withSecurity } from '@/lib/security-headers'
 
 export const runtime = 'nodejs'
 
-export async function GET(request: NextRequest) {
+export const GET = withSecurity(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url)
     const feedId = searchParams.get('feed') || searchParams.get('id')
@@ -25,5 +26,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || String(error) }, { status: 500 })
   }
-}
+})
+
+export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
 
