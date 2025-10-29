@@ -54,6 +54,7 @@ model Project {
   competitors Competitor[]
   competitorRules CompetitorRule[]
   shopifyIntegrations ShopifyIntegration[]
+  amazonIntegrations AmazonIntegration[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -360,4 +361,26 @@ model ShopifyWebhookSubscription {
 
   @@index([integrationId])
   @@index([webhookId])
+}
+
+model AmazonIntegration {
+  id              String   @id @default(cuid())
+  projectId       String
+  sellerId        String
+  marketplaceId   String   @default("ATVPDKIKX0DER") // US marketplace by default
+  region          String   @default("us-east-1")
+  refreshToken    String   @db.Text
+  accessToken     String?  @db.Text
+  tokenExpiresAt  DateTime?
+  installedAt     DateTime @default(now())
+  isActive        Boolean  @default(true)
+  lastSyncAt      DateTime?
+  syncStatus      String?  // 'success', 'error', 'in_progress'
+  syncError       String?  @db.Text
+
+  project         Project  @relation(fields: [projectId], references: [id])
+
+  @@unique([projectId, sellerId])
+  @@index([projectId])
+  @@index([sellerId])
 }
