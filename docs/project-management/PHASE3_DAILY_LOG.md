@@ -243,3 +243,91 @@ Next:
 
 Refs: `AGENT_C_RAILWAY_RUNTIME_HANDOFF.md:1`, `apps/api/app/api/platforms/[platform]/route.ts:1`, `Dockerfile:1`
 
+---
+
+## Day 4 - October 31, 2025
+
+### Workstream A: Shopify OAuth Flow & CORS Fixes
+Agent: Agent A
+Status: ✅ Complete - All Critical Issues Resolved
+
+Today's Progress:
+- [x] Fixed Shopify OAuth install route: Resolved 405 error caused by const variable reassignment bug
+- [x] Fixed Shopify OAuth callback: Added missing `platformName` parameter in POST request
+- [x] Fixed CORS issues: Added `withSecurity` middleware and OPTIONS handler to sync endpoint
+- [x] Fixed ShopifyStatus component: Made `onUpdate` prop optional, added local state management
+- [x] Fixed ShopifyConnector initialization: Properly pass `shopDomain` and `accessToken` to client
+- [x] Fixed ShopifyClient: Use credentials-based shop domain and access token (not API key)
+- [x] Fixed console auth: Corrected `getServerSession` import for NextAuth v4 compatibility
+- [x] Added DisconnectButton component for Shopify integration UI
+- [x] Improved error handling in sync endpoint with proper project slug resolution
+- [x] Added test scripts for OAuth flow validation (`test-oauth-local.ps1`)
+- [x] Organized documentation into structured directories (`docs/learnings/`, `docs/misc/`, `docs/project-management/`)
+
+Completed:
+- ✅ Shopify OAuth install endpoint (no more 405 errors)
+- ✅ Shopify OAuth callback flow (saves integration correctly)
+- ✅ CORS support for cross-origin requests (console → API)
+- ✅ Shopify connection testing (test_connection action works)
+- ✅ UI components for Shopify integration management
+- ✅ Error handling and status updates in UI
+- ✅ Database migrations applied (ShopifyIntegration table exists)
+
+Key Files Modified:
+- `apps/api/app/api/platforms/shopify/oauth/install/route.ts` - Fixed const reassignment bug
+- `apps/api/app/api/platforms/shopify/oauth/callback/route.ts` - Added platformName to POST
+- `apps/api/app/api/integrations/shopify/sync/route.ts` - Added CORS, projectSlug support
+- `apps/api/app/api/platforms/[platform]/route.ts` - Fixed connector initialization
+- `apps/console/app/p/[slug]/integrations/shopify/components/ShopifyStatus.tsx` - Fixed state management
+- `apps/console/app/p/[slug]/integrations/shopify/components/ShopifyAuthButton.tsx` - Fixed imports
+- `apps/console/app/p/[slug]/integrations/shopify/components/DisconnectButton.tsx` - New component
+- `packages/shopify-connector/src/ShopifyConnector.ts` - Fixed initialization
+- `packages/shopify-connector/src/client.ts` - Use credentials for shop domain/token
+
+Key Files Created:
+- `apps/console/app/p/[slug]/integrations/shopify/components/DisconnectButton.tsx`
+- `apps/api/tests/platforms/shopify/oauth.install.test.ts`
+- `apps/api/tests/platforms/shopify/oauth.callback.test.ts`
+- `test-oauth-local.ps1`
+- `test-shopify-oauth-e2e.ps1`
+- `docs/learnings/CORS_FIX_SUMMARY.md`
+- Multiple documentation files organized into docs/ structure
+
+Issues Resolved:
+1. **405 Method Not Allowed** - Fixed const variable reassignment preventing route from loading
+2. **Failed to save integration** - Fixed missing platformName parameter and connector initialization
+3. **Failed to connect to platform** - Fixed ShopifyClient using wrong shop domain and token
+4. **CORS errors** - Added withSecurity middleware and OPTIONS handler
+5. **onUpdate is not a function** - Made prop optional and added local state management
+6. **Connection test failed** - Fixed projectSlug resolution and sync endpoint configuration
+7. **getServerSession is not a function** - Fixed NextAuth v4 import compatibility
+
+Testing Results:
+- ✅ OAuth install endpoint: Returns 200 with correct authorization URL
+- ✅ OAuth callback: Successfully saves integration to database
+- ✅ CORS preflight (OPTIONS): Returns 200 with correct CORS headers
+- ✅ CORS POST request: Returns 200 with CORS headers when tested
+- ✅ Connection test: Successfully connects to Shopify API
+- ✅ Database: ShopifyIntegration table exists and migrations applied
+
+Blockers:
+- None - All critical issues resolved
+
+Questions for Other Agents:
+- @Agent C: CORS middleware is working correctly with `withSecurity`. Sync endpoint now properly handles cross-origin requests.
+- @All Agents: Documentation has been reorganized into `docs/learnings/`, `docs/misc/`, and `docs/project-management/` for better navigation.
+
+Next Session Plan:
+- Test end-to-end OAuth flow in production
+- Verify production deployment with Railway environment variables
+- Add additional error handling for edge cases
+- Consider adding webhook setup automation
+- Monitor production sync operations
+
+Refs: 
+- `apps/api/app/api/integrations/shopify/sync/route.ts:13`
+- `apps/api/app/api/platforms/shopify/oauth/install/route.ts:1`
+- `apps/api/app/api/platforms/shopify/oauth/callback/route.ts:1`
+- `apps/console/app/p/[slug]/integrations/shopify/components/ShopifyStatus.tsx:27`
+- `packages/shopify-connector/src/client.ts:1`
+
