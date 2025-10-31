@@ -11,7 +11,7 @@ export function encryptionMiddleware(): Prisma.Middleware {
   return async (params, next) => {
     // Encrypt before create/update
     if (
-      params.model === 'PlatformIntegration' &&
+      params.model === 'PlatformIntegration' as any &&
       (params.action === 'create' || params.action === 'update' || params.action === 'upsert')
     ) {
       if (params.action === 'upsert') {
@@ -34,7 +34,7 @@ export function encryptionMiddleware(): Prisma.Middleware {
     const result = await next(params)
 
     // Decrypt after find queries
-    if (params.model === 'PlatformIntegration' && result) {
+    if (params.model === 'PlatformIntegration' as any && result) {
       if (Array.isArray(result)) {
         // findMany
         result.forEach((item: any) => {

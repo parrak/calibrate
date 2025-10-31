@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "type": "module",
   "main": "index.js",
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
   "dependencies": {},
   "devDependencies": {
     "@vitest/ui": "^4.0.4",

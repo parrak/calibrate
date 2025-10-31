@@ -48,7 +48,7 @@ export class EncryptionService {
     encrypted += cipher.final('hex')
 
     // Get authentication tag
-    const authTag = cipher.getAuthTag()
+    const authTag = (cipher as any).getAuthTag()
 
     // Return format: iv:authTag:encrypted
     // This allows us to decrypt later and verify integrity
@@ -77,7 +77,7 @@ export class EncryptionService {
 
     // Create decipher
     const decipher = createDecipheriv(this.algorithm, this.key, iv)
-    decipher.setAuthTag(authTag)
+    ;(decipher as any).setAuthTag(authTag)
 
     // Decrypt
     let decrypted = decipher.update(encrypted, 'hex', 'utf8')

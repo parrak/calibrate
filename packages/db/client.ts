@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-// TODO: Re-enable encryption middleware after implementing encryptCredentials/decryptCredentials in @calibr/security
-// import { encryptionMiddleware } from './src/middleware/encryption'
+import { encryptionMiddleware } from './src/middleware/encryption'
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient
@@ -16,12 +15,12 @@ export function prisma(): PrismaClient {
       })
       console.log('[Prisma] PrismaClient initialized successfully')
 
-      // TODO: Re-enable encryption middleware
       // Apply encryption middleware once
-      // if (!globalForPrisma.middlewareApplied) {
-      //   globalForPrisma.prisma.$use(encryptionMiddleware())
-      //   globalForPrisma.middlewareApplied = true
-      // }
+      if (!globalForPrisma.middlewareApplied) {
+        globalForPrisma.prisma.$use(encryptionMiddleware())
+        globalForPrisma.middlewareApplied = true
+        console.log('[Prisma] Encryption middleware enabled')
+      }
     } catch (error) {
       console.error('[Prisma] Failed to initialize PrismaClient:', error)
       throw error
