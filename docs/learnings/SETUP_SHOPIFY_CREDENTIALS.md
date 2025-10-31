@@ -11,8 +11,8 @@
 3. Add the following variables:
 
 ```
-SHOPIFY_API_KEY=55d12ed6f0420a21cd0682db635a7fa1
-SHOPIFY_API_SECRET=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
+SHOPIFY_API_KEY=YOUR_SHOPIFY_API_KEY
+SHOPIFY_API_SECRET=YOUR_SHOPIFY_API_SECRET
 ```
 
 4. Click **Save** - Railway will automatically redeploy
@@ -20,8 +20,8 @@ SHOPIFY_API_SECRET=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
 ### Option 2: Railway CLI
 ```bash
 # Set environment variables
-railway variables set SHOPIFY_API_KEY=55d12ed6f0420a21cd0682db635a7fa1
-railway variables set SHOPIFY_API_SECRET=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
+railway variables set SHOPIFY_API_KEY=YOUR_SHOPIFY_API_KEY
+railway variables set SHOPIFY_API_SECRET=YOUR_SHOPIFY_API_SECRET
 
 # Verify they're set
 railway variables
@@ -33,8 +33,8 @@ railway variables
 
 ```bash
 # In apps/api/.env.local
-SHOPIFY_API_KEY=55d12ed6f0420a21cd0682db635a7fa1
-SHOPIFY_API_SECRET=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
+SHOPIFY_API_KEY=YOUR_SHOPIFY_API_KEY
+SHOPIFY_API_SECRET=YOUR_SHOPIFY_API_SECRET
 
 # Also ensure these are set:
 NEXT_PUBLIC_API_URL=http://localhost:3001

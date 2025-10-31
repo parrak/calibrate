@@ -20,7 +20,7 @@ Create `apps/api/.env.local`:
 ```bash
 # Shopify OAuth Credentials
 SHOPIFY_API_KEY=55d12ed6f0420a21cd0682db635a7fa1
-SHOPIFY_API_SECRET=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
+SHOPIFY_API_SECRET=YOUR_SHOPIFY_API_SECRET
 
 # API URLs (for OAuth redirects)
 NEXT_PUBLIC_API_URL=http://localhost:3000

@@ -59,7 +59,7 @@ Ensure these scopes are configured:
 
 #### API Credentials
 - **Client ID (API Key):** `55d12ed6f0420a21cd0682db635a7fa1`
-- **Client Secret (API Secret):** `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`
+- **Client Secret (API Secret):** `YOUR_SHOPIFY_API_SECRET` (found in Partners Dashboard)
 
 ### Step 4: Save and Test
 
