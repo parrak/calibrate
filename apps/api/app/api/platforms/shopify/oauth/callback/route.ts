@@ -75,8 +75,9 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
     }
 
     // Save integration using Agent C's POST endpoint
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
     const saveResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/platforms/shopify`,
+      `${apiBase}/api/platforms/shopify`,
       {
         method: 'POST',
         headers: {
@@ -104,8 +105,9 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
     console.log('Shopify integration saved successfully:', integration.integration.id);
 
     // Redirect to console success page
+    const consoleUrl = process.env.NEXT_PUBLIC_CONSOLE_URL || 'https://console.calibr.lat';
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_CONSOLE_URL}/p/${state}/integrations/shopify?success=true`
+      `${consoleUrl}/p/${state}/integrations/shopify?success=true`
     );
   } catch (error) {
     console.error('OAuth callback error:', error);
@@ -148,9 +150,10 @@ function verifyShopifyHMAC(
  * Redirect to console with error parameter
  */
 function redirectToConsoleWithError(projectSlug: string | null, error: string): NextResponse {
+  const consoleBase = process.env.NEXT_PUBLIC_CONSOLE_URL || 'https://console.calibr.lat';
   const consoleUrl = projectSlug
-    ? `${process.env.NEXT_PUBLIC_CONSOLE_URL}/p/${projectSlug}/integrations/shopify?error=${error}`
-    : `${process.env.NEXT_PUBLIC_CONSOLE_URL}/integrations?error=${error}`;
+    ? `${consoleBase}/p/${projectSlug}/integrations/shopify?error=${error}`
+    : `${consoleBase}/integrations?error=${error}`;
 
   return NextResponse.redirect(consoleUrl);
 }

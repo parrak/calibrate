@@ -53,7 +53,8 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
   ].join(',');
 
   const apiKey = process.env.SHOPIFY_API_KEY;
-  const redirectUri = `${process.env.NEXT_PUBLIC_API_URL}/api/platforms/shopify/oauth/callback`;
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
+  const redirectUri = `${apiBase}/api/platforms/shopify/oauth/callback`;
 
   if (!apiKey) {
     console.error('SHOPIFY_API_KEY not configured');
