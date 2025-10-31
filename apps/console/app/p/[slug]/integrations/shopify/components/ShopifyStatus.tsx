@@ -34,13 +34,11 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
   }, [integration]);
 
   const handleTestConnection = async () => {
-    // Use NEXT_PUBLIC_API_URL or fallback to NEXT_PUBLIC_API_BASE or localhost
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ||
-                   process.env.NEXT_PUBLIC_API_BASE ||
-                   'http://localhost:3000';
-
     try {
       setTesting(true);
+      
+      // Use NEXT_PUBLIC_API_BASE with fallback to production API
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
       
       if (!projectSlug) {
         throw new Error('Project slug is required for connection test');

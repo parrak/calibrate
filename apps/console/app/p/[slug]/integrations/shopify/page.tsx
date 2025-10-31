@@ -13,8 +13,9 @@ export default async function ShopifyIntegrationPage({
   const { slug } = await params;
 
   // Fetch current integration status
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/platforms/shopify?project=${slug}`,
+    `${apiBase}/api/platforms/shopify?project=${slug}`,
     { cache: 'no-store' }
   );
 

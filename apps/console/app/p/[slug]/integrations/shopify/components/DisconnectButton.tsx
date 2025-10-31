@@ -19,7 +19,7 @@ export function DisconnectButton({ projectSlug, onDisconnect }: DisconnectButton
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
       const response = await fetch(`${apiUrl}/api/platforms/shopify?project=${projectSlug}`, {
         method: 'DELETE',
       });

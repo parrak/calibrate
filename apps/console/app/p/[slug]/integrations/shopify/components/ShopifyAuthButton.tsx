@@ -43,7 +43,7 @@ export function ShopifyAuthButton({ projectSlug, onSuccess }: ShopifyAuthButtonP
 
     try {
       // Call install endpoint to get OAuth URL
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE || '';
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
       const response = await fetch(
         `${apiUrl}/api/platforms/shopify/oauth/install?project=${projectSlug}&shop=${encodeURIComponent(shopDomain)}`
       );
