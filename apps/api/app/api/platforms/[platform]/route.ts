@@ -97,9 +97,13 @@ export const GET = withSecurity(async function GET(
           id: shopifyIntegration.id,
           platform: 'shopify',
           platformName: shopifyIntegration.shopDomain,
+          shopDomain: shopifyIntegration.shopDomain,
           status: shopifyIntegration.isActive ? 'CONNECTED' : 'DISCONNECTED',
-          lastSyncAt: shopifyIntegration.lastSyncAt,
+          isActive: shopifyIntegration.isActive,
+          lastSyncAt: shopifyIntegration.lastSyncAt?.toISOString() || null,
           syncStatus: shopifyIntegration.syncStatus,
+          syncError: shopifyIntegration.syncError,
+          installedAt: shopifyIntegration.installedAt.toISOString(),
         };
         isConnected = shopifyIntegration.isActive;
       }
@@ -188,19 +192,41 @@ export const POST = withSecurity(async function POST(
       );
     }
 
+    // Build platform-specific connector config
+    let connectorConfig: any;
+    if (platform === 'shopify') {
+      connectorConfig = {
+        platform: 'shopify' as const,
+        apiKey: process.env.SHOPIFY_API_KEY!,
+        apiSecret: process.env.SHOPIFY_API_SECRET!,
+        scopes: (process.env.SHOPIFY_SCOPES || 'read_products,write_products').split(','),
+        webhookSecret: process.env.SHOPIFY_WEBHOOK_SECRET || '',
+        apiVersion: process.env.SHOPIFY_API_VERSION || '2024-10',
+      };
+    } else if (platform === 'amazon') {
+      // Add Amazon config here when needed
+      connectorConfig = {
+        platform: 'amazon' as const,
+        // Amazon config...
+      };
+    } else {
+      return NextResponse.json(
+        { error: `Platform '${platform}' not supported` },
+        { status: 400 }
+      );
+    }
+
     // Test connection with credentials
     const connector = await ConnectorRegistry.createConnector(
       platform as any,
-      {
-        platform: platform as any,
-        name: platformName,
-        isActive: true,
-      },
-      {
-        ...credentials,
-        platform,
-      }
+      connectorConfig
     );
+
+    // Initialize connector before testing connection
+    await connector.initialize({
+      ...credentials,
+      platform: platform as any,
+    });
 
     const isConnected = await connector.testConnection();
 

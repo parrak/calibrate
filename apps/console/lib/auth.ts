@@ -5,6 +5,7 @@
  */
 
 import NextAuth, { NextAuthOptions } from 'next-auth'
+import { getServerSession as getServerSessionHelper } from 'next-auth'
 import { prisma } from '@calibr/db'
 import CredentialsProvider from 'next-auth/providers/credentials'
 
@@ -114,6 +115,9 @@ const handler = NextAuth(authOptions)
 export default handler
 
 // Export helper to get session on server
-export { getServerSession } from 'next-auth'
+// In NextAuth v4, getServerSession is imported from next-auth/next
+export async function getServerSession(options?: NextAuthOptions) {
+  return await getServerSessionHelper(options || authOptions)
+}
 
-// For use in server components: getServerSession(authOptions)
+// For use in server components: await getServerSession()

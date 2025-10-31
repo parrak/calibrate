@@ -84,6 +84,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
         },
         body: JSON.stringify({
           projectSlug: state,
+          platformName: shop, // Required by POST endpoint
           credentials: {
             shopDomain: shop,
             accessToken: access_token,
@@ -134,8 +135,9 @@ function verifyShopifyHMAC(
     .update(params)
     .digest('hex');
 
-  // Shopify OAuth HMAC is hex-encoded, not base64
+  // Shopify OAuth HMAC is hex-encoded
   // Compare using timing-safe comparison
+  // Both hash and receivedHmac are already hex strings
   return crypto.timingSafeEqual(
     Buffer.from(hash, 'hex'),
     Buffer.from(receivedHmac, 'hex')

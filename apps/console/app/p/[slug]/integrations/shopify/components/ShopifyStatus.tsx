@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Badge, Button } from '@calibr/ui';
 
 interface ShopifyIntegration {
@@ -20,57 +20,100 @@ interface ShopifyIntegration {
 
 interface ShopifyStatusProps {
   integration: ShopifyIntegration;
-  onUpdate: (integration: ShopifyIntegration) => void;
+  projectSlug?: string;
+  onUpdate?: (integration: ShopifyIntegration) => void;
 }
 
-export function ShopifyStatus({ integration, onUpdate }: ShopifyStatusProps) {
+export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifyStatusProps) {
   const [testing, setTesting] = useState(false);
+  const [currentIntegration, setCurrentIntegration] = useState<ShopifyIntegration>(integration);
+
+  // Sync prop changes to local state
+  useEffect(() => {
+    setCurrentIntegration(integration);
+  }, [integration]);
 
   const handleTestConnection = async () => {
     try {
       setTesting(true);
       
-      const response = await fetch('/api/integrations/shopify/sync', {
+      // Use NEXT_PUBLIC_API_URL or fallback to NEXT_PUBLIC_API_BASE or localhost
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 
+                     process.env.NEXT_PUBLIC_API_BASE || 
+                     'http://localhost:3000';
+      
+      if (!projectSlug) {
+        throw new Error('Project slug is required for connection test');
+      }
+      
+      // Call the sync endpoint with projectSlug
+      // Include credentials for CORS if needed
+      const response = await fetch(`${apiUrl}/api/integrations/shopify/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include credentials for CORS
         body: JSON.stringify({
-          project_id: integration.id.split('_')[0], // Extract project ID from integration ID
+          projectSlug,
           action: 'test_connection',
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Connection test failed');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Connection test failed');
       }
 
       const data = await response.json();
       
-      // Update integration status
-      onUpdate({
-        ...integration,
-        syncStatus: data.result.connected ? 'success' : 'error',
-        syncError: data.result.connected ? null : 'Connection failed',
-      });
+      // Update local state
+      const updated = {
+        ...currentIntegration,
+        syncStatus: data.result?.connected ? 'success' : 'error',
+        syncError: data.result?.connected ? null : (data.result?.status?.message || 'Connection failed'),
+        lastSyncAt: new Date().toISOString(),
+      };
+      setCurrentIntegration(updated);
+      
+      // Call onUpdate callback if provided
+      if (onUpdate) {
+        onUpdate(updated);
+      }
 
     } catch (error) {
-      onUpdate({
-        ...integration,
+      console.error('Connection test error:', error);
+      console.error('API URL used:', apiUrl);
+      console.error('Project slug:', projectSlug);
+      
+      let errorMessage = 'Connection test failed';
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = `Network error: Cannot connect to API at ${apiUrl}. Make sure the API server is running.`;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      const updated = {
+        ...currentIntegration,
         syncStatus: 'error',
-        syncError: error instanceof Error ? error.message : 'Connection test failed',
-      });
+        syncError: errorMessage,
+      };
+      setCurrentIntegration(updated);
+      
+      if (onUpdate) {
+        onUpdate(updated);
+      }
     } finally {
       setTesting(false);
     }
   };
 
   const getStatusBadge = () => {
-    if (!integration.isActive) {
+    if (!currentIntegration.isActive) {
       return <Badge variant="danger">Inactive</Badge>;
     }
     
-    switch (integration.syncStatus) {
+    switch (currentIntegration.syncStatus) {
       case 'success':
         return <Badge variant="primary">Connected</Badge>;
       case 'error':
@@ -106,19 +149,19 @@ export function ShopifyStatus({ integration, onUpdate }: ShopifyStatusProps) {
             <div>
               <span className="text-sm text-gray-600 dark:text-gray-400">Store:</span>
               <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
-                {integration.shopDomain}
+                {currentIntegration.shopDomain}
               </span>
             </div>
             <div>
               <span className="text-sm text-gray-600 dark:text-gray-400">Installed:</span>
               <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
-                {formatDate(integration.installedAt)}
+                {formatDate(currentIntegration.installedAt)}
               </span>
             </div>
             <div>
               <span className="text-sm text-gray-600 dark:text-gray-400">Last Sync:</span>
               <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
-                {formatDate(integration.lastSyncAt)}
+                {formatDate(currentIntegration.lastSyncAt)}
               </span>
             </div>
           </div>
@@ -143,7 +186,7 @@ export function ShopifyStatus({ integration, onUpdate }: ShopifyStatusProps) {
       </div>
 
       {/* Error Display */}
-      {integration.syncError && (
+      {currentIntegration.syncError && (
         <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <div className="flex items-start">
             <svg className="w-5 h-5 text-red-400 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,7 +197,7 @@ export function ShopifyStatus({ integration, onUpdate }: ShopifyStatusProps) {
                 Sync Error
               </h4>
               <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                {integration.syncError}
+                {currentIntegration.syncError}
               </p>
             </div>
           </div>
@@ -162,7 +205,7 @@ export function ShopifyStatus({ integration, onUpdate }: ShopifyStatusProps) {
       )}
 
       {/* Success Message */}
-      {integration.syncStatus === 'success' && !integration.syncError && (
+      {currentIntegration.syncStatus === 'success' && !currentIntegration.syncError && (
         <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
           <div className="flex items-start">
             <svg className="w-5 h-5 text-green-400 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

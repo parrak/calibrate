@@ -28,12 +28,20 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
   }
 
   // Validate shop domain format
-  if (!shop.includes('.') || !shop.endsWith('.myshopify.com')) {
+  // Allow both "mystore.myshopify.com" and "mystore" formats
+  // If no .myshopify.com suffix, we'll add it
+  let normalizedShop = shop.trim().toLowerCase();
+  if (!normalizedShop.includes('.')) {
+    normalizedShop = `${normalizedShop}.myshopify.com`;
+  } else if (!normalizedShop.endsWith('.myshopify.com')) {
     return NextResponse.json(
-      { error: 'Invalid shop domain. Must be in format: mystore.myshopify.com' },
+      { error: 'Invalid shop domain. Must be in format: mystore.myshopify.com or mystore' },
       { status: 400 }
     );
   }
+  
+  // Use normalized shop domain
+  const finalShop = normalizedShop;
 
   // Shopify OAuth scopes
   const scopes = [
@@ -56,7 +64,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
   }
 
   // Build Shopify OAuth URL
-  const authUrl = new URL(`https://${shop}/admin/oauth/authorize`);
+  const authUrl = new URL(`https://${finalShop}/admin/oauth/authorize`);
   authUrl.searchParams.set('client_id', apiKey);
   authUrl.searchParams.set('scope', scopes);
   authUrl.searchParams.set('redirect_uri', redirectUri);
@@ -65,7 +73,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
 
   return NextResponse.json({
     installUrl: authUrl.toString(),
-    shop,
+    shop: finalShop,
     scopes: scopes.split(','),
   });
 });

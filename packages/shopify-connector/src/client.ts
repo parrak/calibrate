@@ -9,12 +9,20 @@ import { ShopifyConfig, ShopifyApiError, ShopifyRateLimit } from './types';
 export class ShopifyClient {
   private client: AxiosInstance;
   private config: ShopifyConfig;
+  private shopDomain?: string;
+  private accessToken?: string;
   private rateLimit: ShopifyRateLimit | null = null;
 
-  constructor(config: ShopifyConfig) {
+  constructor(config: ShopifyConfig & { shopDomain?: string; accessToken?: string }) {
     this.config = config;
+    this.shopDomain = config.shopDomain;
+    this.accessToken = config.accessToken;
+    
+    // Use shopDomain if provided, otherwise fall back to apiKey (for backwards compatibility)
+    const domain = this.shopDomain || `${config.apiKey}.myshopify.com`;
+    
     this.client = axios.create({
-      baseURL: `https://${config.apiKey}.myshopify.com/admin/api/${config.apiVersion || '2024-10'}`,
+      baseURL: `https://${domain}/admin/api/${config.apiVersion || '2024-10'}`,
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -31,8 +39,10 @@ export class ShopifyClient {
   private setupInterceptors(): void {
     // Request interceptor to add authentication
     this.client.interceptors.request.use((config) => {
-      if (this.config.apiKey) {
-        config.headers['X-Shopify-Access-Token'] = this.config.apiKey;
+      // Use accessToken if provided, otherwise fall back to apiKey (for backwards compatibility)
+      const token = this.accessToken || this.config.apiKey;
+      if (token) {
+        config.headers['X-Shopify-Access-Token'] = token;
       }
       return config;
     });

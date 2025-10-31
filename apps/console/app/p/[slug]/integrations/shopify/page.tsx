@@ -1,6 +1,7 @@
 // Shopify Integration Page - Server Component
 import { ShopifyAuthButton } from './components/ShopifyAuthButton';
 import { ShopifyStatus } from './components/ShopifyStatus';
+import { DisconnectButton } from './components/DisconnectButton';
 
 export default async function ShopifyIntegrationPage({
   params,
@@ -42,23 +43,11 @@ export default async function ShopifyIntegrationPage({
 
       {isConnected ? (
         <div className="space-y-6">
-          <ShopifyStatus integration={integration} />
+          <ShopifyStatus integration={integration} projectSlug={slug} />
 
           <div className="border-t pt-6">
             <h2 className="text-xl font-semibold mb-4">Actions</h2>
-            <button
-              className="text-red-600 hover:text-red-700"
-              onClick={async () => {
-                if (confirm('Are you sure you want to disconnect your Shopify store?')) {
-                  await fetch(`/api/platforms/shopify?project=${slug}`, {
-                    method: 'DELETE',
-                  });
-                  window.location.reload();
-                }
-              }}
-            >
-              Disconnect Shopify
-            </button>
+            <DisconnectButton projectSlug={slug} />
           </div>
         </div>
       ) : (

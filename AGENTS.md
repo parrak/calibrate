@@ -109,7 +109,7 @@ export const OPTIONS = withSecurity(async (req: NextRequest) => {
 - ✅ Created debug endpoints for production diagnostics (commit 4f5c3da)
 - ✅ Fixed platform route to use platform-specific models (ShopifyIntegration, AmazonIntegration)
 
-**Documentation:** See [AGENT_C_WEEK2_HANDOFF.md](AGENT_C_WEEK2_HANDOFF.md) for complete details
+**Documentation:** See [docs/project-management/AGENT_C_WEEK2_HANDOFF.md](docs/project-management/AGENT_C_WEEK2_HANDOFF.md) for complete details
 
 ### Previous Fixes (Oct 27-28, 2025)
 - **Platform Registration**: Fixed missing Shopify connector import in `apps/api/lib/platforms/register.ts`
@@ -128,8 +128,8 @@ export const OPTIONS = withSecurity(async (req: NextRequest) => {
 - ✅ TypeScript errors fixed
 
 **This unblocks:**
-- 🟢 **Agent A** - Can now complete Shopify OAuth callback (see [AGENT_A_IMMEDIATE_TASKS.md](AGENT_A_IMMEDIATE_TASKS.md))
-- 🟢 **Agent B** - Can now implement Amazon SP-API OAuth (see [AGENT_B_IMMEDIATE_TASKS.md](AGENT_B_IMMEDIATE_TASKS.md))
+- 🟢 **Agent A** - Can now complete Shopify OAuth callback (see [docs/project-management/AGENT_A_IMMEDIATE_TASKS.md](docs/project-management/AGENT_A_IMMEDIATE_TASKS.md))
+- 🟢 **Agent B** - Can now implement Amazon SP-API OAuth (see [docs/project-management/AGENT_B_IMMEDIATE_TASKS.md](docs/project-management/AGENT_B_IMMEDIATE_TASKS.md))
 
 ### For Other Agents
 - **Agent A (Shopify)**: 🟢 READY TO START - Complete OAuth flow using POST endpoint (estimated 4-6 hours)
@@ -139,8 +139,63 @@ export const OPTIONS = withSecurity(async (req: NextRequest) => {
 
 ### Documentation
 - **CORS Requirements**: [apps/api/CORS_MIDDLEWARE_REQUIRED.md](apps/api/CORS_MIDDLEWARE_REQUIRED.md)
-- **Platform Integration**: [AGENT_C_INTEGRATIONS_FIX.md](AGENT_C_INTEGRATIONS_FIX.md)
-- **Latest Status**: [AGENT_C_OCT28_SUMMARY.md](AGENT_C_OCT28_SUMMARY.md)
+- **Platform Integration**: [docs/project-management/AGENT_C_INTEGRATIONS_FIX.md](docs/project-management/AGENT_C_INTEGRATIONS_FIX.md)
+- **Latest Status**: [docs/project-management/AGENT_C_OCT28_SUMMARY.md](docs/project-management/AGENT_C_OCT28_SUMMARY.md)
+
+## Documentation Structure
+
+All project documentation is organized into three main directories to help you quickly find what you need:
+
+### `docs/project-management/`
+Contains all files related to project planning, progress tracking, agent coordination, and status updates.
+
+**Key files:**
+- **Status Tracking**: `CURRENT_STATUS.md`, `AGENT_STATUS.md` - Current project state
+- **Daily Coordination**: `PHASE3_DAILY_LOG.md` - Daily progress updates from agents
+- **Roadmaps & Plans**: `PHASE3_ROADMAP.md`, `TIMELINE.md`, `NEXT_PHASES_PLAN.md`
+- **Agent Handoffs**: `AGENT_*_HANDOFF.md` - Detailed handoff documents
+- **Agent Tasks**: `AGENT_*_IMMEDIATE_TASKS.md`, `AGENT_*_NEXT_STEPS.md`, `AGENT_PRIORITY_TASKS.md`
+- **Progress Updates**: `AGENT_*_PROGRESS_UPDATE.md`, `AGENT_*_SUMMARY.md`, `AGENT_*_COMPLETE.md`
+- **Broadcasts**: `AGENTS_BROADCAST_YYYY-MM-DD.md` - Cross-cutting milestone announcements
+- **Status Guide**: `STATUS_BROADCASTING.md` - How to publish status updates
+
+**When to use:** Looking for current tasks, agent status, project timeline, or where to log your progress.
+
+### `docs/learnings/`
+Contains debugging guides, troubleshooting notes, test results, setup instructions, and lessons learned from fixing issues.
+
+**Key categories:**
+- **CORS Issues**: `CORS_FIX_SUMMARY.md`, `CORS_DEBUGGING_OCT27.md`
+- **Deployment Fixes**: `DEPLOYMENT_FIX_SUMMARY.md`, `RAILWAY_DEPLOYMENT_VERIFICATION.md`, `PRODUCTION_DEPLOYMENT_GUIDE.md`
+- **Shopify Integration**: `SHOPIFY_*.md` files covering setup, troubleshooting, limitations, redirect URI fixes
+- **OAuth Testing**: `OAUTH_*.md`, `test-oauth-flow.md`
+- **Testing Guides**: `LOCAL_TESTING_GUIDE.md`, `TEST_REPORT.md`, `SETUP_*.md` files
+- **Quick Fixes**: `QUICK_FIX_SUMMARY.md`
+
+**When to use:** Debugging issues, setting up integrations, understanding past problems and their solutions.
+
+### `docs/misc/`
+Contains architectural documents, strategy plans, onboarding guides, and other reference materials.
+
+**Key categories:**
+- **Architecture & Design**: `ARCHITECTURE_DIAGRAM.md`, `TECHNICAL_ASSESSMENT.md`, `INTEGRATION_DASHBOARD_DESIGN.md`
+- **Planning Documents**: `CONNECTOR_SETUP_PLAN.md`, `PLANNING_SUMMARY.md`, `PROJECT_ONBOARDING_SPEC.md`
+- **Strategies**: `CREDENTIAL_ENCRYPTION_STRATEGY.md`, `MONITORING_ALERTING_PLAN.md`
+- **Onboarding**: `QUICK_START.md`, `ESSENTIAL_CONTEXT.md`, `EXECUTIVE_SUMMARY.md`
+- **Environment Guides**: `STAGING_ENVIRONMENT.md`, `PRODUCTION_VERIFICATION.md`, `ENCRYPTION_*.md`
+- **Other References**: `COMPETITOR_MONITORING.md`, `REGRESSION_PREVENTION.md`, `PHASE2_COMPLETE.md`
+
+**When to use:** Understanding system architecture, planning new features, onboarding, reviewing strategies.
+
+### Finding Documentation
+
+**Quick lookup guide:**
+- **What's the current project status?** → `docs/project-management/CURRENT_STATUS.md`
+- **Where do I log my progress?** → `docs/project-management/PHASE3_DAILY_LOG.md`
+- **I'm debugging a CORS issue** → `docs/learnings/CORS_*.md`
+- **Setting up Shopify integration** → `docs/learnings/SHOPIFY_*.md`
+- **What's the system architecture?** → `docs/misc/ARCHITECTURE_DIAGRAM.md`
+- **Need agent task assignments?** → `docs/project-management/AGENT_*_IMMEDIATE_TASKS.md`
 
 ## Subdirectory Guides
 - See additional, more specific rules in:
@@ -152,27 +207,27 @@ export const OPTIONS = withSecurity(async (req: NextRequest) => {
 
 ## Status Broadcasting
 
-Use this repo’s docs to broadcast your status and handoffs so other agents can follow and continue your work without friction. This file is the hub; link or update the files below as you work.
+Use this repo's docs to broadcast your status and handoffs so other agents can follow and continue your work without friction. This file is the hub; link or update the files below as you work.
 
-- Daily progress: `PHASE3_DAILY_LOG.md`
-  - Add a dated entry with: what changed, what’s next, blockers.
-- Rolling status: `CURRENT_STATUS.md` and `AGENT_STATUS.md`
+- Daily progress: `docs/project-management/PHASE3_DAILY_LOG.md`
+  - Add a dated entry with: what changed, what's next, blockers.
+- Rolling status: `docs/project-management/CURRENT_STATUS.md` and `docs/project-management/AGENT_STATUS.md`
   - Keep the top sections current for quick at-a-glance status.
-- Milestone broadcasts: `AGENTS_BROADCAST_YYYY-MM-DD.md`
+- Milestone broadcasts: `docs/project-management/AGENTS_BROADCAST_YYYY-MM-DD.md`
   - For cross-cutting updates. Example: `AGENTS_BROADCAST_2025-10-27.md`.
-- Handoffs: `AGENT_*_HANDOFF.md`
+- Handoffs: `docs/project-management/AGENT_*_HANDOFF.md`
   - Capture acceptance criteria, file references, and next steps.
   - Resolved: `AGENT_C_RAILWAY_RUNTIME_HANDOFF.md` (Railway Prisma runtime investigation)
 - Low-level event log (optional): `agents/events/YYYYMMDD/<agent>.jsonl`
   - Append JSON objects for fine-grained progress; see `agents/README.md`.
 
 Quick checklist when you finish a chunk of work
-- Update `PHASE3_DAILY_LOG.md` with a concise entry.
-- Refresh `CURRENT_STATUS.md` (and `AGENT_STATUS.md` if applicable).
-- If the change is cross-cutting, add an `AGENTS_BROADCAST_<date>.md` and link it in the daily log.
-- For a handoff, create/update an `AGENT_*_HANDOFF.md` and reference exact files like `apps/api/app/api/.../route.ts:1`.
+- Update `docs/project-management/PHASE3_DAILY_LOG.md` with a concise entry.
+- Refresh `docs/project-management/CURRENT_STATUS.md` (and `docs/project-management/AGENT_STATUS.md` if applicable).
+- If the change is cross-cutting, add an `docs/project-management/AGENTS_BROADCAST_<date>.md` and link it in the daily log.
+- For a handoff, create/update an `docs/project-management/AGENT_*_HANDOFF.md` and reference exact files like `apps/api/app/api/.../route.ts:1`.
 
 Details and templates
-- See `STATUS_BROADCASTING.md` for message structure and copy-paste templates.
+- See `docs/project-management/STATUS_BROADCASTING.md` for message structure and copy-paste templates.
 - Collaboration protocol and JSONL event format live in `agents/PROTOCOLS.md` and `agents/README.md`.
 

@@ -6,26 +6,52 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ShopifyConnector } from '@calibr/shopify-connector';
 import { prisma } from '@calibr/db';
+import { withSecurity } from '@/lib/security-headers';
 
-export async function POST(request: NextRequest) {
+export const runtime = 'nodejs';
+
+export const POST = withSecurity(async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, action, data } = body;
+    const { projectId, projectSlug, action, data } = body;
 
-    if (!projectId || !action) {
+    if ((!projectId && !projectSlug) || !action) {
       return NextResponse.json(
-        { error: 'project_id and action are required' },
+        { error: 'project_id or project_slug, and action are required' },
         { status: 400 }
       );
     }
 
-    // Find the Shopify integration
-    const integration = await prisma().shopifyIntegration.findFirst({
-      where: { 
-        projectId,
-        isActive: true,
-      },
-    });
+    let integration;
+    
+    // If projectSlug is provided, resolve it to projectId first
+    if (projectSlug) {
+      const project = await prisma().project.findUnique({
+        where: { slug: projectSlug },
+      });
+      
+      if (!project) {
+        return NextResponse.json(
+          { error: 'Project not found' },
+          { status: 404 }
+        );
+      }
+      
+      integration = await prisma().shopifyIntegration.findFirst({
+        where: { 
+          projectId: project.id,
+          isActive: true,
+        },
+      });
+    } else {
+      // Find the Shopify integration by projectId
+      integration = await prisma().shopifyIntegration.findFirst({
+        where: { 
+          projectId,
+          isActive: true,
+        },
+      });
+    }
 
     if (!integration) {
       return NextResponse.json(
@@ -36,22 +62,31 @@ export async function POST(request: NextRequest) {
 
     // Initialize Shopify connector
     const connector = new ShopifyConnector({
+      platform: 'shopify',
       apiKey: process.env.SHOPIFY_API_KEY!,
       apiSecret: process.env.SHOPIFY_API_SECRET!,
       scopes: process.env.SHOPIFY_SCOPES?.split(',') || ['read_products', 'write_products'],
-      webhookSecret: process.env.SHOPIFY_WEBHOOK_SECRET!,
+      webhookSecret: process.env.SHOPIFY_WEBHOOK_SECRET || '',
+      apiVersion: process.env.SHOPIFY_API_VERSION || '2024-10',
     });
 
-    await connector.initialize(integration.shopDomain, integration.accessToken);
-
-    // Update sync status to in progress
-    await prisma().shopifyIntegration.update({
-      where: { id: integration.id },
-      data: {
-        syncStatus: 'in_progress',
-        syncError: null,
-      },
+    await connector.initialize({
+      platform: 'shopify',
+      shopDomain: integration.shopDomain,
+      accessToken: integration.accessToken,
+      scope: integration.scope,
     });
+
+    // Update sync status to in progress (only for non-test actions)
+    if (action !== 'test_connection') {
+      await prisma().shopifyIntegration.update({
+        where: { id: integration.id },
+        data: {
+          syncStatus: 'in_progress',
+          syncError: null,
+        },
+      });
+    }
 
     let result: any;
 
@@ -76,15 +111,20 @@ export async function POST(request: NextRequest) {
         throw new Error(`Unknown sync action: ${action}`);
     }
 
-    // Update sync status to success
-    await prisma.shopifyIntegration.update({
-      where: { id: integration.id },
-      data: {
-        lastSyncAt: new Date(),
-        syncStatus: 'success',
-        syncError: null,
-      },
-    });
+    // Update sync status to success (only for non-test actions)
+    if (action !== 'test_connection') {
+      await prisma().shopifyIntegration.update({
+        where: { id: integration.id },
+        data: {
+          lastSyncAt: new Date(),
+          syncStatus: 'success',
+          syncError: null,
+        },
+      });
+    } else {
+      // For test_connection, optionally update lastSyncAt without changing status
+      // This allows UI to show when connection was last tested
+    }
 
     return NextResponse.json({
       success: true,
@@ -97,16 +137,22 @@ export async function POST(request: NextRequest) {
     console.error('Shopify sync error:', error);
 
     // Update sync status with error
-    if (projectId) {
+    const project = projectSlug 
+      ? await prisma().project.findUnique({ where: { slug: projectSlug } })
+      : null;
+    
+    const actualProjectId = project?.id || projectId;
+    
+    if (actualProjectId) {
       try {
         await prisma().shopifyIntegration.updateMany({
           where: { 
-            projectId,
+            projectId: actualProjectId,
             isActive: true,
           },
           data: {
             syncStatus: 'error',
-            syncError: error.message || 'Unknown error',
+            syncError: error instanceof Error ? error.message : 'Unknown error',
           },
         });
       } catch (dbError) {
@@ -115,11 +161,18 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: error.message || 'Sync operation failed' },
+      { 
+        success: false,
+        error: error instanceof Error ? error.message : 'Sync operation failed' 
+      },
       { status: 500 }
     );
   }
-}
+});
+
+export const OPTIONS = withSecurity(async () => {
+  return new NextResponse(null, { status: 204 });
+});
 
 /**
  * Sync products from Shopify
@@ -127,18 +180,25 @@ export async function POST(request: NextRequest) {
 async function syncProducts(connector: ShopifyConnector, integration: any) {
   const products = await connector.products.listProducts({ limit: 100 });
   
-  // Log sync event
-  await prisma().event.create({
-    data: {
-      tenantId: integration.project.tenantId,
-      projectId: integration.projectId,
-      kind: 'shopify_products_sync',
-      payload: {
-        productsCount: products.products.length,
-        syncedAt: new Date().toISOString(),
-      },
-    },
+  // Get project to get tenantId
+  const project = await prisma().project.findUnique({
+    where: { id: integration.projectId },
   });
+  
+  if (project) {
+    // Log sync event
+    await prisma().event.create({
+      data: {
+        tenantId: project.tenantId,
+        projectId: integration.projectId,
+        kind: 'shopify_products_sync',
+        payload: {
+          productsCount: products.products.length,
+          syncedAt: new Date().toISOString(),
+        },
+      },
+    });
+  }
 
   return {
     productsCount: products.products.length,
@@ -164,20 +224,27 @@ async function updatePrices(connector: ShopifyConnector, integration: any, data:
     batchSize: data.batchSize || 10,
   });
 
-  // Log price update event
-  await prisma().event.create({
-    data: {
-      tenantId: integration.project.tenantId,
-      projectId: integration.projectId,
-      kind: 'shopify_price_update',
-      payload: {
-        updatesCount: data.priceUpdates.length,
-        successCount: results.successCount,
-        errorCount: results.errorCount,
-        updatedAt: new Date().toISOString(),
-      },
-    },
+  // Get project to get tenantId
+  const project = await prisma().project.findUnique({
+    where: { id: integration.projectId },
   });
+  
+  if (project) {
+    // Log price update event
+    await prisma().event.create({
+      data: {
+        tenantId: project.tenantId,
+        projectId: integration.projectId,
+        kind: 'shopify_price_update',
+        payload: {
+          updatesCount: data.priceUpdates.length,
+          successCount: results.successCount,
+          errorCount: results.errorCount,
+          updatedAt: new Date().toISOString(),
+        },
+      },
+    });
+  }
 
   return results;
 }

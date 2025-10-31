@@ -6,7 +6,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@calibr/ui/button';
+import { Button } from '@calibr/ui';
 import { AlertCircle } from 'lucide-react';
 
 interface ShopifyAuthButtonProps {
@@ -27,18 +27,25 @@ export function ShopifyAuthButton({ projectSlug, onSuccess }: ShopifyAuthButtonP
     }
 
     // Validate shop domain format
-    if (!shopDomain.includes('.') || !shopDomain.endsWith('.myshopify.com')) {
-      setError('Invalid format. Enter: mystore.myshopify.com');
-      return;
+    // Allow both "mystore.myshopify.com" and "mystore" formats
+    const normalizedShop = shopDomain.trim().toLowerCase();
+    if (normalizedShop.includes('.')) {
+      // If it includes a dot, it must end with .myshopify.com
+      if (!normalizedShop.endsWith('.myshopify.com')) {
+        setError('Invalid format. Enter: mystore.myshopify.com or mystore');
+        return;
+      }
     }
+    // If no dot, it's a simple store name - install route will normalize it
 
     setLoading(true);
     setError(null);
 
     try {
       // Call install endpoint to get OAuth URL
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE || '';
       const response = await fetch(
-        `/api/platforms/shopify/oauth/install?project=${projectSlug}&shop=${shopDomain}`
+        `${apiUrl}/api/platforms/shopify/oauth/install?project=${projectSlug}&shop=${encodeURIComponent(shopDomain)}`
       );
 
       if (!response.ok) {
@@ -57,7 +64,7 @@ export function ShopifyAuthButton({ projectSlug, onSuccess }: ShopifyAuthButtonP
 
   if (!showInput) {
     return (
-      <Button onClick={() => setShowInput(true)} size="lg">
+      <Button onClick={() => setShowInput(true)}>
         Connect Shopify Store
       </Button>
     );
@@ -99,12 +106,11 @@ export function ShopifyAuthButton({ projectSlug, onSuccess }: ShopifyAuthButtonP
         <Button
           onClick={handleConnect}
           disabled={loading || !shopDomain}
-          size="lg"
         >
           {loading ? 'Connecting...' : 'Continue to Shopify'}
         </Button>
         <Button
-          variant="outline"
+          variant="ghost"
           onClick={() => {
             setShowInput(false);
             setShopDomain('');

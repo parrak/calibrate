@@ -126,13 +126,15 @@ export class ShopifyConnector implements PlatformConnector {
       );
     }
 
-    // Initialize Shopify client
+    // Initialize Shopify client with shop domain and access token
     this.client = new ShopifyClient({
       apiKey: this.config.apiKey,
       apiSecret: this.config.apiSecret,
       scopes: this.config.scopes,
       webhookSecret: this.config.webhookSecret,
       apiVersion: this.config.apiVersion || '2024-10',
+      shopDomain: this.credentials.shopDomain,
+      accessToken: this.credentials.accessToken,
     });
 
     // Initialize operations
