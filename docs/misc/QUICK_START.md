@@ -1,13 +1,13 @@
 # Quick Start - Calibrate Platform
 
-## 🎯 Current Status (Phase 3: Platform Integrations)
+## ?? Current Status (Phase 3: Platform Integrations)
 
 **Status:** Production Ready - 95% Complete  
 **Latest:** Shopify & Amazon connectors complete, UI integration management dashboard deployed
 
 ---
 
-## 📦 Architecture
+## ?? Architecture
 
 **Monorepo:** `pnpm` + `turbo`  
 **Apps:** `api`, `console`, `site`, `docs`  
@@ -15,7 +15,7 @@
 
 ---
 
-## 🚀 Key Commands
+## ?? Key Commands
 
 ```bash
 pnpm dev           # Start all apps
@@ -28,18 +28,18 @@ pnpm seed          # Seed database
 
 ---
 
-## 📊 Current Features
+## ?? Current Features
 
-✅ **Core Platform:** Webhook API, Policy Engine, Admin Console  
-✅ **Competitor Monitoring:** Automated tracking, analytics, rules  
-✅ **Platform Integrations:** Shopify OAuth/sync, Amazon SP-API  
-✅ **Integration Management:** Dashboard at `/p/[slug]/integrations`
+? **Core Platform:** Webhook API, Policy Engine, Admin Console  
+? **Competitor Monitoring:** Automated tracking, analytics, rules  
+? **Platform Integrations:** Shopify OAuth/sync, Amazon SP-API  
+? **Integration Management:** Dashboard at `/p/[slug]/integrations`
 
 ---
 
-## 🔧 Setup
+## Setup
 
-1. Copy `.env.example` → `.env`
+1. Copy `.env.example` ? `.env`
 2. Run `pnpm install`
 3. Run `pnpm migrate && pnpm seed`
 4. Run `pnpm dev`
@@ -48,7 +48,20 @@ See `README.md` for full setup instructions.
 
 ---
 
-## 📚 Essential Docs
+### OAuth Env Vars (summary)
+
+Shopify
+- `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`, `SHOPIFY_SCOPES`, `SHOPIFY_WEBHOOK_SECRET`
+
+Amazon SP-API (LWA)
+- `AMAZON_SP_APP_ID`, `AMAZON_LWA_CLIENT_ID`, `AMAZON_LWA_CLIENT_SECRET`
+
+Console/URLs
+- `NEXT_PUBLIC_API_BASE`, `NEXT_PUBLIC_CONSOLE_URL`
+
+---
+
+## Essential Docs
 
 - `README.md` - Full project documentation
 - `CURRENT_STATUS.md` - Current system status
@@ -59,3 +72,6 @@ See `README.md` for full setup instructions.
 ---
 
 **Need Help?** See documentation files or check existing implementations in `packages/*/README.md`
+
+
+

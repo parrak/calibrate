@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useToast } from '@/components/Toast'
 import { platformsApi } from '@/lib/api-client'
 import { PlatformCard } from '@/components/platforms/PlatformCard'
 import { IntegrationStats } from '@/components/platforms/IntegrationStats'
@@ -11,6 +12,7 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
   const [integrations, setIntegrations] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const toast = useToast()
 
   const loadData = async () => {
     try {
@@ -42,7 +44,9 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
 
       setIntegrations(integrationData)
     } catch (err: any) {
-      setError(err.message || 'Failed to load integrations')
+      const msg = err?.message || 'Failed to load integrations'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }

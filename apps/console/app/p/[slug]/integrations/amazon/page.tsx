@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { platformsApi } from '@/lib/api-client'
 import Link from 'next/link'
 import { Notice } from '@/components/Notice'
+import { useToast } from '@/components/Toast'
+import { DisconnectConfirm } from '@/components/DisconnectConfirm'
+import { ConfirmModal } from '@/components/ConfirmModal'
 
 interface AmazonIntegration {
   id: string
@@ -28,6 +31,7 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   const [error, setError] = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const toast = useToast()
 
   useEffect(() => {
     fetchIntegration()
@@ -35,7 +39,7 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
     try {
       const q = new URLSearchParams(window.location.search)
       if (q.get('connected') === '1') {
-        setNotice('Amazon account connected successfully.')
+        toast.success('Amazon account connected successfully.')
         // Clean up query param in URL without reloading
         const url = new URL(window.location.href)
         url.searchParams.delete('connected')
@@ -84,7 +88,7 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
       if (!installUrl) throw new Error('Install URL not returned from API')
       window.location.href = installUrl
     } catch (e: any) {
-      setError(e?.message || 'Failed to start Amazon connection')
+      toast.error(e?.message || 'Failed to start Amazon connection')
       setConnecting(false)
     }
   }
@@ -152,20 +156,7 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
                 </span>
               </div>
               <div className="flex items-center gap-3 mb-4">
-                <button
-                  onClick={async () => {
-                    try {
-                      await fetch(`${process.env.NEXT_PUBLIC_API_BASE || ''}/api/platforms/amazon?project=${encodeURIComponent(params.slug)}`, { method: 'DELETE' })
-                      setNotice('Amazon integration disconnected.')
-                      fetchIntegration()
-                    } catch (e: any) {
-                      setError(e?.message || 'Failed to disconnect Amazon')
-                    }
-                  }}
-                  className="text-sm px-3 py-1.5 rounded-md border border-red-200 text-red-700 hover:bg-red-50"
-                >
-                  Disconnect
-                </button>
+                <DisconnectConfirm projectSlug={params.slug} platform="amazon" onDone={fetchIntegration} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
