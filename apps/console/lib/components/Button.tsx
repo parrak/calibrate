@@ -2,7 +2,7 @@ import clsx from 'clsx'
 import React from 'react'
 
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  as?: any; variant?: 'primary' | 'ghost' | 'danger' | 'outline'
+  as?: React.ElementType; variant?: 'primary' | 'ghost' | 'danger' | 'outline'
   size?: 'sm' | 'md' | 'lg'
 }
 export function Button({ as:Tag='button', variant='primary', size='md', className='', ...props }: Props) {

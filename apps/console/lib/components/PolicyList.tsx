@@ -1,4 +1,4 @@
-type Check = { name: string; ok: boolean; [k: string]: any }
+type Check = { name: string; ok: boolean; [k: string]: unknown }
 export function PolicyList({ checks }:{ checks: Check[] }) {
   return (
     <div className="rounded-xl border border-border bg-surface p-4">

@@ -87,7 +87,7 @@ export const authOptions: NextAuthOptions = {
             })
             if (res.ok) {
               const data = await res.json()
-              ;(token as any).apiToken = data.token
+              token.apiToken = data.token
             }
           }
         } catch {
@@ -100,7 +100,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.sub as string
         session.user.role = token.role as string
-        ;(session as any).apiToken = (token as any).apiToken
+        session.apiToken = token.apiToken
       }
       return session
     },

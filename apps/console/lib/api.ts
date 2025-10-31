@@ -10,7 +10,7 @@ export async function apiFetchWithAuth(
   init: RequestInit = {},
 ) {
   const token = await getToken()
-  const headers = new Headers(init.headers as any)
+  const headers = new Headers(init.headers as HeadersInit)
   if (token) headers.set('Authorization', `Bearer ${token}`)
   return apiFetch(path, { ...init, headers })
 }
