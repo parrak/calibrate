@@ -34,15 +34,39 @@ export class ShopifyProductOperations implements ProductOperations {
       );
     }
 
+    // Prepare request parameters
+    const requestParams: any = {
+      limit: filter?.limit || 50,
+      page: filter?.page || 1,
+    };
+
+    // Add optional filters, only if they have values
+    if (filter?.vendor) requestParams.vendor = filter.vendor;
+    if (filter?.productType) requestParams.product_type = filter.productType;
+    if (filter?.search) requestParams.title = filter.search;
+    
+    // Format date parameter if provided
+    if (filter?.updatedAfter) {
+      const date = filter.updatedAfter instanceof Date 
+        ? filter.updatedAfter 
+        : new Date(filter.updatedAfter);
+      
+      // Validate date
+      if (isNaN(date.getTime())) {
+        throw new PlatformError(
+          'validation',
+          'Invalid updatedAfter date provided',
+          'shopify'
+        );
+      }
+      
+      // Shopify expects ISO 8601 format, remove milliseconds if present
+      const isoString = date.toISOString();
+      requestParams.updated_at_min = isoString;
+    }
+
     try {
-      const response = await this.connector.underlyingProducts.listProducts({
-        limit: filter?.limit || 50,
-        page: filter?.page || 1,
-        vendor: filter?.vendor,
-        product_type: filter?.productType,
-        title: filter?.search,
-        updated_at_min: filter?.updatedAfter?.toISOString(),
-      } as any);
+      const response = await this.connector.underlyingProducts.listProducts(requestParams);
 
       // Validate response structure
       if (!response || typeof response !== 'object') {
@@ -66,9 +90,41 @@ export class ShopifyProductOperations implements ProductOperations {
     } catch (error: any) {
       // Extract error message from various error types
       let errorMessage = 'Unknown error';
+      let shopifyErrorDetails: any = null;
+      let statusCode: number | undefined;
       
       if (error instanceof Error) {
         errorMessage = error.message;
+        statusCode = (error as any)?.statusCode;
+        
+        // Check if the error has response data from axios
+        if ((error as any).response?.data) {
+          shopifyErrorDetails = (error as any).response.data;
+          statusCode = (error as any).response.status;
+        } else if ((error as any).responseData) {
+          shopifyErrorDetails = (error as any).responseData;
+        }
+      } else if (error?.response?.data) {
+        // Axios error with response
+        shopifyErrorDetails = error.response.data;
+        const data = error.response.data;
+        statusCode = error.response.status;
+        
+        if (data.errors && typeof data.errors === 'object') {
+          const errorMessages: string[] = [];
+          for (const key in data.errors) {
+            if (Array.isArray(data.errors[key])) {
+              errorMessages.push(...data.errors[key]);
+            } else if (typeof data.errors[key] === 'string') {
+              errorMessages.push(data.errors[key]);
+            }
+          }
+          errorMessage = errorMessages.length > 0 
+            ? errorMessages.join(', ') 
+            : (data.message || 'Shopify API error');
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
       } else if (error?.errors) {
         // Handle ShopifyApiError format
         const errors = error.errors;
@@ -85,16 +141,38 @@ export class ShopifyProductOperations implements ProductOperations {
             ? errorMessages.join(', ') 
             : 'Shopify API error';
         }
+        shopifyErrorDetails = error.errors;
       } else if (error?.message) {
         errorMessage = error.message;
       } else if (typeof error === 'string') {
         errorMessage = error;
       }
 
+      // Get final status code
+      const finalStatusCode = statusCode || (error as any)?.response?.status || (error as any)?.statusCode;
+      
+      // Log detailed error information for 400 errors
+      if (finalStatusCode === 400 || errorMessage.includes('400')) {
+        console.error('Shopify API 400 error details:', {
+          requestParams,
+          shopifyErrorDetails,
+          statusCode: finalStatusCode,
+          fullError: error,
+        });
+      }
+
       // Create a proper Error object if needed
       const originalError = error instanceof Error 
         ? error 
         : new Error(errorMessage);
+
+      // Enhance error message with Shopify error details if available
+      if (shopifyErrorDetails && finalStatusCode === 400) {
+        const detailsStr = typeof shopifyErrorDetails === 'object' 
+          ? JSON.stringify(shopifyErrorDetails) 
+          : String(shopifyErrorDetails);
+        errorMessage = `${errorMessage}${detailsStr ? ` | Shopify details: ${detailsStr}` : ''}`;
+      }
 
       throw new PlatformError(
         'server',

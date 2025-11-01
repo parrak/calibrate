@@ -92,21 +92,14 @@ export class ShopifyClient {
    * Handle API errors and convert to standardized format
    */
   private handleError(error: any): Error {
-    // If it's already an Error instance, return it
-    if (error instanceof Error) {
-      return error;
-    }
-
-    // Extract error message from Shopify API response
-    let errorMessage = 'Unknown error';
-    let statusCode: number | undefined;
-    
-    if (error.response?.data) {
-      statusCode = error.response.status;
-      const data = error.response.data;
+    // If it's already an Error instance with response data, enhance it
+    if (error instanceof Error && (error as any).response?.data) {
+      const enhancedError = error;
+      const data = (error as any).response.data;
+      const statusCode = (error as any).response.status;
       
+      // Enhance error message with Shopify error details
       if (data.errors && typeof data.errors === 'object') {
-        // Format Shopify API errors
         const errorMessages: string[] = [];
         for (const key in data.errors) {
           if (Array.isArray(data.errors[key])) {
@@ -115,14 +108,73 @@ export class ShopifyClient {
             errorMessages.push(data.errors[key]);
           }
         }
+        if (errorMessages.length > 0) {
+          enhancedError.message = `${error.message} | ${errorMessages.join(', ')}`;
+        }
+      }
+      
+      (enhancedError as any).statusCode = statusCode;
+      (enhancedError as any).responseData = data;
+      
+      // Log detailed error for 400 errors
+      if (statusCode === 400) {
+        console.error('Shopify API 400 error:', {
+          url: (error as any).config?.url,
+          method: (error as any).config?.method,
+          params: (error as any).config?.params,
+          statusCode,
+          responseData: data,
+        });
+      }
+      
+      return enhancedError;
+    }
+    
+    // If it's already a proper Error instance, return it
+    if (error instanceof Error) {
+      return error;
+    }
+
+    // Extract error message from Shopify API response
+    let errorMessage = 'Unknown error';
+    let statusCode: number | undefined;
+    let responseData: any = null;
+    
+    if (error.response?.data) {
+      statusCode = error.response.status;
+      responseData = error.response.data;
+      
+      if (responseData.errors && typeof responseData.errors === 'object') {
+        // Format Shopify API errors
+        const errorMessages: string[] = [];
+        for (const key in responseData.errors) {
+          if (Array.isArray(responseData.errors[key])) {
+            errorMessages.push(...responseData.errors[key]);
+          } else if (typeof responseData.errors[key] === 'string') {
+            errorMessages.push(responseData.errors[key]);
+          }
+        }
         errorMessage = errorMessages.length > 0 
           ? errorMessages.join(', ') 
-          : (data.message || 'Shopify API error');
-      } else if (data.message) {
-        errorMessage = data.message;
+          : (responseData.message || 'Shopify API error');
+      } else if (responseData.message) {
+        errorMessage = responseData.message;
+      } else if (statusCode) {
+        errorMessage = `Request failed with status code ${statusCode}`;
       }
     } else if (error.message) {
       errorMessage = error.message;
+    }
+
+    // Log detailed error for 400 errors
+    if (statusCode === 400) {
+      console.error('Shopify API 400 error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        params: error.config?.params,
+        statusCode,
+        responseData,
+      });
     }
 
     // Create a proper Error instance with additional context
@@ -130,8 +182,15 @@ export class ShopifyClient {
     if (statusCode) {
       (err as any).statusCode = statusCode;
     }
-    if (error.response?.data) {
-      (err as any).responseData = error.response.data;
+    if (responseData) {
+      (err as any).responseData = responseData;
+    }
+    if (error.config) {
+      (err as any).requestConfig = {
+        url: error.config.url,
+        method: error.config.method,
+        params: error.config.params,
+      };
     }
     
     return err;
