@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
+const bcryptjs = require('bcryptjs')
 
 export async function POST() {
   try {
     console.log('Starting database seed...')
+
+    const adminSeedPassword = process.env.ADMIN_SEED_PASSWORD || 'Admin1234!'
+    const demoSeedPassword = process.env.DEMO_SEED_PASSWORD || 'Demo1234!'
+    const adminPasswordHash = bcryptjs.hashSync(adminSeedPassword, 10)
+    const demoPasswordHash = bcryptjs.hashSync(demoSeedPassword, 10)
 
     // Create demo tenant
     const tenant = await prisma().tenant.upsert({
@@ -27,6 +35,75 @@ export async function POST() {
       },
     })
     console.log('✓ Project created:', project.name)
+
+    // Create admin user with password
+    const adminUser = await prisma().user.upsert({
+      where: { email: 'admin@calibr.lat' },
+      update: {
+        name: 'Admin User',
+        role: 'OWNER',
+        tenantId: tenant.id,
+        passwordHash: adminPasswordHash,
+      },
+      create: {
+        email: 'admin@calibr.lat',
+        name: 'Admin User',
+        role: 'OWNER',
+        tenantId: tenant.id,
+        passwordHash: adminPasswordHash,
+      },
+    })
+    console.log('✓ Admin user created:', adminUser.email)
+
+    // Create demo user with password
+    const demoUser = await prisma().user.upsert({
+      where: { email: 'demo@calibr.lat' },
+      update: {
+        name: 'Demo User',
+        role: 'ADMIN',
+        tenantId: tenant.id,
+        passwordHash: demoPasswordHash,
+      },
+      create: {
+        email: 'demo@calibr.lat',
+        name: 'Demo User',
+        role: 'ADMIN',
+        tenantId: tenant.id,
+        passwordHash: demoPasswordHash,
+      },
+    })
+    console.log('✓ Demo user created:', demoUser.email)
+
+    // Create memberships
+    await prisma().membership.upsert({
+      where: {
+        userId_projectId: {
+          userId: adminUser.id,
+          projectId: project.id,
+        },
+      },
+      update: { role: 'OWNER' },
+      create: {
+        userId: adminUser.id,
+        projectId: project.id,
+        role: 'OWNER',
+      },
+    })
+
+    await prisma().membership.upsert({
+      where: {
+        userId_projectId: {
+          userId: demoUser.id,
+          projectId: project.id,
+        },
+      },
+      update: { role: 'ADMIN' },
+      create: {
+        userId: demoUser.id,
+        projectId: project.id,
+        role: 'ADMIN',
+      },
+    })
 
     // Create demo products
     const products = [

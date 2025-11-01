@@ -1,5 +1,7 @@
 ﻿import { PrismaClient } from '@prisma/client'
-import { hashSync } from 'bcryptjs'
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
+const bcryptjs = require('bcryptjs')
 
 const prisma = new PrismaClient()
 
@@ -8,8 +10,8 @@ async function main() {
 
   const adminSeedPassword = process.env.ADMIN_SEED_PASSWORD || 'Admin1234!'
   const demoSeedPassword = process.env.DEMO_SEED_PASSWORD || 'Demo1234!'
-  const adminPasswordHash = hashSync(adminSeedPassword, 10)
-  const demoPasswordHash = hashSync(demoSeedPassword, 10)
+  const adminPasswordHash = bcryptjs.hashSync(adminSeedPassword, 10)
+  const demoPasswordHash = bcryptjs.hashSync(demoSeedPassword, 10)
 
   // Create demo tenant
   const tenant = await prisma.tenant.upsert({
@@ -41,14 +43,14 @@ async function main() {
       role: 'OWNER',
       tenantId: tenant.id,
       passwordHash: adminPasswordHash,
-    },
+    } as any,
     create: {
       email: 'admin@calibr.lat',
       name: 'Admin User',
       role: 'OWNER',
       tenantId: tenant.id,
       passwordHash: adminPasswordHash,
-    },
+    } as any,
   })
   console.log('[seed] Admin user seeded:', adminUser.email)
 
@@ -59,14 +61,14 @@ async function main() {
       role: 'ADMIN',
       tenantId: tenant.id,
       passwordHash: demoPasswordHash,
-    },
+    } as any,
     create: {
       email: 'demo@calibr.lat',
       name: 'Demo User',
       role: 'ADMIN',
       tenantId: tenant.id,
       passwordHash: demoPasswordHash,
-    },
+    } as any,
   })
   console.log('[seed] Demo user seeded:', demoUser.email)
 
@@ -179,6 +181,7 @@ async function main() {
         update: {},
         create: {
           ...skuInfo,
+          name: skuInfo.code, // Use code as name if name not provided
           productId: product.id,
         },
       })
