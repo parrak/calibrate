@@ -56,4 +56,6 @@ WHERE email = 'admin@calibr.lat';
 - The migration adds the `passwordHash` column to the User table
 - The seed endpoint creates/updates users with hashed passwords
 - Both console (Vercel) and API (Railway) connect to the same PostgreSQL database
+- **Manual seeding is required after initial deployment** - call `POST /api/seed` once to create initial users
+- The seed endpoint uses `upsert`, so it's safe to call multiple times (updates existing users with passwords if needed)
 

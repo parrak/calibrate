@@ -72,6 +72,24 @@ After deploying code changes that include schema updates:
 railway run -- npx prisma migrate deploy --schema=./packages/db/prisma/schema.prisma
 ```
 
+**Note:** Migrations run automatically via `preDeployCommand` in `railway.json`.
+
+### Initial Database Seeding
+
+After the first deployment or when setting up a new database, seed the database to create initial users:
+
+```bash
+# Call the seed endpoint
+curl -X POST https://api.calibr.lat/api/seed
+```
+
+This creates:
+- `admin@calibr.lat` with password `Admin1234!` (or `ADMIN_SEED_PASSWORD` env var)
+- `demo@calibr.lat` with password `Demo1234!` (or `DEMO_SEED_PASSWORD` env var)
+- Demo tenant, project, products, and sample data
+
+**Note:** The seed endpoint uses `upsert`, so it's safe to call multiple times. It will update existing users with passwords if needed.
+
 ### Viewing Logs
 
 ```bash
