@@ -12,6 +12,7 @@
   "dependencies": {
     "@calibr/db": "workspace:*",
     "@calibr/ui": "workspace:*",
+    "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "lucide-react": "^0.263.1",
     "next": "14.0.4",

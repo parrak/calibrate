@@ -116,11 +116,18 @@ export const GET = withSecurity(async (req: NextRequest) => {
       include: {
         project: {
           include: {
-            platformIntegrations: {
+            shopifyIntegrations: {
               select: {
                 id: true,
-                platform: true,
-                status: true,
+                shopDomain: true,
+                isActive: true,
+              },
+            },
+            amazonIntegrations: {
+              select: {
+                id: true,
+                sellerId: true,
+                isActive: true,
               },
             },
           },
@@ -133,16 +140,25 @@ export const GET = withSecurity(async (req: NextRequest) => {
       },
     })
 
-    const projects = memberships.map((m) => ({
-      id: m.project.id,
-      slug: m.project.slug,
-      name: m.project.name,
-      role: m.role,
-      integrationCount: m.project.platformIntegrations.length,
-      integrations: m.project.platformIntegrations,
-      createdAt: m.project.createdAt,
-      updatedAt: m.project.updatedAt,
-    }))
+    const projects = memberships.map((m) => {
+      const shopifyIntegrations = m.project.shopifyIntegrations || []
+      const amazonIntegrations = m.project.amazonIntegrations || []
+      const integrations = {
+        shopify: shopifyIntegrations,
+        amazon: amazonIntegrations,
+      }
+
+      return {
+        id: m.project.id,
+        slug: m.project.slug,
+        name: m.project.name,
+        role: m.role,
+        integrationCount: shopifyIntegrations.length + amazonIntegrations.length,
+        integrations,
+        createdAt: m.project.createdAt,
+        updatedAt: m.project.updatedAt,
+      }
+    })
 
     return NextResponse.json({ projects })
   } catch (error: any) {

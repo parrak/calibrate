@@ -1,9 +1,15 @@
-import { PrismaClient } from '@prisma/client'
+﻿import { PrismaClient } from '@prisma/client'
+import { hashSync } from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
   console.log('Starting database seed...')
+
+  const adminSeedPassword = process.env.ADMIN_SEED_PASSWORD || 'Admin1234!'
+  const demoSeedPassword = process.env.DEMO_SEED_PASSWORD || 'Demo1234!'
+  const adminPasswordHash = hashSync(adminSeedPassword, 10)
+  const demoPasswordHash = hashSync(demoSeedPassword, 10)
 
   // Create demo tenant
   const tenant = await prisma.tenant.upsert({
@@ -14,7 +20,7 @@ async function main() {
       name: 'Demo Company',
     },
   })
-  console.log('✓ Tenant created:', tenant.name)
+  console.log('âœ“ Tenant created:', tenant.name)
 
   // Create demo project
   const project = await prisma.project.upsert({
@@ -26,7 +32,73 @@ async function main() {
       tenantId: tenant.id,
     },
   })
-  console.log('✓ Project created:', project.name)
+  console.log('âœ“ Project created:', project.name)
+
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@calibr.lat' },
+    update: {
+      name: 'Admin User',
+      role: 'OWNER',
+      tenantId: tenant.id,
+      passwordHash: adminPasswordHash,
+    },
+    create: {
+      email: 'admin@calibr.lat',
+      name: 'Admin User',
+      role: 'OWNER',
+      tenantId: tenant.id,
+      passwordHash: adminPasswordHash,
+    },
+  })
+  console.log('[seed] Admin user seeded:', adminUser.email)
+
+  const demoUser = await prisma.user.upsert({
+    where: { email: 'demo@calibr.lat' },
+    update: {
+      name: 'Demo User',
+      role: 'ADMIN',
+      tenantId: tenant.id,
+      passwordHash: demoPasswordHash,
+    },
+    create: {
+      email: 'demo@calibr.lat',
+      name: 'Demo User',
+      role: 'ADMIN',
+      tenantId: tenant.id,
+      passwordHash: demoPasswordHash,
+    },
+  })
+  console.log('[seed] Demo user seeded:', demoUser.email)
+
+  await prisma.membership.upsert({
+    where: {
+      userId_projectId: {
+        userId: adminUser.id,
+        projectId: project.id,
+      },
+    },
+    update: { role: 'OWNER' },
+    create: {
+      userId: adminUser.id,
+      projectId: project.id,
+      role: 'OWNER',
+    },
+  })
+
+  await prisma.membership.upsert({
+    where: {
+      userId_projectId: {
+        userId: demoUser.id,
+        projectId: project.id,
+      },
+    },
+    update: { role: 'ADMIN' },
+    create: {
+      userId: demoUser.id,
+      projectId: project.id,
+      role: 'ADMIN',
+    },
+  })
 
   // Create demo products
   const products = [
@@ -93,7 +165,7 @@ async function main() {
       update: {},
       create: productInfo,
     })
-    console.log('✓ Product created:', product.name)
+    console.log('âœ“ Product created:', product.name)
 
     for (const skuData of skus) {
       const { prices, ...skuInfo } = skuData
@@ -110,7 +182,7 @@ async function main() {
           productId: product.id,
         },
       })
-      console.log('  ✓ SKU created:', sku.code)
+      console.log('  âœ“ SKU created:', sku.code)
 
       for (const priceData of prices) {
         await prisma.price.upsert({
@@ -127,7 +199,7 @@ async function main() {
           },
         })
       }
-      console.log('    ✓ Prices created for', prices.length, 'currencies')
+      console.log('    âœ“ Prices created for', prices.length, 'currencies')
     }
   }
 
@@ -147,7 +219,7 @@ async function main() {
       },
     },
   })
-  console.log('✓ Policy created')
+  console.log('âœ“ Policy created')
 
   // Create demo competitors
   const competitor1 = await prisma.competitor.upsert({
@@ -163,7 +235,7 @@ async function main() {
       isActive: true,
     },
   })
-  console.log('✓ Competitor created:', competitor1.name)
+  console.log('âœ“ Competitor created:', competitor1.name)
 
   const competitor2 = await prisma.competitor.upsert({
     where: { id: 'demo-competitor-2' },
@@ -178,7 +250,7 @@ async function main() {
       isActive: true,
     },
   })
-  console.log('✓ Competitor created:', competitor2.name)
+  console.log('âœ“ Competitor created:', competitor2.name)
 
   // Get SKUs for linking competitor products
   const proMonthlySku = await prisma.sku.findFirst({
@@ -231,7 +303,7 @@ async function main() {
       },
     })
 
-    console.log('✓ Competitor products and prices created for PRO-MONTHLY')
+    console.log('âœ“ Competitor products and prices created for PRO-MONTHLY')
   }
 
   if (entMonthlySku) {
@@ -275,7 +347,7 @@ async function main() {
       },
     })
 
-    console.log('✓ Competitor products and prices created for ENT-MONTHLY')
+    console.log('âœ“ Competitor products and prices created for ENT-MONTHLY')
   }
 
   // Create demo competitor rule
@@ -294,7 +366,7 @@ async function main() {
       },
     },
   })
-  console.log('✓ Competitor rule created')
+  console.log('âœ“ Competitor rule created')
 
   // Create some demo price changes
   const proMonthlyUsdSku = await prisma.sku.findFirst({
@@ -319,11 +391,11 @@ async function main() {
           policyResult: { ok: true, checks: [] },
         },
       })
-      console.log('✓ Demo price change created')
+      console.log('âœ“ Demo price change created')
     }
   }
 
-  console.log('✅ Database seeded successfully!')
+  console.log('âœ… Database seeded successfully!')
 }
 
 main()

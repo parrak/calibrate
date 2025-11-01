@@ -2,9 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+
+const API_FALLBACK = 'http://localhost:3001'
 
 export default function CreateProject() {
   const router = useRouter()
+  const { data: session } = useSession()
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [error, setError] = useState('')
@@ -31,14 +35,26 @@ export default function CreateProject() {
     setLoading(true)
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3001'
+      const userId = session?.user?.id
+      if (!userId) {
+        throw new Error('Your session has expired. Please sign in again.')
+      }
+
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE || API_FALLBACK
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      const apiToken = (session as any)?.apiToken as string | undefined
+      if (apiToken) {
+        headers.Authorization = `Bearer ${apiToken}`
+      }
+
       const res = await fetch(`${apiBase}/api/projects`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           name,
           slug,
-          userId: 'temp-user-id', // TODO: Get from session
+          userId,
+          tenantId: session?.user?.tenantId,
         }),
       })
 

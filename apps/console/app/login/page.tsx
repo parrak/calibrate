@@ -4,6 +4,7 @@
  * Simple email-based login for Calibrate Console
  */
 
+import Link from 'next/link'
 import LoginForm from '@/components/LoginForm'
 
 export default function LoginPage({ searchParams }: { searchParams?: { callbackUrl?: string; error?: string } }) {
@@ -23,12 +24,15 @@ export default function LoginPage({ searchParams }: { searchParams?: { callbackU
 
         <LoginForm callbackUrl={searchParams?.callbackUrl} />
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-3">
           <p className="text-sm text-gray-600">
-            Demo mode: Enter any email to sign in
+            Need an account?{' '}
+            <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+              Create one now
+            </Link>
           </p>
           {searchParams?.error && (
-            <p className="text-sm text-red-600 mt-2">{decodeURIComponent(searchParams.error)}</p>
+            <p className="text-sm text-red-600">{decodeURIComponent(searchParams.error)}</p>
           )}
         </div>
 

@@ -22,6 +22,7 @@
     "@calibr/pricing-engine": "workspace:*",
     "@calibr/security": "workspace:*",
     "@calibrate/competitor-monitoring": "workspace:*",
+    "bcryptjs": "^2.4.3",
     "isomorphic-dompurify": "^2.30.1",
     "next": "14.0.4",
     "prisma": "^5.22.0",

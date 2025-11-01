@@ -15,6 +15,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "@prisma/client": "^5.22.0",
     "@calibr/security": "workspace:*"
   },

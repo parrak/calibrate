@@ -78,6 +78,9 @@ importers:
       '@calibrate/competitor-monitoring':
         specifier: workspace:*
         version: link:../../packages/competitor-monitoring
+      bcryptjs:
+        specifier: ^2.4.3
+        version: 2.4.3
       isomorphic-dompurify:
         specifier: ^2.30.1
         version: 2.30.1(postcss@8.5.6)
@@ -136,6 +139,9 @@ importers:
       '@calibr/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      bcryptjs:
+        specifier: ^2.4.3
+        version: 2.4.3
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -322,6 +328,9 @@ importers:
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
+      bcryptjs:
+        specifier: ^2.4.3
+        version: 2.4.3
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -1615,6 +1624,9 @@ packages:
   baseline-browser-mapping@2.8.18:
     resolution: {integrity: sha512-UYmTpOBwgPScZpS4A+YbapwWuBwasxvO/2IOHArSsAhL/+ZdmATBXTex3t+l2hXwLVYK382ibr/nKoY9GKe86w==}
     hasBin: true
+
+  bcryptjs@2.4.3:
+    resolution: {integrity: sha512-V/Hy/X9Vt7f3BbPJEi8BdVFMByHi+jNXrYkW3huaybV/kQ0KJg0Y6PkEMbn+zeT+i+SiKZ/HMqJGIIt4LZDqNQ==}
 
   bidi-js@1.0.3:
     resolution: {integrity: sha512-RKshQI1R3YQ+n9YJz2QQ147P66ELpa1FQEg20Dk8oW9t2KgLbpDLLp9aGZ7y8WHSshDknG0bknqGw5/tyCs5tw==}
@@ -4681,6 +4693,8 @@ snapshots:
   balanced-match@1.0.2: {}
 
   baseline-browser-mapping@2.8.18: {}
+
+  bcryptjs@2.4.3: {}
 
   bidi-js@1.0.3:
     dependencies:

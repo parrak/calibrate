@@ -8,6 +8,7 @@ import NextAuth, { NextAuthOptions } from 'next-auth'
 import { getServerSession as getServerSessionHelper } from 'next-auth'
 import { prisma } from '@calibr/db'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import { compare } from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
@@ -20,43 +21,31 @@ export const authOptions: NextAuthOptions = {
           type: 'email',
           placeholder: 'you@example.com',
         },
+        password: {
+          label: 'Password',
+          type: 'password',
+        },
       },
       async authorize(credentials) {
-        if (!credentials?.email || typeof credentials.email !== 'string') {
+        if (!credentials?.email || !credentials?.password) {
           return null
         }
 
-        // For demo purposes, allow any email
-        // In production, verify password or send magic link
-        const email = credentials.email.toLowerCase()
+        const email = credentials.email.trim().toLowerCase()
+        const password = credentials.password
         const db = prisma()
 
-        // Find or create user
-        let user = await db.user.findUnique({
+        const user = await db.user.findUnique({
           where: { email },
-          include: { tenant: true },
         })
 
-        if (!user) {
-          // Create demo user with demo tenant
-          const tenant = await db.tenant.upsert({
-            where: { id: 'demo-tenant' },
-            create: {
-              id: 'demo-tenant',
-              name: 'Demo Company',
-            },
-            update: {},
-          })
+        if (!user || !user.passwordHash) {
+          return null
+        }
 
-          user = await db.user.create({
-            data: {
-              email,
-              name: email.split('@')[0],
-              role: 'ADMIN',
-              tenantId: tenant.id,
-            },
-            include: { tenant: true },
-          })
+        const isValidPassword = await compare(password, user.passwordHash)
+        if (!isValidPassword) {
+          return null
         }
 
         return {
@@ -64,6 +53,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          tenantId: user.tenantId,
         }
       },
     }),
@@ -75,15 +65,19 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role
-        // Bootstrap API session token for console → API calls
+        ;(token as any).tenantId = (user as any).tenantId
         try {
           const apiBase = process.env.NEXT_PUBLIC_API_BASE || process.env.API_BASE_URL
           const internal = process.env.CONSOLE_INTERNAL_TOKEN
-          if (apiBase && internal) {
+          if (apiBase && internal && token.sub) {
+            const tenantId = (user as any).tenantId
+            const roleLower =
+              typeof user.role === 'string' ? user.role.toLowerCase() : undefined
+            const roles = Array.from(new Set([user.role, roleLower].filter(Boolean)))
             const res = await fetch(`${apiBase}/api/auth/session`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-console-auth': internal },
-              body: JSON.stringify({ userId: token.sub, roles: [user.role] }),
+              body: JSON.stringify({ userId: token.sub, roles, tenantId }),
             })
             if (res.ok) {
               const data = await res.json()
@@ -100,7 +94,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.sub as string
         session.user.role = token.role as string
-        session.apiToken = token.apiToken
+        session.user.tenantId = (token as any).tenantId as string | undefined
+        session.apiToken = (token as any).apiToken as string | undefined
       }
       return session
     },

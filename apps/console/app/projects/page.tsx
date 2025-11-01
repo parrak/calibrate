@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Button, EmptyState } from '@/lib/components'
 
 type Project = {
@@ -10,17 +12,60 @@ type Project = {
   createdAt: string
 }
 
+const API_FALLBACK = 'http://localhost:3001'
+
 export default function Projects() {
+  const router = useRouter()
+  const { data: session } = useSession()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const apiToken = (session as any)?.apiToken as string | undefined
 
   useEffect(() => {
-    // TODO: Replace with API fetch for user projects
-    setProjects([
-      { id: 'demo', name: 'Demo Project', slug: 'demo', createdAt: new Date().toISOString() },
-    ])
-    setLoading(false)
-  }, [])
+    const userId = session?.user?.id
+    if (!userId) {
+      return
+    }
+
+    let isMounted = true
+
+    async function loadProjects() {
+      setLoading(true)
+      setError('')
+      try {
+        const apiBase = process.env.NEXT_PUBLIC_API_BASE || API_FALLBACK
+        const headers: Record<string, string> = {}
+        if (apiToken) {
+          headers.Authorization = `Bearer ${apiToken}`
+        }
+        const res = await fetch(`${apiBase}/api/projects?userId=${userId}`, { headers })
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || 'Unable to load projects.')
+        }
+        const data = await res.json()
+        if (isMounted) {
+          setProjects(Array.isArray(data.projects) ? data.projects : [])
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          setError(err?.message || 'Failed to load projects.')
+          setProjects([])
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadProjects()
+
+    return () => {
+      isMounted = false
+    }
+  }, [session?.user?.id, apiToken])
 
   if (loading)
     return (
@@ -33,11 +78,18 @@ export default function Projects() {
   if (!projects.length) {
     return (
       <div className="p-6">
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
         <EmptyState
           title="No projects yet"
           desc="Create your first project to get started with price management."
         >
-          <Button aria-label="Create a new project">Create Project</Button>
+          <Button aria-label="Create a new project" onClick={() => router.push('/onboarding/project')}>
+            Create Project
+          </Button>
         </EmptyState>
       </div>
     )
@@ -47,8 +99,16 @@ export default function Projects() {
     <main className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Projects</h1>
-        <Button aria-label="Create a new project">Create Project</Button>
+        <Button aria-label="Create a new project" onClick={() => router.push('/onboarding/project')}>
+          Create Project
+        </Button>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-700">
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {projects.map((project) => (
