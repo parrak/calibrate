@@ -26,8 +26,16 @@ export class ShopifyProductOperations implements ProductOperations {
       );
     }
 
+    if (!this.connector.underlyingProducts) {
+      throw new PlatformError(
+        'authentication',
+        'Products client not initialized. Connector may not be fully initialized.',
+        'shopify'
+      );
+    }
+
     try {
-      const response = await this.connector.underlyingProducts!.listProducts({
+      const response = await this.connector.underlyingProducts.listProducts({
         limit: filter?.limit || 50,
         page: filter?.page || 1,
         vendor: filter?.vendor,
@@ -35,6 +43,15 @@ export class ShopifyProductOperations implements ProductOperations {
         title: filter?.search,
         updated_at_min: filter?.updatedAfter?.toISOString(),
       } as any);
+
+      // Validate response structure
+      if (!response || typeof response !== 'object') {
+        throw new Error('Invalid response from Shopify API: response is not an object');
+      }
+
+      if (!Array.isArray(response.products)) {
+        throw new Error(`Invalid response from Shopify API: products is not an array. Got: ${typeof response.products}`);
+      }
 
       return {
         data: response.products.map((product: any) => this.normalizeProduct(product)),
@@ -46,12 +63,44 @@ export class ShopifyProductOperations implements ProductOperations {
           hasPrev: response.page_info?.has_previous_page || false,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
+      // Extract error message from various error types
+      let errorMessage = 'Unknown error';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error?.errors) {
+        // Handle ShopifyApiError format
+        const errors = error.errors;
+        if (typeof errors === 'object') {
+          const errorMessages: string[] = [];
+          for (const key in errors) {
+            if (Array.isArray(errors[key])) {
+              errorMessages.push(...errors[key]);
+            } else if (typeof errors[key] === 'string') {
+              errorMessages.push(errors[key]);
+            }
+          }
+          errorMessage = errorMessages.length > 0 
+            ? errorMessages.join(', ') 
+            : 'Shopify API error';
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+
+      // Create a proper Error object if needed
+      const originalError = error instanceof Error 
+        ? error 
+        : new Error(errorMessage);
+
       throw new PlatformError(
         'server',
-        `Failed to list products: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Failed to list products: ${errorMessage}`,
         'shopify',
-        error instanceof Error ? error : undefined
+        originalError
       );
     }
   }

@@ -66,7 +66,9 @@ export class ShopifyClient {
             });
           }
         }
-        return Promise.reject(this.handleError(error));
+        // Handle error and return a proper Error instance
+        const handledError = this.handleError(error);
+        return Promise.reject(handledError);
       }
     );
   }
@@ -89,19 +91,50 @@ export class ShopifyClient {
   /**
    * Handle API errors and convert to standardized format
    */
-  private handleError(error: any): ShopifyApiError {
-    if (error.response?.data) {
-      return {
-        errors: error.response.data.errors || {
-          general: [error.response.data.message || 'Unknown error'],
-        },
-      };
+  private handleError(error: any): Error {
+    // If it's already an Error instance, return it
+    if (error instanceof Error) {
+      return error;
     }
-    return {
-      errors: {
-        general: [error.message || 'Network error'],
-      },
-    };
+
+    // Extract error message from Shopify API response
+    let errorMessage = 'Unknown error';
+    let statusCode: number | undefined;
+    
+    if (error.response?.data) {
+      statusCode = error.response.status;
+      const data = error.response.data;
+      
+      if (data.errors && typeof data.errors === 'object') {
+        // Format Shopify API errors
+        const errorMessages: string[] = [];
+        for (const key in data.errors) {
+          if (Array.isArray(data.errors[key])) {
+            errorMessages.push(...data.errors[key]);
+          } else if (typeof data.errors[key] === 'string') {
+            errorMessages.push(data.errors[key]);
+          }
+        }
+        errorMessage = errorMessages.length > 0 
+          ? errorMessages.join(', ') 
+          : (data.message || 'Shopify API error');
+      } else if (data.message) {
+        errorMessage = data.message;
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    // Create a proper Error instance with additional context
+    const err = new Error(errorMessage);
+    if (statusCode) {
+      (err as any).statusCode = statusCode;
+    }
+    if (error.response?.data) {
+      (err as any).responseData = error.response.data;
+    }
+    
+    return err;
   }
 
   /**

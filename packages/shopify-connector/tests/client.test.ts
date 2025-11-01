@@ -136,6 +136,7 @@ describe('ShopifyClient', () => {
     it('should handle API errors correctly', () => {
       const error = {
         response: {
+          status: 400,
           data: {
             errors: {
               title: ['Title is required'],
@@ -145,11 +146,9 @@ describe('ShopifyClient', () => {
       };
 
       const result = client['handleError'](error);
-      expect(result).toEqual({
-        errors: {
-          title: ['Title is required'],
-        },
-      });
+      expect(result).toBeInstanceOf(Error);
+      expect(result.message).toBe('Title is required');
+      expect((result as any).statusCode).toBe(400);
     });
 
     it('should handle network errors', () => {
@@ -158,11 +157,8 @@ describe('ShopifyClient', () => {
       };
 
       const result = client['handleError'](error);
-      expect(result).toEqual({
-        errors: {
-          general: ['Network error'],
-        },
-      });
+      expect(result).toBeInstanceOf(Error);
+      expect(result.message).toBe('Network error');
     });
   });
 });

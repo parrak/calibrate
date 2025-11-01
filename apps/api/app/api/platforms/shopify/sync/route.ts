@@ -95,26 +95,45 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
     }
 
     try {
+      // Validate environment variables
+      if (!process.env.SHOPIFY_API_KEY) {
+        throw new Error('SHOPIFY_API_KEY environment variable is not set');
+      }
+      if (!process.env.SHOPIFY_API_SECRET) {
+        throw new Error('SHOPIFY_API_SECRET environment variable is not set');
+      }
+
       // Get connector configuration
       const config = {
         platform: 'shopify' as const,
-        apiKey: process.env.SHOPIFY_API_KEY!,
-        apiSecret: process.env.SHOPIFY_API_SECRET!,
+        apiKey: process.env.SHOPIFY_API_KEY,
+        apiSecret: process.env.SHOPIFY_API_SECRET,
         scopes: (process.env.SHOPIFY_SCOPES || 'read_products,write_products').split(','),
-        webhookSecret: process.env.SHOPIFY_WEBHOOK_SECRET!,
+        webhookSecret: process.env.SHOPIFY_WEBHOOK_SECRET || '',
         apiVersion: process.env.SHOPIFY_API_VERSION || '2024-10',
       };
+
+      // Validate integration credentials
+      if (!integration.shopDomain || !integration.accessToken) {
+        throw new Error('Shopify integration is missing required credentials (shopDomain or accessToken)');
+      }
 
       // Create connector with stored credentials
       const credentials = {
         platform: 'shopify' as const,
-      shopDomain: integration.shopDomain,
-      accessToken: integration.accessToken,
-      scope: integration.scope,
+        shopDomain: integration.shopDomain,
+        accessToken: integration.accessToken,
+        scope: integration.scope,
       };
 
       const connector = await ConnectorRegistry.createConnector('shopify', config);
       await connector.initialize(credentials);
+
+      // Verify connector is properly initialized
+      const isAuthenticated = await connector.isAuthenticated();
+      if (!isAuthenticated) {
+        throw new Error('Failed to authenticate with Shopify. Please reconnect your integration.');
+      }
 
       let syncResults = [];
       let summary = { total: 0, successful: 0, failed: 0 };
@@ -199,6 +218,33 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
         message: `Sync completed: ${summary.successful}/${summary.total} items processed successfully`,
       });
     } catch (error) {
+      // Extract detailed error message
+      let errorMessage = 'Unknown error';
+      let errorDetails: any = null;
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        errorDetails = {
+          name: error.name,
+          stack: error.stack,
+          // Include additional properties if available
+          ...(error as any).statusCode && { statusCode: (error as any).statusCode },
+          ...(error as any).responseData && { responseData: (error as any).responseData },
+        };
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = (error as any).message || JSON.stringify(error);
+        errorDetails = error;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+
+      console.error('Shopify sync error details:', {
+        errorMessage,
+        errorDetails,
+        integrationId: integration.id,
+        shopDomain: integration.shopDomain,
+      });
+
       // Update sync log with error
       if (syncLog?.id) {
         try {
@@ -207,7 +253,7 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
             data: {
               status: 'ERROR',
               completedAt: new Date(),
-              errors: [error instanceof Error ? error.message : 'Unknown error'],
+              errors: [errorMessage],
             },
           });
         } catch (err) {
@@ -220,11 +266,16 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
         where: { id: integration.id },
         data: {
           syncStatus: 'ERROR',
-          syncError: error instanceof Error ? error.message : 'Unknown error',
+          syncError: errorMessage,
         },
       });
 
-      throw error;
+      // Re-throw with better error message
+      const syncError = new Error(`Shopify sync failed: ${errorMessage}`);
+      if (errorDetails) {
+        (syncError as any).details = errorDetails;
+      }
+      throw syncError;
     }
   } catch (error) {
     console.error('Shopify sync error:', error);
