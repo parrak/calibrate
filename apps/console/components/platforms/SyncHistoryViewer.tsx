@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { platformsApi } from '@/lib/api-client'
 
 interface SyncLog {
@@ -28,50 +28,59 @@ export function SyncHistoryViewer({
   const [logs, setLogs] = useState<SyncLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Fetch sync history on mount
   useEffect(() => {
     fetchSyncHistory()
-  }, [integrationId])
+  }, [integrationId, projectSlug])
+
+  // Poll for updates when there's an active sync
+  useEffect(() => {
+    const hasActiveSync = logs.some(log => log.status === 'SYNCING')
+    
+    if (hasActiveSync) {
+      // Poll every 2 seconds when sync is active
+      pollingIntervalRef.current = setInterval(() => {
+        fetchSyncHistory()
+      }, 2000)
+    } else {
+      // Clear polling when no active sync
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+        pollingIntervalRef.current = null
+      }
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+      }
+    }
+  }, [logs])
 
   const fetchSyncHistory = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with actual API call when endpoint exists
-      // For now, use mock data
-      const mockLogs: SyncLog[] = [
-        {
-          id: '1',
-          syncType: 'full',
-          status: 'SUCCESS',
-          startedAt: new Date(Date.now() - 3600000).toISOString(),
-          completedAt: new Date(Date.now() - 3500000).toISOString(),
-          itemsSynced: 245,
-          itemsFailed: 0,
-          errors: null,
-        },
-        {
-          id: '2',
-          syncType: 'incremental',
-          status: 'SUCCESS',
-          startedAt: new Date(Date.now() - 7200000).toISOString(),
-          completedAt: new Date(Date.now() - 7100000).toISOString(),
-          itemsSynced: 12,
-          itemsFailed: 0,
-          errors: null,
-        },
-        {
-          id: '3',
-          syncType: 'manual',
-          status: 'PARTIAL',
-          startedAt: new Date(Date.now() - 10800000).toISOString(),
-          completedAt: new Date(Date.now() - 10600000).toISOString(),
-          itemsSynced: 189,
-          itemsFailed: 3,
-          errors: null,
-        },
-      ]
-      setLogs(mockLogs)
+      setError(null)
+      
+      const data = await platformsApi.getSyncStatus(platform, projectSlug)
+      
+      // Transform API response to our SyncLog format
+      const transformedLogs: SyncLog[] = data.syncLogs.map(log => ({
+        id: log.id,
+        syncType: log.syncType,
+        status: log.status,
+        startedAt: log.startedAt,
+        completedAt: log.completedAt,
+        itemsSynced: log.itemsSuccessful ?? log.itemsProcessed ?? 0,
+        itemsFailed: log.itemsFailed ?? 0,
+        errors: log.errors,
+      }))
+      
+      setLogs(transformedLogs)
     } catch (err: any) {
+      console.error('Failed to fetch sync history:', err)
       setError(err.message || 'Failed to load sync history')
     } finally {
       setLoading(false)

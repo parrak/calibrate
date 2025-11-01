@@ -142,11 +142,37 @@ export const platformsApi = {
     })
   },
 
-  triggerSync: async (platform: string, projectSlug: string) => {
+  triggerSync: async (platform: string, projectSlug: string, syncType: string = 'full') => {
     return fetchApi(`/api/platforms/${platform}/sync`, {
       method: 'POST',
-      body: JSON.stringify({ projectSlug }),
+      body: JSON.stringify({ projectSlug, syncType }),
     })
+  },
+
+  getSyncStatus: async (platform: string, projectSlug: string, projectId?: string) => {
+    const queryParam = projectId ? `projectId=${projectId}` : `projectSlug=${projectSlug}`
+    return fetchApi<{
+      success: boolean
+      integration: {
+        id: string
+        platformName: string
+        status: string
+        syncStatus: string | null
+        lastSyncAt: string | null
+        syncError: string | null
+      }
+      syncLogs: Array<{
+        id: string
+        syncType: string
+        status: string
+        startedAt: string
+        completedAt: string | null
+        itemsProcessed: number | null
+        itemsSuccessful: number | null
+        itemsFailed: number | null
+        errors: any
+      }>
+    }>(`/api/platforms/${platform}/sync/status?${queryParam}`)
   },
 }
 

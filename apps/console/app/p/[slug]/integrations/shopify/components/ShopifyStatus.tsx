@@ -5,8 +5,9 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, Badge, Button } from '@calibr/ui';
+import { platformsApi } from '@/lib/api-client';
 
 interface ShopifyIntegration {
   id: string;
@@ -26,12 +27,98 @@ interface ShopifyStatusProps {
 
 export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifyStatusProps) {
   const [testing, setTesting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [currentIntegration, setCurrentIntegration] = useState<ShopifyIntegration>(integration);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync prop changes to local state
   useEffect(() => {
     setCurrentIntegration(integration);
   }, [integration]);
+
+  // Poll for live status updates when sync is in progress
+  useEffect(() => {
+    const isSyncing = currentIntegration.syncStatus === 'SYNCING' || currentIntegration.syncStatus === 'in_progress';
+    
+    if (isSyncing && projectSlug) {
+      // Poll every 2 seconds when sync is active
+      pollingIntervalRef.current = setInterval(async () => {
+        try {
+          const data = await platformsApi.getSyncStatus('shopify', projectSlug);
+          if (data.integration) {
+            const updated: ShopifyIntegration = {
+              ...currentIntegration,
+              syncStatus: data.integration.syncStatus,
+              lastSyncAt: data.integration.lastSyncAt,
+              syncError: data.integration.syncError,
+            };
+            setCurrentIntegration(updated);
+            if (onUpdate) {
+              onUpdate(updated);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to poll sync status:', err);
+        }
+      }, 2000);
+    } else {
+      // Clear polling when no active sync
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [currentIntegration.syncStatus, projectSlug]);
+
+  const handleSync = async () => {
+    if (!projectSlug) {
+      alert('Project slug is required for sync');
+      return;
+    }
+
+    try {
+      setSyncing(true);
+      
+      // Use platformsApi to trigger sync
+      await platformsApi.triggerSync('shopify', projectSlug, 'full');
+      
+      // Update local state to show syncing
+      const updated: ShopifyIntegration = {
+        ...currentIntegration,
+        syncStatus: 'SYNCING',
+        syncError: null,
+      };
+      setCurrentIntegration(updated);
+      
+      if (onUpdate) {
+        onUpdate(updated);
+      }
+
+      // The polling effect will handle updating the status
+    } catch (error) {
+      console.error('Sync error:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Sync operation failed';
+      const updated: ShopifyIntegration = {
+        ...currentIntegration,
+        syncStatus: 'error',
+        syncError: errorMessage,
+      };
+      setCurrentIntegration(updated);
+      
+      if (onUpdate) {
+        onUpdate(updated);
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleTestConnection = async () => {
     // Use NEXT_PUBLIC_API_BASE with fallback to production API
@@ -171,6 +258,16 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
             Actions
           </h3>
           <div className="space-y-2">
+            <Button 
+              onClick={handleSync}
+              disabled={syncing || currentIntegration.syncStatus === 'SYNCING' || currentIntegration.syncStatus === 'in_progress'}
+              variant="primary"
+              className="w-full"
+            >
+              {syncing || currentIntegration.syncStatus === 'SYNCING' || currentIntegration.syncStatus === 'in_progress' 
+                ? 'Syncing...' 
+                : 'Sync Products'}
+            </Button>
             <Button 
               onClick={handleTestConnection}
               disabled={testing}

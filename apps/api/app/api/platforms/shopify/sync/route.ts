@@ -3,6 +3,7 @@
  * Handles manual synchronization triggers
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { withSecurity } from '@/lib/security-headers';
 import { ConnectorRegistry } from '@calibr/platform-connector';
 import { prisma } from '@calibr/db';
 import '@/lib/platforms/register';
@@ -14,7 +15,7 @@ export const runtime = 'nodejs';
  * 
  * Trigger manual synchronization
  */
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { projectId, syncType = 'full' } = body;
@@ -50,15 +51,22 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create sync log entry
-    const syncLog = await prisma().platformSyncLog.create({
-      data: {
-        integrationId: integration.id,
-        syncType,
-        status: 'SYNCING',
-        startedAt: new Date(),
-      },
-    });
+    // Create sync log entry - PlatformSyncLog model doesn't exist yet
+    // TODO: Create PlatformSyncLog model or use alternative storage
+    let syncLog: any = null;
+    try {
+      syncLog = await (prisma() as any).platformSyncLog?.create({
+        data: {
+          integrationId: integration.id,
+          syncType,
+          status: 'SYNCING',
+          startedAt: new Date(),
+        },
+      });
+    } catch (err) {
+      // Model doesn't exist yet - this is expected
+      console.log('PlatformSyncLog model not available, sync will proceed without logging');
+    }
 
     try {
       // Get connector configuration
@@ -129,17 +137,23 @@ export async function POST(request: NextRequest) {
       }
 
       // Update sync log with results
-      await prisma().platformSyncLog.update({
-        where: { id: syncLog.id },
-        data: {
-          status: summary.failed === 0 ? 'SUCCESS' : 'PARTIAL',
-          completedAt: new Date(),
-          itemsProcessed: summary.total,
-          itemsSuccessful: summary.successful,
-          itemsFailed: summary.failed,
-          errors: summary.failed > 0 ? syncResults.filter(r => !r.success).map(r => r.error).filter(Boolean) : null,
-        },
-      });
+      if (syncLog?.id) {
+        try {
+          await (prisma() as any).platformSyncLog?.update({
+            where: { id: syncLog.id },
+            data: {
+              status: summary.failed === 0 ? 'SUCCESS' : 'PARTIAL',
+              completedAt: new Date(),
+              itemsProcessed: summary.total,
+              itemsSuccessful: summary.successful,
+              itemsFailed: summary.failed,
+              errors: summary.failed > 0 ? syncResults.filter(r => !r.success).map(r => r.error).filter(Boolean) : null,
+            },
+          });
+        } catch (err) {
+          console.log('Could not update sync log:', err);
+        }
+      }
 
       // Update integration status
       await prisma().shopifyIntegration.update({
@@ -155,19 +169,25 @@ export async function POST(request: NextRequest) {
         success: true,
         syncType,
         summary,
-        syncLogId: syncLog.id,
+        syncLogId: syncLog?.id || null,
         message: `Sync completed: ${summary.successful}/${summary.total} items processed successfully`,
       });
     } catch (error) {
       // Update sync log with error
-      await prisma().platformSyncLog.update({
-        where: { id: syncLog.id },
-        data: {
-          status: 'ERROR',
-          completedAt: new Date(),
-          errors: [error instanceof Error ? error.message : 'Unknown error'],
-        },
-      });
+      if (syncLog?.id) {
+        try {
+          await (prisma() as any).platformSyncLog?.update({
+            where: { id: syncLog.id },
+            data: {
+              status: 'ERROR',
+              completedAt: new Date(),
+              errors: [error instanceof Error ? error.message : 'Unknown error'],
+            },
+          });
+        } catch (err) {
+          console.log('Could not update sync log with error:', err);
+        }
+      }
 
       // Update integration status
       await prisma().shopifyIntegration.update({
@@ -190,21 +210,37 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * GET /api/platforms/shopify/sync/status
  * 
  * Get sync status and history
  */
-export async function GET(request: NextRequest) {
+export const GET = withSecurity(async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const projectId = searchParams.get('projectId');
+    let projectId = searchParams.get('projectId');
+    const projectSlug = searchParams.get('projectSlug');
+
+    // If projectSlug is provided, resolve it to projectId
+    if (projectSlug && !projectId) {
+      const project = await prisma().project.findUnique({
+        where: { slug: projectSlug },
+        select: { id: true },
+      });
+      if (!project) {
+        return NextResponse.json(
+          { error: 'Project not found' },
+          { status: 404 }
+        );
+      }
+      projectId = project.id;
+    }
 
     if (!projectId) {
       return NextResponse.json(
-        { error: 'Missing projectId parameter' },
+        { error: 'Missing projectId or projectSlug parameter' },
         { status: 400 }
       );
     }
@@ -224,33 +260,44 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get recent sync logs
-    const syncLogs = await prisma().platformSyncLog.findMany({
-      where: { integrationId: integration.id },
-      orderBy: { startedAt: 'desc' },
-      take: 10,
-    });
+    // Get recent sync logs - PlatformSyncLog model doesn't exist yet, so return empty array
+    // TODO: Create PlatformSyncLog model or use alternative storage
+    const syncLogs: any[] = [];
+    
+    // Try to query sync logs if model exists, catch error gracefully
+    try {
+      // This will fail if model doesn't exist, but we'll catch it
+      const logs = await (prisma() as any).platformSyncLog?.findMany({
+        where: { integrationId: integration.id },
+        orderBy: { startedAt: 'desc' },
+        take: 10,
+      }) || [];
+      syncLogs.push(...logs);
+    } catch (err) {
+      // Model doesn't exist yet - this is expected
+      console.log('PlatformSyncLog model not available, returning empty logs');
+    }
 
     return NextResponse.json({
       success: true,
       integration: {
         id: integration.id,
-        platformName: integration.platformName,
-        status: integration.status,
+        platformName: integration.shopDomain,
+        status: integration.isActive ? 'CONNECTED' : 'DISCONNECTED',
         syncStatus: integration.syncStatus,
-        lastSyncAt: integration.lastSyncAt,
+        lastSyncAt: integration.lastSyncAt?.toISOString() || null,
         syncError: integration.syncError,
       },
       syncLogs: syncLogs.map(log => ({
         id: log.id,
         syncType: log.syncType,
         status: log.status,
-        startedAt: log.startedAt,
-        completedAt: log.completedAt,
-        itemsProcessed: log.itemsProcessed,
-        itemsSuccessful: log.itemsSuccessful,
-        itemsFailed: log.itemsFailed,
-        errors: log.errors,
+        startedAt: log.startedAt?.toISOString() || new Date().toISOString(),
+        completedAt: log.completedAt?.toISOString() || null,
+        itemsProcessed: log.itemsProcessed || 0,
+        itemsSuccessful: log.itemsSuccessful || 0,
+        itemsFailed: log.itemsFailed || 0,
+        errors: log.errors || null,
       })),
     });
   } catch (error) {
@@ -263,4 +310,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
+
+/**
+ * OPTIONS handler for CORS preflight
+ */
+export const OPTIONS = withSecurity(async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, { status: 204 });
+});
