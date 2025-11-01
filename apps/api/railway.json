@@ -13,7 +13,7 @@
                    "healthcheckPath":  "/api/health",
                    "restartPolicyType":  "ON_FAILURE",
                    "restartPolicyMaxRetries":  10,
-                   "preDeployCommand":  "prisma migrate deploy --schema=/app/prisma/schema.prisma",
+                   "preDeployCommand":  "prisma migrate deploy --schema=/app/packages/db/prisma/schema.prisma",
                    "startCommand": "/app/start.sh"
                }
 }
