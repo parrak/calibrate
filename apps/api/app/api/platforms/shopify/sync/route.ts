@@ -17,12 +17,38 @@ export const runtime = 'nodejs';
  */
 export const POST = withSecurity(async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { projectId, syncType = 'full' } = body;
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
+
+    let projectId = body?.projectId;
+    const projectSlug = body?.projectSlug;
+    const syncType = body?.syncType || 'full';
+
+    // If projectSlug is provided, resolve it to projectId
+    if (projectSlug && !projectId) {
+      const project = await prisma().project.findUnique({
+        where: { slug: projectSlug },
+        select: { id: true },
+      });
+      if (!project) {
+        return NextResponse.json(
+          { error: 'Project not found' },
+          { status: 404 }
+        );
+      }
+      projectId = project.id;
+    }
 
     if (!projectId) {
       return NextResponse.json(
-        { error: 'Missing projectId' },
+        { error: 'Missing projectId or projectSlug parameter' },
         { status: 400 }
       );
     }
