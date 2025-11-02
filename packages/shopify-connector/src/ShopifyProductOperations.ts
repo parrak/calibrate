@@ -95,8 +95,8 @@ export class ShopifyProductOperations implements ProductOperations {
           limit: filter?.limit || 50,
           hasNext: response.page_info?.has_next_page || false,
           hasPrev: response.page_info?.has_previous_page || false,
-          // Include cursor information for next page
-          sinceId: lastProductId || undefined,
+          // Use nextCursor for cursor-based pagination (Shopify uses since_id)
+          nextCursor: lastProductId || undefined,
         },
       };
     } catch (error: any) {
@@ -303,10 +303,10 @@ export class ShopifyProductOperations implements ProductOperations {
 
       // Use cursor-based pagination: get the last product ID for next page
       hasMore = response.pagination.hasNext;
-      if (response.pagination.sinceId) {
-        sinceId = response.pagination.sinceId;
+      if (response.pagination.nextCursor) {
+        sinceId = response.pagination.nextCursor;
       } else if (response.data.length > 0) {
-        // Fallback: extract ID from last product if sinceId not in pagination
+        // Fallback: extract ID from last product if nextCursor not in pagination
         const lastProduct = response.data[response.data.length - 1];
         sinceId = lastProduct.externalId;
       } else {
