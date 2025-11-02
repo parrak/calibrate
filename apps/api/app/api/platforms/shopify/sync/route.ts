@@ -204,13 +204,23 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
         }
       }
 
-      // Update integration status
+      // Update integration status with summary information
+      const finalStatus = summary.failed === 0 ? 'SUCCESS' : 'PARTIAL';
+      
+      // Store summary in syncError field in a parseable format
+      // Format: "SUMMARY: total=X, successful=Y, failed=Z" for both success and partial
+      // This allows us to extract summary information for display in sync history
+      const summaryText = `SUMMARY: total=${summary.total}, successful=${summary.successful}, failed=${summary.failed}`;
+      const syncErrorMsg = summary.failed > 0 
+        ? `${summary.failed} items failed to sync (${summary.successful} successful, ${summary.total} total). ${summaryText}`
+        : summaryText; // Store summary even for successful syncs
+      
       await prisma().shopifyIntegration.update({
         where: { id: integration.id },
         data: {
           lastSyncAt: new Date(),
-          syncStatus: summary.failed === 0 ? 'SUCCESS' : 'PARTIAL',
-          syncError: summary.failed > 0 ? `${summary.failed} items failed to sync` : null,
+          syncStatus: finalStatus,
+          syncError: syncErrorMsg,
         },
       });
 
