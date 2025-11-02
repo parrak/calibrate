@@ -4,11 +4,150 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { withSecurity } from '@/lib/security-headers';
-import { ConnectorRegistry } from '@calibr/platform-connector';
+import { ConnectorRegistry, NormalizedProduct } from '@calibr/platform-connector';
 import { prisma } from '@calibr/db';
 import '@/lib/platforms/register';
 
 export const runtime = 'nodejs';
+
+/**
+ * Save a normalized product from Shopify to the database
+ */
+async function saveProductToDatabase(
+  normalizedProduct: NormalizedProduct,
+  tenantId: string,
+  projectId: string
+): Promise<void> {
+  // Validate required fields
+  if (!normalizedProduct.externalId) {
+    throw new Error('Product externalId is required');
+  }
+  if (!normalizedProduct.title) {
+    throw new Error('Product title is required');
+  }
+  if (!tenantId || !projectId) {
+    throw new Error('tenantId and projectId are required');
+  }
+
+  // Use Shopify product ID as the product code (or handle if available)
+  // Fall back to externalId if no better identifier
+  const productCode = normalizedProduct.metadata?.shopifyHandle 
+    || `SHOPIFY-${normalizedProduct.externalId}`;
+  
+  // Create or update the Product
+  const product = await prisma().product.upsert({
+    where: {
+      tenantId_projectId_code: {
+        tenantId,
+        projectId,
+        code: productCode,
+      },
+    },
+    update: {
+      name: normalizedProduct.title,
+      status: normalizedProduct.status === 'active' ? 'ACTIVE' : 'DRAFT',
+    },
+    create: {
+      tenantId,
+      projectId,
+      code: productCode,
+      name: normalizedProduct.title,
+      status: normalizedProduct.status === 'active' ? 'ACTIVE' : 'DRAFT',
+    },
+  });
+
+  // Handle products with no variants - create a default SKU
+  if (!normalizedProduct.variants || normalizedProduct.variants.length === 0) {
+    // Create a default SKU for products without variants
+    const defaultSkuCode = `DEFAULT-${normalizedProduct.externalId}`;
+    await prisma().sku.upsert({
+      where: {
+        productId_code: {
+          productId: product.id,
+          code: defaultSkuCode,
+        },
+      },
+      update: {
+        name: normalizedProduct.title,
+        status: normalizedProduct.status === 'active' ? 'ACTIVE' : 'DRAFT',
+      },
+      create: {
+        productId: product.id,
+        code: defaultSkuCode,
+        name: normalizedProduct.title,
+        status: normalizedProduct.status === 'active' ? 'ACTIVE' : 'DRAFT',
+        attributes: {
+          externalId: normalizedProduct.externalId,
+        },
+      },
+    });
+    return; // Exit early if no variants
+  }
+
+  // Save each variant as a SKU
+  for (const variant of normalizedProduct.variants) {
+    // Validate variant
+    if (!variant.externalId) {
+      console.warn(`Skipping variant without externalId for product ${productCode}`);
+      continue;
+    }
+
+    // Use SKU from variant, or fall back to variant externalId
+    const skuCode = variant.sku || `VARIANT-${variant.externalId}`;
+    
+    // Create or update the SKU
+    const sku = await prisma().sku.upsert({
+      where: {
+        productId_code: {
+          productId: product.id,
+          code: skuCode,
+        },
+      },
+      update: {
+        name: variant.title || product.name,
+        status: normalizedProduct.status === 'active' ? 'ACTIVE' : 'DRAFT',
+        attributes: {
+          externalId: variant.externalId,
+          ...(variant.options || {}),
+          ...(variant.metadata || {}),
+        },
+      },
+      create: {
+        productId: product.id,
+        code: skuCode,
+        name: variant.title || product.name,
+        status: normalizedProduct.status === 'active' ? 'ACTIVE' : 'DRAFT',
+        attributes: {
+          externalId: variant.externalId,
+          ...(variant.options || {}),
+          ...(variant.metadata || {}),
+        },
+      },
+    });
+
+    // Save the price (even if 0, some products might have free variants)
+    if (variant.price !== undefined && variant.price !== null) {
+      await prisma().price.upsert({
+        where: {
+          skuId_currency: {
+            skuId: sku.id,
+            currency: variant.currency || 'USD',
+          },
+        },
+        update: {
+          amount: variant.price,
+          status: 'ACTIVE',
+        },
+        create: {
+          skuId: sku.id,
+          currency: variant.currency || 'USD',
+          amount: variant.price,
+          status: 'ACTIVE',
+        },
+      });
+    }
+  }
+}
 
 /**
  * POST /api/platforms/shopify/sync
@@ -135,54 +274,133 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
         throw new Error('Failed to authenticate with Shopify. Please reconnect your integration.');
       }
 
-      let syncResults = [];
-      let summary = { total: 0, successful: 0, failed: 0 };
+      // Get project to access tenantId for saving products
+      const project = await prisma().project.findUnique({
+        where: { id: projectId },
+        select: { id: true, tenantId: true },
+      });
+
+      if (!project) {
+        throw new Error('Project not found');
+      }
 
       // Shopify REST API maximum limit is 250 per request
       // We'll use pagination to fetch more products in batches
       const SHOPIFY_MAX_LIMIT = 250;
 
-      switch (syncType) {
-        case 'products':
-          // Sync products only - use max limit and pagination will handle fetching more
-          const productResults = await connector.productOperations.syncAll({
-            limit: SHOPIFY_MAX_LIMIT,
-          });
-          syncResults = productResults;
-          summary = {
-            total: productResults.length,
-            successful: productResults.filter(r => r.success).length,
-            failed: productResults.filter(r => !r.success).length,
-          };
-          break;
+      // Instead of using syncAll which fetches products again, we'll list products directly
+      // and save them immediately for better efficiency
+      let syncResults: any[] = [];
+      let summary = { total: 0, successful: 0, failed: 0 };
+      let savedCount = 0;
+      let saveErrors: string[] = [];
+      
+      // Prepare filter based on sync type
+      let listFilter: any = { limit: SHOPIFY_MAX_LIMIT };
+      if (syncType === 'incremental') {
+        listFilter.updatedAfter = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      }
 
-        case 'incremental':
-          // Incremental sync (last 24 hours) - use max limit and pagination
-          const incrementalResults = await connector.productOperations.syncAll({
-            updatedAfter: new Date(Date.now() - 24 * 60 * 60 * 1000),
-            limit: SHOPIFY_MAX_LIMIT,
+      // Fetch and save products in batches using pagination
+      let hasMore = true;
+      let sinceId: string | undefined = undefined;
+      let pageCount = 0;
+      
+      while (hasMore) {
+        try {
+          const listFilterWithPagination = { ...listFilter };
+          if (sinceId) {
+            (listFilterWithPagination as any).sinceId = sinceId;
+          }
+          
+          const response = await connector.productOperations.list(listFilterWithPagination);
+          pageCount++;
+          
+          // Save each product immediately
+          for (const product of response.data) {
+            try {
+              // Validate product before saving
+              if (!product.externalId) {
+                console.warn(`Skipping product without externalId:`, product);
+                continue;
+              }
+              
+              // Save product to database
+              await saveProductToDatabase(product, project.tenantId, projectId);
+              
+              // Record successful sync
+              syncResults.push({
+                productId: `cal-${product.externalId}`,
+                externalId: product.externalId,
+                platform: 'shopify',
+                success: true,
+                syncedAt: new Date(),
+              });
+              savedCount++;
+              
+              if (savedCount % 10 === 0) {
+                console.log(`Saved ${savedCount} products so far...`);
+              }
+            } catch (err) {
+              const errorMsg = `Failed to save product ${product.externalId || 'unknown'}: ${err instanceof Error ? err.message : 'Unknown error'}`;
+              console.error(errorMsg, err);
+              saveErrors.push(errorMsg);
+              
+              // Record failed sync
+              syncResults.push({
+                productId: `cal-${product.externalId || 'unknown'}`,
+                externalId: product.externalId || 'unknown',
+                platform: 'shopify',
+                success: false,
+                error: errorMsg,
+                syncedAt: new Date(),
+              });
+            }
+          }
+          
+          // Check if there are more pages
+          hasMore = response.pagination.hasNext;
+          if (response.pagination.nextCursor) {
+            sinceId = response.pagination.nextCursor;
+          } else if (response.data.length > 0) {
+            // Fallback: use last product's external ID
+            const lastProduct = response.data[response.data.length - 1];
+            sinceId = lastProduct.externalId;
+          } else {
+            hasMore = false;
+          }
+          
+          // Prevent infinite loops
+          if (pageCount > 1000) {
+            console.warn('Reached maximum page limit (1000), stopping pagination');
+            hasMore = false;
+          }
+        } catch (err) {
+          console.error(`Error during product listing/saving (page ${pageCount}):`, err);
+          hasMore = false;
+          // Add error to results
+          syncResults.push({
+            productId: 'unknown',
+            externalId: 'unknown',
+            platform: 'shopify',
+            success: false,
+            error: err instanceof Error ? err.message : 'Unknown error',
+            syncedAt: new Date(),
           });
-          syncResults = incrementalResults;
-          summary = {
-            total: incrementalResults.length,
-            successful: incrementalResults.filter(r => r.success).length,
-            failed: incrementalResults.filter(r => !r.success).length,
-          };
-          break;
-
-        case 'full':
-        default:
-          // Full sync - use max limit and pagination will fetch all products
-          const fullResults = await connector.productOperations.syncAll({
-            limit: SHOPIFY_MAX_LIMIT,
-          });
-          syncResults = fullResults;
-          summary = {
-            total: fullResults.length,
-            successful: fullResults.filter(r => r.success).length,
-            failed: fullResults.filter(r => !r.success).length,
-          };
-          break;
+        }
+      }
+      
+      // Calculate summary
+      summary = {
+        total: syncResults.length,
+        successful: syncResults.filter(r => r.success).length,
+        failed: syncResults.filter(r => !r.success).length,
+      };
+      
+      console.log(`Sync completed: ${summary.successful} successful, ${summary.failed} failed`);
+      console.log(`Saved ${savedCount} products to database`);
+      if (saveErrors.length > 0) {
+        console.error(`Failed to save ${saveErrors.length} products:`, saveErrors.slice(0, 5)); // Log first 5 errors
       }
 
       // Update sync log with results

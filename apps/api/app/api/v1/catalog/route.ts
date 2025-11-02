@@ -51,8 +51,14 @@ export const GET = withSecurity(async (req: NextRequest) => {
       skus: { 
         include: { prices: true } 
       } 
-    } 
+    },
+    orderBy: {
+      createdAt: 'desc' // Most recently synced products first
+    }
   })
+
+  // Log for debugging
+  console.log(`Catalog API: Found ${products.length} products for project ${projectSlug} (projectId: ${project.id})`)
 
   const productsWithSkus = products.map((product: any) => {
     const skus = product.skus.map((s: any) => ({ 
