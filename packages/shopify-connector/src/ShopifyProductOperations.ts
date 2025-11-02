@@ -35,10 +35,16 @@ export class ShopifyProductOperations implements ProductOperations {
     }
 
     // Prepare request parameters
+    // Note: Shopify REST API uses cursor-based pagination (since_id), not page-based
     const requestParams: any = {
       limit: filter?.limit || 50,
-      page: filter?.page || 1,
     };
+
+    // Add cursor-based pagination if sinceId is provided
+    // This is used for subsequent pages after the first page
+    if ((filter as any)?.sinceId) {
+      requestParams.since_id = (filter as any).sinceId;
+    }
 
     // Add optional filters, only if they have values
     if (filter?.vendor) requestParams.vendor = filter.vendor;
@@ -77,14 +83,20 @@ export class ShopifyProductOperations implements ProductOperations {
         throw new Error(`Invalid response from Shopify API: products is not an array. Got: ${typeof response.products}`);
       }
 
+      // Extract the last product ID for cursor-based pagination
+      const lastProductId = response.products.length > 0 
+        ? response.products[response.products.length - 1]?.id?.toString()
+        : null;
+
       return {
         data: response.products.map((product: any) => this.normalizeProduct(product)),
         pagination: {
           total: response.page_info ? undefined : response.products.length,
-          page: filter?.page || 1,
           limit: filter?.limit || 50,
           hasNext: response.page_info?.has_next_page || false,
           hasPrev: response.page_info?.has_previous_page || false,
+          // Include cursor information for next page
+          sinceId: lastProductId || undefined,
         },
       };
     } catch (error: any) {
@@ -265,11 +277,21 @@ export class ShopifyProductOperations implements ProductOperations {
 
   async syncAll(filter?: ProductFilter): Promise<ProductSyncResult[]> {
     const results: ProductSyncResult[] = [];
-    let page = 1;
     let hasMore = true;
+    let sinceId: string | undefined = undefined;
 
     while (hasMore) {
-      const response = await this.list({ ...filter, page, limit: filter?.limit || 50 });
+      // Use cursor-based pagination with since_id
+      const listFilter = {
+        ...filter,
+        limit: filter?.limit || 50,
+      } as any;
+      
+      if (sinceId) {
+        listFilter.sinceId = sinceId;
+      }
+
+      const response = await this.list(listFilter);
 
       for (const product of response.data) {
         const result = await this.sync(
@@ -279,8 +301,17 @@ export class ShopifyProductOperations implements ProductOperations {
         results.push(result);
       }
 
+      // Use cursor-based pagination: get the last product ID for next page
       hasMore = response.pagination.hasNext;
-      page++;
+      if (response.pagination.sinceId) {
+        sinceId = response.pagination.sinceId;
+      } else if (response.data.length > 0) {
+        // Fallback: extract ID from last product if sinceId not in pagination
+        const lastProduct = response.data[response.data.length - 1];
+        sinceId = lastProduct.externalId;
+      } else {
+        hasMore = false;
+      }
     }
 
     return results;

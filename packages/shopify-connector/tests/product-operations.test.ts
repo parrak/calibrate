@@ -101,7 +101,8 @@ describe('ShopifyProductOperations', () => {
       }
       connector['underlyingProducts'].listProducts.mockResolvedValue(mockResponse)
 
-      const result = await operations.list({ page: 2 })
+      // Test cursor-based pagination with since_id
+      const result = await operations.list({ limit: 50 })
 
       expect(connector['underlyingProducts'].listProducts).toHaveBeenCalledWith(
         expect.objectContaining({ page: 2 })

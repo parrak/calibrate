@@ -8,7 +8,7 @@ import { ShopifyProduct, ShopifyVariant, ShopifyPriceUpdate } from './types';
 
 export interface ProductListOptions {
   limit?: number;
-  page?: number;
+  since_id?: string; // Cursor-based pagination: last product ID from previous page
   fields?: string[];
   ids?: string[];
   title?: string;
@@ -44,13 +44,16 @@ export class ShopifyProducts {
 
   /**
    * List products with optional filtering
+   * Uses cursor-based pagination (since_id) instead of page-based pagination
    */
   async listProducts(options: ProductListOptions = {}): Promise<ProductListResponse> {
     const params: any = {
       limit: options.limit || 50,
-      page: options.page || 1,
       ...options,
     };
+
+    // Remove page parameter if present (Shopify doesn't support it)
+    delete params.page;
 
     // Remove undefined values
     Object.keys(params).forEach((key: string) => {
