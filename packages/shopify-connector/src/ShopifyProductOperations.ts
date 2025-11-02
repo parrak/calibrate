@@ -36,8 +36,18 @@ export class ShopifyProductOperations implements ProductOperations {
 
     // Prepare request parameters
     // Note: Shopify REST API uses cursor-based pagination (since_id), not page-based
+    // Note: Shopify REST API has a maximum limit of 250 products per request
+    const maxLimit = 250;
+    const requestedLimit = filter?.limit || 50;
+    const limit = Math.min(requestedLimit, maxLimit);
+
+    // Warn if requested limit exceeds maximum
+    if (requestedLimit && requestedLimit > maxLimit) {
+      console.warn(`Shopify API limit ${requestedLimit} exceeds maximum of ${maxLimit}. Using ${maxLimit} instead.`);
+    }
+
     const requestParams: any = {
-      limit: filter?.limit || 50,
+      limit,
     };
 
     // Add cursor-based pagination if sinceId is provided

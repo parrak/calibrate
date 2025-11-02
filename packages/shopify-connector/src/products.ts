@@ -45,15 +45,27 @@ export class ShopifyProducts {
   /**
    * List products with optional filtering
    * Uses cursor-based pagination (since_id) instead of page-based pagination
+   * Note: Shopify REST API has a maximum limit of 250 products per request
    */
   async listProducts(options: ProductListOptions = {}): Promise<ProductListResponse> {
+    const maxLimit = 250; // Shopify's maximum limit
+    const requestedLimit = options.limit || 50;
+    const limit = Math.min(requestedLimit, maxLimit);
+
+    // Warn if requested limit exceeds maximum
+    if (requestedLimit > maxLimit) {
+      console.warn(`Shopify API limit ${requestedLimit} exceeds maximum of ${maxLimit}. Using ${maxLimit} instead.`);
+    }
+
     const params: any = {
-      limit: options.limit || 50,
+      limit,
       ...options,
     };
 
     // Remove page parameter if present (Shopify doesn't support it)
     delete params.page;
+    // Ensure limit doesn't exceed maximum
+    params.limit = limit;
 
     // Remove undefined values
     Object.keys(params).forEach((key: string) => {

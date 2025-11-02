@@ -138,11 +138,15 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
       let syncResults = [];
       let summary = { total: 0, successful: 0, failed: 0 };
 
+      // Shopify REST API maximum limit is 250 per request
+      // We'll use pagination to fetch more products in batches
+      const SHOPIFY_MAX_LIMIT = 250;
+
       switch (syncType) {
         case 'products':
-          // Sync products only
+          // Sync products only - use max limit and pagination will handle fetching more
           const productResults = await connector.productOperations.syncAll({
-            limit: 1000, // Reasonable limit for manual sync
+            limit: SHOPIFY_MAX_LIMIT,
           });
           syncResults = productResults;
           summary = {
@@ -153,10 +157,10 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
           break;
 
         case 'incremental':
-          // Incremental sync (last 24 hours)
+          // Incremental sync (last 24 hours) - use max limit and pagination
           const incrementalResults = await connector.productOperations.syncAll({
             updatedAfter: new Date(Date.now() - 24 * 60 * 60 * 1000),
-            limit: 500,
+            limit: SHOPIFY_MAX_LIMIT,
           });
           syncResults = incrementalResults;
           summary = {
@@ -168,9 +172,9 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
 
         case 'full':
         default:
-          // Full sync
+          // Full sync - use max limit and pagination will fetch all products
           const fullResults = await connector.productOperations.syncAll({
-            limit: 2000, // Higher limit for full sync
+            limit: SHOPIFY_MAX_LIMIT,
           });
           syncResults = fullResults;
           summary = {
