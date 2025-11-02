@@ -105,7 +105,11 @@ describe('ShopifyProductOperations', () => {
       const result = await operations.list({ limit: 50 })
 
       expect(connector['underlyingProducts'].listProducts).toHaveBeenCalledWith(
-        expect.objectContaining({ page: 2 })
+        expect.objectContaining({ limit: 50 })
+      )
+      // Verify page parameter is NOT included
+      expect(connector['underlyingProducts'].listProducts).toHaveBeenCalledWith(
+        expect.not.objectContaining({ page: expect.anything() })
       )
       expect(result.pagination.hasNext).toBe(true)
     })
