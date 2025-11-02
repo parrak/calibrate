@@ -238,11 +238,21 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
         errorMessage = error;
       }
 
+      const statusCode = errorDetails?.statusCode || (error instanceof Error && (error as any).statusCode);
+      const isAuthError = statusCode === 401 || errorMessage.toLowerCase().includes('authentication') || errorMessage.toLowerCase().includes('unauthorized');
+
+      // Provide helpful message for authentication errors
+      if (isAuthError) {
+        errorMessage = 'Shopify authentication failed. The access token may be invalid or expired. Please reconnect your Shopify integration.';
+      }
+
       console.error('Shopify sync error details:', {
         errorMessage,
         errorDetails,
         integrationId: integration.id,
         shopDomain: integration.shopDomain,
+        statusCode,
+        isAuthError,
       });
 
       // Update sync log with error
@@ -261,12 +271,14 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
         }
       }
 
-      // Update integration status
+      // Update integration status - mark as needing re-authentication for 401 errors
       await prisma().shopifyIntegration.update({
         where: { id: integration.id },
         data: {
           syncStatus: 'ERROR',
           syncError: errorMessage,
+          // Mark as inactive if authentication failed, so user knows to reconnect
+          ...(isAuthError && { isActive: false }),
         },
       });
 

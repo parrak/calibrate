@@ -163,14 +163,19 @@ export class ShopifyProductOperations implements ProductOperations {
       // Get final status code
       const finalStatusCode = statusCode || (error as any)?.response?.status || (error as any)?.statusCode;
       
-      // Log detailed error information for 400 errors
-      if (finalStatusCode === 400 || errorMessage.includes('400')) {
-        console.error('Shopify API 400 error details:', {
+      // Log detailed error information for 400 and 401 errors
+      if (finalStatusCode === 400 || finalStatusCode === 401 || errorMessage.includes('400') || errorMessage.includes('401')) {
+        console.error(`Shopify API ${finalStatusCode} error details:`, {
           requestParams,
           shopifyErrorDetails,
           statusCode: finalStatusCode,
           fullError: error,
         });
+      }
+
+      // Provide better error message for 401 (authentication errors)
+      if (finalStatusCode === 401) {
+        errorMessage = 'Authentication failed. The access token may be invalid or expired. Please reconnect your Shopify integration.';
       }
 
       // Create a proper Error object if needed

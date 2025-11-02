@@ -166,15 +166,20 @@ export class ShopifyClient {
       errorMessage = error.message;
     }
 
-    // Log detailed error for 400 errors
-    if (statusCode === 400) {
-      console.error('Shopify API 400 error:', {
+    // Log detailed error for 400 and 401 errors
+    if (statusCode === 400 || statusCode === 401) {
+      console.error(`Shopify API ${statusCode} error:`, {
         url: error.config?.url,
         method: error.config?.method,
         params: error.config?.params,
         statusCode,
         responseData,
       });
+    }
+
+    // Provide better error message for 401 (authentication errors)
+    if (statusCode === 401) {
+      errorMessage = 'Authentication failed. The access token may be invalid or expired. Please reconnect your Shopify integration.';
     }
 
     // Create a proper Error instance with additional context
