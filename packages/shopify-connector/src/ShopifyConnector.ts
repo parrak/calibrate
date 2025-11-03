@@ -16,6 +16,10 @@ import { ShopifyClient } from './client';
 import { ShopifyProducts } from './products';
 import { ShopifyPricing } from './pricing';
 import { ShopifyWebhooks } from './webhooks';
+import type { ShopifyRateLimit } from './types';
+import type { ShopifyAuthOperations } from './ShopifyAuthOperations';
+import type { ShopifyProductOperations } from './ShopifyProductOperations';
+import type { ShopifyPricingOperations } from './ShopifyPricingOperations';
 
 export interface ShopifyCredentials extends PlatformCredentials {
   platform: 'shopify';
@@ -54,9 +58,9 @@ export class ShopifyConnector implements PlatformConnector {
   };
 
   private client: ShopifyClient | null = null;
-  private authOperations: any = null;
-  private productOperations: any = null;
-  private pricingOperations: any = null;
+  private authOperations: ShopifyAuthOperations | null = null;
+  private productOperations: ShopifyProductOperations | null = null;
+  private pricingOperations: ShopifyPricingOperations | null = null;
   private webhooks: ShopifyWebhooks | null = null;
   private credentials: ShopifyCredentials | null = null;
 
@@ -74,7 +78,7 @@ export class ShopifyConnector implements PlatformConnector {
   }
 
   // Implement required properties
-  get auth(): any {
+  get auth(): ShopifyAuthOperations {
     if (!this.authOperations) {
       throw new PlatformError(
         'authentication',
@@ -85,7 +89,7 @@ export class ShopifyConnector implements PlatformConnector {
     return this.authOperations;
   }
 
-  get products(): any {
+  get products(): ShopifyProductOperations {
     if (!this.productOperations) {
       throw new PlatformError(
         'authentication',
@@ -96,7 +100,7 @@ export class ShopifyConnector implements PlatformConnector {
     return this.productOperations;
   }
 
-  get pricing(): any {
+  get pricing(): ShopifyPricingOperations {
     if (!this.pricingOperations) {
       throw new PlatformError(
         'authentication',
@@ -207,11 +211,10 @@ export class ShopifyConnector implements PlatformConnector {
   }
 
   // Additional Shopify-specific methods
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getConnectionStatus(): Promise<{
     connected: boolean;
-    rateLimit: any;
-    shopInfo?: any;
+    rateLimit: ShopifyRateLimit | null;
+    shopInfo?: unknown;
   }> {
     try {
       const connected = await this.testConnection();
