@@ -439,7 +439,7 @@ export function stopResourceMonitoring() {
  */
 export async function getDatabasePerformanceMetrics() {
   try {
-    const [slowQueries, connectionStats, queryStats] = await Promise.all([
+    const [slowQueries, connectionStats, queryStats] = await (Promise.all([
       prisma().$queryRaw`
         SELECT 
           query,
@@ -475,7 +475,7 @@ export async function getDatabasePerformanceMetrics() {
         FROM pg_stat_database 
         WHERE datname = current_database()
       `
-    ])
+    ]) as Promise<[any[], any[], any[]]>)
     
     return {
       slowQueries,

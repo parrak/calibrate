@@ -26,8 +26,8 @@ export interface ProjectAccess {
 
 export interface SecurityPolicy {
   requireAuth: boolean
-  requireProject: boolean
-  requireTenant: boolean
+  requireProject?: boolean
+  requireTenant?: boolean
   allowedRoles?: string[]
   requiredPermissions?: string[]
   rateLimit?: {
