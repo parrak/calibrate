@@ -1,233 +1,190 @@
-# AGENTS.md
+# Calibrate — Multi-Agent Execution Plan
 
-These rules guide AI coding agents (Codex CLI, etc.) working in this repo. They apply to the entire repository unless a more specific AGENTS.md in a subfolder overrides them.
+This document defines how the Calibrate project is collaboratively developed across three autonomous agents:
 
-## Goals
-- Make minimal, surgical changes that solve the user's request.
-- Prefer clarity and safety over breadth; avoid unrelated edits.
-- Validate changes locally with focused checks before broad ones.
+- 🧠 **Agent A — Cursor:** Infrastructure, Developer Experience, CI/CD, and deployment orchestration.  
+- ⚙️ **Agent B — Codex:** Core Product Implementation — pricing engine, connectors, API, and Price Changes MVP.  
+- 📊 **Agent C — Claude Code:** AI, analytics, forecasting, and intelligent automation for Growth + Expansion phases.  
 
-## Monorepo Overview
-- Workspace: `pnpm` + `turbo` across `apps/*` and `packages/*`.
-- Primary stacks: Next.js (App Router) + TypeScript + Tailwind + Prisma.
-- Testing: Vitest in packages and `apps/api`.
-- Config/lint: ESLint configured at root (`.eslintrc.js`). Prettier is available but do not introduce new formatting tooling.
+Each agent works independently but adheres to shared contracts, schemas, and milestones.
 
-## Core Commands (run at `calibrate/` root)
-- Dev: `pnpm dev`
-- Build: `pnpm build`
-- Lint: `pnpm lint`
-- Test (all): `pnpm test`
-- Test (one project): `pnpm --filter <pkg-name> test` or `test:run`
-- DB (Prisma): `pnpm migrate`, `pnpm seed`, `pnpm db:generate`, `pnpm db:studio`
-- Local verification: `pnpm verify:local`
-- Docs: `pnpm docs:dev` | `pnpm docs:build` | `pnpm docs:deploy`
+---
 
-## Change Policy
-- Keep edits scoped to the files directly involved in the task.
-- Do not rename/move files unless required by the task.
-- Follow existing conventions in nearby code (naming, structure, imports).
-- Use TypeScript types and Zod validation where the codebase already does so.
-- Do not add new dependencies unless strictly necessary and aligned with workspace tooling.
+## 🧭  Project Overview
 
-## Validation & Tests
-- Always add or update tests for any behavior change you introduce.
-- Start specific: run tests or type checks for only the changed package/app.
-  - Example: `pnpm --filter @calibr/api test:run` or `pnpm --filter @calibr/amazon-connector test:run`
-- For Next.js route handlers (in `apps/*/app/api/**/route.ts`): import the handler directly in Vitest and pass a `Request` object (cast to `any`). Mock external services (e.g., Prisma via `vi.mock('@calibr/db')`).
-- For packages (e.g., connectors): place unit tests in `packages/<pkg>/tests/**` using Vitest. Prefer testing normalized outputs and error handling.
-- Then run repo-level checks if the change affects multiple projects.
-- Lint before finishing: `pnpm lint` (fix only relevant issues).
-- For Prisma-related changes, add a migration, run `pnpm db:generate`, and ensure no drift.
+**Calibrate** is an AI-ready pricing automation platform for commerce systems.  
+It synchronizes price data across marketplaces (Shopify, Amazon, etc.), applies guardrail policies, and progressively evolves toward AI-driven pricing intelligence.
 
-## CI & Deployment Guards
-- CI enforces lockfile consistency. Before pushing, run `pnpm install --frozen-lockfile` locally to catch dependency drift.
-- If Railway deploys fail due to build or lockfile errors, do not push unrelated changes until the failure is resolved; update the lockfile or align `package.json` specifiers.
-
-## Patterns To Follow
-- Next.js App Router patterns under `apps/*/app` and API route handlers under `app/api/**/route.ts`.
-- UI components live in `packages/ui`; prefer reusing existing primitives.
-- Validation uses `zod`; schema-first where possible.
-- Data access goes through `packages/db` (Prisma). Do not edit generated files.
-
-## Security and Secrets
-- Never commit secrets. Use `.env.local` and `.env.example` as references.
-- Avoid logging PII or secrets. Scrub before output.
-- Keep third-party tokens in environment variables only.
-
-## Agent Etiquette
-- Use `apply_patch` for edits. Group related changes in one patch when possible.
-- Explain what you're about to do before running commands.
-- Use `update_plan` for multi-step work. Mark steps complete as you go.
-- Do not add license headers or reformat large files unprompted.
-
-## Critical API Requirements
-
-**MANDATORY for ALL agents working on `apps/api`:**
-
-When creating or modifying API routes, you MUST:
-1. Use `withSecurity` middleware on ALL route handlers
-2. Export an explicit `OPTIONS` handler wrapped with `withSecurity`
-3. Test CORS preflight requests
-
-Why: The console runs on a different domain and requires CORS headers. Missing OPTIONS handlers cause preflight failures that break the console.
-
-Full details: `apps/api/CORS_MIDDLEWARE_REQUIRED.md`
-
-Example pattern:
-```typescript
-import { withSecurity } from '@/lib/security-headers'
-
-export const GET = withSecurity(async (req: NextRequest) => { /* ... */ })
-export const OPTIONS = withSecurity(async (req: NextRequest) => {
-  return new NextResponse(null, { status: 204 })
-})
+### Monorepo Structure
+```
+calibrate/
+├── packages/
+│   ├── db/
+│   ├── pricing-engine/
+│   ├── connectors/
+│   ├── security/
+│   ├── ui/
+│   └── analytics/           # (added by Claude Code)
+└── apps/
+    ├── api/
+    ├── console/
+    ├── site/
+    └── docs/
 ```
 
-## Agent Status & Updates
+---
 
-### Current Status (Oct 28, 2025 - Updated)
-- **Production Deployment**: ✅ RESOLVED - Railway deployment fully operational after critical fixes
-- **Platform Routes**: ✅ Working - All 11 dynamic route handlers fixed for Next.js 15
-- **Database Schema**: ✅ Updated - AmazonIntegration + ShopifyIntegration models added, migrations applied
-- **Prisma Client**: ✅ Operational - DATABASE_URL properly configured, all models accessible
-- **API Stability**: ✅ Stable - No more undefined errors, 200 responses on all platform endpoints
-- **Integration Creation**: ✅ COMPLETE - POST/DELETE endpoints fully functional for both platforms
+## 🧩 Agent A — Cursor (Infrastructure & Developer Experience)
 
-### Recent Crisis Resolution (Oct 28, 2025) - Agent C Week 2
-**Problem:** `TypeError: Cannot read properties of undefined (reading 'findUnique')` on all Railway deployments
+### **Mission**
+Deliver and maintain the foundational developer environment, CI/CD, and deployment infrastructure enabling seamless collaboration for Agents B and C.
 
-**Root Causes:**
-1. **Shell Syntax Error** - start.sh used bash-specific `${var:0:20}` in POSIX `/bin/sh` environment
-2. **Next.js 15 Breaking Change** - 11 route handlers accessing params synchronously instead of awaiting Promise
-3. **Schema Mismatch** - Routes calling `db.platformIntegration.findUnique()` but model didn't exist
+### **Primary Objectives**
+1. **Workspace Integrity**
+   - Maintain `pnpm` + Turborepo pipelines.
+   - Synchronize `tsconfig`, TypeScript references, and shared types.
+   - Enforce lint + format via ESLint & Prettier.
+2. **Database & Environment**
+   - Manage Prisma migrations + seeds.
+   - Keep `.env` files consistent; add validation script.
+   - Create a migration CI step (`pnpm migrate:check`).
+3. **Deployment**
+   - Deploy API on Fly.io or Railway.
+   - Deploy Site & Console on Vercel (preview builds per PR).
+   - Centralize secrets: `DATABASE_URL`, `WEBHOOK_SECRET`, `NEXT_PUBLIC_API_BASE`.
+4. **DX & Observability**
+   - Create `pnpm dev:all` to run API + Console + Site concurrently.
+   - Add request logging (`@calibr/monitor`) and error tracing.
+   - Generate OpenAPI or ts-rest types → `@calibr/types` for frontend.
 
-**Fixes Applied:**
-- ✅ Converted start.sh to POSIX-compliant syntax (commit d27e3ff)
-- ✅ Updated all dynamic route handlers to await params (11 files)
-- ✅ Added AmazonIntegration model to schema (commit 0c03db3)
-- ✅ Created debug endpoints for production diagnostics (commit 4f5c3da)
-- ✅ Fixed platform route to use platform-specific models (ShopifyIntegration, AmazonIntegration)
+### **Deliverables**
+- 1-step bootstrap (`pnpm setup`)  
+- Working preview deployments  
+- Shared generated API types  
+- CI pipeline validating migrations + tests  
 
-**Documentation:** See [docs/project-management/AGENT_C_WEEK2_HANDOFF.md](docs/project-management/AGENT_C_WEEK2_HANDOFF.md) for complete details
+### **Definition of Done**
+- Dev environment reproducible < 5 min  
+- All build targets compile cleanly  
+- Preview deploys auto-build per PR  
 
-### Previous Fixes (Oct 27-28, 2025)
-- **Platform Registration**: Fixed missing Shopify connector import in `apps/api/lib/platforms/register.ts`
-- **CORS Middleware**: Added `withSecurity` middleware to `/api/platforms/[platform]` endpoint
-- **Build Issues**: Resolved JSX syntax errors in `PlatformCard.tsx`
-- **Railway Deployment**: Fixed "Unexpected eof" build errors
+---
 
-### Latest Update (Oct 28, 2025 - Agent C Priority 1 Complete)
+## ⚙️ Agent B — Codex (Core Product)
 
-**Agent C completed POST/DELETE endpoints:**
-- ✅ POST /api/platforms/[platform] - Save integration credentials (commit 730cb91)
-- ✅ DELETE /api/platforms/[platform] - Deactivate integrations (commit 730cb91)
-- ✅ Platform-specific handling for Shopify and Amazon
-- ✅ Upsert pattern allows reconnecting
-- ✅ Connection tested before saving
-- ✅ TypeScript errors fixed
+### **Mission**
+Implement the full **Price Changes MVP** and core pricing workflow APIs while maintaining production-grade reliability and testing.
 
-**This unblocks:**
-- 🟢 **Agent A** - Can now complete Shopify OAuth callback (see [docs/project-management/AGENT_A_IMMEDIATE_TASKS.md](docs/project-management/AGENT_A_IMMEDIATE_TASKS.md))
-- 🟢 **Agent B** - Can now implement Amazon SP-API OAuth (see [docs/project-management/AGENT_B_IMMEDIATE_TASKS.md](docs/project-management/AGENT_B_IMMEDIATE_TASKS.md))
+### **MVP Phase (v0.2)**
+1. **API Endpoints**
+   - `GET /api/v1/price-changes` (list + filters + pagination)  
+   - `POST /api/v1/price-changes/:id/(approve|apply|reject|rollback)`  
+2. **Console Page**
+   - `/p/[slug]/price-changes`  
+   - Table view + filters + search + cursor pagination  
+   - Detail drawer with price diff + policy checks + context  
+   - Action buttons (Approve, Apply, Reject, Rollback) with optimistic updates  
+3. **RBAC**
+   - VIEWER → read-only  
+   - EDITOR → approve/reject  
+   - ADMIN → apply/rollback  
+4. **Testing**
+   - Supertest integration + React Testing Library UI tests.  
 
-### For Other Agents
-- **Agent A (Shopify)**: 🟢 READY TO START - Complete OAuth flow using POST endpoint (estimated 4-6 hours)
-- **Agent B (Amazon)**: 🟢 READY TO START - Implement SP-API OAuth using POST endpoint (estimated 6-8 hours)
-- **Agent C (Security)**: ⏸️ NEXT - Implement credential encryption (Priority 4)
-- **Agent C (Platform)**: ✅ Handoff complete - all platform infrastructure stable
+### **Post-MVP Growth (v0.3–v0.5)**
+- Shopify connector write-back (REST Admin API).  
+- Policy Templates (max Δ%, floor/ceiling, daily limit).  
+- Notifications (Slack + email) on large deltas.  
+- Connector retries + idempotent event queue.  
 
-### Documentation
-- **CORS Requirements**: [apps/api/CORS_MIDDLEWARE_REQUIRED.md](apps/api/CORS_MIDDLEWARE_REQUIRED.md)
-- **Platform Integration**: [docs/project-management/AGENT_C_INTEGRATIONS_FIX.md](docs/project-management/AGENT_C_INTEGRATIONS_FIX.md)
-- **Latest Status**: [docs/project-management/AGENT_C_OCT28_SUMMARY.md](docs/project-management/AGENT_C_OCT28_SUMMARY.md)
+### **Deliverables**
+- End-to-end Price Changes flow functional.  
+- Comprehensive API docs (`/apps/docs`).  
+- CI green on integration + UI tests.  
 
-## Documentation Structure
+### **Definition of Done**
+- All actions return correct HTTP codes.  
+- Console reflects live state updates.  
+- Data consistent across tenants + connectors.  
 
-All project documentation is organized into three main directories to help you quickly find what you need:
+---
 
-### `docs/project-management/`
-Contains all files related to project planning, progress tracking, agent coordination, and status updates.
+## 📊 Agent C — Claude Code (AI & Analytics)
 
-**Key files:**
-- **Status Tracking**: `CURRENT_STATUS.md`, `AGENT_STATUS.md` - Current project state
-- **Daily Coordination**: `PHASE3_DAILY_LOG.md` - Daily progress updates from agents
-- **Roadmaps & Plans**: `PHASE3_ROADMAP.md`, `TIMELINE.md`, `NEXT_PHASES_PLAN.md`
-- **Agent Handoffs**: `AGENT_*_HANDOFF.md` - Detailed handoff documents
-- **Agent Tasks**: `AGENT_*_IMMEDIATE_TASKS.md`, `AGENT_*_NEXT_STEPS.md`, `AGENT_PRIORITY_TASKS.md`
-- **Progress Updates**: `AGENT_*_PROGRESS_UPDATE.md`, `AGENT_*_SUMMARY.md`, `AGENT_*_COMPLETE.md`
-- **Broadcasts**: `AGENTS_BROADCAST_YYYY-MM-DD.md` - Cross-cutting milestone announcements
-- **Status Guide**: `STATUS_BROADCASTING.md` - How to publish status updates
+### **Mission**
+Build Calibrate's intelligence layer — AI pricing suggestions, analytics dashboards, forecasting, and merchant insights.
 
-**When to use:** Looking for current tasks, agent status, project timeline, or where to log your progress.
+### **Growth Phase (v0.3–v0.6)**
+1. **AI Pricing Assist**
+   - Add `packages/ai-engine` with `suggestPrice()` method.  
+   - Inputs: SKU history, competitor data, sales velocity.  
+   - Outputs: `{ delta, confidence, rationale }`.  
+   - Integrate into `pricing-engine` as optional AI policy.  
+2. **Analytics Module**
+   - Create `packages/analytics` for daily snapshot aggregation.  
+   - Expose `/api/v1/analytics/:projectId/overview`.  
+   - Console dashboard → `/p/[slug]/analytics`.  
+3. **Policy Insight Copilot**
+   - `/api/v1/assistant/query` → LLM-powered SQL templates.  
+   - Console chat panel for "why / what-if" queries.  
 
-### `docs/learnings/`
-Contains debugging guides, troubleshooting notes, test results, setup instructions, and lessons learned from fixing issues.
+### **Expansion Phase (v0.7–v1.0)**
+- Inventory-aware pricing (merge stock signals).  
+- Demand forecasting (Prophet / XGBoost).  
+- Merchant Intelligence Suite (margin heatmaps, elasticity).  
+- AI Copilot explaining price changes.  
+- CPQ extension for B2B self-serve quoting.  
 
-**Key categories:**
-- **CORS Issues**: `CORS_FIX_SUMMARY.md`, `CORS_DEBUGGING_OCT27.md`
-- **Deployment Fixes**: `DEPLOYMENT_FIX_SUMMARY.md`, `RAILWAY_DEPLOYMENT_VERIFICATION.md`, `PRODUCTION_DEPLOYMENT_GUIDE.md`
-- **Shopify Integration**: `SHOPIFY_*.md` files covering setup, troubleshooting, limitations, redirect URI fixes
-- **OAuth Testing**: `OAUTH_*.md`, `test-oauth-flow.md`
-- **Testing Guides**: `LOCAL_TESTING_GUIDE.md`, `TEST_REPORT.md`, `SETUP_*.md` files
-- **Quick Fixes**: `QUICK_FIX_SUMMARY.md`
+### **Deliverables**
+- AI engine + analytics packages deployed.  
+- Analytics dashboard live with key metrics.  
+- Copilot query endpoint returning accurate insights.  
 
-**When to use:** Debugging issues, setting up integrations, understanding past problems and their solutions.
+### **Definition of Done**
+- AI module suggests valid price deltas with explainability.  
+- Analytics jobs run nightly.  
+- Dashboard visualizations accurate within tolerance.  
 
-### `docs/misc/`
-Contains architectural documents, strategy plans, onboarding guides, and other reference materials.
+---
 
-**Key categories:**
-- **Architecture & Design**: `ARCHITECTURE_DIAGRAM.md`, `TECHNICAL_ASSESSMENT.md`, `INTEGRATION_DASHBOARD_DESIGN.md`
-- **Planning Documents**: `CONNECTOR_SETUP_PLAN.md`, `PLANNING_SUMMARY.md`, `PROJECT_ONBOARDING_SPEC.md`
-- **Strategies**: `CREDENTIAL_ENCRYPTION_STRATEGY.md`, `MONITORING_ALERTING_PLAN.md`
-- **Onboarding**: `QUICK_START.md`, `ESSENTIAL_CONTEXT.md`, `EXECUTIVE_SUMMARY.md`
-- **Environment Guides**: `STAGING_ENVIRONMENT.md`, `PRODUCTION_VERIFICATION.md`, `ENCRYPTION_*.md`
-- **Other References**: `COMPETITOR_MONITORING.md`, `REGRESSION_PREVENTION.md`, `PHASE2_COMPLETE.md`
+## 🤝 Coordination & Interfaces
 
-**When to use:** Understanding system architecture, planning new features, onboarding, reviewing strategies.
+| Responsibility | Agent | Notes |
+|----------------|--------|-------|
+| Infra / CI / Deploy | Cursor | Maintains build pipelines + environments |
+| Core Product & Connectors | Codex | Implements APIs + console |
+| AI & Analytics | Claude Code | Consumes stable APIs |
 
-### Finding Documentation
+### **Shared Contracts**
+- `PriceChangeDTO` type (common schema)  
+- `Event`, `Project`, and `Membership` tables  
+- Common ENV structure (`DATABASE_URL`, `WEBHOOK_SECRET`, `NEXT_PUBLIC_API_BASE`)  
 
-**Quick lookup guide:**
-- **What's the current project status?** → `docs/project-management/CURRENT_STATUS.md`
-- **Where do I log my progress?** → `docs/project-management/PHASE3_DAILY_LOG.md`
-- **I'm debugging a CORS issue** → `docs/learnings/CORS_*.md`
-- **Setting up Shopify integration** → `docs/learnings/SHOPIFY_*.md`
-- **What's the system architecture?** → `docs/misc/ARCHITECTURE_DIAGRAM.md`
-- **Need agent task assignments?** → `docs/project-management/AGENT_*_IMMEDIATE_TASKS.md`
+### **Handoff Rules**
+1. Cursor → provides infra + API type generation.  
+2. Codex → finalizes API and console flows (MVP).  
+3. Claude Code → extends analytics & AI features built on Codex APIs.  
+4. Cursor → adds jobs + cron infra for Claude's analytics.  
 
-## Subdirectory Guides
-- See additional, more specific rules in:
-  - `apps/api/AGENTS.md` — **Read CORS_MIDDLEWARE_REQUIRED.md before editing routes**
-  - `apps/console/AGENTS.md`
-  - `apps/site/AGENTS.md`
-  - `packages/AGENTS.md`
-  - `scripts/AGENTS.md`
+All agents commit to `develop`; Cursor manages preview deployments.
 
-## Status Broadcasting
+---
 
-Use this repo's docs to broadcast your status and handoffs so other agents can follow and continue your work without friction. This file is the hub; link or update the files below as you work.
+## 📅 Milestones & Accountability
 
-- Daily progress: `docs/project-management/PHASE3_DAILY_LOG.md`
-  - Add a dated entry with: what changed, what's next, blockers.
-- Rolling status: `docs/project-management/CURRENT_STATUS.md` and `docs/project-management/AGENT_STATUS.md`
-  - Keep the top sections current for quick at-a-glance status.
-- Milestone broadcasts: `docs/project-management/AGENTS_BROADCAST_YYYY-MM-DD.md`
-  - For cross-cutting updates. Example: `AGENTS_BROADCAST_2025-10-27.md`.
-- Handoffs: `docs/project-management/AGENT_*_HANDOFF.md`
-  - Capture acceptance criteria, file references, and next steps.
-  - Resolved: `AGENT_C_RAILWAY_RUNTIME_HANDOFF.md` (Railway Prisma runtime investigation)
-- Low-level event log (optional): `agents/events/YYYYMMDD/<agent>.jsonl`
-  - Append JSON objects for fine-grained progress; see `agents/README.md`.
+| Phase | Lead Agent | Definition of Done |
+|--------|-------------|--------------------|
+| **MVP (v0.2)** | Codex | Price Changes workflow complete end-to-end |
+| **Growth (v0.3–v0.6)** | Claude Code | AI Assist + Analytics Dashboard live |
+| **Expansion (v0.7–v1.0)** | Shared | Inventory + Forecasting + Copilot complete |
 
-Quick checklist when you finish a chunk of work
-- Update `docs/project-management/PHASE3_DAILY_LOG.md` with a concise entry.
-- Refresh `docs/project-management/CURRENT_STATUS.md` (and `docs/project-management/AGENT_STATUS.md` if applicable).
-- If the change is cross-cutting, add an `docs/project-management/AGENTS_BROADCAST_<date>.md` and link it in the daily log.
-- For a handoff, create/update an `docs/project-management/AGENT_*_HANDOFF.md` and reference exact files like `apps/api/app/api/.../route.ts:1`.
+---
 
-Details and templates
-- See `docs/project-management/STATUS_BROADCASTING.md` for message structure and copy-paste templates.
-- Collaboration protocol and JSONL event format live in `agents/PROTOCOLS.md` and `agents/README.md`.
+## ✅ Summary
 
+- **Agent A (CURSOR):** Infra / DX / CI / Deploy  
+- **Agent B (CODEX):** Core Pricing MVP / Connectors / Policies  
+- **Agent C (CLAUDE CODE):** AI / Analytics / Forecasting / Copilot  
+
+All agents must re-read this file before each major merge cycle.  
+Cursor ensures `develop` is always stable and deployable.
