@@ -165,6 +165,7 @@ model PriceChange {
   policyResult Json?
   approvedBy   String?
   appliedAt    DateTime?
+  connectorStatus Json?
   createdAt    DateTime          @default(now())
 
   @@index([tenantId, projectId, status])

@@ -246,14 +246,19 @@ export async function POST() {
             projectId: project.id,
             skuId: proMonthlyUsdSku.id,
             source: 'MANUAL',
-            fromAmount: usdPrice.amount,
-            toAmount: 5200,
-            currency: 'USD',
-            status: 'PENDING',
-            context: { skuCode: 'PRO-MONTHLY' },
-            policyResult: { ok: true, checks: [] },
+          fromAmount: usdPrice.amount,
+          toAmount: 5200,
+          currency: 'USD',
+          status: 'PENDING',
+          context: { skuCode: 'PRO-MONTHLY' },
+          policyResult: { ok: true, checks: [] },
+          connectorStatus: {
+            target: 'shopify',
+            state: 'SYNCED',
+            errorMessage: null,
           },
-        })
+        },
+      })
         console.log('✓ Demo price change created')
       }
     }
