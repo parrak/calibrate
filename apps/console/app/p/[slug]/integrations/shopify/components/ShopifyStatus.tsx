@@ -39,7 +39,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
   // Poll for live status updates when sync is in progress
   useEffect(() => {
     const isSyncing = currentIntegration.syncStatus === 'SYNCING' || currentIntegration.syncStatus === 'in_progress';
-    
+
     if (isSyncing && projectSlug) {
       // Poll every 2 seconds when sync is active
       pollingIntervalRef.current = setInterval(async () => {
@@ -84,10 +84,10 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
 
     try {
       setSyncing(true);
-      
+
       // Use platformsApi to trigger sync
       await platformsApi.triggerSync('shopify', projectSlug, 'full');
-      
+
       // Update local state to show syncing
       const updated: ShopifyIntegration = {
         ...currentIntegration,
@@ -95,7 +95,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
         syncError: null,
       };
       setCurrentIntegration(updated);
-      
+
       if (onUpdate) {
         onUpdate(updated);
       }
@@ -103,7 +103,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       // The polling effect will handle updating the status
     } catch (error) {
       console.error('Sync error:', error);
-      
+
       const errorMessage = error instanceof Error ? error.message : 'Sync operation failed';
       const updated: ShopifyIntegration = {
         ...currentIntegration,
@@ -111,7 +111,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
         syncError: errorMessage,
       };
       setCurrentIntegration(updated);
-      
+
       if (onUpdate) {
         onUpdate(updated);
       }
@@ -123,14 +123,14 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
   const handleTestConnection = async () => {
     // Use NEXT_PUBLIC_API_BASE with fallback to production API
     const apiUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
-    
+
     try {
       setTesting(true);
-      
+
       if (!projectSlug) {
         throw new Error('Project slug is required for connection test');
       }
-      
+
       // Call the sync endpoint with projectSlug
       // Include credentials for CORS if needed
       const response = await fetch(`${apiUrl}/api/integrations/shopify/sync`, {
@@ -151,7 +151,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       }
 
       const data = await response.json();
-      
+
       // Update local state
       const updated = {
         ...currentIntegration,
@@ -160,7 +160,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
         lastSyncAt: new Date().toISOString(),
       };
       setCurrentIntegration(updated);
-      
+
       // Call onUpdate callback if provided
       if (onUpdate) {
         onUpdate(updated);
@@ -170,21 +170,21 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       console.error('Connection test error:', error);
       console.error('API URL used:', apiUrl);
       console.error('Project slug:', projectSlug);
-      
+
       let errorMessage = 'Connection test failed';
       if (error instanceof TypeError && error.message.includes('fetch')) {
         errorMessage = `Network error: Cannot connect to API at ${apiUrl}. Make sure the API server is running.`;
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
-      
+
       const updated = {
         ...currentIntegration,
         syncStatus: 'error',
         syncError: errorMessage,
       };
       setCurrentIntegration(updated);
-      
+
       if (onUpdate) {
         onUpdate(updated);
       }
@@ -197,7 +197,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
     if (!currentIntegration.isActive) {
       return <Badge variant="danger">Inactive</Badge>;
     }
-    
+
     switch (currentIntegration.syncStatus) {
       case 'success':
         return <Badge variant="primary">Connected</Badge>;
@@ -258,17 +258,17 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
             Actions
           </h3>
           <div className="space-y-2">
-            <Button 
+            <Button
               onClick={handleSync}
               disabled={syncing || currentIntegration.syncStatus === 'SYNCING' || currentIntegration.syncStatus === 'in_progress'}
               variant="primary"
               className="w-full"
             >
-              {syncing || currentIntegration.syncStatus === 'SYNCING' || currentIntegration.syncStatus === 'in_progress' 
-                ? 'Syncing...' 
+              {syncing || currentIntegration.syncStatus === 'SYNCING' || currentIntegration.syncStatus === 'in_progress'
+                ? 'Syncing...'
                 : 'Sync Products'}
             </Button>
-            <Button 
+            <Button
               onClick={handleTestConnection}
               disabled={testing}
               variant="ghost"

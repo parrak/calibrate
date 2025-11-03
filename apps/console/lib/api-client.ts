@@ -1,7 +1,7 @@
 /**
  * API Client for Calibr Console
  * Communicates with the Calibr API backend
- * 
+ *
  * 📚 API Documentation: https://docs.calibr.lat
  * 🔗 Base URL: https://api.calibr.lat
  */
@@ -12,7 +12,7 @@ class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
-    public data?: any
+    public data?: unknown
   ) {
     super(message)
     this.name = 'ApiError'
@@ -49,7 +49,7 @@ async function fetchApi<T>(
 export const priceChangesApi = {
   list: async (projectSlug: string) => {
     // API returns shape: { items: [...] }
-    const res = await fetchApi<{ items?: any[] }>(`/api/v1/price-changes?project=${projectSlug}`)
+    const res = await fetchApi<{ items?: Array<Record<string, unknown>> }>(`/api/v1/price-changes?project=${projectSlug}`)
     return Array.isArray(res?.items) ? res.items : []
   },
 
@@ -75,12 +75,12 @@ export const priceChangesApi = {
 // Catalog API
 export const catalogApi = {
   getProduct: async (productCode: string) => {
-    return fetchApi<any>(`/api/v1/catalog?productCode=${productCode}`)
+    return fetchApi<Record<string, unknown>>(`/api/v1/catalog?productCode=${productCode}`)
   },
 
   listProducts: async (projectSlug: string) => {
     // API expects `project` and returns { products: [{ product: {code,name}, skus: [...] }, ...] }
-    const res = await fetchApi<{ products?: Array<{ product: { code: string; name: string }; skus: any[] }> }>(
+    const res = await fetchApi<{ products?: Array<{ product: { code: string; name: string }; skus: Array<Record<string, unknown>> }> }>(
       `/api/v1/catalog?project=${projectSlug}`
     )
     const products = Array.isArray(res?.products) ? res.products : []
@@ -92,44 +92,44 @@ export const catalogApi = {
 // Competitors API
 export const competitorsApi = {
   list: async (projectSlug: string) => {
-    return fetchApi<any[]>(`/api/v1/competitors?projectSlug=${projectSlug}`)
+    return fetchApi<Array<Record<string, unknown>>>(`/api/v1/competitors?projectSlug=${projectSlug}`)
   },
 
   get: async (id: string) => {
-    return fetchApi<any>(`/api/v1/competitors/${id}`)
+    return fetchApi<Record<string, unknown>>(`/api/v1/competitors/${id}`)
   },
 
   getProducts: async (id: string) => {
-    return fetchApi<any[]>(`/api/v1/competitors/${id}/products`)
+    return fetchApi<Array<Record<string, unknown>>>(`/api/v1/competitors/${id}/products`)
   },
 
   monitor: async (id: string) => {
-    return fetchApi<any>(`/api/v1/competitors/monitor`, {
+    return fetchApi<Record<string, unknown>>(`/api/v1/competitors/monitor`, {
       method: 'POST',
       body: JSON.stringify({ competitorId: id }),
     })
   },
 
   getRules: async (projectSlug: string) => {
-    return fetchApi<any[]>(`/api/v1/competitors/rules?projectSlug=${projectSlug}`)
+    return fetchApi<Array<Record<string, unknown>>>(`/api/v1/competitors/rules?projectSlug=${projectSlug}`)
   },
 }
 
 // Platforms API
 export const platformsApi = {
   list: async () => {
-    return fetchApi<{ platforms: any[]; count: number }>('/api/platforms')
+    return fetchApi<{ platforms: Array<Record<string, unknown>>; count: number }>('/api/platforms')
   },
 
   getStatus: async (platform: string, projectSlug: string) => {
     return fetchApi<{
       platform: string
-      integration: any | null
+      integration: Record<string, unknown> | null
       isConnected: boolean
     }>(`/api/platforms/${platform}?project=${projectSlug}`)
   },
 
-  connect: async (platform: string, projectSlug: string, platformName: string, credentials: any) => {
+  connect: async (platform: string, projectSlug: string, platformName: string, credentials: Record<string, unknown>) => {
     return fetchApi(`/api/platforms/${platform}`, {
       method: 'POST',
       body: JSON.stringify({ projectSlug, platformName, credentials }),
@@ -170,7 +170,7 @@ export const platformsApi = {
         itemsProcessed: number | null
         itemsSuccessful: number | null
         itemsFailed: number | null
-        errors: any
+        errors: Record<string, unknown> | null
       }>
     }>(`/api/platforms/${platform}/sync/status?${queryParam}`)
   },

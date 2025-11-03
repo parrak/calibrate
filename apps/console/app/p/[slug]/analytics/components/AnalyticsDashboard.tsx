@@ -122,7 +122,7 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
             <div className="bg-white rounded-lg border p-6">
               <h2 className="text-xl font-semibold mb-4">Top Margins</h2>
               <div className="space-y-3">
-                {data.topPerformers.byMargin.slice(0, 5).map((item: SkuPerformance, idx: number) => (
+                {data.topPerformers.byMargin.slice(0, 5).map((item: SkuPerformance) => (
                   <div
                     key={item.sku}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded"
@@ -210,10 +210,8 @@ function MetricCard({ title, value, subtitle, trend }: MetricCardProps) {
 
 function TrendChart({
   trend,
-  label,
 }: {
   trend: { current: number; previous: number; direction: string }
-  label: string
 }) {
   const max = Math.max(trend.current, trend.previous)
   const currentHeight = (trend.current / max) * 100

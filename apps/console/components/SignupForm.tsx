@@ -59,9 +59,9 @@ export default function SignupForm() {
       }
 
       router.push('/onboarding')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Sign up error:', err)
-      setError(err?.message || 'Failed to create account. Please try again.')
+      setError(err instanceof Error ? err.message : 'Failed to create account. Please try again.')
       setIsLoading(false)
     }
   }

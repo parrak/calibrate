@@ -20,7 +20,7 @@ export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const apiToken = (session as any)?.apiToken as string | undefined
+  const apiToken = (session as { apiToken?: string })?.apiToken
 
   useEffect(() => {
     const userId = session?.user?.id
@@ -48,9 +48,9 @@ export default function Projects() {
         if (isMounted) {
           setProjects(Array.isArray(data.projects) ? data.projects : [])
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (isMounted) {
-          setError(err?.message || 'Failed to load projects.')
+          setError(err instanceof Error ? err.message : 'Failed to load projects.')
           setProjects([])
         }
       } finally {
@@ -67,14 +67,14 @@ export default function Projects() {
     }
   }, [session?.user?.id, apiToken])
 
-
-  if (loading)
+  if (loading) {
     return (
       <div className="p-6 space-y-3">
         <div className="h-6 w-36 bg-gray-200 animate-pulse rounded" />
         <div className="h-24 w-full bg-gray-100 animate-pulse rounded" />
       </div>
     )
+  }
 
   if (!projects.length) {
     return (

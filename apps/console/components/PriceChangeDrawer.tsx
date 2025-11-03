@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 
 type Item = {
   id:string; status:string; currency:string; fromAmount:number; toAmount:number;
-  createdAt:string; context?:any; source?:string; policyResult?:{ ok:boolean; checks:any[] }
+  createdAt:string; context?:Record<string, unknown>; source?:string; policyResult?:{ ok:boolean; checks:Array<Record<string, unknown>> }
 }
 
 export function PriceChangeDrawer({

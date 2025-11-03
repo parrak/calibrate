@@ -121,8 +121,8 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
             Monitor competitor prices and track market positioning
           </p>
         </div>
-        <Button 
-          onClick={startMonitoring} 
+        <Button
+          onClick={startMonitoring}
           disabled={isMonitoring}
           className="flex items-center gap-2"
         >
@@ -220,7 +220,7 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
                     </TableCell>
                     <TableCell>{competitor.products.length}</TableCell>
                     <TableCell>
-                      {competitor.lastChecked 
+                      {competitor.lastChecked
                         ? new Date(competitor.lastChecked).toLocaleString()
                         : 'Never'
                       }
@@ -253,8 +253,8 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {competitors.flatMap(competitor => 
-              competitor.products.map(product => 
+            {competitors.flatMap(competitor =>
+              competitor.products.map(product =>
                 product.prices.map((price, index) => (
                   <div key={`${product.id}-${index}`} className="flex items-center justify-between p-3 border rounded">
                     <div>

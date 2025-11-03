@@ -9,7 +9,7 @@ interface PlatformSettingsProps {
     name: string
     description: string
   }
-  integration: any | null
+  integration: { id: string; status: string; platformName: string; connectedAt: string; lastSyncAt?: string | null; syncStatus?: string | null; platform: string; isActive: boolean } | null
   projectSlug: string
   onClose: () => void
   onUpdate: () => void
@@ -38,8 +38,8 @@ export function PlatformSettings({
       setTimeout(() => {
         onClose()
       }, 1000)
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Failed to disconnect' })
+    } catch (error: unknown) {
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to disconnect' })
     } finally {
       setLoading(false)
     }

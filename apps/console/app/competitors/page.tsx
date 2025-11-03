@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/lib/components/Tabs'
 import { CompetitorMonitor } from '@/components/CompetitorMonitor'
 import { CompetitorRules } from '@/components/CompetitorRules'

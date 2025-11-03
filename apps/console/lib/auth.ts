@@ -65,12 +65,12 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role
-        ;(token as any).tenantId = (user as any).tenantId
+        ;(token as { tenantId?: string }).tenantId = (user as { tenantId?: string }).tenantId
         try {
           const apiBase = process.env.NEXT_PUBLIC_API_BASE || process.env.API_BASE_URL
           const internal = process.env.CONSOLE_INTERNAL_TOKEN
           if (apiBase && internal && token.sub) {
-            const tenantId = (user as any).tenantId
+            const tenantId = (user as { tenantId?: string }).tenantId
             const roleLower =
               typeof user.role === 'string' ? user.role.toLowerCase() : undefined
             const roles = Array.from(new Set([user.role, roleLower].filter(Boolean)))
@@ -80,8 +80,8 @@ export const authOptions: NextAuthOptions = {
               body: JSON.stringify({ userId: token.sub, roles, tenantId }),
             })
             if (res.ok) {
-              const data = await res.json()
-              token.apiToken = data.token
+              const data = await res.json() as { token: string }
+              ;(token as { apiToken?: string }).apiToken = data.token
             }
           }
         } catch {
@@ -94,8 +94,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.sub as string
         session.user.role = token.role as string
-        session.user.tenantId = (token as any).tenantId as string | undefined
-        session.apiToken = (token as any).apiToken as string | undefined
+        session.user.tenantId = (token as { tenantId?: string }).tenantId
+        session.apiToken = (token as { apiToken?: string }).apiToken
       }
       return session
     },

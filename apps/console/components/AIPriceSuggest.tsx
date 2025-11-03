@@ -12,10 +12,8 @@ interface AIPriceSuggestProps {
 }
 
 export function AIPriceSuggest({
-  sku,
   currentPrice,
   currency,
-  cost,
   onApply,
 }: AIPriceSuggestProps) {
   const [loading, setLoading] = useState(false)

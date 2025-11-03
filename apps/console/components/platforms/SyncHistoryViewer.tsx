@@ -11,7 +11,7 @@ interface SyncLog {
   completedAt: string | null
   itemsSynced: number
   itemsFailed: number
-  errors: any
+  errors: Record<string, unknown> | null
 }
 
 interface SyncHistoryViewerProps {
@@ -38,7 +38,7 @@ export function SyncHistoryViewer({
   // Poll for updates when there's an active sync
   useEffect(() => {
     const hasActiveSync = logs.some(log => log.status === 'SYNCING')
-    
+
     if (hasActiveSync) {
       // Poll every 2 seconds when sync is active
       pollingIntervalRef.current = setInterval(() => {
@@ -63,9 +63,9 @@ export function SyncHistoryViewer({
     try {
       setLoading(true)
       setError(null)
-      
+
       const data = await platformsApi.getSyncStatus(platform, projectSlug)
-      
+
       // Transform API response to our SyncLog format
       const transformedLogs: SyncLog[] = data.syncLogs.map(log => ({
         id: log.id,
@@ -77,11 +77,11 @@ export function SyncHistoryViewer({
         itemsFailed: log.itemsFailed ?? 0,
         errors: log.errors,
       }))
-      
+
       setLogs(transformedLogs)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch sync history:', err)
-      setError(err.message || 'Failed to load sync history')
+      setError(err instanceof Error ? err.message : 'Failed to load sync history')
     } finally {
       setLoading(false)
     }

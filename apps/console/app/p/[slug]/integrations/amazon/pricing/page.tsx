@@ -9,9 +9,9 @@ export default function AmazonPricingPage() {
   const [sku, setSku] = useState('')
   const [price, setPrice] = useState('')
   const [currency, setCurrency] = useState('USD')
-  const [result, setResult] = useState<any>(null)
-  const [status, setStatus] = useState<any>(null)
-  const [authResult, setAuthResult] = useState<any>(null)
+  const [result, setResult] = useState<Record<string, unknown> | null>(null)
+  const [status, setStatus] = useState<Record<string, unknown> | null>(null)
+  const [authResult, setAuthResult] = useState<{ ok: boolean; status: number; data: Record<string, unknown> } | null>(null)
   const [loading, setLoading] = useState(false)
 
   async function submit(e: React.FormEvent) {
@@ -20,7 +20,7 @@ export default function AmazonPricingPage() {
     setResult(null)
     try {
       const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
-      const token = (session as any)?.apiToken as string | undefined
+      const token = (session as { apiToken?: string })?.apiToken
       const res = await fetch(`${base}/api/platforms/amazon/pricing`, {
         method: 'POST',
         headers: {
@@ -43,7 +43,7 @@ export default function AmazonPricingPage() {
     setLoading(true)
     try {
       const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
-      const token = (session as any)?.apiToken as string | undefined
+      const token = (session as { apiToken?: string })?.apiToken
       const res = await fetch(`${base}/api/platforms/amazon/pricing/status?feed=${encodeURIComponent(feedId)}&parse=true`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       })
@@ -59,7 +59,7 @@ export default function AmazonPricingPage() {
     setAuthResult(null)
     try {
       const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
-      const token = (session as any)?.apiToken as string | undefined
+      const token = (session as { apiToken?: string })?.apiToken
       const res = await fetch(`${base}/api/admin/dashboard`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       })
@@ -91,7 +91,7 @@ export default function AmazonPricingPage() {
 
       <div className="mt-6">
         <h2 className="font-medium">API Auth</h2>
-        <div className="text-xs text-gray-600 mb-2">Session token present: {((session as any)?.apiToken ? 'yes' : 'no')}</div>
+        <div className="text-xs text-gray-600 mb-2">Session token present: {((session as { apiToken?: string })?.apiToken ? 'yes' : 'no')}</div>
         <button onClick={checkAuth} disabled={loading} className="bg-green-600 text-white px-3 py-1 rounded disabled:opacity-50">{loading ? 'Checking…' : 'Check API Auth'}</button>
         {authResult && (
           <pre className="mt-2 text-xs bg-gray-100 p-2 overflow-auto">{JSON.stringify(authResult, null, 2)}</pre>

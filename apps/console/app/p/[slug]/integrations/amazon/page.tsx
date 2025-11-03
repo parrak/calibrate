@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { Notice } from '@/components/Notice'
 import { useToast } from '@/components/Toast'
 import { DisconnectConfirm } from '@/components/DisconnectConfirm'
-import { ConfirmModal } from '@/components/ConfirmModal'
 
 interface AmazonIntegration {
   id: string
@@ -54,7 +53,9 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
         url.searchParams.delete('error')
         window.history.replaceState({}, '', url.toString())
       }
-    } catch {}
+    } catch (error) {
+      console.error('Error parsing query params:', error)
+    }
   }, [params.slug])
 
   const fetchIntegration = async () => {
@@ -62,12 +63,12 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
       setLoading(true)
       const { integration: integrationData } = await platformsApi.getStatus('amazon', params.slug)
       setIntegration(integrationData)
-    } catch (err: any) {
-      if (err.status === 404) {
+    } catch (err: unknown) {
+      if (err instanceof Error && 'status' in err && (err as { status: number }).status === 404) {
         // Not connected, that's OK
         setIntegration(null)
       } else {
-        setError(err.message || 'Failed to fetch integration status')
+        setError(err instanceof Error ? err.message : 'Failed to fetch integration status')
       }
     } finally {
       setLoading(false)
@@ -87,8 +88,8 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
       const installUrl = data?.installUrl as string | undefined
       if (!installUrl) throw new Error('Install URL not returned from API')
       window.location.href = installUrl
-    } catch (e: any) {
-      toast.error(e?.message || 'Failed to start Amazon connection')
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to start Amazon connection')
       setConnecting(false)
     }
   }

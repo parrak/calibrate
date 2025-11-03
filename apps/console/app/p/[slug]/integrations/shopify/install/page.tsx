@@ -88,7 +88,7 @@ export default function ShopifyInstallPage({ params }: ShopifyInstallPageProps) 
             <div className="space-y-4">
               {status === 'success' && (
                 <div className="space-y-2">
-                  <Button 
+                  <Button
                     onClick={() => window.location.href = `/p/${params.slug}/integrations/shopify`}
                     className="w-full"
                   >
@@ -102,13 +102,13 @@ export default function ShopifyInstallPage({ params }: ShopifyInstallPageProps) 
 
               {status === 'error' && (
                 <div className="space-y-2">
-                  <Button 
+                  <Button
                     onClick={handleRetry}
                     className="w-full"
                   >
                     Try Again
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => window.location.href = `/p/${params.slug}/integrations`}
                     variant="ghost"
                     className="w-full"
@@ -123,7 +123,7 @@ export default function ShopifyInstallPage({ params }: ShopifyInstallPageProps) 
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Please wait while we complete the installation...
                   </p>
-                  <Button 
+                  <Button
                     onClick={() => window.location.href = `/p/${params.slug}/integrations/shopify`}
                     variant="ghost"
                     className="w-full"

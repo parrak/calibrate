@@ -9,7 +9,7 @@ import { SimpleTable as Table } from '@/lib/components/SimpleTable'
 type ConnectorState = 'QUEUED' | 'SYNCING' | 'SYNCED' | 'ERROR'
 type PriceChangeStatus = 'PENDING' | 'APPROVED' | 'APPLIED' | 'REJECTED' | 'FAILED' | 'ROLLED_BACK'
 type ProjectRole = 'VIEWER' | 'EDITOR' | 'ADMIN' | 'OWNER'
-type PolicyCheck = { name: string; ok: boolean; [k: string]: any }
+type PolicyCheck = { name: string; ok: boolean; [k: string]: unknown }
 type ConnectorStatus = {
   target: string
   state: ConnectorState
@@ -24,7 +24,7 @@ type PriceChangeDTO = {
   toAmount: number
   createdAt: string
   source?: string
-  context?: Record<string, any>
+  context?: Record<string, unknown>
   policyResult?: { ok: boolean; checks: PolicyCheck[] }
   approvedBy?: string | null
   appliedAt?: string | null
@@ -82,7 +82,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
   const fallbackRole: ProjectRole =
     globalRole === 'OWNER' ? 'OWNER' : globalRole === 'ADMIN' ? 'ADMIN' : 'VIEWER'
 
-  const token = (session as any)?.apiToken as string | undefined
+  const token = (session as { apiToken?: string })?.apiToken
 
   const [status, setStatus] = useState<FilterStatus>('PENDING')
   const [q, setQ] = useState('')
@@ -172,13 +172,13 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         cursorRef.current = data?.nextCursor ?? undefined
         setItems((prev) => (reset ? incoming : [...prev, ...incoming]))
         setError(null)
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (reset) {
           setItems([])
           setCursor(undefined)
           cursorRef.current = undefined
         }
-        const message = err?.message || 'Unexpected error'
+        const message = err instanceof Error ? err.message : 'Unexpected error'
         setError(message)
         setMsg(`Failed to load price changes: ${message}`)
       } finally {
@@ -233,8 +233,8 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
             ? 'Rejected'
             : 'Approved'
         setMsg(successMessage)
-      } catch (err: any) {
-        setMsg(`Failed: ${err?.message || 'Unexpected error'}`)
+      } catch (err: unknown) {
+        setMsg(`Failed: ${err instanceof Error ? err.message : 'Unexpected error'}`)
       } finally {
         setBusyId(undefined)
       }
@@ -252,7 +252,6 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
   }
 
   const renderActions = (item: PriceChangeDTO) => {
-    const pct = pctDelta(item.fromAmount, item.toAmount)
     const isBusy = busyId === item.id
     const canApproveAction = canEdit && item.status === 'PENDING'
     const canApplyAction =

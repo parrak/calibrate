@@ -5,7 +5,6 @@
  */
 
 import { getServerSession, authOptions } from '@/lib/auth'
-import { signOut } from 'next-auth/react'
 import SignOutButton from './SignOutButton'
 
 export async function UserMenu() {
