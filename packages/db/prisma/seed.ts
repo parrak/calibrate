@@ -278,6 +278,11 @@ async function main() {
           { name: 'ceiling', ok: true, ceiling: 7900, proposedAmount: 5400 },
         ],
       },
+      connectorStatus: {
+        target: 'shopify',
+        state: 'SYNCED',
+        errorMessage: null,
+      },
     },
   })
 
@@ -305,6 +310,11 @@ async function main() {
           { name: 'ceiling', ok: true, ceiling: 29900, proposedAmount: 17900 },
         ],
       },
+      connectorStatus: {
+        target: 'shopify',
+        state: 'QUEUED',
+        errorMessage: null,
+      },
     },
   })
 
@@ -328,6 +338,11 @@ async function main() {
         checks: [
           { name: 'maxPctDelta', ok: false, deltaPct: 0.526, limit: 0.15 },
         ],
+      },
+      connectorStatus: {
+        target: 'shopify',
+        state: 'ERROR',
+        errorMessage: 'Policy guardrail failure',
       },
     },
   })
