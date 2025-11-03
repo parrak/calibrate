@@ -1,5 +1,5 @@
 {
-  "name": "@calibr/pricing-engine",
+  "name": "@calibr/analytics",
   "version": "0.0.1",
   "type": "module",
   "main": "index.js",
@@ -8,11 +8,10 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@calibr/ai-engine": "workspace:*",
-    "@calibr/db": "workspace:*",
-    "@calibrate/competitor-monitoring": "workspace:*"
+    "@calibr/db": "workspace:*"
   },
   "devDependencies": {
-    "vitest": "^1.0.0"
+    "@types/node": "^20.0.0",
+    "vitest": "^4.0.4"
   }
 }

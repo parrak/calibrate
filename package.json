@@ -34,14 +34,19 @@
     "agents:cli": "node agents/bin/agents-cli.mjs",
     "agents:list": "node agents/bin/agents-cli.mjs list-inbox",
     "encrypt:credentials": "tsx scripts/encrypt-credentials.ts",
-    "encrypt:credentials:dry": "tsx scripts/encrypt-credentials.ts --dry-run --verbose"
+    "encrypt:credentials:dry": "tsx scripts/encrypt-credentials.ts --dry-run --verbose",
+    "aggregate:analytics": "tsx scripts/aggregate-analytics.ts"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.2.0",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.2",
     "@types/node": "^20.10.0",
     "@types/supertest": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "eslint": "^8.55.0",
+    "jsdom": "^22.1.0",
     "prettier": "^3.1.0",
     "supertest": "^6.3.0",
     "tsx": "^4.7.0",
