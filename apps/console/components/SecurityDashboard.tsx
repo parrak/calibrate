@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@calibr/ui'
 import { Badge } from '@calibr/ui'
 import { Button } from '@calibr/ui'
-import { 
-  Shield, 
-  AlertTriangle, 
-  CheckCircle, 
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle,
   XCircle,
   RefreshCw,
   Eye,
@@ -27,7 +27,7 @@ interface SecurityVulnerability {
   owasp?: string
   detectedAt: string
   resolved: boolean
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 interface SecurityAuditResult {
@@ -60,13 +60,13 @@ export default function SecurityDashboard() {
     try {
       setLoading(true)
       setError(null)
-      
+
       const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
       const response = await fetch(`${base}/api/admin/security?includeDetails=true&runScan=${runScan}`)
       if (!response.ok) {
         throw new Error('Failed to fetch security data')
       }
-      
+
       const result = await response.json()
       setData(result)
     } catch (err) {
@@ -101,13 +101,13 @@ export default function SecurityDashboard() {
 
   const downloadReport = () => {
     if (!data) return
-    
+
     const report = {
       ...data,
       generatedAt: new Date().toISOString(),
       generatedBy: 'Security Dashboard'
     }
-    
+
     const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -182,8 +182,8 @@ export default function SecurityDashboard() {
           <p className="text-gray-600">Security audit and vulnerability management</p>
         </div>
         <div className="flex items-center space-x-4">
-          <Button 
-            onClick={() => setRunScan(true)} 
+          <Button
+            onClick={() => setRunScan(true)}
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />

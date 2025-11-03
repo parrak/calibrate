@@ -102,14 +102,6 @@ export function CompetitorAnalytics({ tenantId, projectId }: { tenantId: string;
     }).format(amount / 100)
   }
 
-  const getPositionColor = (position: string) => {
-    switch (position) {
-      case 'lowest': return 'text-green-600 bg-green-50'
-      case 'highest': return 'text-red-600 bg-red-50'
-      default: return 'text-blue-600 bg-blue-50'
-    }
-  }
-
   const getPositionIcon = (position: string) => {
     switch (position) {
       case 'lowest': return <TrendingDown className="h-5 w-5" />

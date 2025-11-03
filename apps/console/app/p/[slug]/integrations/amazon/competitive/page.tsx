@@ -1,27 +1,25 @@
 "use client";
 import { useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { useParams } from 'next/navigation'
 
 export default function AmazonCompetitivePage() {
-  const params = useParams() as { slug: string }
   const { data: session } = useSession()
 
   const [asinInput, setAsinInput] = useState('')
   const [singleAsin, setSingleAsin] = useState('')
-  const [history, setHistory] = useState<any[]>([])
-  const [trackResult, setTrackResult] = useState<any>(null)
-  const [latest, setLatest] = useState<any>(null)
-  const [recent, setRecent] = useState<any[]>([])
+  const [history, setHistory] = useState<Array<{ id: string; retrievedAt: string; lowestPriceCents: number | null; buyBoxPriceCents: number | null; offerCount: number }>>([])
+  const [trackResult, setTrackResult] = useState<{ results?: Array<{ asin: string; ok: boolean; error?: string }> } | null>(null)
+  const [latest, setLatest] = useState<Record<string, unknown> | null>(null)
+  const [recent, setRecent] = useState<Array<{ id: string; asin: string; lowestPriceCents: number | null; buyBoxPriceCents: number | null; offerCount: number }>>([])
   const [recentPage, setRecentPage] = useState(1)
   const [recentHasMore, setRecentHasMore] = useState(false)
   const [recentQuery, setRecentQuery] = useState('')
   const [cardView, setCardView] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [watchlist, setWatchlist] = useState<any[]>([])
+  const [watchlist, setWatchlist] = useState<Array<{ id: string; asin: string }>>([])
 
   const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
-  const token = (session as any)?.apiToken as string | undefined
+  const token = (session as { apiToken?: string })?.apiToken
 
   async function trackBatch() {
     const asins = asinInput.split(/\s+/).map(s => s.trim()).filter(Boolean)
@@ -97,16 +95,19 @@ export default function AmazonCompetitivePage() {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         cache: 'no-store',
       })
-      const data = await res.json()
+      const data = await res.json() as { items?: Array<{ id: string; asin: string }> }
       setWatchlist(Array.isArray(data?.items) ? data.items : [])
-    } catch {}
+    } catch (error) {
+      console.error('Failed to load watchlist:', error)
+    }
   }
 
   // Load recent on mount and when filters change (debounced)
   useEffect(() => {
-    const t = setTimeout(() => { loadRecent() }, 250)
+    const t = setTimeout(() => {
+      void loadRecent()
+    }, 250)
     return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recentPage, recentQuery, token])
 
   useEffect(() => { loadWatchlist() }, [token])
@@ -123,7 +124,7 @@ export default function AmazonCompetitivePage() {
         </button>
         {trackResult && (
           <div className="flex flex-wrap gap-2 mt-2">
-            {(trackResult.results || []).map((r: any) => (
+            {(trackResult.results || []).map((r: { asin: string; ok: boolean; error?: string }) => (
               <span key={r.asin} className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${r.ok ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                 {r.asin}{!r.ok && `: ${r.error || 'error'}`}
               </span>
@@ -162,7 +163,7 @@ export default function AmazonCompetitivePage() {
             </tr>
           </thead>
           <tbody>
-            {recent.map((row: any) => (
+            {recent.map((row: { id: string; asin: string; lowestPriceCents: number | null; buyBoxPriceCents: number | null; offerCount: number }) => (
               <tr key={row.id} className="border-t">
                   <td className="px-3 py-2 font-mono">{row.asin}</td>
                   <td className="px-3 py-2">{row.lowestPriceCents != null ? `$ ${(row.lowestPriceCents/100).toFixed(2)}` : '-'}</td>
@@ -211,7 +212,7 @@ export default function AmazonCompetitivePage() {
         </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {recent.map((row: any) => (
+            {recent.map((row: { id: string; asin: string; lowestPriceCents: number | null; buyBoxPriceCents: number | null; offerCount: number }) => (
               <div key={row.id} className="border rounded p-3 bg-white">
                 <div className="flex items-center justify-between">
                   <div className="font-mono text-sm">{row.asin}</div>
@@ -309,7 +310,7 @@ export default function AmazonCompetitivePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {history.map((row: any) => (
+                  {history.map((row: { id: string; retrievedAt: string; lowestPriceCents: number | null; buyBoxPriceCents: number | null; offerCount: number }) => (
                     <tr key={row.id} className="border-t">
                       <td className="px-3 py-2">{new Date(row.retrievedAt).toLocaleString()}</td>
                       <td className="px-3 py-2">{row.lowestPriceCents != null ? `$ ${(row.lowestPriceCents/100).toFixed(2)}` : '-'}</td>
@@ -347,7 +348,7 @@ export default function AmazonCompetitivePage() {
               </tr>
             </thead>
             <tbody>
-              {watchlist.map((w: any) => (
+              {watchlist.map((w: { id: string; asin: string }) => (
                 <tr key={w.id} className="border-t">
                   <td className="px-3 py-2 font-mono">{w.asin}</td>
                   <td className="px-3 py-2 flex gap-2">
@@ -377,8 +378,8 @@ export default function AmazonCompetitivePage() {
 function Sparkline({ asin, base, token }: { asin: string; base: string; token?: string }) {
   const [points, setPoints] = useState<number[]>([])
 
-  useState(() => {
-    ;(async () => {
+  useEffect(() => {
+    (async () => {
       try {
         const res = await fetch(`${base}/api/platforms/amazon/competitive?asin=${encodeURIComponent(asin)}&limit=10`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -387,13 +388,15 @@ function Sparkline({ asin, base, token }: { asin: string; base: string; token?: 
         const data = await res.json()
         const items = Array.isArray(data?.items) ? data.items : []
         const arr = items
-          .map((r: any) => r.lowestPriceCents ?? r.buyBoxPriceCents)
-          .filter((n: any) => typeof n === 'number')
+          .map((r: { lowestPriceCents?: number | null; buyBoxPriceCents?: number | null }) => r.lowestPriceCents ?? r.buyBoxPriceCents)
+          .filter((n): n is number => typeof n === 'number')
           .reverse() // oldest to newest
         setPoints(arr)
-      } catch {}
+      } catch (error) {
+        console.error('Failed to fetch sparkline data:', error)
+      }
     })()
-  })
+  }, [asin, base, token])
 
   if (!points.length) return <span className="text-xs text-gray-400">—</span>
 
@@ -434,7 +437,9 @@ function TrendBadge({ asin, base, token }: { asin: string; base: string; token?:
           const b = items[1].lowestPriceCents ?? items[1].buyBoxPriceCents
           if (a != null && b != null) setDir(b > a ? 'up' : b < a ? 'down' : 'flat')
         }
-      } catch {}
+      } catch (error) {
+        console.error('Failed to fetch trend badge data:', error)
+      }
     })()
   }, [asin, base, token])
 

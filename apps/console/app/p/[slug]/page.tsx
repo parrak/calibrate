@@ -26,19 +26,25 @@ export default function ProjectDashboard({ params }: { params: { slug: string } 
         const now = new Date()
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
+        interface PriceChange {
+          status: string
+          updatedAt?: string
+          appliedAt?: string
+        }
+
         const stats: Stats = {
-          pending: changes.filter((c: any) => c.status === 'PENDING').length,
+          pending: changes.filter((c: PriceChange) => c.status === 'PENDING').length,
           approvedToday: changes.filter(
-            (c: any) => c.status === 'APPROVED' && new Date(c.updatedAt) >= todayStart
+            (c: PriceChange) => c.status === 'APPROVED' && c.updatedAt && new Date(c.updatedAt) >= todayStart
           ).length,
           appliedToday: changes.filter(
-            (c: any) => c.status === 'APPLIED' && c.appliedAt && new Date(c.appliedAt) >= todayStart
+            (c: PriceChange) => c.status === 'APPLIED' && c.appliedAt && new Date(c.appliedAt) >= todayStart
           ).length,
         }
 
         setStats(stats)
-      } catch (err: any) {
-        setError(err.message || 'Failed to load dashboard data')
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
       } finally {
         setLoading(false)
       }

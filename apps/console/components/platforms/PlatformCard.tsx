@@ -12,14 +12,13 @@ interface PlatformCardProps {
     description?: string
     available: boolean
   }
-  integration: any | null
+  integration: { status?: string; platformName?: string; lastSyncAt?: string | null; syncStatus?: string | null } | null
   projectSlug: string
   onUpdate?: () => void
 }
 
 export function PlatformCard({ platform, integration, projectSlug, onUpdate }: PlatformCardProps) {
   const [syncing, setSyncing] = useState(false)
-  const [disconnecting, setDisconnecting] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
 
   const handleSync = async () => {
@@ -31,20 +30,6 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
       console.error('Sync failed:', error)
     } finally {
       setSyncing(false)
-    }
-  }
-
-  const handleDisconnect = async () => {
-    if (!confirm(`Disconnect from ${platform.name}?`)) return
-
-    try {
-      setDisconnecting(true)
-      await platformsApi.disconnect(platform.platform, projectSlug)
-      onUpdate?.()
-    } catch (error) {
-      console.error('Disconnect failed:', error)
-    } finally {
-      setDisconnecting(false)
     }
   }
 

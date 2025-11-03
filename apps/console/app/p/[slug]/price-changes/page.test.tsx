@@ -11,7 +11,7 @@ vi.mock('next-auth/react', () => ({
   }),
 }))
 
-const jsonResponse = (data: any, status = 200) =>
+const jsonResponse = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
     headers: { 'Content-Type': 'application/json' },
@@ -115,7 +115,7 @@ describe('PriceChangesPage UI', () => {
         })
       )
 
-    // @ts-expect-error
+    // @ts-expect-error - Mocking global fetch for testing
     global.fetch = fetchMock
   })
 

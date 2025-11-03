@@ -57,8 +57,8 @@ export function DisconnectConfirm({
             if (!res.ok) throw new Error('Failed to disconnect')
             toast.success(`${resolvedPlatform} integration disconnected.`)
             onDone?.()
-          } catch (e: any) {
-            toast.error(e?.message || 'Failed to disconnect')
+          } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to disconnect')
           }
         }}
       />
