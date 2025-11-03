@@ -29,20 +29,22 @@
 - `deployment-validation.yml:21`: Invalid pnpm action input `version-file`
 - `lockfile-check.yml:17`: Invalid pnpm action input `version-file`
 
-### Vercel Console Deployment: IN PROGRESS 🔄
+### Vercel Console Deployment: ✅ FIXED!
 **Issue**: Prisma client resolution failure during build
-**Root Cause**: Redundant isolated install breaking workspace dependency resolution
+**Root Cause**: Local pnpm installs were removing packages from workspace
 
-**Fixes Applied**:
-1. Removed premature postinstall script (commit `99b4dcd`) - timing issue
-2. Added `@prisma/client` to console dependencies (commit `b31915d`) - still failed
-3. Removed redundant `pnpm --filter @calibr/db install` (commit `f96e753`) - still failed
-4. Use direct cd + shamefully-hoist (commit `493b15f`) - still failed
-5. Use `pnpm exec prisma generate` for workspace context (commit `1fe9007`) - still failed
-6. Add local pnpm install in db before generate (commit `7bc2d52`) - still failed
-7. Remove redundant install from buildCommand (commit `81e8012`) - testing now
+**Solution (commit `2cb4843`)**: Run prisma generate from workspace root with schema path
+```bash
+pnpm exec prisma generate --schema=./packages/db/prisma/schema.prisma
+```
 
-**Root Cause Found**: buildCommand was running `pnpm install` AGAIN after installCommand already ran it, removing 403 packages and breaking workspace. Fixed by removing duplicate install from buildCommand.
+**Why This Works**:
+- installCommand sets up entire workspace with `--shamefully-hoist`
+- buildCommand runs prisma from root where all packages are available
+- No local installs that could break the workspace structure
+- Prisma can find @prisma/client in the hoisted node_modules
+
+**Deployment**: https://vercel.com/rakesh-paridas-projects/console/9LiY5vp5kF7z2KQqhGUWXoURoCt4
 
 ---
 
@@ -284,9 +286,10 @@ All agents working on same branch (`chore/update-docs-and-scripts`):
 - [x] Attempt 4: remove redundant db install (f96e753) - still failed
 - [x] Attempt 5: direct cd + shamefully-hoist (493b15f) - still failed
 - [x] Attempt 6: use pnpm exec for workspace context (1fe9007) - still failed
-- [x] Attempt 7: add local pnpm install in db (7bc2d52) - still failed
-- [x] Attempt 8: remove duplicate install from buildCommand (81e8012) - testing now
-- [x] Found root cause: buildCommand was undoing installCommand's work
+- [x] Attempt 7: add local pnpm install in db (7bc2d52) - removed packages!
+- [x] Attempt 8: remove duplicate install from buildCommand (81e8012) - still had local install
+- [x] Attempt 9: run prisma from root with schema path (2cb4843) - ✅ SUCCESS!
+- [x] Vercel console deployment now working!
 - [ ] Wait for Codex to finish
 - [ ] Fix remaining 6 small files (14 errors total)
 - [ ] Monitor PR checks until all pass
@@ -303,7 +306,7 @@ All agents working on same branch (`chore/update-docs-and-scripts`):
 
 ✅ **Current Session - Completed**:
 - Agent A: Fixed ShopifyConnector.ts (8 errors)
-- Agent B: Debugging Vercel Prisma deployment (8 attempts, found root cause: duplicate install)
+- Agent B: ✅ Fixed Vercel Prisma deployment (9 attempts, success with schema path approach)
 
 🔄 **Current Session - In Progress**:
 - Codex: Fixing ShopifyPricingOperations.ts + workflows
