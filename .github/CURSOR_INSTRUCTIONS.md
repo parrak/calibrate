@@ -10,6 +10,20 @@
 
 - 2025-01-13 10:42 — Created `fix/typescript-packages` branch from latest `chore/update-docs-and-scripts`; baseline `pnpm --filter @calibr/api typecheck` reported 28 errors within `packages/**` and `apps/api/lib/**`.
 - 2025-01-13 11:12 — Started amazon-connector refactor; product list/get/sync return normalized products, pricing fixes in progress.
+
+- 2025-01-13 12:20 — Competitor monitoring + API lib fixes committed on `fix/typescript-routes`:
+  - packages/competitor-monitoring:
+    - Iterate over `CompetitorProduct` instead of `products`
+    - Create `CompetitorPrice` via relation connect; generate `id` with `crypto.randomUUID()`
+  - apps/api/lib:
+    - logger: normalize `projectId` to `string | undefined`
+    - auth-security: make `SecurityPolicy.requireProject`/`requireTenant` optional
+    - performance-monitor: add result typing for `$queryRaw` tuple
+
+Remaining (Agent B scope):
+- Amazon connector typing and SP-API types
+- Pricing engine create inputs with explicit `id`
+- Test-only errors (Shopify OAuth route imports, performance tests)
 - 2025-01-13 14:30 — **Agent B work taken over by Codex agent**. Working on same branch `fix/typescript-routes` as Agent A.
 - 2025-01-13 15:45 — ✅ **Task 1 COMPLETE**: `packages/amazon-connector/src/connector.ts` (16 errors fixed)
 - 2025-01-13 15:50 — ✅ **Task 2 COMPLETE**: `packages/competitor-monitoring/monitor.ts` (4 errors fixed)
