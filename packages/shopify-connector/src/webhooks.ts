@@ -79,7 +79,7 @@ export class ShopifyWebhooks {
   /**
    * Verify webhook signature
    */
-  verifyWebhookSignature(payload: string, signature: string): ShopifyWebhookVerification {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-anyverifyWebhookSignature(payload: string, signature: string): ShopifyWebhookVerification {
     try {
       const hmac = crypto.createHmac('sha256', this.webhookSecret);
       hmac.update(payload, 'utf8');

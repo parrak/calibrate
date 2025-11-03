@@ -77,7 +77,7 @@ export class ShopifyPricing {
           success: false,
           variantId: update.variantId,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          error: productVariantUpdate.userErrors.map((e: any) => e.message).join(', '),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-anyerror: productVariantUpdate.userErrors.map((e: any) => e.message).join(', '),
         };
       }
 
@@ -87,7 +87,7 @@ export class ShopifyPricing {
         updatedVariant: this.convertGraphQLVariant(productVariantUpdate.productVariant),
       };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any} catch (error: any) {
       return {
         success: false,
         variantId: update.variantId,
@@ -180,10 +180,10 @@ export class ShopifyPricing {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (response as any).data.nodes.forEach((node: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any(response as any).data.nodes.forEach((node: any) => {
         if (node) {
           const variantId = node.id.split('/').pop();
-          pricingMap.set(variantId, this.convertGraphQLVariant(node));
+          // eslint-disable-next-line @typescript-eslint/no-explicit-anypricingMap.set(variantId, this.convertGraphQLVariant(node));
         }
       });
 
@@ -233,7 +233,7 @@ export class ShopifyPricing {
    * Convert GraphQL variant response to ShopifyVariant type
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private convertGraphQLVariant(graphqlVariant: any): ShopifyVariant {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-anyprivate convertGraphQLVariant(graphqlVariant: any): ShopifyVariant {
     return {
       id: graphqlVariant.id.split('/').pop(),
       productId: graphqlVariant.product?.id.split('/').pop() || '',

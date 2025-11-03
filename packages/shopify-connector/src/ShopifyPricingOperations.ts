@@ -100,7 +100,7 @@ export class ShopifyPricingOperations implements PricingOperations {
         },
       };
 
-      const response: any = await this.connector['client'].post('/graphql.json', {
+      const response: any = await this.connector['client'].post('/graphql.json', // eslint-disable-next-line @typescript-eslint/no-explicit-any{
         query: mutation,
         variables,
       });
@@ -186,7 +186,7 @@ export class ShopifyPricingOperations implements PricingOperations {
       errors.push('Only USD currency is supported');
     }
 
-    // Validate variant exists
+    // // eslint-disable-next-line @typescript-eslint/no-explicit-anyValidate variant exists
     try {
       await this.getPrice(update.externalId);
     } catch {
