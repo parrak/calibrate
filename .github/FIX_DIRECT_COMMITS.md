@@ -107,3 +107,4 @@ Your rule should have:
 
 This will prevent future direct commits from bypassing your protection rules.
 
+

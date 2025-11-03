@@ -74,3 +74,4 @@ fi
 echo ""
 echo "✅ Migration check complete!"
 exit 0
+
