@@ -74,6 +74,8 @@ export class ShopifyProducts {
       published_status?: 'published' | 'unpublished' | 'any';
       collection_id?: string;
       product_ids?: string[];
+      page?: unknown; // Allow page property to be deleted
+      [key: string]: unknown; // Index signature for dynamic property access
     }
     const params: ProductListParams = {
       limit,
@@ -92,7 +94,21 @@ export class ShopifyProducts {
       }
     });
 
-    return await this.client.get<ProductListResponse>('/products.json', params);
+    // Convert to Record for client.get which expects Record<string, string | number | boolean>
+    const requestParams: Record<string, string | number | boolean> = {};
+    for (const key in params) {
+      const value = params[key];
+      if (value !== undefined) {
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          requestParams[key] = value;
+        } else if (Array.isArray(value)) {
+          // Convert arrays to comma-separated strings
+          requestParams[key] = value.join(',');
+        }
+      }
+    }
+
+    return await this.client.get<ProductListResponse>('/products.json', requestParams);
   }
 
   /**

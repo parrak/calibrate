@@ -28,6 +28,10 @@ export interface ShopifyProduct {
   variants: ShopifyVariant[];
   createdAt: string;
   updatedAt: string;
+  body_html?: string;
+  status?: 'active' | 'archived' | 'draft';
+  images?: Array<{ src: string }>;
+  publishedAt?: string;
 }
 
 export interface ShopifyVariant {
@@ -43,6 +47,12 @@ export interface ShopifyVariant {
   inventoryManagement?: string;
   createdAt: string;
   updatedAt: string;
+  option1?: string;
+  option2?: string;
+  option3?: string;
+  barcode?: string;
+  image?: { src: string };
+  inventoryItemId?: string;
 }
 
 export interface ShopifyPriceUpdate {

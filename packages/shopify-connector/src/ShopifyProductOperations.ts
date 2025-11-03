@@ -413,7 +413,7 @@ export class ShopifyProductOperations implements ProductOperations {
       vendor: shopifyProduct.vendor || '',
       productType: shopifyProduct.productType || '',
       tags: shopifyProduct.tags || [],
-      status: this.normalizeStatus(shopifyProduct.status),
+      status: this.normalizeStatus(shopifyProduct.status || 'draft'),
       images: shopifyProduct.images?.map((img: { src: string }) => img.src) || [],
       variants: shopifyProduct.variants?.map((variant: ShopifyVariant) => this.normalizeVariant(variant)) || [],
       createdAt: new Date(shopifyProduct.createdAt),
