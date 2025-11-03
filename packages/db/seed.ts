@@ -392,6 +392,11 @@ async function main() {
           status: 'PENDING',
           context: { skuCode: 'PRO-MONTHLY' },
           policyResult: { ok: true, checks: [] },
+          connectorStatus: {
+            target: 'shopify',
+            state: 'SYNCED',
+            errorMessage: null,
+          },
         },
       })
       console.log('âœ“ Demo price change created')
