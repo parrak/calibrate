@@ -36,9 +36,11 @@
 **Fixes Applied**:
 1. Removed premature postinstall script (commit `99b4dcd`) - timing issue
 2. Added `@prisma/client` to console dependencies (commit `b31915d`) - still failed
-3. Removed redundant `pnpm --filter @calibr/db install` from build command (commit `f96e753`)
+3. Removed redundant `pnpm --filter @calibr/db install` (commit `f96e753`) - still failed
+4. Use direct cd + shamefully-hoist (commit `493b15f`) - still failed
+5. Use `pnpm exec prisma generate` for workspace context (commit `1fe9007`) - testing now
 
-**Explanation**: The build command was running `pnpm --filter @calibr/db install` after the global `pnpm install`, which re-installed the db package in isolation, breaking workspace dependency resolution. Prisma couldn't find @prisma/client because the isolated install broke the workspace structure.
+**Current Theory**: Prisma's generate command tries to install @prisma/client internally but doesn't understand pnpm workspaces. Using `pnpm exec` should run it in proper workspace context.
 
 ---
 
@@ -277,7 +279,9 @@ All agents working on same branch (`chore/update-docs-and-scripts`):
 - [x] Attempt 1: postinstall script (503cad7) - timing issue
 - [x] Attempt 2: remove postinstall (99b4dcd) - still failed
 - [x] Attempt 3: add @prisma/client to console (b31915d) - still failed
-- [x] Attempt 4: remove redundant db install (f96e753) - testing now
+- [x] Attempt 4: remove redundant db install (f96e753) - still failed
+- [x] Attempt 5: direct cd + shamefully-hoist (493b15f) - still failed
+- [x] Attempt 6: use pnpm exec for workspace context (1fe9007) - testing now
 - [x] Monitor deployment - waiting for build with latest fix
 - [ ] Wait for Codex to finish
 - [ ] Fix remaining 6 small files (14 errors total)
@@ -295,7 +299,7 @@ All agents working on same branch (`chore/update-docs-and-scripts`):
 
 ✅ **Current Session - Completed**:
 - Agent A: Fixed ShopifyConnector.ts (8 errors)
-- Agent B: Debugging Vercel Prisma deployment (4 attempts, latest: removed redundant install)
+- Agent B: Debugging Vercel Prisma deployment (6 attempts, latest: pnpm exec for workspace context)
 
 🔄 **Current Session - In Progress**:
 - Codex: Fixing ShopifyPricingOperations.ts + workflows
