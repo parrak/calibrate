@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client'
-import crypto from 'crypto'
 import { 
   CompetitorData, 
   CompetitorProductData, 
@@ -71,14 +70,14 @@ export class CompetitorMonitor {
           if (currentPrice) {
             await this.db.competitorPrice.create({
               data: {
-                id: crypto.randomUUID(),
+                id: (crypto as any).randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random()}`,
                 amount: currentPrice.amount,
                 currency: currentPrice.currency,
                 channel: currentPrice.channel,
                 isOnSale: currentPrice.isOnSale,
                 saleEndsAt: currentPrice.saleEndsAt,
                 stockStatus: currentPrice.stockStatus,
-                CompetitorProduct: { connect: { id: product.id } }
+                productId: product.id
               }
             })
             pricesUpdated++

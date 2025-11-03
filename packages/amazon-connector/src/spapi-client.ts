@@ -29,7 +29,7 @@ export function loadConfigFromEnv(): AmazonConnectorConfig {
   }
 }
 
-export function createSpApiClient(partial?: AmazonConnectorConfig): SellingPartner | null {
+export function createSpApiClient(partial?: AmazonConnectorConfig): any | null {
   const cfg = { ...loadConfigFromEnv(), ...partial }
 
   if (!cfg.lwaClientId || !cfg.lwaClientSecret) {

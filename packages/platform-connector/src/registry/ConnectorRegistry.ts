@@ -52,12 +52,12 @@ export class ConnectorRegistry {
    */
   static unregister(platform: PlatformType): void {
     this.factories.delete(platform);
-    // Clean up any instances for this platform
-    for (const [key, connector] of this.instances.entries()) {
+    // Clean up any instances for this platform without relying on downlevel iteration
+    this.instances.forEach((connector, key) => {
       if (connector.platform === platform) {
         this.instances.delete(key);
       }
-    }
+    });
   }
 
   /**

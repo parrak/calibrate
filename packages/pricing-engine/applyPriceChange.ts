@@ -1,4 +1,5 @@
 import { prisma } from '@calibr/db'
+import crypto from 'crypto'
 
 export async function applyPriceChange(priceChangeId: string) {
   const pc = await prisma().priceChange.findUnique({ where: { id: priceChangeId } })
@@ -15,6 +16,7 @@ export async function applyPriceChange(priceChangeId: string) {
   // Create version record before updating
   await prisma().priceVersion.create({ 
     data: { 
+      id: crypto.randomUUID(),
       priceId: price.id, 
       amount: price.amount, 
       note: `Apply PC ${pc.id}` 
@@ -30,6 +32,7 @@ export async function applyPriceChange(priceChangeId: string) {
   // Record the event
   await prisma().event.create({ 
     data: { 
+      id: crypto.randomUUID(),
       tenantId: pc.tenantId, 
       kind: 'PRICE_APPLIED', 
       payload: { 
