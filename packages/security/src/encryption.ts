@@ -75,15 +75,19 @@ export class EncryptionService {
     const authTag = Buffer.from(parts[1], 'hex')
     const encrypted = parts[2]
 
-    // Create decipher
-    const decipher = createDecipheriv(this.algorithm, this.key, iv)
-    ;(decipher as any).setAuthTag(authTag)
+    try {
+      // Create decipher
+      const decipher = createDecipheriv(this.algorithm, this.key, iv)
+      ;(decipher as any).setAuthTag(authTag)
 
-    // Decrypt
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8')
-    decrypted += decipher.final('utf8')
+      // Decrypt - will throw if auth tag verification fails
+      let decrypted = decipher.update(encrypted, 'hex', 'utf8')
+      decrypted += decipher.final('utf8')
 
-    return decrypted
+      return decrypted
+    } catch (error) {
+      throw new Error('Decryption failed: data may be corrupted or tampered with')
+    }
   }
 
   /**
