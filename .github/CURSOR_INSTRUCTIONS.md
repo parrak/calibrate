@@ -2,10 +2,180 @@
 
 **Current Branch**: `chore/update-docs-and-scripts`
 **PR**: https://github.com/parrak/calibrate/pull/2
-**Status**: Vercel Prisma fix applied, but 50+ TypeScript errors blocking merge
+**Status**: In Progress - Fixing TypeScript errors (100+ errors identified)
+
+---
+
+## 🅰️ AGENT A — API Routes Team
+
+**Branch**: `fix/typescript-routes` (forked from `chore/update-docs-and-scripts`)
+**Scope**: Fix all TypeScript errors in `apps/api/app/api/**` routes (~65 errors)
+
+### ✅ Task 1: assistant/query/route.ts — COMPLETE (26 errors fixed)
+
+**File**: `apps/api/app/api/v1/assistant/query/route.ts`
+
+**Issues Fixed**:
+1. ✅ **Prisma schema relation mismatches**: 
+   - `PriceChange` has no direct `sku` relation (only `skuId` field)
+   - Fixed `explainPriceChange()`: query Sku separately using `skuId`
+   - Changed `include: { sku: ... }` → fetch Sku separately with `prisma().sku.findUnique()`
+
+2. ✅ **Sku model field access**:
+   - `Sku` doesn't have `projectId` directly (via `Product` relation)
+   - Fixed `simulatePriceIncrease()`: use `where: { Product: { projectId } }`
+   - Fixed `findLowMarginProducts()`: same pattern + access Price via relation
+
+3. ✅ **Price and cost data access**:
+   - `Sku` doesn't have `priceAmount` or `cost` fields directly
+   - Price stored in `Price` model (relation: `Sku.Price[]`)
+   - Fixed: Access price via `s.Price[0]?.amount` and cost via `s.attributes?.cost`
+
+4. ✅ **Field name corrections**:
+   - `Sku.code` used instead of `Sku.sku` (field is `code` in schema)
+   - All references updated to use `code` field
+
+5. ✅ **Type safety improvements**:
+   - Added proper null checks for optional fields
+   - Added type assertions for JSON attributes
+   - Fixed `method: 'ai'` with `as const` for type literal
+
+**Changes Summary**:
+- `explainPriceChange()`: Fetch Sku separately after getting PriceChange
+- `simulatePriceIncrease()`: Query via Product relation, access Price and cost correctly
+- `findLowMarginProducts()`: Query via Product relation, calculate margins from Price and attributes
+- All functions now correctly handle Prisma schema relationships
+
+**Status**: ✅ All 26 TypeScript errors in this file resolved. No linter errors remaining.
+
+### ✅ Task 2: projects/route.ts & projects/[slug]/route.ts — COMPLETE (13 errors fixed)
+
+**Files Fixed**:
+- `apps/api/app/api/projects/route.ts` (11 errors)
+- `apps/api/app/api/projects/[slug]/route.ts` (1 error)
+
+**Issues Fixed**:
+1. ✅ **Missing IDs in create operations**:
+   - `Project.create`: Added `id: createId()` and `updatedAt: new Date()`
+   - `Membership.create`: Added `id: createId()`
+
+2. ✅ **Relation name mismatches**:
+   - `include: { project: ... }` → `include: { Project: ... }`
+   - `orderBy: { project: ... }` → `orderBy: { Project: ... }`
+   - `m.project.*` → `m.Project.*` (property access)
+   - `shopifyIntegrations` → `ShopifyIntegration` (relation name)
+   - `amazonIntegrations` → `AmazonIntegration` (relation name)
+
+3. ✅ **Non-existent model**: `platformIntegration` doesn't exist
+   - Fixed: Query `shopifyIntegration` and `amazonIntegration` separately, then combine results
+
+**Status**: ✅ All 13 errors in these files resolved.
+
+### ✅ Task 3: seed/route.ts — COMPLETE (12 errors fixed)
+
+**File**: `apps/api/app/api/seed/route.ts`
+
+**Issues Fixed**:
+1. ✅ **Missing IDs in all create operations**:
+   - `Project.create`: Added `id: createId()` and `updatedAt: new Date()`
+   - `User.create` (2 instances): Added `id: createId()`
+   - `Membership.create` (2 instances): Added `id: createId()`
+   - `Product.create`: Added `id: createId()`
+   - `Sku.create`: Added `id: createId()`
+   - `Price.create`: Added `id: createId()`
+   - `Policy.create`: Added `id: createId()` and `updatedAt: new Date()`
+   - `PriceChange.create`: Added `id: createId()`
+
+2. ✅ **Relation name mismatch**:
+   - `include: { prices: true }` → `include: { Price: true }`
+   - `sku.prices` → `sku.Price`
+
+**Status**: ✅ All 12 errors in this file resolved.
+
+### 📋 Next Tasks (Agent A)
+✅ **Task 4 (DONE)**: Fix relation name mismatches in competitors routes (`sku` → `Sku`, `products` → `CompetitorProduct`, `prices` → `CompetitorPrice`, `product` → `Product`)
+
+✅ **Task 5 (DONE)**: Export `verifyHmac` and `ensureIdempotent` from `@calibr/security`
+
+✅ **Task 6 (DONE)**: Fix remaining route errors (analytics import path, `JsonValue` casts in price-changes, `LogEntry` property usage via `metadata`)
+
+✅ **Task 7 (DONE)**: Typecheck for routes is clean; remaining errors are outside Agent A scope (tests, packages)
+
+---
+
+## Progress Tracker
+
+### ✅ Completed Steps
+- **Step 1**: Verified current state - Branch synced, CI shows `validate-deployment: FAILURE`
+- **Step 2**: ✅ Type definitions already added (`@types/validator@13.12.2`, `@types/bcryptjs@2.4.6`)
+- **Step 3**: ✅ `downlevelIteration` already enabled in `apps/api/tsconfig.json`
+- **Step 4c**: ✅ `@paralleldrive/cuid2` already installed in `apps/api`
+
+**New (Agent A) — Completed in this session**
+- ✅ Competitors routes fixed: relation names corrected (`CompetitorProduct`, `Sku`, `CompetitorPrice`)
+- ✅ Security module exports: `verifyHmac`, `ensureIdempotent` exported from `@calibr/security`
+- ✅ Price changes routes: `JsonValue` issues resolved via `Prisma.InputJsonValue` casts
+- ✅ Webhooks route: `verifyHmac`/`ensureIdempotent` wired, `LogEntry` fields moved to `metadata`, schema relation fixes (`Product`)
+- ✅ Analytics routes: imports resolved and Next.js params typing aligned
+
+### 🔄 In Progress
+- **Step 4**: Fixing critical TypeScript errors (100+ errors identified)
+  - ✅ Fixed dashboard route: removed invalid PriceChange.sku include, query Sku separately
+  - ✅ Fixed ShopifyIntegration.create: added createId() in oauth/callback route
+  - ✅ Fixed Event.create: added createId() in shopify/sync route (2 instances)
+  - ✅ Fixed Event.create: added createId() in shopify/webhooks route (4 instances)
+  - ✅ Fixed admin/security route: restructure details response for typing
+  - ✅ Fixed health route: typed Prisma raw queries for connections/migrations
+  - ✅ Shopify products/sync routes: centralized connector bootstrap helper, typed config/credentials, guarded webhooks/pricing access
+  - ✅ Deprecated legacy `/api/platforms/*` Shopify endpoints in favor of new `/api/integrations` routes
+  - 🔄 Missing IDs in create operations (7+ Event.create in platforms/shopify/webhooks, PriceVersion.create, AmazonIntegration, etc.)
+  - Schema field mismatches (wrong relation names, missing fields)
+  - Type errors (undefined/null handling, wrong types)
+  
+**Files fixed so far:**
+- `apps/api/app/api/admin/dashboard/route.ts`
+- `apps/api/app/api/integrations/shopify/oauth/callback/route.ts`
+- `apps/api/app/api/integrations/shopify/sync/route.ts`
+- `apps/api/app/api/integrations/shopify/webhooks/route.ts`
+- `apps/api/app/api/v1/price-changes/[id]/apply/route.ts`
+- `apps/api/app/api/v1/price-changes/[id]/rollback/route.ts`
+- `apps/api/app/api/v1/assistant/query/route.ts` (✅ Agent A - 26 errors fixed)
+
+**Progress**: 
+- ✅ Fixed ~25+ create operations with missing IDs:
+  - Event.create (13 instances)
+  - PriceVersion.create (2 instances) 
+  - ShopifyIntegration.create (2 instances)
+  - AmazonIntegration.create (2 instances)
+  - AmazonCompetitivePrice.create (3 instances)
+  - PriceChange.create (1 instance)
+  - Competitor.create, CompetitorProduct.create, CompetitorRule.create (3 instances)
+  
+- ✅ Fixed relation name mismatches:
+  - `include: { tenant: true }` → `include: { Tenant: true }` (2 instances)
+  - `include: { project: true }` → `include: { Project: true }` (1 instance)
+  - `include: { skus: ... }` → `include: { Sku: ... }` (2 instances)
+  - `include: { prices: ... }` → `include: { Price: ... }` (2 instances)
+  - `product.skus` → `product.Sku`, `s.prices` → `s.Price`
+  - `project.tenant` → `project.Tenant`
+  - ✅ Agent A: Fixed `PriceChange` relation issues - no direct `sku` relation, query separately
+  - ✅ Agent A: Fixed `Sku` access via `Product` relation for `projectId` filtering
+  - ✅ Agent A: Fixed `Price` access via `Sku.Price[]` relation, `cost` via `attributes`
+  
+**Remaining**: Route errors in Agent A scope: 0. Remaining TypeScript errors are primarily in tests and external packages (Amazon connector, competitor monitoring, performance monitoring), which are out of Agent A scope.
+- Schema field mismatches
+- Type errors (undefined/null handling)
+- Missing type annotations
+- Other relation/field name issues
+
+### 📋 Next Steps
+- Continue fixing create operations with missing IDs
+- Fix schema mismatches (relation names, field names)
+- Fix undefined/null type issues
+- Fix performance-monitor.ts type annotations
 
 ## Context
-Previous agent fixed the Vercel Prisma generation issue and restored `@default(cuid())` to the schema. Now need to fix remaining TypeScript errors to get console deploying and merge to master.
+Previous agent fixed the Vercel Prisma generation issue and restored `@default(cuid())` to the schema. Currently fixing remaining TypeScript errors to get console deploying and merge to master.
 
 ---
 
