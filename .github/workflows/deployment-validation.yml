@@ -32,7 +32,7 @@ jobs:
       run: pnpm db:generate
       
     - name: Check migrations
-      run: pnpm migrate:check
+      run: bash scripts/migrate-check.sh
       continue-on-error: false
       
     - name: TypeScript check
