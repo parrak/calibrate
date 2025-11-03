@@ -8,6 +8,7 @@
     "dev": { "cache": false },
     "lint": {},
     "test": {},
+    "typecheck": {},
     "generate": {
       "cache": false
     }
