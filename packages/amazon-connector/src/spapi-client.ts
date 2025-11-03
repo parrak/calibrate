@@ -1,3 +1,4 @@
+/// <reference path="./shims.d.ts" />
 import SellingPartner from 'selling-partner-api'
 
 export type AmazonRegion = 'na' | 'eu' | 'fe'
