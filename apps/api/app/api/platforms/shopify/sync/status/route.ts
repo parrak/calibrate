@@ -165,4 +165,3 @@ export const OPTIONS = withSecurity(async function OPTIONS(request: NextRequest)
   return new NextResponse(null, { status: 204 });
 });
 
-

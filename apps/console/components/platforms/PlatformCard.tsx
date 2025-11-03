@@ -138,10 +138,19 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
       </div>
 
       {/* Settings Modal */}
-      {showSettings && (
+      {showSettings && integration && (
         <PlatformSettings
           platform={{ ...platform, description: platform.description || '' }}
-          integration={integration}
+          integration={{
+            id: (integration as { id?: string }).id || '',
+            status: integration.status || 'UNKNOWN',
+            platformName: integration.platformName || '',
+            connectedAt: new Date().toISOString(),
+            lastSyncAt: integration.lastSyncAt,
+            syncStatus: integration.syncStatus,
+            platform: platform.platform,
+            isActive: true
+          }}
           projectSlug={projectSlug}
           onClose={() => setShowSettings(false)}
           onUpdate={() => {

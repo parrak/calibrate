@@ -53,7 +53,7 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
     try {
       setError(null)
       const data = await competitorsApi.list(projectSlug)
-      setCompetitors(Array.isArray(data) ? data : [])
+      setCompetitors(Array.isArray(data) ? (data as unknown as Competitor[]) : [])
     } catch (error) {
       console.error('Error fetching competitors:', error)
       setError('Failed to load competitors')
@@ -71,7 +71,8 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
       const results = await Promise.all(
         competitors.map(c => competitorsApi.monitor(c.id).catch(() => null))
       )
-      setMonitoringResults(results.filter(Boolean) as MonitoringResult[])
+      const validResults = results.filter((r): r is Record<string, unknown> => r !== null) as unknown as MonitoringResult[]
+      setMonitoringResults(validResults)
       await fetchCompetitors() // Refresh data
     } catch (error) {
       console.error('Error monitoring competitors:', error)

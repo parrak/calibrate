@@ -111,7 +111,7 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
       {data.trends.priceChanges && (
         <div className="bg-white rounded-lg border p-6">
           <h2 className="text-xl font-semibold mb-4">Price Changes Trend</h2>
-          <TrendChart trend={data.trends.priceChanges} label="Price Changes" />
+          <TrendChart trend={data.trends.priceChanges} />
         </div>
       )}
 

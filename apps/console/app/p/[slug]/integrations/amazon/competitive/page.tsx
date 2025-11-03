@@ -389,7 +389,7 @@ function Sparkline({ asin, base, token }: { asin: string; base: string; token?: 
         const items = Array.isArray(data?.items) ? data.items : []
         const arr = items
           .map((r: { lowestPriceCents?: number | null; buyBoxPriceCents?: number | null }) => r.lowestPriceCents ?? r.buyBoxPriceCents)
-          .filter((n): n is number => typeof n === 'number')
+          .filter((n: number | null | undefined): n is number => typeof n === 'number')
           .reverse() // oldest to newest
         setPoints(arr)
       } catch (error) {

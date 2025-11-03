@@ -20,7 +20,7 @@ interface Integration {
   platformName: string
   status: string
   lastSyncAt?: string | null
-  syncStatus?: string | null
+  syncStatus?: string | null | undefined
 }
 
 export default function IntegrationsPage({ params }: { params: { slug: string } }) {
@@ -37,23 +37,24 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
 
       // Get available platforms
       const { platforms: availablePlatforms } = await platformsApi.list()
-      setPlatforms(availablePlatforms)
+      setPlatforms(availablePlatforms as unknown as Platform[])
 
       // Get integration status for each platform
       const integrationData: Record<string, Integration> = {}
       await Promise.all(
-        availablePlatforms.map(async (platform) => {
+        availablePlatforms.map(async (platformRaw) => {
           try {
+            const platform = platformRaw as unknown as Platform
             const { integration } = await platformsApi.getStatus(
               platform.platform,
               params.slug
             )
             if (integration) {
-              integrationData[platform.platform] = integration as Integration
+              integrationData[platform.platform] = integration as unknown as Integration
             }
           } catch (err: unknown) {
             // Platform not connected, that's OK
-            console.log(`Platform ${platform.platform} not connected:`, err)
+            console.log(`Platform ${(platformRaw as unknown as Platform).platform} not connected:`, err)
           }
         })
       )
@@ -72,7 +73,7 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
     loadData()
   }, [params.slug])
 
-  const allIntegrations = Object.values(integrations)
+  const allIntegrations = Object.values(integrations) as Integration[]
 
   return (
     <div className="space-y-6 p-6">

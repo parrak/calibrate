@@ -60,7 +60,7 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
   const fetchRules = async () => {
     try {
       const data = await competitorsApi.getRules(projectSlug)
-      setRules(Array.isArray(data) ? data : [])
+      setRules(Array.isArray(data) ? (data as unknown as CompetitorRule[]) : [])
     } catch (error) {
       console.error('Error fetching rules:', error)
     } finally {
@@ -157,7 +157,11 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
                 <Label htmlFor="type">Rule Type</Label>
                 <Select
                   value={newRule.type}
-                  onValueChange={(value: 'beat_by_percent' | 'beat_by_amount' | 'match' | 'avoid_race_to_bottom') => setNewRule({ ...newRule, type: value })}
+                  onValueChange={(value: string) => {
+                    if (value === 'beat_by_percent' || value === 'beat_by_amount' || value === 'match' || value === 'avoid_race_to_bottom') {
+                      setNewRule({ ...newRule, type: value })
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -298,7 +302,10 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEditingRule(rule)}
+                      onClick={() => {
+                        // TODO: Implement edit functionality
+                        console.log('Edit rule:', rule)
+                      }}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>

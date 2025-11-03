@@ -62,7 +62,7 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
     try {
       setLoading(true)
       const { integration: integrationData } = await platformsApi.getStatus('amazon', params.slug)
-      setIntegration(integrationData)
+      setIntegration(integrationData as AmazonIntegration | null)
     } catch (err: unknown) {
       if (err instanceof Error && 'status' in err && (err as { status: number }).status === 404) {
         // Not connected, that's OK

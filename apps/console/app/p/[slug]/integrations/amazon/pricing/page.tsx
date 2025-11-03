@@ -38,7 +38,7 @@ export default function AmazonPricingPage() {
   }
 
   async function poll() {
-    const feedId = result?.result?.channelResult?.feedId
+    const feedId = (result?.result as { channelResult?: { feedId?: string } })?.channelResult?.feedId
     if (!feedId) return
     setLoading(true)
     try {

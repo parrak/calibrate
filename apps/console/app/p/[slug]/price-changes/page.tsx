@@ -420,7 +420,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
                   }}
                 >
                   <td className="px-4 py-3 font-mono text-xs">
-                    {item.context?.skuCode || '—'}
+                    {(item.context?.skuCode as string | undefined) || '—'}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col">

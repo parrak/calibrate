@@ -21,7 +21,7 @@ export default function ProjectDashboard({ params }: { params: { slug: string } 
         setLoading(true)
         setError(null)
 
-        const changes = await priceChangesApi.list(params.slug)
+        const changesRaw = await priceChangesApi.list(params.slug)
 
         const now = new Date()
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -32,13 +32,15 @@ export default function ProjectDashboard({ params }: { params: { slug: string } 
           appliedAt?: string
         }
 
+        const changes = changesRaw as unknown as PriceChange[]
+
         const stats: Stats = {
-          pending: changes.filter((c: PriceChange) => c.status === 'PENDING').length,
+          pending: changes.filter((c) => c.status === 'PENDING').length,
           approvedToday: changes.filter(
-            (c: PriceChange) => c.status === 'APPROVED' && c.updatedAt && new Date(c.updatedAt) >= todayStart
+            (c) => c.status === 'APPROVED' && c.updatedAt && new Date(c.updatedAt) >= todayStart
           ).length,
           appliedToday: changes.filter(
-            (c: PriceChange) => c.status === 'APPLIED' && c.appliedAt && new Date(c.appliedAt) >= todayStart
+            (c) => c.status === 'APPLIED' && c.appliedAt && new Date(c.appliedAt) >= todayStart
           ).length,
         }
 

@@ -47,7 +47,7 @@ async function fetchApi<T>(
 
 // Price Changes API
 export const priceChangesApi = {
-  list: async (projectSlug: string) => {
+  list: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
     // API returns shape: { items: [...] }
     const res = await fetchApi<{ items?: Array<Record<string, unknown>> }>(`/api/v1/price-changes?project=${projectSlug}`)
     return Array.isArray(res?.items) ? res.items : []
@@ -78,7 +78,7 @@ export const catalogApi = {
     return fetchApi<Record<string, unknown>>(`/api/v1/catalog?productCode=${productCode}`)
   },
 
-  listProducts: async (projectSlug: string) => {
+  listProducts: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
     // API expects `project` and returns { products: [{ product: {code,name}, skus: [...] }, ...] }
     const res = await fetchApi<{ products?: Array<{ product: { code: string; name: string }; skus: Array<Record<string, unknown>> }> }>(
       `/api/v1/catalog?project=${projectSlug}`
@@ -91,7 +91,7 @@ export const catalogApi = {
 
 // Competitors API
 export const competitorsApi = {
-  list: async (projectSlug: string) => {
+  list: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
     return fetchApi<Array<Record<string, unknown>>>(`/api/v1/competitors?projectSlug=${projectSlug}`)
   },
 
@@ -103,25 +103,29 @@ export const competitorsApi = {
     return fetchApi<Array<Record<string, unknown>>>(`/api/v1/competitors/${id}/products`)
   },
 
-  monitor: async (id: string) => {
+  monitor: async (id: string): Promise<Record<string, unknown>> => {
     return fetchApi<Record<string, unknown>>(`/api/v1/competitors/monitor`, {
       method: 'POST',
       body: JSON.stringify({ competitorId: id }),
     })
   },
 
-  getRules: async (projectSlug: string) => {
+  getRules: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
     return fetchApi<Array<Record<string, unknown>>>(`/api/v1/competitors/rules?projectSlug=${projectSlug}`)
   },
 }
 
 // Platforms API
 export const platformsApi = {
-  list: async () => {
+  list: async (): Promise<{ platforms: Array<Record<string, unknown>>; count: number }> => {
     return fetchApi<{ platforms: Array<Record<string, unknown>>; count: number }>('/api/platforms')
   },
 
-  getStatus: async (platform: string, projectSlug: string) => {
+  getStatus: async (platform: string, projectSlug: string): Promise<{
+    platform: string
+    integration: Record<string, unknown> | null
+    isConnected: boolean
+  }> => {
     return fetchApi<{
       platform: string
       integration: Record<string, unknown> | null

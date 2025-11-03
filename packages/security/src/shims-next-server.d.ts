@@ -3,4 +3,3 @@ declare module 'next/server' {
   export type NextResponse = any;
 }
 
-
