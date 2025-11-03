@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "cd ../.. && corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @calibr/console build",
-  "installCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile=false && pnpm db:generate && pnpm --filter @calibr/console build",
+  "installCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm install --frozen-lockfile=false --shamefully-hoist",
   "outputDirectory": ".next"
 }
