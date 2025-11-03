@@ -10,7 +10,7 @@ datasource db {
 }
 
 model AmazonCompetitivePrice {
-  id               String   @id
+  id               String   @id @default(cuid())
   asin             String
   marketplaceId    String
   lowestPriceCents Int?
@@ -24,7 +24,7 @@ model AmazonCompetitivePrice {
 }
 
 model AmazonIntegration {
-  id             String    @id
+  id             String    @id @default(cuid())
   projectId      String
   sellerId       String
   marketplaceId  String    @default("ATVPDKIKX0DER")
@@ -57,7 +57,7 @@ model AmazonWatchlist {
 }
 
 model Competitor {
-  id                String              @id
+  id                String              @id @default(cuid())
   tenantId          String
   projectId         String
   name              String
@@ -75,7 +75,7 @@ model Competitor {
 }
 
 model CompetitorPrice {
-  id                String            @id
+  id                String            @id @default(cuid())
   productId         String
   amount            Int
   currency          String
@@ -91,7 +91,7 @@ model CompetitorPrice {
 }
 
 model CompetitorProduct {
-  id              String            @id
+  id              String            @id @default(cuid())
   competitorId    String
   skuId           String?
   name            String
@@ -109,7 +109,7 @@ model CompetitorProduct {
 }
 
 model CompetitorRule {
-  id          String   @id
+  id          String   @id @default(cuid())
   tenantId    String
   projectId   String
   name        String
@@ -125,7 +125,7 @@ model CompetitorRule {
 }
 
 model Customer {
-  id        String   @id
+  id        String   @id @default(cuid())
   tenantId  String
   email     String
   name      String?
@@ -136,7 +136,7 @@ model Customer {
 }
 
 model Event {
-  id        String   @id
+  id        String   @id @default(cuid())
   tenantId  String?
   projectId String?
   kind      String
@@ -147,7 +147,7 @@ model Event {
 }
 
 model Membership {
-  id        String      @id
+  id        String      @id @default(cuid())
   userId    String
   projectId String
   role      ProjectRole @default(VIEWER)
@@ -158,7 +158,7 @@ model Membership {
 }
 
 model Policy {
-  id        String   @id
+  id        String   @id @default(cuid())
   tenantId  String
   projectId String   @unique
   autoApply Boolean  @default(false)
@@ -170,7 +170,7 @@ model Policy {
 }
 
 model Price {
-  id           String         @id
+  id           String         @id @default(cuid())
   skuId        String
   currency     String
   billingCycle String?
@@ -185,27 +185,27 @@ model Price {
 }
 
 model PriceChange {
-  id           String            @id
-  tenantId     String
-  projectId    String
-  skuId        String
-  source       String
-  fromAmount   Int
-  toAmount     Int
-  currency     String
-  context      Json?
-  status       PriceChangeStatus @default(PENDING)
-  policyResult Json?
-  approvedBy   String?
-  appliedAt    DateTime?
+  id              String            @id @default(cuid())
+  tenantId        String
+  projectId       String
+  skuId           String
+  source          String
+  fromAmount      Int
+  toAmount        Int
+  currency        String
+  context         Json?
+  status          PriceChangeStatus @default(PENDING)
+  policyResult    Json?
+  approvedBy      String?
+  appliedAt       DateTime?
   connectorStatus Json?
-  createdAt    DateTime          @default(now())
+  createdAt       DateTime          @default(now())
 
   @@index([tenantId, projectId, status])
 }
 
 model PriceVersion {
-  id        String   @id
+  id        String   @id @default(cuid())
   priceId   String
   amount    Int
   note      String?
@@ -214,7 +214,7 @@ model PriceVersion {
 }
 
 model Product {
-  id        String   @id
+  id        String   @id @default(cuid())
   tenantId  String
   projectId String
   name      String
@@ -229,7 +229,7 @@ model Product {
 }
 
 model Project {
-  id                 String               @id
+  id                 String               @id @default(cuid())
   tenantId           String
   name               String
   slug               String               @unique
@@ -248,7 +248,7 @@ model Project {
 }
 
 model Quote {
-  id          String      @id
+  id          String      @id @default(cuid())
   tenantId    String
   customerId  String
   status      QuoteStatus @default(DRAFT)
@@ -263,7 +263,7 @@ model Quote {
 }
 
 model QuoteItem {
-  id         String   @id
+  id         String   @id @default(cuid())
   quoteId    String
   skuId      String
   name       String
@@ -274,7 +274,7 @@ model QuoteItem {
 }
 
 model ShopifyIntegration {
-  id                         String                       @id
+  id                         String                       @id @default(cuid())
   projectId                  String
   shopDomain                 String                       @unique
   accessToken                String
@@ -292,7 +292,7 @@ model ShopifyIntegration {
 }
 
 model ShopifyWebhookSubscription {
-  id                 String             @id
+  id                 String             @id @default(cuid())
   integrationId      String
   topic              String
   address            String
@@ -306,7 +306,7 @@ model ShopifyWebhookSubscription {
 }
 
 model Sku {
-  id                String              @id
+  id                String              @id @default(cuid())
   productId         String
   name              String
   code              String
@@ -320,7 +320,7 @@ model Sku {
 }
 
 model Tenant {
-  id             String           @id
+  id             String           @id @default(cuid())
   name           String
   createdAt      DateTime         @default(now())
   Competitor     Competitor[]
@@ -334,7 +334,7 @@ model Tenant {
 }
 
 model User {
-  id           String       @id
+  id           String       @id @default(cuid())
   email        String       @unique
   name         String?
   role         Role         @default(MEMBER)
