@@ -10,6 +10,19 @@
 
 - 2025-01-13 10:42 — Created `fix/typescript-packages` branch from latest `chore/update-docs-and-scripts`; baseline `pnpm --filter @calibr/api typecheck` reported 28 errors within `packages/**` and `apps/api/lib/**`.
 - 2025-01-13 11:12 — Started amazon-connector refactor; product list/get/sync return normalized products, pricing fixes in progress.
+- 2025-01-13 14:30 — **Agent B work taken over by Codex agent**. Working on same branch `fix/typescript-routes` as Agent A.
+- 2025-01-13 15:45 — ✅ **Task 1 COMPLETE**: `packages/amazon-connector/src/connector.ts` (16 errors fixed)
+- 2025-01-13 15:50 — ✅ **Task 2 COMPLETE**: `packages/competitor-monitoring/monitor.ts` (4 errors fixed)
+- 2025-01-13 16:00 — ✅ **Task 3 COMPLETE**: `apps/api/lib/performance-monitor.ts` (2 errors fixed)
+
+**Current Status**: 71 TypeScript errors remaining (down from 122 at start of parallel execution)
+
+**Completed Fixes**:
+1. ✅ amazon-connector/connector.ts: Fixed all type imports, AuthStatus interface, method signatures, return types
+2. ✅ competitor-monitoring: Fixed all Prisma relation names
+3. ✅ performance-monitor: Added type casts for Prisma raw queries
+
+**Remaining in Agent B scope**: ~30 errors in amazon-connector edge cases (feeds, pricing, spapi-client) and analytics package (implicit any types)
 
 ---
 
