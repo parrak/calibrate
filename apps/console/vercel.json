@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
-  "buildCommand": "cd ../.. && pnpm --filter @calibr/db generate && cd apps/console && pnpm build",
+  "buildCommand": "cd ../.. && pnpm --filter @calibr/db install && pnpm --filter @calibr/db generate && cd apps/console && pnpm build",
   "installCommand": "cd ../.. && pnpm install --filter @calibr/console..."
 }
