@@ -69,12 +69,14 @@ export class ShopifyPricing {
         variables,
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { productVariantUpdate } = (response as any).data;
 
       if (productVariantUpdate.userErrors.length > 0) {
         return {
           success: false,
           variantId: update.variantId,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           error: productVariantUpdate.userErrors.map((e: any) => e.message).join(', '),
         };
       }
@@ -84,6 +86,7 @@ export class ShopifyPricing {
         variantId: update.variantId,
         updatedVariant: this.convertGraphQLVariant(productVariantUpdate.productVariant),
       };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       return {
         success: false,
@@ -175,6 +178,8 @@ export class ShopifyPricing {
 
       const pricingMap = new Map<string, ShopifyVariant>();
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (response as any).data.nodes.forEach((node: any) => {
         if (node) {
           const variantId = node.id.split('/').pop();
@@ -227,6 +232,7 @@ export class ShopifyPricing {
   /**
    * Convert GraphQL variant response to ShopifyVariant type
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private convertGraphQLVariant(graphqlVariant: any): ShopifyVariant {
     return {
       id: graphqlVariant.id.split('/').pop(),
@@ -248,7 +254,8 @@ export class ShopifyPricing {
    * Get pricing history for a variant (if available)
    * Note: Shopify doesn't provide pricing history, this is for future compatibility
    */
-  async getPricingHistory(variantId: string): Promise<any[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getPricingHistory(_variantId: string): Promise<any[]> {
     // Shopify doesn't provide pricing history
     // This method is here for interface compatibility
     return [];

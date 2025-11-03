@@ -3,6 +3,7 @@
  * Handles webhook subscription, verification, and processing
  */
 
+import * as crypto from 'crypto';
 import { ShopifyClient } from './client';
 import { ShopifyWebhook, ShopifyWebhookPayload, ShopifyWebhookVerification } from './types';
 
@@ -80,7 +81,6 @@ export class ShopifyWebhooks {
    */
   verifyWebhookSignature(payload: string, signature: string): ShopifyWebhookVerification {
     try {
-      const crypto = require('crypto');
       const hmac = crypto.createHmac('sha256', this.webhookSecret);
       hmac.update(payload, 'utf8');
       const hash = hmac.digest('base64');

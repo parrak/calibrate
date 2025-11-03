@@ -87,7 +87,7 @@ export class ShopifyAuthManager {
    * Validate shop domain format
    */
   validateShopDomain(shopDomain: string): boolean {
-    const shopifyDomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/;
+    const shopifyDomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/;
     return shopifyDomainRegex.test(shopDomain);
   }
 
@@ -138,7 +138,7 @@ export class ShopifyAuthManager {
    * Refresh access token (if supported by Shopify)
    * Note: Shopify doesn't support token refresh, this is for future compatibility
    */
-  async refreshToken(auth: ShopifyAuthType): Promise<ShopifyAuthType> {
+  async refreshToken(_auth: ShopifyAuthType): Promise<ShopifyAuthType> {
     // Shopify doesn't support token refresh
     // This method is here for interface compatibility
     throw new Error('Shopify does not support token refresh. Re-authentication required.');

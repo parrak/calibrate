@@ -266,7 +266,7 @@ export class ShopifyProductOperations implements ProductOperations {
 
   async sync(productId: string, externalId: string): Promise<ProductSyncResult> {
     try {
-      const product = await this.get(externalId);
+      await this.get(externalId);
 
       // In a real implementation, this would update the local database
       // For now, we'll just return a success result
@@ -332,7 +332,7 @@ export class ShopifyProductOperations implements ProductOperations {
     return results;
   }
 
-  async count(filter?: ProductFilter): Promise<number> {
+  async count(_filter?: ProductFilter): Promise<number> {
     if (!this.connector['client']) {
       throw new PlatformError(
         'authentication',

@@ -11,10 +11,8 @@ import {
   PlatformHealth,
   PlatformCapabilities,
   PlatformError,
-  PlatformErrorType,
 } from '@calibr/platform-connector';
 import { ShopifyClient } from './client';
-import { ShopifyAuthManager } from './auth';
 import { ShopifyProducts } from './products';
 import { ShopifyPricing } from './pricing';
 import { ShopifyWebhooks } from './webhooks';
@@ -222,7 +220,7 @@ export class ShopifyConnector implements PlatformConnector {
       if (connected && this.client) {
         try {
           shopInfo = await this.client.get('/shop.json');
-        } catch (error) {
+        } catch {
           // Shop info is optional
         }
       }
@@ -232,7 +230,7 @@ export class ShopifyConnector implements PlatformConnector {
         rateLimit,
         shopInfo,
       };
-    } catch (error) {
+    } catch {
       return {
         connected: false,
         rateLimit: null,

@@ -4,7 +4,7 @@
  */
 
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { ShopifyConfig, ShopifyApiError, ShopifyRateLimit } from './types';
+import { ShopifyConfig, ShopifyRateLimit } from './types';
 
 export class ShopifyClient {
   private client: AxiosInstance;

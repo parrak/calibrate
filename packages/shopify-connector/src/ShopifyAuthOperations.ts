@@ -103,6 +103,7 @@ export class ShopifyAuthOperations implements AuthOperations {
       );
 
       if (!response.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const errorData: any = await response.json();
         throw new PlatformError(
           'authentication',
@@ -111,6 +112,7 @@ export class ShopifyAuthOperations implements AuthOperations {
         );
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data: any = await response.json();
 
       return {
