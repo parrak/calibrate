@@ -1,360 +1,571 @@
-# Instructions for Cursor: Fix PR #2 and Merge to Master
+# Instructions for Cursor: Fix PR #2 with Parallel Execution
 
 **Current Branch**: `chore/update-docs-and-scripts`
 **PR**: https://github.com/parrak/calibrate/pull/2
-**Status**: Vercel Prisma fix applied, but 50+ TypeScript errors blocking merge
+**Status**: PARALLEL EXECUTION MODE - Two agents working simultaneously
 
-## Context
-Previous agent fixed the Vercel Prisma generation issue and restored `@default(cuid())` to the schema. Now need to fix remaining TypeScript errors to get console deploying and merge to master.
+## 🎯 Strategy Update: Two-Agent Parallel Execution
+
+Based on diagnostic showing **122 TypeScript errors**, we're executing **Path A with parallel agents** to complete cleanup efficiently.
+
+**Decision**: Clean up the repo completely, but split work between two agents to save 50% time.
 
 ---
 
-## Step-by-Step Instructions
+## 📊 Current Error Breakdown
 
-### 1. Verify Current State (2 min)
+**Total**: 122 errors in `@calibr/api` package
+
+**Top 5 Files**:
+1. `apps/api/app/api/v1/assistant/query/route.ts` – 26 errors
+2. `packages/amazon-connector/src/connector.ts` – 16 errors
+3. `apps/api/app/api/v1/webhooks/price-suggestion/route.ts` – 15 errors
+4. `apps/api/app/api/seed/route.ts` – 13 errors
+5. `apps/api/app/api/projects/route.ts` – 11 errors
+
+**Top Error Types**:
+- TS2339 (29): Property doesn't exist on type
+- TS2322 (23): Type assignment mismatch
+- TS2353 (19): Unknown object properties
+- TS2305 (11): Module has no exported member
+- TS2551 (8): Property misspelling
+
+---
+
+## 🔀 Two-Agent Work Distribution
+
+### 🅰️ AGENT A: API Routes Team (~65 errors)
+
+**Branch**: `fix/typescript-routes`
+
+**Scope**: All files in `apps/api/app/api/**` (routes only, no packages)
+
+**Files**:
+1. `apps/api/app/api/v1/assistant/query/route.ts` (26 errors) ⭐ START HERE
+2. `apps/api/app/api/v1/webhooks/price-suggestion/route.ts` (15 errors)
+3. `apps/api/app/api/seed/route.ts` (13 errors)
+4. `apps/api/app/api/projects/route.ts` (11 errors)
+5. All remaining `apps/api/app/api/**/*.ts` route files
+
+**Estimated Time**: 2-2.5 hours
+
+---
+
+### 🅱️ AGENT B: Packages & Infrastructure Team (~57 errors)
+
+**Branch**: `fix/typescript-packages`
+
+**Scope**: All packages + lib files
+
+**Files**:
+1. `packages/amazon-connector/**` (16 errors) ⭐ START HERE
+2. `apps/api/lib/staging-database.ts` (~10 errors)
+3. `apps/api/lib/performance-monitor.ts` (~8 errors)
+4. `apps/api/lib/auth-security.ts` (~3 errors)
+5. `packages/competitor-monitoring/**`
+6. `packages/platform-connector/**`
+7. `apps/api/tests/**`
+
+**Estimated Time**: 2-2.5 hours
+
+---
+
+## 🅰️ AGENT A: Detailed Instructions
+
+### Setup (5 min)
 
 ```bash
-# Ensure you're on the right branch
+# Navigate to directory (use calibrate-cursor or clone fresh)
+cd C:\Users\rakes\developer\calibrate-cursor\calibrate
+
+# Ensure on latest
 git checkout chore/update-docs-and-scripts
 git pull origin chore/update-docs-and-scripts
 
-# Check current CI status
-gh pr view 2 --json statusCheckRollup --jq '.statusCheckRollup[] | select(.name == "validate-deployment") | "\(.name): \(.conclusion)"'
+# Create your branch
+git checkout -b fix/typescript-routes
+
+# Verify your scope (should show ~65 errors)
+pnpm --filter @calibr/api typecheck 2>&1 | grep "apps/api/app/api" | grep -v "packages/" | wc -l
 ```
 
-**Expected**: Should show "validate-deployment: FAILURE"
+### Execution Order
+
+#### **Task 1: assistant/query/route.ts (26 errors - 30 min)**
+
+```bash
+# View errors for this file
+pnpm --filter @calibr/api typecheck 2>&1 | grep "assistant/query" | head -30
+
+# Open file
+code apps/api/app/api/v1/assistant/query/route.ts
+
+# Common fixes needed:
+# 1. Fix Prisma relation casing: tenant → Tenant, project → Project, skus → Sku
+# 2. Add missing IDs: id: createId() to any .create() calls
+# 3. Check schema fields match actual Prisma schema
+
+# Reference the schema:
+grep "model Project" packages/db/prisma/schema.prisma -A 20
+grep "model Product" packages/db/prisma/schema.prisma -A 20
+grep "model Tenant" packages/db/prisma/schema.prisma -A 15
+
+# Fix pattern example:
+# BEFORE: include: { tenant: true, products: { include: { skus: true } } }
+# AFTER:  include: { Tenant: true, Product: { include: { Sku: true } } }
+
+# Test after fix
+pnpm --filter @calibr/api typecheck 2>&1 | grep "assistant/query"
+# Should show: 0 results
+
+# Commit
+git add apps/api/app/api/v1/assistant/query/route.ts
+git commit -m "fix(routes): resolve 26 TypeScript errors in assistant/query route
+
+- Fix Prisma relation names to PascalCase
+- Add proper null handling for optional fields
+- Remove non-existent schema fields from queries"
+
+# Update progress
+echo "✅ Task 1 Complete: assistant/query (26 errors fixed)"
+```
+
+#### **Task 2: webhooks/price-suggestion/route.ts (15 errors - 20 min)**
+
+```bash
+pnpm --filter @calibr/api typecheck 2>&1 | grep "webhooks/price-suggestion" | head -20
+
+# Common issues:
+# - Missing id: createId() in create operations
+# - PriceChange field mismatches
+# - undefined → null conversions
+
+# After fixing:
+pnpm --filter @calibr/api typecheck 2>&1 | grep "webhooks/price-suggestion"
+
+git add apps/api/app/api/v1/webhooks/price-suggestion/route.ts
+git commit -m "fix(routes): resolve TypeScript errors in webhooks/price-suggestion"
+
+echo "✅ Task 2 Complete: webhooks/price-suggestion (15 errors fixed)"
+```
+
+#### **Task 3: seed/route.ts (13 errors - 20 min)**
+
+```bash
+pnpm --filter @calibr/api typecheck 2>&1 | grep "seed/route" | head -20
+
+# Import cuid2 at top if not present:
+# import { createId } from '@paralleldrive/cuid2'
+
+# Add id: createId() to EVERY .create() operation
+# Pattern:
+# await prisma.tenant.create({
+#   data: {
+#     id: createId(),  // ← Add this
+#     name: 'Demo',
+#   }
+# })
+
+pnpm --filter @calibr/api typecheck 2>&1 | grep "seed/route"
+
+git add apps/api/app/api/seed/route.ts
+git commit -m "fix(routes): add explicit IDs to all seed route create operations"
+
+echo "✅ Task 3 Complete: seed/route (13 errors fixed)"
+```
+
+#### **Task 4: projects/route.ts (11 errors - 15 min)**
+
+```bash
+pnpm --filter @calibr/api typecheck 2>&1 | grep "projects/route" | head -15
+
+# Fix same patterns: relations, IDs, field names
+
+pnpm --filter @calibr/api typecheck 2>&1 | grep "projects/route"
+
+git add apps/api/app/api/projects/route.ts
+git commit -m "fix(routes): resolve TypeScript errors in projects route"
+
+echo "✅ Task 4 Complete: projects/route (11 errors fixed)"
+```
+
+#### **Task 5: Remaining route errors (30 min)**
+
+```bash
+# Find all remaining errors in your scope
+pnpm --filter @calibr/api typecheck 2>&1 | grep "apps/api/app/api" | grep -v "packages/" | cut -d'(' -f1 | sort -u
+
+# Fix each file systematically, commit after each
+```
+
+### Agent A Completion Checklist
+
+```bash
+# Verify all your errors are fixed
+pnpm --filter @calibr/api typecheck 2>&1 | grep "apps/api/app/api" | grep -v "packages/"
+# Should show: 0 results
+
+# Push your branch
+git push -u origin fix/typescript-routes
+
+# Update progress tracker
+echo "🅰️ AGENT A COMPLETE: All route errors fixed (65/65)"
+```
 
 ---
 
-### 2. Add Missing Type Definitions (3 min)
+## 🅱️ AGENT B: Detailed Instructions
+
+### Setup (5 min)
 
 ```bash
-# Add to apps/api
-cd apps/api
-pnpm add -D @types/validator@13.12.2 @types/bcryptjs@2.4.6
+# Navigate to directory (use calibrate-codex or clone fresh)
+cd C:\Users\rakes\developer\calibrate-codex\calibrate
 
-# Add to apps/console (if needed)
-cd ../console
-pnpm add -D @types/bcryptjs@2.4.6
+# Ensure on latest
+git checkout chore/update-docs-and-scripts
+git pull origin chore/update-docs-and-scripts
+
+# Create your branch
+git checkout -b fix/typescript-packages
+
+# Verify your scope (should show ~57 errors)
+pnpm --filter @calibr/api typecheck 2>&1 | grep -E "(packages/|apps/api/lib/)" | wc -l
 ```
 
-**Commit**:
-```bash
-git add apps/api/package.json apps/console/package.json pnpm-lock.yaml
-git commit -m "fix: add missing type definitions for validator and bcryptjs"
-```
+### Execution Order
 
----
-
-### 3. Enable downlevelIteration (2 min)
-
-**File**: `apps/api/tsconfig.json`
-
-Find the `compilerOptions` section and add:
-```json
-{
-  "compilerOptions": {
-    "downlevelIteration": true,
-    // ... existing options
-  }
-}
-```
-
-**Commit**:
-```bash
-git add apps/api/tsconfig.json
-git commit -m "fix: enable downlevelIteration for Map/Set iteration"
-```
-
----
-
-### 4. Fix Critical Type Errors (20-30 min)
-
-#### 4a. Fix undefined → null conversions
-
-**Files to fix**:
-- `apps/api/app/api/admin/dashboard/route.ts` (lines 37, 38, 40, 41)
-
-**Pattern**: Replace `string | undefined` with proper null handling:
-```typescript
-// BEFORE
-someFunction(valueOrUndefined)
-
-// AFTER
-someFunction(valueOrUndefined ?? null)
-```
-
-#### 4b. Fix Prisma include errors
-
-**File**: `apps/api/app/api/admin/dashboard/route.ts` (line 25)
-
-**Change**:
-```typescript
-// BEFORE
-include: {
-  tenant: true,
-  // ...
-}
-
-// AFTER
-include: {
-  Tenant: true,  // PascalCase for relation name
-  // ...
-}
-```
-
-#### 4c. Fix missing ID fields in create operations
-
-**Files affected**:
-- `apps/api/app/api/auth/register/route.ts` (lines 61, 67)
-- Any ShopifyIntegration.create calls
-- Any Event.create calls
-
-**Solution**: Install cuid2 and add explicit IDs
+#### **Task 1: amazon-connector (16 errors - 45 min)**
 
 ```bash
-cd apps/api
-pnpm add @paralleldrive/cuid2
+# View errors
+pnpm --filter @calibr/api typecheck 2>&1 | grep "amazon-connector" | head -20
+
+# Common issues:
+# - TS2305: Missing exports from platform-connector
+# - Type mismatches in connector interface
+# - Private property access issues
+
+# Check what platform-connector exports:
+grep "export" packages/platform-connector/src/index.ts
+
+# May need to add missing type exports or use workarounds
+
+pnpm --filter @calibr/api typecheck 2>&1 | grep "amazon-connector"
+
+git add packages/amazon-connector
+git commit -m "fix(packages): resolve amazon-connector type errors
+
+- Fix missing type imports from platform-connector
+- Resolve interface implementation issues
+- Fix private property visibility"
+
+echo "✅ Task 1 Complete: amazon-connector (16 errors fixed)"
 ```
 
-**Pattern**:
-```typescript
-import { createId } from '@paralleldrive/cuid2'
+#### **Task 2: lib/staging-database.ts (~10 errors - 30 min)**
 
-// BEFORE
-await prisma.tenant.create({
-  data: {
-    name: tenantName,
-  }
-})
-
-// AFTER
-await prisma.tenant.create({
-  data: {
-    id: createId(),
-    name: tenantName,
-  }
-})
-```
-
-**Apply to all create operations missing explicit IDs**.
-
-#### 4d. Fix staging-database.ts schema mismatches
-
-**File**: `apps/api/lib/staging-database.ts`
-
-Issues to fix:
-1. **Line 83**: Remove `slug` from Tenant create (field doesn't exist)
-2. **Line 102**: Remove `settings` from Project create (field doesn't exist)
-3. **Line 144**: Add `tenantId` to Product create
-4. **Line 184**: Update PriceChange create to match new schema
-5. **Lines 205, 228, 323**: Remove `slug` from Tenant where clauses
-
-**Check current schema first**:
 ```bash
+pnpm --filter @calibr/api typecheck 2>&1 | grep "staging-database" | head -15
+
+# Known fixes from checkpoint:
+# Line 83: Remove slug from Tenant create (field doesn't exist)
+# Line 102: Remove settings from Project create (field doesn't exist)
+# Line 144: Add tenantId to Product create (required field)
+# Line 184: Fix PriceChange create to match new schema
+# Lines 205, 228, 323: Remove slug from Tenant where clauses
+
+# Check actual schema:
 grep "model Tenant" packages/db/prisma/schema.prisma -A 10
 grep "model Product" packages/db/prisma/schema.prisma -A 20
-grep "model PriceChange" packages/db/prisma/schema.prisma -A 30
+
+pnpm --filter @calibr/api typecheck 2>&1 | grep "staging-database"
+
+git add apps/api/lib/staging-database.ts
+git commit -m "fix(lib): resolve schema mismatches in staging-database
+
+- Remove non-existent fields (Tenant.slug, Project.settings)
+- Add required fields (Product.tenantId)
+- Update PriceChange create to match current schema"
+
+echo "✅ Task 2 Complete: staging-database (10 errors fixed)"
 ```
 
-**Then update staging-database.ts to match actual schema fields**.
+#### **Task 3: lib/performance-monitor.ts (~8 errors - 20 min)**
 
-#### 4e. Fix performance-monitor.ts
-
-**File**: `apps/api/lib/performance-monitor.ts`
-
-Add type annotations to implicit `any` parameters:
-```typescript
-// Lines 236, 242, 367, 377, 387
-// BEFORE
-.reduce((sum, m) => sum + m.value, 0)
-
-// AFTER
-.reduce((sum, m: PerformanceMetric) => sum + m.value, 0)
-```
-
-**Commit after each file**:
 ```bash
-git add <file>
-git commit -m "fix: resolve TypeScript errors in <component>"
+pnpm --filter @calibr/api typecheck 2>&1 | grep "performance-monitor" | head -12
+
+# Add type annotations to implicit any parameters
+# Pattern on lines 234, 236, 241, 242, 366-387:
+# BEFORE: .reduce((sum, m) => sum + m.value, 0)
+# AFTER:  .reduce((sum, m: PerformanceMetric) => sum + m.value, 0)
+
+# Also type other implicit parameters like ErrorMetric, ResourceMetric
+
+pnpm --filter @calibr/api typecheck 2>&1 | grep "performance-monitor"
+
+git add apps/api/lib/performance-monitor.ts
+git commit -m "fix(lib): add type annotations in performance-monitor
+
+- Add PerformanceMetric type to reduce callback parameters
+- Add ErrorMetric and ResourceMetric type annotations
+- Fix unknown types in Prisma raw query results"
+
+echo "✅ Task 3 Complete: performance-monitor (8 errors fixed)"
+```
+
+#### **Task 4: lib/auth-security.ts (~3 errors - 10 min)**
+
+```bash
+pnpm --filter @calibr/api typecheck 2>&1 | grep "auth-security" | head -5
+
+# Known issue: Missing requireTenant property in SecurityPolicy
+# Lines 418, 426: Add requireTenant: false (or true as needed)
+
+pnpm --filter @calibr/api typecheck 2>&1 | grep "auth-security"
+
+git add apps/api/lib/auth-security.ts
+git commit -m "fix(lib): add missing requireTenant to SecurityPolicy objects"
+
+echo "✅ Task 4 Complete: auth-security (3 errors fixed)"
+```
+
+#### **Task 5: Remaining package errors (30 min)**
+
+```bash
+# Find remaining errors in your scope
+pnpm --filter @calibr/api typecheck 2>&1 | grep "packages/" | cut -d'(' -f1 | sort -u
+
+# Also check lib files
+pnpm --filter @calibr/api typecheck 2>&1 | grep "apps/api/lib/" | cut -d'(' -f1 | sort -u
+
+# Fix each, commit incrementally
+```
+
+### Agent B Completion Checklist
+
+```bash
+# Verify all your errors are fixed
+pnpm --filter @calibr/api typecheck 2>&1 | grep -E "(packages/|apps/api/lib/)"
+# Should show: 0 results
+
+# Push your branch
+git push -u origin fix/typescript-packages
+
+# Update progress tracker
+echo "🅱️ AGENT B COMPLETE: All package/lib errors fixed (57/57)"
 ```
 
 ---
 
-### 5. Run Local TypeCheck (5 min)
+## 🔄 Coordination & Progress Tracking
+
+### 30-Minute Checkpoint
+
+Both agents run and share:
 
 ```bash
-# From repo root
+# Agent A
+echo "=== AGENT A (Routes) - 30min Checkpoint ==="
+pnpm --filter @calibr/api typecheck 2>&1 | grep "apps/api/app/api" | grep -v "packages/" | wc -l
+echo "errors remaining"
+git log --oneline -5
+
+# Agent B
+echo "=== AGENT B (Packages) - 30min Checkpoint ==="
+pnpm --filter @calibr/api typecheck 2>&1 | grep -E "(packages/|apps/api/lib/)" | wc -l
+echo "errors remaining"
+git log --oneline -5
+```
+
+### 60-Minute Checkpoint
+
+```bash
+# Both agents: Share estimated completion time
+# Verify no file overlap
+# If one agent finishing early, they can help the other
+```
+
+---
+
+## 🎯 Merge Strategy
+
+### Option 1: Sequential Merge (Recommended)
+
+**Agent who finishes first** (likely Agent A):
+
+```bash
+# Create PR from your branch
+gh pr create --title "fix: resolve TypeScript errors in API routes (Part 1/2)" \
+  --body "## Summary
+Part 1 of parallel TypeScript cleanup. Fixes all 65 errors in API route files.
+
+## Scope
+- apps/api/app/api/v1/** routes
+- apps/api/app/api/auth/** routes
+- apps/api/app/api/seed, projects, etc.
+
+## Changes
+- Fixed Prisma relation casing (tenant → Tenant, etc.)
+- Added explicit IDs with createId() to all create operations
+- Removed non-existent schema fields
+- Added proper null handling
+
+## Testing
+- [x] pnpm typecheck passes for all route files
+- [ ] CI validates (will check after push)
+
+Part 2 (packages/lib) being worked on in parallel by Agent B.
+
+Related: PR #2"
+
+# Merge it
+gh pr merge --squash --auto
+```
+
+**Agent who finishes second**:
+
+```bash
+# Pull the merged changes
+git checkout chore/update-docs-and-scripts
+git pull origin chore/update-docs-and-scripts
+
+# Rebase your branch
+git checkout fix/typescript-packages
+git rebase chore/update-docs-and-scripts
+# Resolve any conflicts (should be minimal to none)
+
+# Push rebased branch
+git push --force-with-lease origin fix/typescript-packages
+
+# Create PR
+gh pr create --title "fix: resolve TypeScript errors in packages and lib (Part 2/2)" \
+  --body "## Summary
+Part 2 of parallel TypeScript cleanup. Fixes all 57 errors in packages and lib files.
+
+## Scope
+- packages/amazon-connector/**
+- packages/competitor-monitoring/**
+- packages/platform-connector/**
+- apps/api/lib/** (staging-database, performance-monitor, auth-security)
+
+## Changes
+- Fixed amazon-connector type exports and interface issues
+- Updated lib files to match Prisma schema changes
+- Added type annotations to remove implicit any errors
+- Fixed SecurityPolicy missing properties
+
+## Testing
+- [x] pnpm typecheck passes for all package/lib files
+- [ ] CI validates
+
+Completes TypeScript cleanup started in Part 1. Combined with Part 1, resolves all 122 TypeScript errors.
+
+Related: PR #2"
+
+# Merge it
+gh pr merge --squash --auto
+```
+
+### Option 2: Combined Merge
+
+```bash
+# Both agents push to their branches
+# Then merge both into chore/update-docs-and-scripts
+
+git checkout chore/update-docs-and-scripts
+git merge fix/typescript-routes
+git merge fix/typescript-packages
+
+# Run final verification
 pnpm typecheck
-```
+# Should show: 0 errors
 
-**If errors remain**:
-- Read error messages carefully
-- Most common: schema field mismatches, missing IDs, wrong types
-- Fix iteratively and re-run typecheck
-- Commit working fixes incrementally
-
-**Goal**: Get `pnpm typecheck` to pass with 0 errors
-
----
-
-### 6. Push and Monitor CI (10 min)
-
-```bash
+# Push
 git push origin chore/update-docs-and-scripts
 ```
 
-Wait 2-3 minutes, then check:
-```bash
-gh run list --branch chore/update-docs-and-scripts --limit 3
-gh pr view 2 --json statusCheckRollup --jq '.statusCheckRollup[] | "\(.name): \(.conclusion)"'
-```
-
-**Expected results**:
-- `validate-deployment`: SUCCESS
-- `pnpm-frozen-lockfile`: SUCCESS
-- `pr_lint`: SUCCESS
-- `Vercel – console`: SUCCESS (wait for deployment)
-
-**If Vercel console still fails**, check deployment logs:
-```bash
-gh pr view 2 --json statusCheckRollup --jq '.statusCheckRollup[] | select(.context == "Vercel – console") | .targetUrl'
-```
-Visit that URL to see build logs.
-
 ---
 
-### 7. Final Verification (5 min)
+## ✅ Final Verification (Both Agents)
 
-Once all checks pass:
+Once both branches are merged:
 
 ```bash
-# Verify PR is ready
+# Checkout the combined branch
+git checkout chore/update-docs-and-scripts
+git pull origin chore/update-docs-and-scripts
+
+# Run FULL typecheck
+pnpm typecheck
+# Expected: Found 0 errors
+
+# Test builds
+pnpm --filter @calibr/console build
+pnpm --filter @calibr/api build
+
+# Push and check CI
+git push origin chore/update-docs-and-scripts
+
+# Monitor PR #2
 gh pr view 2
-
-# Check for any review comments
-gh pr view 2 --json reviews
-
-# Verify all checks are green
 gh pr checks 2
 ```
 
+### Success Criteria
+
+- ✅ `pnpm typecheck` shows 0 errors
+- ✅ Console builds successfully
+- ✅ API builds successfully
+- ✅ All CI checks pass (validate-deployment, pr-lint, lockfile)
+- ✅ Vercel console deploys successfully
+
 ---
 
-### 8. Merge to Master
+## 🚨 If You Get Stuck
 
+### Agent A (Routes)
+
+**Common issues**:
+1. **Relation names**: Always use PascalCase (Tenant, Project, Product, Sku, Price)
+2. **Missing IDs**: Every `.create()` needs `id: createId()`
+3. **Schema fields**: Check Prisma schema with `grep "model <Name>" packages/db/prisma/schema.prisma -A 20`
+
+**Get help**:
 ```bash
-# Use GitHub CLI to merge
-gh pr merge 2 --squash --auto
-
-# Or merge via web UI if you prefer
-gh pr view 2 --web
+# Share current error count and top error
+pnpm --filter @calibr/api typecheck 2>&1 | grep "apps/api/app/api" | head -5
 ```
 
-**Squash commit message suggestion**:
-```
-fix: Vercel Prisma deployment and TypeScript errors
+### Agent B (Packages)
 
-- Add explicit @calibr/db install before Prisma generate in Vercel
-- Restore @default(cuid()) to Prisma schema for auto ID generation
-- Fix pr-lint workflow syntax error
-- Add missing type definitions (@types/validator, @types/bcryptjs)
-- Enable downlevelIteration for iterator support
-- Fix schema field mismatches in API routes
-- Add explicit ID generation using cuid2 where needed
+**Common issues**:
+1. **amazon-connector**: May need to add type exports to platform-connector
+2. **staging-database**: Field mismatches with schema (remove non-existent fields)
+3. **performance-monitor**: Add type annotations to all implicit any parameters
 
-Fixes Vercel console deployment and resolves 50+ TypeScript errors.
-```
-
----
-
-## Priority Order
-
-If short on time, fix in this order:
-
-1. **Type definitions** (step 2) - Quick win, fixes ~10 errors
-2. **downlevelIteration** (step 3) - Quick win, fixes ~6 errors
-3. **auth/register.ts ID generation** (step 4c) - Fixes 2 critical errors
-4. **staging-database.ts schema fixes** (step 4d) - Fixes ~8 errors
-5. **Remaining undefined → null** (step 4a) - Fixes ~4 errors
-6. **performance-monitor.ts types** (step 4e) - Fixes ~4 errors
-
-**Skip if necessary**:
-- Amazon connector errors (not critical for console deployment)
-- Competitor monitoring errors (not critical path)
-- Test file errors (won't block deployment)
-
----
-
-## Emergency Fallback
-
-If TypeScript errors prove too complex:
-
-**Create new minimal PR with just the Vercel fix**:
+**Get help**:
 ```bash
-# Start fresh from master
-git checkout master
-git pull origin master
-git checkout -b fix/vercel-prisma-minimal
-
-# Cherry-pick just the Vercel config change
-git cherry-pick 49d6114  # The Vercel fix commit
-
-# Push and create PR
-git push -u origin fix/vercel-prisma-minimal
-gh pr create --title "fix: Vercel Prisma client generation" \
-  --body "Minimal fix for Vercel console deployment - adds explicit @calibr/db install before generate"
-
-# Merge that instead
-```
-
-This gets the critical fix merged without the TypeScript cleanup.
-
----
-
-## Helpful Commands
-
-```bash
-# See what changed in this PR
-git diff master...chore/update-docs-and-scripts --stat
-
-# Run typecheck on specific package
-pnpm --filter @calibr/api typecheck
-
-# View specific error count
-pnpm typecheck 2>&1 | grep "error TS" | wc -l
-
-# Check Prisma schema
-pnpm --filter @calibr/db exec prisma format
-pnpm --filter @calibr/db exec prisma validate
-
-# Test build locally
-pnpm --filter @calibr/console build
+# Share current error count and top error
+pnpm --filter @calibr/api typecheck 2>&1 | grep -E "(packages/|apps/api/lib/)" | head -5
 ```
 
 ---
 
-## Success Criteria
+## 📊 Expected Timeline
 
-✅ All CI checks passing
-✅ Vercel console deploying successfully
-✅ 0 TypeScript errors in `pnpm typecheck`
-✅ PR merged to master
-✅ Vercel env var `PRISMA_DISABLE_POSTINSTALL_GENERATE=true` is set (already done)
+**Agent A (Routes)**: 2-2.5 hours
+**Agent B (Packages/Lib)**: 2-2.5 hours
+**Combined Time**: ~2.5 hours (vs 5 hours sequential)
 
----
-
-## Questions or Blockers?
-
-If you encounter issues:
-
-1. **Check the checkpoint doc**: `.github/PR2_CHECKPOINT.md` has detailed error analysis
-2. **View CI logs**: `gh run view <run-id> --log-failed`
-3. **Compare schemas**: `git diff master..HEAD packages/db/prisma/schema.prisma`
-4. **Test locally**: Always run `pnpm typecheck` before pushing
+**Time Saved**: 50% 🚀
 
 ---
 
-**Estimated time**: 30-60 minutes total
+## 🎯 Ready to Start?
 
-Good luck! 🚀
+**Agent A**: Start with Task 1 (assistant/query/route.ts)
+**Agent B**: Start with Task 1 (amazon-connector)
+
+Good luck! Let's get this repo clean! 💪
