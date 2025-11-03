@@ -91,7 +91,7 @@ async function generateSnapshot(
   // Get all SKUs for project (through Product relation)
   const skus = await prisma().sku.findMany({
     where: {
-      product: {
+      Product: {
         projectId,
       },
     },
@@ -99,7 +99,7 @@ async function generateSnapshot(
       id: true,
       code: true,
       name: true,
-      prices: {
+      Price: {
         where: {
           status: 'ACTIVE',
         },
@@ -145,7 +145,7 @@ async function generateSnapshot(
 
   // Calculate pricing metrics
   const prices = skus
-    .map((s) => s.prices[0]?.amount)
+    .map((s) => s.Price[0]?.amount)
     .filter((p): p is number => p !== undefined && p !== null)
   const pricingMetrics = {
     averagePrice: prices.length > 0 ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0,
@@ -157,7 +157,7 @@ async function generateSnapshot(
   // Calculate margin metrics if cost data available (cost might be in attributes JSON)
   const skusWithCost = skus
     .map((s) => {
-      const price = s.prices[0]?.amount
+      const price = s.Price[0]?.amount
       const cost = s.attributes && typeof s.attributes === 'object' && 'cost' in s.attributes
         ? (s.attributes as any).cost
         : null

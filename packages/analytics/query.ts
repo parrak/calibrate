@@ -18,7 +18,7 @@ export async function getAnalyticsOverview(
   // Get SKUs (through Product relation)
   const skus = await prisma().sku.findMany({
     where: {
-      product: {
+      Product: {
         projectId,
       },
     },
@@ -26,7 +26,7 @@ export async function getAnalyticsOverview(
       id: true,
       code: true,
       name: true,
-      prices: {
+      Price: {
         where: {
           status: 'ACTIVE',
         },
@@ -83,7 +83,7 @@ export async function getAnalyticsOverview(
 
   // Calculate average price trend
   const prices = skus
-    .map((s) => s.prices[0]?.amount)
+    .map((s) => s.Price[0]?.amount)
     .filter((p): p is number => p !== undefined && p !== null)
   const avgPrice = prices.length > 0
     ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length)
@@ -103,16 +103,16 @@ export async function getAnalyticsOverview(
   // Top performers by price (simplified - would need sales data for real analysis)
   const topPerformers: AnalyticsOverview['topPerformers'] = {
     bySales: skus
-      .filter((s) => s.prices[0]?.amount !== undefined)
+      .filter((s) => s.Price[0]?.amount !== undefined)
       .slice(0, 5)
       .map((s) => ({
         sku: s.code,
         name: s.name,
-        price: s.prices[0]!.amount,
+        price: s.Price[0]!.amount,
       })),
     byMargin: skus
       .map((s) => {
-        const price = s.prices[0]?.amount
+        const price = s.Price[0]?.amount
         const cost = s.attributes && typeof s.attributes === 'object' && 'cost' in s.attributes
           ? (s.attributes as any).cost
           : null

@@ -15,7 +15,7 @@ export default async function Home() {
   const db = prisma()
   const memberships = await db.membership.findMany({
     where: { userId: session.user.id },
-    include: { project: true },
+    include: { Project: true },
     take: 1,
   })
 
@@ -27,8 +27,8 @@ export default async function Home() {
   // If user has projects, show project selection
   const allMemberships = await db.membership.findMany({
     where: { userId: session.user.id },
-    include: { project: true },
-    orderBy: { project: { createdAt: 'desc' } },
+    include: { Project: true },
+    orderBy: { Project: { createdAt: 'desc' } },
   })
 
   return (
@@ -38,12 +38,12 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {allMemberships.map((membership) => (
             <Link
-              key={membership.project.id}
-              href={`/p/${membership.project.slug}`}
+              key={membership.Project.id}
+              href={`/p/${membership.Project.slug}`}
               className="block bg-blue-600 text-white px-4 py-3 rounded hover:bg-blue-700 transition-colors"
             >
-              <div className="font-semibold">{membership.project.name}</div>
-              <div className="text-sm opacity-90">/{membership.project.slug}</div>
+              <div className="font-semibold">{membership.Project.name}</div>
+              <div className="text-sm opacity-90">/{membership.Project.slug}</div>
             </Link>
           ))}
           <Link
