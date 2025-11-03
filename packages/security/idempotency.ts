@@ -3,7 +3,7 @@ export async function ensureIdempotent(
   key: string,
   scope: string
 ): Promise<boolean> {
-  const found = await db.findFirst({ 
+  const found = await db.event.findFirst({ 
     where: { 
       kind: 'IDEMPOTENCY', 
       payload: { 
@@ -15,7 +15,7 @@ export async function ensureIdempotent(
   
   if (found) return false
   
-  await db.create({ 
+  await db.event.create({ 
     data: { 
       kind: 'IDEMPOTENCY', 
       payload: { key, scope } 

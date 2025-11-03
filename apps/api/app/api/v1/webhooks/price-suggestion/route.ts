@@ -37,7 +37,7 @@ async function handleWebhook(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
     }
 
-    const ok = await ensureIdempotent(prisma().event, body.idempotencyKey, 'price-suggestion')
+    const ok = await ensureIdempotent({ event: prisma().event }, body.idempotencyKey, 'price-suggestion')
     if (!ok) {
       logger.info('Duplicate request detected', { metadata: { idempotencyKey: body.idempotencyKey } })
       return NextResponse.json({ status: 'duplicate' })
