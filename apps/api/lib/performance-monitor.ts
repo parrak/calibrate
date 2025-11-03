@@ -479,8 +479,8 @@ export async function getDatabasePerformanceMetrics() {
     
     return {
       slowQueries,
-      connectionStats: connectionStats[0],
-      queryStats: queryStats[0]
+      connectionStats: connectionStats[0] as any,
+      queryStats: queryStats[0] as any
     }
   } catch (error) {
     console.error('Failed to get database performance metrics:', error)
