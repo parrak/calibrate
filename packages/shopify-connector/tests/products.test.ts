@@ -43,7 +43,6 @@ describe('ShopifyProducts', () => {
 
       expect(mockClient.get).toHaveBeenCalledWith('/products.json', {
         limit: 50,
-        page: 1,
       });
       expect(result).toEqual(mockResponse);
     });
@@ -54,14 +53,17 @@ describe('ShopifyProducts', () => {
 
       const options = {
         limit: 25,
-        page: 2,
         vendor: 'Test Vendor',
         product_type: 'Electronics',
       };
 
       await products.listProducts(options);
 
-      expect(mockClient.get).toHaveBeenCalledWith('/products.json', options);
+      expect(mockClient.get).toHaveBeenCalledWith('/products.json', {
+        limit: 25,
+        vendor: 'Test Vendor',
+        product_type: 'Electronics',
+      });
     });
   });
 
@@ -227,7 +229,6 @@ describe('ShopifyProducts', () => {
       expect(mockClient.get).toHaveBeenCalledWith('/products.json', {
         title: 'test query',
         limit: 50,
-        page: 1,
       });
     });
   });
@@ -242,7 +243,6 @@ describe('ShopifyProducts', () => {
       expect(mockClient.get).toHaveBeenCalledWith('/products.json', {
         vendor: 'Test Vendor',
         limit: 50,
-        page: 1,
       });
     });
   });
@@ -257,7 +257,6 @@ describe('ShopifyProducts', () => {
       expect(mockClient.get).toHaveBeenCalledWith('/products.json', {
         product_type: 'Electronics',
         limit: 50,
-        page: 1,
       });
     });
   });
@@ -272,7 +271,6 @@ describe('ShopifyProducts', () => {
       expect(mockClient.get).toHaveBeenCalledWith('/products.json', {
         updated_at_min: expect.any(String),
         limit: 50,
-        page: 1,
       });
     });
   });
