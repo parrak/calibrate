@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { verifyHmac } from '@calibr/security'
+import { createId } from '@paralleldrive/cuid2'
 
 const db = () => prisma()
 
@@ -24,7 +25,7 @@ export async function GET(
         ...(skuId && { skuId })
       },
       include: {
-        sku: true,
+        Sku: true,
         prices: {
           orderBy: { createdAt: 'desc' },
           take: 1
@@ -60,12 +61,14 @@ export async function POST(
 
     const product = await db().competitorProduct.create({
       data: {
+        id: createId(),
         competitorId: id,
         skuId,
         name,
         skuCode,
         url,
-        imageUrl
+        imageUrl,
+        updatedAt: new Date()
       }
     })
 

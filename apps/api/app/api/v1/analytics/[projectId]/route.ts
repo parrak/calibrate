@@ -19,9 +19,12 @@ export const runtime = 'nodejs'
  */
 export const GET = withSecurity(async function GET(
   req: NextRequest,
-  context: { params: Promise<{ projectId: string }> }
+  context?: { params?: Promise<{ projectId: string }> }
 ) {
   try {
+    if (!context?.params) {
+      return NextResponse.json({ error: 'Missing projectId parameter' }, { status: 400 })
+    }
     const { projectId } = await context.params
     const { searchParams } = new URL(req.url)
     const days = parseInt(searchParams.get('days') || '30', 10)
