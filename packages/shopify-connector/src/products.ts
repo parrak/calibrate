@@ -91,7 +91,8 @@ export class ShopifyProducts {
   async getProductByHandle(handle: string): Promise<ShopifyProduct | null> {
     try {
       const response = await this.client.get<{ product: ShopifyProduct }>(`/products.json?handle=${handle}`);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-anyreturn response.product || null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return response.product || null;
     } catch (error: any) {
       if (error?.response?.status === 404) {
         return null;
@@ -210,7 +211,8 @@ export class ShopifyProducts {
   /**
    * Check if product exists
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-anyasync productExists(productId: string): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async productExists(productId: string): Promise<boolean> {
     try {
       await this.getProduct(productId);
       return true;
@@ -225,7 +227,8 @@ export class ShopifyProducts {
   /**
    * Check if variant exists
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-anyasync variantExists(variantId: string): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async variantExists(variantId: string): Promise<boolean> {
     try {
       await this.getVariant(variantId);
       return true;

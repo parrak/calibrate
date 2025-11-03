@@ -2,7 +2,8 @@
  * Shopify-specific types and interfaces
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-anyexport interface ShopifyConfig {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface ShopifyConfig {
   apiKey: string;
   apiSecret: string;
   scopes: string[];

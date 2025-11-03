@@ -91,7 +91,8 @@ export class ShopifyClient {
   /**
    * Handle API errors and convert to standardized format
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-anyprivate handleError(error: any): Error {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private handleError(error: any): Error {
     // If it's already an Error instance with response data, enhance it
     if (error instanceof Error && (error as any).response?.data) {
       const enhancedError = error;
@@ -212,7 +213,8 @@ export class ShopifyClient {
   /**
    * Make a POST request to Shopify Admin API
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-anyasync post<T>(endpoint: string, data?: any): Promise<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async post<T>(endpoint: string, data?: any): Promise<T> {
     const response = await this.client.post(endpoint, data);
     return response.data;
   }
@@ -220,7 +222,8 @@ export class ShopifyClient {
   /**
    * Make a PUT request to Shopify Admin API
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-anyasync put<T>(endpoint: string, data?: any): Promise<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async put<T>(endpoint: string, data?: any): Promise<T> {
     const response = await this.client.put(endpoint, data);
     return response.data;
   }
