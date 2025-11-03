@@ -1,8 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  // Target both native (for local dev) and Debian Slim (for Railway deployment)
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
-  engineType   = "binary"
+  engineType    = "binary"
 }
 
 datasource db {
@@ -10,149 +9,183 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Tenant {
-  id        String   @id @default(cuid())
-  name      String
-  users     User[]
-  projects  Project[]
-  products  Product[]
-  customers Customer[]
-  policies  Policy[]
-  events    Event[]
-  competitors Competitor[]
-  competitorRules CompetitorRule[]
-  createdAt DateTime @default(now())
+model AmazonCompetitivePrice {
+  id               String   @id
+  asin             String
+  marketplaceId    String
+  lowestPriceCents Int?
+  buyBoxPriceCents Int?
+  offerCount       Int      @default(0)
+  data             Json?
+  retrievedAt      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([asin, marketplaceId], map: "AmazonCompetitivePrice_asin_marketplace_idx")
+  @@index([retrievedAt])
 }
 
-model User {
-  id          String       @id @default(cuid())
-  email       String       @unique
-  name        String?
-  role        Role         @default(MEMBER)
-  passwordHash String?
+model AmazonIntegration {
+  id             String    @id
+  projectId      String
+  sellerId       String
+  marketplaceId  String    @default("ATVPDKIKX0DER")
+  region         String    @default("us-east-1")
+  refreshToken   String
+  accessToken    String?
+  tokenExpiresAt DateTime?
+  installedAt    DateTime  @default(now())
+  isActive       Boolean   @default(true)
+  lastSyncAt     DateTime?
+  syncStatus     String?
+  syncError      String?
+  Project        Project   @relation(fields: [projectId], references: [id])
+
+  @@unique([projectId, sellerId])
+  @@index([projectId])
+  @@index([sellerId])
+}
+
+model AmazonWatchlist {
+  asin          String
+  marketplaceId String
+  active        Boolean  @default(true)
+  notes         String?
+  addedAt       DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([asin, marketplaceId])
+  @@unique([asin, marketplaceId], map: "AmazonWatchlist_asin_marketplace_unique")
+}
+
+model Competitor {
+  id                String              @id
+  tenantId          String
+  projectId         String
+  name              String
+  domain            String
+  channel           String
+  isActive          Boolean             @default(true)
+  lastChecked       DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime
+  Project           Project             @relation(fields: [projectId], references: [id])
+  Tenant            Tenant              @relation(fields: [tenantId], references: [id])
+  CompetitorProduct CompetitorProduct[]
+
+  @@index([tenantId, projectId])
+}
+
+model CompetitorPrice {
+  id                String            @id
+  productId         String
+  amount            Int
+  currency          String
+  channel           String?
+  isOnSale          Boolean           @default(false)
+  saleEndsAt        DateTime?
+  stockStatus       String?
+  createdAt         DateTime          @default(now())
+  CompetitorProduct CompetitorProduct @relation(fields: [productId], references: [id])
+
+  @@index([createdAt])
+  @@index([productId, createdAt])
+}
+
+model CompetitorProduct {
+  id              String            @id
+  competitorId    String
+  skuId           String?
+  name            String
+  skuCode         String?
+  url             String
+  imageUrl        String?
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  CompetitorPrice CompetitorPrice[]
+  Competitor      Competitor        @relation(fields: [competitorId], references: [id])
+  Sku             Sku?              @relation(fields: [skuId], references: [id])
+
+  @@index([competitorId, skuCode])
+}
+
+model CompetitorRule {
+  id          String   @id
   tenantId    String
-  tenant      Tenant       @relation(fields: [tenantId], references: [id])
-  memberships Membership[]
-  createdAt   DateTime     @default(now())
-}
-
-enum Role {
-  OWNER
-  ADMIN
-  MEMBER
-}
-
-model Project {
-  id          String        @id @default(cuid())
-  tenantId    String
-  tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  projectId   String
   name        String
-  slug        String        @unique
-  memberships Membership[]
-  products    Product[]
-  policies    Policy[]
-  events      Event[]
-  competitors Competitor[]
-  competitorRules CompetitorRule[]
-  shopifyIntegrations ShopifyIntegration[]
-  amazonIntegrations AmazonIntegration[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  description String?
+  isActive    Boolean  @default(true)
+  rules       Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  Project     Project  @relation(fields: [projectId], references: [id])
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, projectId])
+}
+
+model Customer {
+  id        String   @id
+  tenantId  String
+  email     String
+  name      String?
+  org       String?
+  createdAt DateTime @default(now())
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  Quote     Quote[]
+}
+
+model Event {
+  id        String   @id
+  tenantId  String?
+  projectId String?
+  kind      String
+  payload   Json
+  createdAt DateTime @default(now())
+  Project   Project? @relation(fields: [projectId], references: [id])
+  Tenant    Tenant?  @relation(fields: [tenantId], references: [id])
 }
 
 model Membership {
-  id        String      @id @default(cuid())
+  id        String      @id
   userId    String
   projectId String
   role      ProjectRole @default(VIEWER)
-  user      User        @relation(fields: [userId], references: [id])
-  project   Project     @relation(fields: [projectId], references: [id])
+  Project   Project     @relation(fields: [projectId], references: [id])
+  User      User        @relation(fields: [userId], references: [id])
 
   @@unique([userId, projectId])
 }
 
-enum ProjectRole {
-  OWNER
-  ADMIN
-  EDITOR
-  VIEWER
-}
-
-model Product {
-  id        String   @id @default(cuid())
+model Policy {
+  id        String   @id
   tenantId  String
-  projectId String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  project   Project  @relation(fields: [projectId], references: [id])
-  name      String
-  code      String
-  status    Status   @default(DRAFT)
-  skus      Sku[]
+  projectId String   @unique
+  autoApply Boolean  @default(false)
+  rules     Json
   createdAt DateTime @default(now())
-
-  // Allow upserts by (tenantId, projectId, code) as used in seed scripts
-  @@unique([tenantId, projectId, code], name: "tenantId_projectId_code")
-}
-
-enum Status {
-  DRAFT
-  ACTIVE
-  ARCHIVED
-}
-
-model Sku {
-  id         String   @id @default(cuid())
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id])
-  name       String
-  code       String
-  attributes Json?
-  status     Status   @default(DRAFT)
-  prices     Price[]
-  competitorProducts CompetitorProduct[]
-
-  // Allow upserts by (productId, code) as used in seed scripts
-  @@unique([productId, code], name: "productId_code")
+  updatedAt DateTime
+  Project   Project  @relation(fields: [projectId], references: [id])
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 model Price {
-  id           String         @id @default(cuid())
+  id           String         @id
   skuId        String
-  sku          Sku            @relation(fields: [skuId], references: [id])
   currency     String
   billingCycle String?
   unit         String?
   amount       Int
   status       Status         @default(ACTIVE)
-  versions     PriceVersion[]
+  Sku          Sku            @relation(fields: [skuId], references: [id])
+  PriceVersion PriceVersion[]
 
-  // Ensure upserts by (skuId, currency) work in seed scripts
-  @@unique([skuId, currency], name: "skuId_currency")
-}
-
-model PriceVersion {
-  id        String   @id @default(cuid())
-  priceId   String
-  price     Price    @relation(fields: [priceId], references: [id])
-  amount    Int
-  note      String?
-  createdAt DateTime @default(now())
-}
-
-model Policy {
-  id        String   @id @default(cuid())
-  tenantId  String
-  projectId String   @unique
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  project   Project  @relation(fields: [projectId], references: [id])
-  autoApply Boolean  @default(false)
-  rules     Json     // {maxPctDelta, dailyChangeBudgetPct, floors, ceilings}
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@unique([skuId, currency], map: "skuId_currency")
+  @@index([skuId, currency])
 }
 
 model PriceChange {
-  id           String            @id @default(cuid())
+  id           String            @id
   tenantId     String
   projectId    String
   skuId        String
@@ -171,6 +204,147 @@ model PriceChange {
   @@index([tenantId, projectId, status])
 }
 
+model PriceVersion {
+  id        String   @id
+  priceId   String
+  amount    Int
+  note      String?
+  createdAt DateTime @default(now())
+  Price     Price    @relation(fields: [priceId], references: [id])
+}
+
+model Product {
+  id        String   @id
+  tenantId  String
+  projectId String
+  name      String
+  code      String
+  status    Status   @default(DRAFT)
+  createdAt DateTime @default(now())
+  Project   Project  @relation(fields: [projectId], references: [id])
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  Sku       Sku[]
+
+  @@unique([tenantId, projectId, code], map: "tenantId_projectId_code")
+}
+
+model Project {
+  id                 String               @id
+  tenantId           String
+  name               String
+  slug               String               @unique
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  amazonIntegrations String[]
+  AmazonIntegration  AmazonIntegration[]
+  Competitor         Competitor[]
+  CompetitorRule     CompetitorRule[]
+  Event              Event[]
+  Membership         Membership[]
+  Policy             Policy?
+  Product            Product[]
+  Tenant             Tenant               @relation(fields: [tenantId], references: [id])
+  ShopifyIntegration ShopifyIntegration[]
+}
+
+model Quote {
+  id          String      @id
+  tenantId    String
+  customerId  String
+  status      QuoteStatus @default(DRAFT)
+  currency    String
+  subtotal    Int         @default(0)
+  total       Int         @default(0)
+  meta        Json?
+  createdAt   DateTime    @default(now())
+  checkoutUrl String?
+  Customer    Customer    @relation(fields: [customerId], references: [id])
+  QuoteItem   QuoteItem[]
+}
+
+model QuoteItem {
+  id         String   @id
+  quoteId    String
+  skuId      String
+  name       String
+  qty        Int
+  unitAmount Int
+  createdAt  DateTime @default(now())
+  Quote      Quote    @relation(fields: [quoteId], references: [id])
+}
+
+model ShopifyIntegration {
+  id                         String                       @id
+  projectId                  String
+  shopDomain                 String                       @unique
+  accessToken                String
+  scope                      String
+  installedAt                DateTime                     @default(now())
+  isActive                   Boolean                      @default(true)
+  lastSyncAt                 DateTime?
+  syncStatus                 String?
+  syncError                  String?
+  Project                    Project                      @relation(fields: [projectId], references: [id])
+  ShopifyWebhookSubscription ShopifyWebhookSubscription[]
+
+  @@index([projectId])
+  @@index([shopDomain])
+}
+
+model ShopifyWebhookSubscription {
+  id                 String             @id
+  integrationId      String
+  topic              String
+  address            String
+  webhookId          String             @unique
+  createdAt          DateTime           @default(now())
+  isActive           Boolean            @default(true)
+  ShopifyIntegration ShopifyIntegration @relation(fields: [integrationId], references: [id])
+
+  @@index([integrationId])
+  @@index([webhookId])
+}
+
+model Sku {
+  id                String              @id
+  productId         String
+  name              String
+  code              String
+  attributes        Json?
+  status            Status              @default(DRAFT)
+  CompetitorProduct CompetitorProduct[]
+  Price             Price[]
+  Product           Product             @relation(fields: [productId], references: [id])
+
+  @@unique([productId, code], map: "productId_code")
+}
+
+model Tenant {
+  id             String           @id
+  name           String
+  createdAt      DateTime         @default(now())
+  Competitor     Competitor[]
+  CompetitorRule CompetitorRule[]
+  Customer       Customer[]
+  Event          Event[]
+  Policy         Policy[]
+  Product        Product[]
+  Project        Project[]
+  User           User[]
+}
+
+model User {
+  id           String       @id
+  email        String       @unique
+  name         String?
+  role         Role         @default(MEMBER)
+  tenantId     String
+  createdAt    DateTime     @default(now())
+  passwordHash String?
+  Membership   Membership[]
+  Tenant       Tenant       @relation(fields: [tenantId], references: [id])
+}
+
 enum PriceChangeStatus {
   PENDING
   APPROVED
@@ -180,30 +354,11 @@ enum PriceChangeStatus {
   ROLLED_BACK
 }
 
-model Customer {
-  id        String   @id @default(cuid())
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  email     String
-  name      String?
-  org       String?
-  quotes    Quote[]
-  createdAt DateTime @default(now())
-}
-
-model Quote {
-  id          String      @id @default(cuid())
-  tenantId    String
-  customerId  String
-  customer    Customer    @relation(fields: [customerId], references: [id])
-  status      QuoteStatus @default(DRAFT)
-  currency    String
-  subtotal    Int         @default(0)
-  total       Int         @default(0)
-  meta        Json?
-  createdAt   DateTime    @default(now())
-  items       QuoteItem[]
-  checkoutUrl String?
+enum ProjectRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
 }
 
 enum QuoteStatus {
@@ -213,176 +368,14 @@ enum QuoteStatus {
   EXPIRED
 }
 
-model QuoteItem {
-  id         String   @id @default(cuid())
-  quoteId    String
-  quote      Quote    @relation(fields: [quoteId], references: [id])
-  skuId      String
-  name       String
-  qty        Int
-  unitAmount Int
-  createdAt  DateTime @default(now())
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
 }
 
-model Event {
-  id        String   @id @default(cuid())
-  tenantId  String?
-  projectId String?
-  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
-  project   Project? @relation(fields: [projectId], references: [id])
-  kind      String
-  payload   Json
-  createdAt DateTime @default(now())
-}
-
-model Competitor {
-  id          String   @id @default(cuid())
-  tenantId    String
-  projectId   String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  project     Project  @relation(fields: [projectId], references: [id])
-  name        String
-  domain      String
-  channel     String   // 'shopify', 'amazon', 'google_shopping', etc.
-  isActive    Boolean  @default(true)
-  lastChecked DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  products    CompetitorProduct[]
-  
-  @@index([tenantId, projectId])
-}
-
-model CompetitorProduct {
-  id           String   @id @default(cuid())
-  competitorId String
-  competitor   Competitor @relation(fields: [competitorId], references: [id])
-  skuId        String?
-  sku          Sku?     @relation(fields: [skuId], references: [id])
-  name         String
-  skuCode      String?  // Competitor's SKU code
-  url          String
-  imageUrl     String?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  prices       CompetitorPrice[]
-  
-  @@index([competitorId, skuCode])
-}
-
-model CompetitorPrice {
-  id           String   @id @default(cuid())
-  productId    String
-  product      CompetitorProduct @relation(fields: [productId], references: [id])
-  amount       Int      // Price in minor units (cents)
-  currency     String
-  channel      String?  // Specific channel within competitor
-  isOnSale     Boolean  @default(false)
-  saleEndsAt   DateTime?
-  stockStatus  String?  // 'in_stock', 'out_of_stock', 'limited'
-  createdAt    DateTime @default(now())
-  
-  @@index([productId, createdAt])
-  @@index([createdAt])
-}
-
-model CompetitorRule {
-  id           String   @id @default(cuid())
-  tenantId     String
-  projectId    String
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
-  project      Project  @relation(fields: [projectId], references: [id])
-  name         String
-  description  String?
-  isActive     Boolean  @default(true)
-  rules        Json     // Pricing rules based on competitor data
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  @@index([tenantId, projectId])
-}
-
-// Amazon competitive pricing snapshot storage
-model AmazonCompetitivePrice {
-  id                String   @id @default(cuid())
-  asin              String
-  marketplaceId     String
-  lowestPriceCents  Int?
-  buyBoxPriceCents  Int?
-  offerCount        Int      @default(0)
-  data              Json?
-  retrievedAt       DateTime @default(now())
-
-  @@index([asin, marketplaceId])
-  @@index([retrievedAt])
-}
-
-// Amazon watchlist of ASINs to track
-model AmazonWatchlist {
-  asin          String
-  marketplaceId String
-  active        Boolean  @default(true)
-  notes         String?
-  addedAt       DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@id([asin, marketplaceId])
-  @@unique([asin, marketplaceId], name: "asin_marketplace_unique")
-}
-
-model ShopifyIntegration {
-  id              String   @id @default(cuid())
-  projectId       String
-  shopDomain      String   @unique
-  accessToken     String   @db.Text
-  scope           String
-  installedAt     DateTime @default(now())
-  isActive        Boolean  @default(true)
-  lastSyncAt      DateTime?
-  syncStatus      String?  // 'success', 'error', 'in_progress'
-  syncError       String?  @db.Text
-  webhookSubscriptions ShopifyWebhookSubscription[]
-
-  project         Project  @relation(fields: [projectId], references: [id])
-
-  @@index([projectId])
-  @@index([shopDomain])
-}
-
-model ShopifyWebhookSubscription {
-  id              String   @id @default(cuid())
-  integrationId   String
-  topic           String
-  address         String
-  webhookId       String   @unique
-  createdAt       DateTime @default(now())
-  isActive        Boolean  @default(true)
-
-  integration     ShopifyIntegration @relation(fields: [integrationId], references: [id])
-
-  @@index([integrationId])
-  @@index([webhookId])
-}
-
-model AmazonIntegration {
-  id              String   @id @default(cuid())
-  projectId       String
-  sellerId        String
-  marketplaceId   String   @default("ATVPDKIKX0DER") // US marketplace by default
-  region          String   @default("us-east-1")
-  refreshToken    String   @db.Text
-  accessToken     String?  @db.Text
-  tokenExpiresAt  DateTime?
-  installedAt     DateTime @default(now())
-  isActive        Boolean  @default(true)
-  lastSyncAt      DateTime?
-  syncStatus      String?  // 'success', 'error', 'in_progress'
-  syncError       String?  @db.Text
-
-  project         Project  @relation(fields: [projectId], references: [id])
-
-  @@unique([projectId, sellerId])
-  @@index([projectId])
-  @@index([sellerId])
+enum Status {
+  DRAFT
+  ACTIVE
+  ARCHIVED
 }
