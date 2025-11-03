@@ -41,8 +41,22 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
     return redirectToConsoleWithError(state, 'configuration_error');
   }
 
-  if (!verifyShopifyHMAC(searchParams, hmac, apiSecret)) {
-    console.error('Invalid HMAC signature');
+  // Log callback parameters for debugging (without sensitive values)
+  console.log('Shopify OAuth callback received:', {
+    shop,
+    state,
+    hasCode: !!code,
+    hasHmac: !!hmac,
+    hasTimestamp: !!timestamp,
+    apiSecretLength: apiSecret.length,
+  });
+
+  if (!verifyShopifyHMAC(searchParams, hmac, apiSecret, req.url)) {
+    console.error('Invalid HMAC signature', {
+      shop,
+      state,
+      apiSecretConfigured: !!apiSecret,
+    });
     return redirectToConsoleWithError(state, 'invalid_signature');
   }
 
@@ -118,32 +132,75 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
 /**
  * Verify Shopify HMAC signature
  * Shopify docs: https://shopify.dev/docs/apps/auth/oauth/getting-started#step-5-verify-the-request
+ * 
+ * Shopify OAuth HMAC validation:
+ * 1. Get all query parameters except 'hmac'
+ * 2. Sort them alphabetically by key
+ * 3. Build query string: key=value&key2=value2 (using decoded values)
+ * 4. Calculate HMAC-SHA256 hex digest
+ * 5. Compare with received HMAC using timing-safe comparison
  */
 function verifyShopifyHMAC(
   searchParams: URLSearchParams,
   receivedHmac: string,
-  apiSecret: string
+  apiSecret: string,
+  _rawUrl: string // Kept for potential future debugging
 ): boolean {
-  // Build query string without HMAC parameter
-  const params = Array.from(searchParams.entries())
-    .filter(([key]) => key !== 'hmac')
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}=${value}`)
-    .join('&');
+  try {
+    // Get all parameters except 'hmac'
+    const params: Array<[string, string]> = [];
+    for (const [key, value] of searchParams.entries()) {
+      if (key !== 'hmac') {
+        params.push([key, value]);
+      }
+    }
 
-  // Calculate HMAC
-  const hash = crypto
-    .createHmac('sha256', apiSecret)
-    .update(params)
-    .digest('hex');
+    // Sort parameters alphabetically by key (Shopify requirement)
+    params.sort(([a], [b]) => a.localeCompare(b));
 
-  // Shopify OAuth HMAC is hex-encoded
-  // Compare using timing-safe comparison
-  // Both hash and receivedHmac are already hex strings
-  return crypto.timingSafeEqual(
-    Buffer.from(hash, 'hex'),
-    Buffer.from(receivedHmac, 'hex')
-  );
+    // Build query string: key=value&key2=value2
+    // Use decoded values from URLSearchParams (Shopify calculates HMAC on decoded values)
+    const queryString = params
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&');
+
+    // Calculate HMAC-SHA256 hex digest
+    const hash = crypto
+      .createHmac('sha256', apiSecret)
+      .update(queryString)
+      .digest('hex');
+
+    // Debug logging (remove in production or make conditional)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('HMAC Verification Debug:', {
+        queryString,
+        calculatedHash: hash.substring(0, 16) + '...',
+        receivedHmac: receivedHmac.substring(0, 16) + '...',
+        paramsCount: params.length,
+      });
+    }
+
+    // Compare using timing-safe comparison to prevent timing attacks
+    // Both hash and receivedHmac are hex strings
+    const isValid = crypto.timingSafeEqual(
+      Buffer.from(hash, 'hex'),
+      Buffer.from(receivedHmac, 'hex')
+    );
+
+    if (!isValid) {
+      console.error('HMAC mismatch:', {
+        queryString,
+        calculatedHash: hash,
+        receivedHmac,
+        params: params.map(([k, v]) => `${k}=${v.substring(0, 10)}...`),
+      });
+    }
+
+    return isValid;
+  } catch (error) {
+    console.error('HMAC verification error:', error);
+    return false;
+  }
 }
 
 /**
