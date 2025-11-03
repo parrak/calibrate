@@ -57,7 +57,25 @@ export class ShopifyProducts {
       console.warn(`Shopify API limit ${requestedLimit} exceeds maximum of ${maxLimit}. Using ${maxLimit} instead.`);
     }
 
-    const params: any = {
+    interface ProductListParams {
+      limit: number;
+      since_id?: string;
+      fields?: string[];
+      ids?: string[];
+      title?: string;
+      vendor?: string;
+      product_type?: string;
+      created_at_min?: string;
+      created_at_max?: string;
+      updated_at_min?: string;
+      updated_at_max?: string;
+      published_at_min?: string;
+      published_at_max?: string;
+      published_status?: 'published' | 'unpublished' | 'any';
+      collection_id?: string;
+      product_ids?: string[];
+    }
+    const params: ProductListParams = {
       limit,
       ...options,
     };
@@ -91,10 +109,10 @@ export class ShopifyProducts {
   async getProductByHandle(handle: string): Promise<ShopifyProduct | null> {
     try {
       const response = await this.client.get<{ product: ShopifyProduct }>(`/products.json?handle=${handle}`);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return response.product || null;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 404) {
         return null;
       }
       throw error;
@@ -211,13 +229,13 @@ export class ShopifyProducts {
   /**
    * Check if product exists
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async productExists(productId: string): Promise<boolean> {
     try {
       await this.getProduct(productId);
       return true;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 404) {
         return false;
       }
       throw error;
@@ -227,13 +245,13 @@ export class ShopifyProducts {
   /**
    * Check if variant exists
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async variantExists(variantId: string): Promise<boolean> {
     try {
       await this.getVariant(variantId);
       return true;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 404) {
         return false;
       }
       throw error;

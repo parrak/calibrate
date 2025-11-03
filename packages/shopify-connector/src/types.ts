@@ -65,7 +65,7 @@ export interface ShopifyWebhookPayload {
   topic: string;
   shop_domain: string;
   created_at: string;
-  data: any;
+  data: unknown;
 }
 
 export interface ShopifyOAuthResponse {
