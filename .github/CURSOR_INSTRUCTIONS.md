@@ -2,324 +2,234 @@
 
 **Current Branch**: `chore/update-docs-and-scripts`
 **PR**: https://github.com/parrak/calibrate/pull/2
-**Status**: 🔴 **LINT CHECK FAILING** - TypeScript fixed, but ESLint errors blocking merge
+**Status**: 🟡 **IN PROGRESS** - TypeScript fixed, working on 50 ESLint errors
 
-## 🚨 Current Failures
+## 🚨 Current Status
 
-### Lint Check: 10 errors in shopify-connector
-**Details**: https://github.com/parrak/calibrate/actions/runs/19050934335/job/54410795896
+### Lint Check: 50 errors in shopify-connector (UPDATED)
+**Initial GitHub Actions Report**: 10 errors shown
+**Full Lint Check**: 50 errors total across 9 files
 
-**Errors**:
-- `packages/shopify-connector/src/ShopifyConnector.ts`: 8 errors (lines 57, 58, 59, 77, 88, 99, 213, 214)
-- `packages/shopify-connector/src/ShopifyPricingOperations.ts`: 2 errors (lines 113, 203)
+**Error Breakdown by File**:
+- ✅ `ShopifyConnector.ts`: 8 errors - **FIXED by Agent A**
+- 🔄 `ShopifyPricingOperations.ts`: 2 errors - **Codex working on this**
+- ❌ `ShopifyProductOperations.ts`: 23 errors - **Agent A take this**
+- ❌ `client.ts`: 13 errors - **Agent A take this**
+- ❌ `auth.ts`: 2 errors - **Agent B will handle**
+- ❌ `index.ts`: 2 errors - **Agent B will handle**
+- ❌ `pricing.ts`: 4 errors - **Agent B will handle**
+- ❌ `products.ts`: 4 errors - **Agent B will handle**
+- ❌ `types.ts`: 1 error - **Agent B will handle**
+- ❌ `webhooks.ts`: 1 error - **Agent B will handle**
 
-**Issue**: "Unexpected any. Specify a different type" - All errors are about using `any` type
+**Issue**: "Unexpected any. Specify a different type" + some unused vars
 
 ### GitHub Actions Warnings: 2 warnings
+🔄 **Codex working on this**
 - `deployment-validation.yml:21`: Invalid pnpm action input `version-file`
 - `lockfile-check.yml:17`: Invalid pnpm action input `version-file`
 
-**Issue**: `version-file` is not a valid input for `pnpm/action-setup@v4`. Valid inputs are: `version`, `dest`, `run_install`, `package_json_file`, `standalone`
-
-### Vercel Console Deployment: FAILING
-**Details**: https://vercel.com/rakesh-paridas-projects/console/5UxvrCzGmrr75kxHjBjyANZztCdF
-
-**Error**:
-```
-Error: Could not resolve @prisma/client despite the installation that we just tried.
-Please try to install it by hand with pnpm add @prisma/client and rerun pnpm dlx "prisma generate" 🙏.
-ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: prisma generate
-```
-
-**Root Cause**: Prisma client generation failing during Vercel build. `@prisma/client` may not be properly installed or the package dependencies are misconfigured.
+### Vercel Console Deployment: FIXED ✅
+**Fix**: Added `postinstall` script to `packages/db/package.json`
+**Commit**: `503cad7` - Ensures Prisma client generates after installation
 
 ---
 
-## 🎯 Two-Agent Work Distribution
+## 🎯 Updated Work Distribution
 
-### 🅰️ AGENT A (Cursor): ShopifyConnector.ts
+### 🅰️ AGENT A (Cursor): Large Shopify Files
 
 **Branch**: Work directly on `chore/update-docs-and-scripts`
-**File**: `packages/shopify-connector/src/ShopifyConnector.ts`
-**Errors**: 8 (lines 57, 58, 59, 77, 88, 99, 213, 214)
+**Files**: 2 large files with 36 total errors
+1. `packages/shopify-connector/src/ShopifyProductOperations.ts` (23 errors)
+2. `packages/shopify-connector/src/client.ts` (13 errors)
 
-#### Setup (2 min)
+#### Setup
 ```bash
 cd C:\Users\rakes\developer\calibrate-cursor\calibrate
 git checkout chore/update-docs-and-scripts
 git pull origin chore/update-docs-and-scripts
 ```
 
-#### Task: Replace `any` types with proper types (20 min)
+#### Task 1: ShopifyProductOperations.ts (23 errors) (~30 min)
 
-**Lines 57-59**: Private operation properties
-```typescript
-// BEFORE
-private authOperations: any = null;
-private productOperations: any = null;
-private pricingOperations: any = null;
+**File**: `packages/shopify-connector/src/ShopifyProductOperations.ts`
 
-// AFTER
-private authOperations: ShopifyAuth | null = null;
-private productOperations: ShopifyProducts | null = null;
-private pricingOperations: ShopifyPricing | null = null;
+**Errors to fix** (23 total):
+```
+  49:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  55:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 103:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 114:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 117:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 122:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 125:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 126:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 127:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 128:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 129:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 176:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 176:91  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 253:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 306:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 339:15  error  '_filter' is defined but never used       @typescript-eslint/no-unused-vars
+ 360:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 370:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 371:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 382:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 ```
 
-**Lines 77, 88, 99**: Similar `any` types in initialization code
-- Check context around these lines
-- Replace with proper typed classes (likely `ShopifyAuth`, `ShopifyProducts`, `ShopifyPricing`)
-- Ensure imports are present at top of file
+**Fix Strategy**:
+1. Replace `any` with proper Shopify GraphQL types (likely `ShopifyProduct`, `ShopifyVariant`, etc.)
+2. Remove unused `_filter` variable (line 339)
+3. Check what types are available from imports - likely need to define interfaces for Shopify API responses
 
-**Lines 213-214**: Error handling or response types
-- Check context - likely error objects or API responses
-- Define proper interface or use `unknown` if type is truly dynamic
-- Example fix:
+**Common patterns**:
 ```typescript
-// If it's an error object
-catch (error: unknown) {
-  if (error instanceof Error) {
-    // handle error
-  }
+// For GraphQL query results
+interface ShopifyGraphQLResponse<T> {
+  data?: T;
+  errors?: Array<{ message: string; locations?: unknown[] }>;
 }
 
-// If it's API response
-interface ShopifyApiResponse {
-  data?: unknown;
-  errors?: Array<{ message: string; field?: string[] }>;
+// For product data
+interface ShopifyProductNode {
+  id: string;
+  title: string;
+  variants: { edges: Array<{ node: ShopifyVariantNode }> };
+  // ... other fields
 }
+
+// Replace: (error: any) => error.message
+// With: (error: { message: string }) => error.message
 ```
 
-#### Verification
+**Verification**:
 ```bash
-# Run lint check
-pnpm --filter @calibr/shopify-connector lint
-
-# Should show: 0 errors in ShopifyConnector.ts
+pnpm --filter @calibr/shopify-connector lint 2>&1 | grep "ShopifyProductOperations"
+# Should show: 0 errors
 ```
 
-#### Commit
+**Commit**:
 ```bash
-git add packages/shopify-connector/src/ShopifyConnector.ts
-git commit -m "fix(shopify-connector): replace any types with proper types in ShopifyConnector
+git add packages/shopify-connector/src/ShopifyProductOperations.ts
+git commit -m "fix(shopify-connector): replace any types in ShopifyProductOperations
 
-- Replace any with ShopifyAuth | null for authOperations
-- Replace any with ShopifyProducts | null for productOperations
-- Replace any with ShopifyPricing | null for pricingOperations
-- Add proper error handling types
-- Fixes 8 ESLint errors (lines 57, 58, 59, 77, 88, 99, 213, 214)"
+- Define proper types for Shopify GraphQL responses
+- Replace any with specific product/variant types
+- Remove unused _filter variable
+- Fixes 23 ESLint errors"
 
 git push origin chore/update-docs-and-scripts
 ```
 
 ---
 
-### 🅱️ AGENT B (Codex/Claude): Remaining Fixes
+#### Task 2: client.ts (13 errors) (~20 min)
 
-**Branch**: Work directly on `chore/update-docs-and-scripts`
-**Scope**:
-1. ShopifyPricingOperations.ts (2 lint errors)
-2. GitHub Actions workflows (2 warnings)
-3. Fix Vercel Prisma deployment issue
-4. Verify all deployments succeed
+**File**: `packages/shopify-connector/src/client.ts`
 
-#### Setup (2 min)
-```bash
-cd C:\Users\rakes\developer\calibrate
-git checkout chore/update-docs-and-scripts
-git pull origin chore/update-docs-and-scripts
+**Errors to fix** (13 total):
+```
+  97:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  99:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 100:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 117:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 118:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 123:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 124:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 125:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 142:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 189:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 192:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 195:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+ 208:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 ```
 
-#### Task 1: Fix ShopifyPricingOperations.ts (10 min)
+**Fix Strategy**:
+1. Define types for GraphQL query/mutation variables
+2. Define types for GraphQL response structure
+3. Use `unknown` for truly dynamic data, then type guard
 
-**File**: `packages/shopify-connector/src/ShopifyPricingOperations.ts`
-**Errors**: 2 (lines 113, 203)
-
-**Line 113**: Error mapping in catch block
+**Common patterns for client.ts**:
 ```typescript
-// BEFORE
-errors.map((e: any) => e.message).join(', ')
-
-// AFTER - Option 1: Define interface
-interface ShopifyUserError {
-  message: string;
-  field?: string[];
+// For GraphQL variables
+interface GraphQLVariables {
+  [key: string]: unknown;
 }
-errors.map((e: ShopifyUserError) => e.message).join(', ')
 
-// AFTER - Option 2: Use unknown with type guard
-errors.map((e: unknown) => {
-  return (e as { message: string }).message;
-}).join(', ')
-```
+// For fetch response
+interface FetchResponse {
+  ok: boolean;
+  status: number;
+  statusText: string;
+  json: () => Promise<unknown>;
+}
 
-**Line 203**: isRetryableError parameter
-```typescript
-// BEFORE
-private isRetryableError(error: any): boolean {
-
-// AFTER
-private isRetryableError(error: unknown): boolean {
-  // Type guard for error with status
-  if (typeof error === 'object' && error !== null && 'status' in error) {
-    const statusError = error as { status?: number };
-    if (statusError.status === 429) return true;
-    if (statusError.status && statusError.status >= 500) return true;
-  }
-  return false;
+// For error handling
+interface GraphQLError {
+  message: string;
+  extensions?: {
+    code?: string;
+    [key: string]: unknown;
+  };
 }
 ```
 
 **Verification**:
 ```bash
-pnpm --filter @calibr/shopify-connector lint
+pnpm --filter @calibr/shopify-connector lint 2>&1 | grep "client.ts"
 # Should show: 0 errors
 ```
 
 **Commit**:
 ```bash
-git add packages/shopify-connector/src/ShopifyPricingOperations.ts
-git commit -m "fix(shopify-connector): replace any types in ShopifyPricingOperations
+git add packages/shopify-connector/src/client.ts
+git commit -m "fix(shopify-connector): replace any types in client.ts
 
-- Add ShopifyUserError interface for error mapping
-- Replace any with unknown in isRetryableError with proper type guards
-- Fixes 2 ESLint errors (lines 113, 203)"
-```
+- Add proper types for GraphQL variables and responses
+- Define error interfaces for type safety
+- Use unknown with type guards for dynamic data
+- Fixes 13 ESLint errors"
 
-#### Task 2: Fix GitHub Actions workflows (5 min)
-
-**Files**:
-- `.github/workflows/deployment-validation.yml` (line 21)
-- `.github/workflows/lockfile-check.yml` (line 17)
-
-**Fix**: Replace `version-file` with `package_json_file`
-
-```yaml
-# BEFORE
-- uses: pnpm/action-setup@v4
-  with:
-    version-file: package.json
-
-# AFTER
-- uses: pnpm/action-setup@v4
-  with:
-    package_json_file: package.json
-```
-
-**Verification**: Push and check GitHub Actions run without warnings
-
-**Commit**:
-```bash
-git add .github/workflows/deployment-validation.yml .github/workflows/lockfile-check.yml
-git commit -m "fix(ci): use package_json_file instead of version-file in pnpm setup
-
-- Update deployment-validation.yml
-- Update lockfile-check.yml
-- Fixes invalid input warnings in GitHub Actions"
-```
-
-#### Task 3: Fix Vercel Prisma deployment (15 min)
-
-**Issue**: `@prisma/client` resolution failing during Vercel build
-
-**Diagnosis Steps**:
-```bash
-# Check if @prisma/client is in package.json dependencies
-cat packages/db/package.json | grep "@prisma/client"
-
-# Check console app dependencies
-cat apps/console/package.json | grep "@calibr/db"
-```
-
-**Likely Fixes** (try in order):
-
-**Option 1**: Ensure `@prisma/client` is explicitly in dependencies (not just devDependencies)
-```bash
-# In packages/db/package.json
-# Ensure @prisma/client is in "dependencies", not "devDependencies"
-```
-
-**Option 2**: Add postinstall script to ensure Prisma generates
-```bash
-# In packages/db/package.json, add:
-"scripts": {
-  "postinstall": "prisma generate"
-}
-```
-
-**Option 3**: Update Vercel build settings
-```bash
-# Check if there's a vercel.json or check console's package.json build script
-# May need to adjust the build command to ensure db package is built first
-```
-
-**Option 4**: Check for workspace dependencies
-```bash
-# In apps/console/package.json, ensure:
-"dependencies": {
-  "@calibr/db": "workspace:*",
-  "@prisma/client": "^5.x.x"  // Explicitly add if missing
-}
-```
-
-**Testing**:
-```bash
-# Test locally that build works
-pnpm install --frozen-lockfile=false
-pnpm --filter @calibr/db install
-pnpm --filter @calibr/db exec prisma generate
-pnpm --filter @calibr/console build
-
-# If successful, commit and push
-git add <modified-files>
-git commit -m "fix(vercel): ensure @prisma/client resolves during deployment
-
-- [describe what was changed]
-- Fixes Prisma client resolution error in Vercel build"
-```
-
-#### Task 4: Verify & Monitor (5 min)
-
-```bash
-# Push all changes
 git push origin chore/update-docs-and-scripts
-
-# Check PR status
-gh pr checks 2
-
-# Monitor until all checks pass:
-# ✅ validate-deployment (lint check)
-# ✅ Vercel – console (deployment)
-# ✅ pnpm-frozen-lockfile
-# ✅ pr_lint
 ```
+
+---
+
+### 🅱️ AGENT B (Codex/Claude): Remaining Files
+
+**Status**:
+- ✅ Prisma deployment fix committed (`503cad7`)
+- 🔄 ShopifyPricingOperations.ts (Codex working on this)
+- 🔄 GitHub Actions workflows (Codex working on this)
+- ⏳ Remaining 14 errors in 6 small files (will handle after Codex finishes)
+
+**Remaining files** (Agent B will handle):
+1. `auth.ts` - 2 errors
+2. `index.ts` - 2 errors
+3. `pricing.ts` - 4 errors
+4. `products.ts` - 4 errors
+5. `types.ts` - 1 error
+6. `webhooks.ts` - 1 error
 
 ---
 
 ## 🔄 Coordination Protocol
 
 ### Timing
-- **Agent A**: Start immediately on ShopifyConnector.ts (~20 min)
-- **Agent B**: Start immediately on ShopifyPricingOperations.ts (~10 min), workflows (~5 min), Prisma fix (~15 min)
-- **Total Time**: ~30 minutes (parallel execution, Agent B slightly longer due to Vercel Prisma fix)
+- **Agent A**: Start immediately on ShopifyProductOperations.ts (~30 min), then client.ts (~20 min)
+- **Codex**: Working on ShopifyPricingOperations.ts + workflows (~15 min)
+- **Agent B (Claude)**: Prisma fix done ✅, will handle remaining small files after Codex
+- **Total Time**: ~50 minutes for all agents combined
 
 ### Communication
-Both agents should:
-1. Pull latest before starting
+All agents working on same branch (`chore/update-docs-and-scripts`):
+1. Pull latest before starting each task
 2. Work on separate files (no conflicts)
-3. Commit immediately after fixing assigned file
-4. Push to same branch (`chore/update-docs-and-scripts`)
-5. Git will handle merging commits automatically
-
-### If Conflicts Occur
-```bash
-# Pull latest changes
-git pull origin chore/update-docs-and-scripts
-
-# If conflicts, resolve and continue
-git add <resolved-files>
-git commit -m "merge: resolve conflicts"
-git push origin chore/update-docs-and-scripts
-```
+3. Commit immediately after fixing each file
+4. Push frequently to keep in sync
 
 ---
 
@@ -338,54 +248,57 @@ git push origin chore/update-docs-and-scripts
 ## 📊 Progress Tracking
 
 ### Agent A Progress
-- [x] Pull latest from branch
-- [x] Fix line 57: authOperations type (ShopifyAuthOperations | null)
-- [x] Fix line 58: productOperations type (ShopifyProductOperations | null)
-- [x] Fix line 59: pricingOperations type (ShopifyPricingOperations | null)
-- [x] Fix line 77: auth getter return type (ShopifyAuthOperations)
-- [x] Fix line 88: products getter return type (ShopifyProductOperations)
-- [x] Fix line 99: pricing getter return type (ShopifyPricingOperations)
-- [x] Fix line 213: rateLimit type (ShopifyRateLimit | null)
-- [x] Fix line 214: shopInfo type (unknown)
-- [x] Verify lint passes (✅ 0 errors in ShopifyConnector.ts)
-- [x] Commit and push (commit: d1344a4)
+- [x] Pull latest from branch (initial)
+- [x] Fix ShopifyConnector.ts (8 errors) - commit: d1344a4
+- [ ] Pull latest (before new tasks)
+- [ ] Fix ShopifyProductOperations.ts (23 errors)
+- [ ] Verify lint passes for ShopifyProductOperations.ts
+- [ ] Commit and push
+- [ ] Fix client.ts (13 errors)
+- [ ] Verify lint passes for client.ts
+- [ ] Commit and push
+- [ ] Final verification: 36 errors fixed
+
+### Codex Progress
+- [x] Working on ShopifyPricingOperations.ts (2 errors)
+- [x] Working on GitHub Actions workflows (2 warnings)
+- [ ] Commit and push lint fixes
+- [ ] Commit and push workflow fixes
 
 ### Agent B Progress
-- [ ] Pull latest from branch
-- [ ] Fix ShopifyPricingOperations.ts line 113
-- [ ] Fix ShopifyPricingOperations.ts line 203
-- [ ] Verify lint passes for shopify-connector
-- [ ] Commit and push lint fixes
-- [ ] Fix deployment-validation.yml
-- [ ] Fix lockfile-check.yml
-- [ ] Commit and push workflow fixes
-- [ ] Diagnose Prisma client resolution issue
-- [ ] Fix Prisma deployment (check dependencies, postinstall, etc.)
-- [ ] Test local build with Prisma
-- [ ] Commit and push Prisma fix
-- [ ] Monitor PR checks until all pass (especially Vercel console)
+- [x] Diagnose Prisma deployment issue
+- [x] Add postinstall script to packages/db/package.json
+- [x] Test Prisma generation
+- [x] Commit and push (503cad7)
+- [ ] Wait for Codex to finish
+- [ ] Fix remaining 6 small files (14 errors total)
+- [ ] Monitor PR checks until all pass
 
 ---
 
-## 📝 Context: What Was Fixed Before
+## 📝 Context: What Was Fixed
 
-✅ **Previous Session (TypeScript Errors)**: All 122 TypeScript type errors were fixed
+✅ **Previous Session**: All 122 TypeScript type errors fixed
 - Fixed Prisma relation names (lowercase → PascalCase)
 - Added missing IDs to create operations
 - Fixed schema field mismatches
 - Resolved cyclic dependencies
 
-🟡 **Current Session (Lint Errors)**: Fixing ESLint errors blocking deployment
-- ✅ Agent A: Replaced `any` types in ShopifyConnector.ts (8 errors fixed)
-- ⏳ Agent B: Need to fix ShopifyPricingOperations.ts (2 errors remaining)
-- ⏳ Agent B: Need to fix GitHub Actions workflow config
-- ⏳ Agent B: Need to fix Vercel console deployment
+✅ **Current Session - Completed**:
+- Agent A: Fixed ShopifyConnector.ts (8 errors)
+- Agent B: Fixed Vercel Prisma deployment with postinstall script
+
+🔄 **Current Session - In Progress**:
+- Codex: Fixing ShopifyPricingOperations.ts + workflows
+- Agent A: About to start ShopifyProductOperations.ts + client.ts
+- Agent B: Will handle remaining 14 errors after Codex
+
+⏳ **Remaining Work**: 48 lint errors across 8 files
 
 ---
 
-## 🎯 Ready to Start?
+## 🎯 Agent A: Start Here!
 
-**Agent A (Cursor)**: Start with ShopifyConnector.ts line 57-59
-**Agent B (Codex/Claude)**: Start with ShopifyPricingOperations.ts line 113
+**Next Task**: Fix `packages/shopify-connector/src/ShopifyProductOperations.ts` (23 errors)
 
-Let's get PR #2 across the finish line! 🚀
+Pull latest and begin! 🚀
