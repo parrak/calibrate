@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { withSecurity } from '@/lib/security-headers'
-import { aggregateDailySnapshots } from '../../../../../../packages/analytics/index'
+import { aggregateDailySnapshots } from '../../../../../../../packages/analytics/index'
 
 export const runtime = 'nodejs'
 

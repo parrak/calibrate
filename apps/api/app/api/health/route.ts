@@ -66,14 +66,14 @@ async function checkDatabaseHealth() {
     await prisma().$queryRaw`SELECT 1`
     
     // Get connection pool info
-    const connections = await prisma().$queryRaw`
+    const connections = await prisma().$queryRaw<Array<{ active_connections: string | number }>>`
       SELECT count(*) as active_connections 
       FROM pg_stat_activity 
       WHERE state = 'active'
     `
     
     // Check if migrations are up to date
-    const migrations = await prisma().$queryRaw`
+    const migrations = await prisma().$queryRaw<Array<{ migration_name: string; finished_at: Date | null }>>`
       SELECT migration_name, finished_at 
       FROM _prisma_migrations 
       ORDER BY finished_at DESC 

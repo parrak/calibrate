@@ -8,6 +8,7 @@ import { ShopifyAuth } from '@calibr/shopify-connector';
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 import { prisma } from '@calibr/db';
+import { createId } from '@paralleldrive/cuid2';
 
 export async function GET(request: NextRequest) {
   try {
@@ -65,6 +66,7 @@ export async function GET(request: NextRequest) {
         syncError: null,
       },
       create: {
+        id: createId(),
         projectId,
         shopDomain,
         accessToken: shopifyAuth.accessToken,

@@ -7,24 +7,20 @@ import type {
   PlatformCredentials,
   PlatformHealth,
   PlatformCapabilities,
-  ProductLookupParams,
-  Product,
-  PriceUpdate,
-  PriceUpdateResult,
-  AuthCredentials,
-  AuthStatus,
   ProductFilter,
   ProductSyncResult,
-  ProductCountResult,
   BatchPriceUpdate,
-  BatchPriceUpdateResult,
-  PriceValidationResult,
+  BatchUpdateResult,
+  PriceUpdate,
+  PriceUpdateResult,
+  AuthStatus,
+  NormalizedProduct,
 } from '@calibr/platform-connector'
 import { PlatformError } from '@calibr/platform-connector'
 import { createSpApiClient, loadConfigFromEnv, AmazonConnectorConfig } from './spapi-client'
 
 export class AmazonConnector implements PlatformConnector {
-  readonly platform = 'amazon' as const
+  readonly platform = 'amazon'
   readonly name = 'Amazon'
   readonly version = '1.0.0'
   readonly capabilities: PlatformCapabilities = {
@@ -41,7 +37,7 @@ export class AmazonConnector implements PlatformConnector {
     },
   }
 
-  private config: PlatformConfig
+  readonly config: PlatformConfig
   private credentials: PlatformCredentials | null = null
   private spClient: any = null
 

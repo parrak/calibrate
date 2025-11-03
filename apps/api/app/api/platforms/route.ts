@@ -23,7 +23,7 @@ export const GET = withSecurity(async (request: NextRequest) => {
     // Get platform capabilities for each registered platform
     const platformsWithInfo = platforms.map((platform) => {
       // Platform metadata with better naming
-      let name = platform;
+      let name: string = platform;
       let description = '';
       
       switch (platform) {
@@ -66,6 +66,6 @@ export const GET = withSecurity(async (request: NextRequest) => {
 /**
  * OPTIONS handler for CORS preflight
  */
-export const OPTIONS = withSecurity(async (req: NextRequest) => {
+export const OPTIONS = withSecurity(async () => {
   return new NextResponse(null, { status: 204 });
 });

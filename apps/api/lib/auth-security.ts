@@ -161,7 +161,7 @@ export class AuthSecurityManager {
     try {
       const project = await prisma().project.findUnique({
         where: { slug: projectId },
-        include: { tenant: true }
+        include: { Tenant: true }
       })
 
       if (project) {

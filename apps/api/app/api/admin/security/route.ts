@@ -34,22 +34,25 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      const response = {
+      const baseResponse = {
         ...auditResult,
         scanType: runScan ? 'full' : 'cached',
         scannedBy: context.userId,
         scannedAt: new Date().toISOString()
       }
 
-      if (includeDetails) {
-        response.details = {
-          vulnerabilities: auditResult.vulnerabilities,
-          recommendations: auditResult.recommendations,
-          compliance: auditResult.compliance
-        }
-      }
-
-      return NextResponse.json(response)
+      return NextResponse.json(
+        includeDetails
+          ? {
+              ...baseResponse,
+              details: {
+                vulnerabilities: auditResult.vulnerabilities,
+                recommendations: auditResult.recommendations,
+                compliance: auditResult.compliance
+              }
+            }
+          : baseResponse
+      )
     } catch (error) {
       console.error('Security audit failed:', error)
       return NextResponse.json({

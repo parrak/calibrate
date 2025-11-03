@@ -4,26 +4,30 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ShopifyConnector } from '@calibr/shopify-connector';
+import type { ShopifyProduct, ShopifyVariant } from '@calibr/shopify-connector';
 import { prisma } from '@calibr/db';
+import { initializeShopifyConnector, getProductsClient } from '@/lib/shopify-connector';
+
+const DEFAULT_LIMIT = 50;
 
 export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const projectId = searchParams.get('project_id');
+  const limitParam = Number.parseInt(searchParams.get('limit') ?? `${DEFAULT_LIMIT}`, 10);
+  const cursor = searchParams.get('cursor') ?? undefined;
+
+  const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 250) : DEFAULT_LIMIT;
+
+  if (!projectId) {
+    return NextResponse.json(
+      { error: 'project_id is required' },
+      { status: 400 }
+    );
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const projectId = searchParams.get('project_id');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const page = parseInt(searchParams.get('page') || '1');
-
-    if (!projectId) {
-      return NextResponse.json(
-        { error: 'project_id is required' },
-        { status: 400 }
-      );
-    }
-
-    // Find the Shopify integration
     const integration = await prisma().shopifyIntegration.findFirst({
-      where: { 
+      where: {
         projectId,
         isActive: true,
       },
@@ -36,41 +40,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Initialize Shopify connector
-    const connector = new ShopifyConnector({
-      apiKey: process.env.SHOPIFY_API_KEY!,
-      apiSecret: process.env.SHOPIFY_API_SECRET!,
-      scopes: process.env.SHOPIFY_SCOPES?.split(',') || ['read_products', 'write_products'],
-      webhookSecret: process.env.SHOPIFY_WEBHOOK_SECRET!,
-    });
+    const connector = await initializeShopifyConnector(integration);
+    const productsClient = getProductsClient(connector);
 
-    // Initialize with shop-specific credentials
-    await connector.initialize(integration.shopDomain, integration.accessToken);
-
-    // Test connection
-    const isConnected = await connector.testConnection();
-    if (!isConnected) {
-      return NextResponse.json(
-        { error: 'Failed to connect to Shopify' },
-        { status: 500 }
-      );
-    }
-
-    // Get products from Shopify
-    const productsResponse = await connector.products.listProducts({
+    const productsResponse = await productsClient.listProducts({
       limit,
-      page,
+      ...(cursor ? { since_id: cursor } : {}),
     });
 
-    // Process and normalize products
-    const normalizedProducts = productsResponse.products.map(product => ({
+    const normalizedProducts = productsResponse.products.map((product: ShopifyProduct) => ({
       id: product.id,
       title: product.title,
       handle: product.handle,
       vendor: product.vendor,
       productType: product.productType,
       tags: product.tags,
-      variants: product.variants.map(variant => ({
+      variants: product.variants.map((variant: ShopifyVariant) => ({
         id: variant.id,
         title: variant.title,
         sku: variant.sku,
@@ -82,7 +67,6 @@ export async function GET(request: NextRequest) {
       updatedAt: product.updatedAt,
     }));
 
-    // Update sync status
     await prisma().shopifyIntegration.update({
       where: { id: integration.id },
       data: {
@@ -101,30 +85,27 @@ export async function GET(request: NextRequest) {
         syncStatus: 'success',
       },
     });
-
   } catch (error) {
     console.error('Shopify products sync error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-    // Update sync status with error
-    if (projectId) {
-      try {
-        await prisma().shopifyIntegration.updateMany({
-          where: { 
-            projectId,
-            isActive: true,
-          },
-          data: {
-            syncStatus: 'error',
-            syncError: error.message || 'Unknown error',
-          },
-        });
-      } catch (dbError) {
-        console.error('Failed to update sync error status:', dbError);
-      }
+    try {
+      await prisma().shopifyIntegration.updateMany({
+        where: {
+          projectId,
+          isActive: true,
+        },
+        data: {
+          syncStatus: 'error',
+          syncError: errorMessage,
+        },
+      });
+    } catch (dbError) {
+      console.error('Failed to update sync error status:', dbError);
     }
 
     return NextResponse.json(
-      { error: 'Failed to sync products from Shopify' },
+      { error: 'Failed to sync products from Shopify', message: errorMessage },
       { status: 500 }
     );
   }
@@ -132,7 +113,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as { projectId?: string; productId?: string };
     const { projectId, productId } = body;
 
     if (!projectId || !productId) {
@@ -142,9 +123,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find the Shopify integration
     const integration = await prisma().shopifyIntegration.findFirst({
-      where: { 
+      where: {
         projectId,
         isActive: true,
       },
@@ -157,18 +137,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initialize Shopify connector
-    const connector = new ShopifyConnector({
-      apiKey: process.env.SHOPIFY_API_KEY!,
-      apiSecret: process.env.SHOPIFY_API_SECRET!,
-      scopes: process.env.SHOPIFY_SCOPES?.split(',') || ['read_products', 'write_products'],
-      webhookSecret: process.env.SHOPIFY_WEBHOOK_SECRET!,
-    });
+    const connector = await initializeShopifyConnector(integration);
+    const productsClient = getProductsClient(connector);
 
-    await connector.initialize(integration.shopDomain, integration.accessToken);
-
-    // Get specific product
-    const product = await connector.products.getProduct(productId);
+    const product = await productsClient.getProduct(productId);
 
     return NextResponse.json({
       product: {
@@ -178,7 +150,7 @@ export async function POST(request: NextRequest) {
         vendor: product.vendor,
         productType: product.productType,
         tags: product.tags,
-        variants: product.variants.map(variant => ({
+        variants: product.variants.map((variant: ShopifyVariant) => ({
           id: variant.id,
           title: variant.title,
           sku: variant.sku,
@@ -190,11 +162,12 @@ export async function POST(request: NextRequest) {
         updatedAt: product.updatedAt,
       },
     });
-
   } catch (error) {
     console.error('Shopify product fetch error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
     return NextResponse.json(
-      { error: 'Failed to fetch product from Shopify' },
+      { error: 'Failed to fetch product from Shopify', message: errorMessage },
       { status: 500 }
     );
   }

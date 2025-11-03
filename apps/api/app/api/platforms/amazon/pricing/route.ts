@@ -37,12 +37,13 @@ export const POST = withSecurity(async (request: NextRequest) => {
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
-    const integration = await prisma().platformIntegration.findUnique({
+    const integration = await prisma().amazonIntegration.findFirst({
       where: {
-        projectId_platform: { projectId: project.id, platform: 'amazon' },
+        projectId: project.id,
+        isActive: true,
       },
     })
-    if (!integration || integration.status !== 'CONNECTED') {
+    if (!integration) {
       return NextResponse.json(
         { error: 'Amazon integration is not connected for this project' },
         { status: 400 },
@@ -91,5 +92,5 @@ export const POST = withSecurity(async (request: NextRequest) => {
   }
 })
 
-export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
+export const OPTIONS = withSecurity(async () => new NextResponse(null, { status: 204 }))
 

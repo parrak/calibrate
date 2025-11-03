@@ -17,8 +17,8 @@ export const GET = withSecurity(async (req: NextRequest) => {
     const product = await prisma().product.findFirst({ 
       where: { code: productCode, projectId: project.id }, 
       include: { 
-        skus: { 
-          include: { prices: true } 
+        Sku: { 
+          include: { Price: true } 
         } 
       } 
     })
@@ -27,9 +27,9 @@ export const GET = withSecurity(async (req: NextRequest) => {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    const skus = product.skus.map((s: any) => ({ 
+    const skus = product.Sku.map((s: any) => ({ 
       code: s.code, 
-      prices: s.prices.map((p: any) => ({ 
+      prices: s.Price.map((p: any) => ({ 
         currency: p.currency, 
         amount: p.amount 
       })) 
@@ -48,8 +48,8 @@ export const GET = withSecurity(async (req: NextRequest) => {
   const products = await prisma().product.findMany({ 
     where: { projectId: project.id }, 
     include: { 
-      skus: { 
-        include: { prices: true } 
+      Sku: { 
+        include: { Price: true } 
       } 
     },
     orderBy: {
@@ -61,9 +61,9 @@ export const GET = withSecurity(async (req: NextRequest) => {
   console.log(`Catalog API: Found ${products.length} products for project ${projectSlug} (projectId: ${project.id})`)
 
   const productsWithSkus = products.map((product: any) => {
-    const skus = product.skus.map((s: any) => ({ 
+    const skus = product.Sku.map((s: any) => ({ 
       code: s.code, 
-      prices: s.prices.map((p: any) => ({ 
+      prices: s.Price.map((p: any) => ({ 
         currency: p.currency, 
         amount: p.amount 
       })) 

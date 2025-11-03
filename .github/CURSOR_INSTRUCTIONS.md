@@ -117,8 +117,8 @@
 **Next Action**: See [AGENT_A_NEXT_STEPS.md](.github/AGENT_A_NEXT_STEPS.md) for finalization steps:
 1. Final verification typecheck
 2. Push branch to origin/fix/typescript-routes
- 3. Coordinate with Agent B for merge readiness
- 4. Wait for Agent B confirmation before opening any PR (shared branch)
+3. Create PR Part 1/2
+4. Coordinate with Agent B for merge
 
 ---
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { createId } from '@paralleldrive/cuid2'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
 const bcryptjs = require('bcryptjs')
@@ -29,9 +30,11 @@ export async function POST() {
       where: { slug: 'demo' },
       update: {},
       create: {
+        id: createId(),
         slug: 'demo',
         name: 'Demo Project',
         tenantId: tenant.id,
+        updatedAt: new Date(),
       },
     })
     console.log('✓ Project created:', project.name)
@@ -46,6 +49,7 @@ export async function POST() {
         passwordHash: adminPasswordHash,
       },
       create: {
+        id: createId(),
         email: 'admin@calibr.lat',
         name: 'Admin User',
         role: 'OWNER',
@@ -65,6 +69,7 @@ export async function POST() {
         passwordHash: demoPasswordHash,
       },
       create: {
+        id: createId(),
         email: 'demo@calibr.lat',
         name: 'Demo User',
         role: 'ADMIN',
@@ -84,6 +89,7 @@ export async function POST() {
       },
       update: { role: 'OWNER' },
       create: {
+        id: createId(),
         userId: adminUser.id,
         projectId: project.id,
         role: 'OWNER',
@@ -99,6 +105,7 @@ export async function POST() {
       },
       update: { role: 'ADMIN' },
       create: {
+        id: createId(),
         userId: demoUser.id,
         projectId: project.id,
         role: 'ADMIN',
@@ -169,7 +176,10 @@ export async function POST() {
           },
         },
         update: {},
-        create: productInfo,
+        create: {
+          ...productInfo,
+          id: createId(),
+        },
       })
       console.log('✓ Product created:', product.name)
 
@@ -184,6 +194,7 @@ export async function POST() {
           },
           update: {},
           create: {
+            id: createId(),
             // Ensure required fields for Sku
             name: (skuInfo as any).name ?? skuInfo.code,
             code: skuInfo.code,
@@ -202,6 +213,7 @@ export async function POST() {
             },
             update: { amount: priceData.amount },
             create: {
+              id: createId(),
               ...priceData,
               skuId: sku.id,
             },
@@ -220,6 +232,7 @@ export async function POST() {
       },
       update: {},
       create: {
+        id: createId(),
         projectId: project.id,
         tenantId: tenant.id,
         autoApply: false,
@@ -227,6 +240,7 @@ export async function POST() {
           maxPctDelta: 0.15,
           dailyChangeBudgetPct: 0.25,
         },
+        updatedAt: new Date(),
       },
     })
     console.log('✓ Policy created')
@@ -234,29 +248,30 @@ export async function POST() {
     // Create some demo price changes
     const proMonthlyUsdSku = await prisma().sku.findFirst({
       where: { code: 'PRO-MONTHLY' },
-      include: { prices: true },
+      include: { Price: true },
     })
 
     if (proMonthlyUsdSku) {
-      const usdPrice = proMonthlyUsdSku.prices.find(p => p.currency === 'USD')
+      const usdPrice = proMonthlyUsdSku.Price.find(p => p.currency === 'USD')
       if (usdPrice) {
         await prisma().priceChange.create({
           data: {
+            id: createId(),
             tenantId: tenant.id,
             projectId: project.id,
             skuId: proMonthlyUsdSku.id,
             source: 'MANUAL',
-          fromAmount: usdPrice.amount,
-          toAmount: 5200,
-          currency: 'USD',
-          status: 'PENDING',
-          context: { skuCode: 'PRO-MONTHLY' },
-          policyResult: { ok: true, checks: [] },
-          connectorStatus: {
-            target: 'shopify',
-            state: 'SYNCED',
-            errorMessage: null,
-          },
+            fromAmount: usdPrice.amount,
+            toAmount: 5200,
+            currency: 'USD',
+            status: 'PENDING',
+            context: { skuCode: 'PRO-MONTHLY' },
+            policyResult: { ok: true, checks: [] },
+            connectorStatus: {
+              target: 'shopify',
+              state: 'SYNCED',
+              errorMessage: null,
+            },
         },
       })
         console.log('✓ Demo price change created')

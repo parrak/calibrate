@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     if (projectSlug) {
       project = await prisma().project.findUnique({
         where: { slug: projectSlug },
-        include: { tenant: true }
+        include: { Tenant: true }
       })
     }
     
@@ -51,8 +51,8 @@ export async function GET(req: NextRequest) {
       resourceStats,
       databasePerformance
     ] = await Promise.all([
-      getPriceChangeMetrics(project?.id, startDate),
-      getWebhookMetrics(project?.id, startDate),
+      getPriceChangeMetrics(project?.id ?? null, startDate),
+      getWebhookMetrics(project?.id ?? null, startDate),
       getSystemMetrics(),
       getDatabaseMetrics(),
       getErrorMetrics(startDate),
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
         id: project.id,
         name: project.name,
         slug: project.slug,
-        tenant: project.tenant.name
+        tenant: project.Tenant?.name ?? null
       } : null,
       metrics: {
         priceChanges,
@@ -167,14 +167,22 @@ async function getSystemMetrics() {
 async function getDatabaseMetrics() {
   try {
     const [connections, tableSizes] = await Promise.all([
-      prisma().$queryRaw`
+      prisma().$queryRaw<Array<{
+        total_connections: bigint | number | string | null;
+        active_connections: bigint | number | string | null;
+        idle_connections: bigint | number | string | null;
+      }>>`
         SELECT 
           count(*) as total_connections,
           count(*) FILTER (WHERE state = 'active') as active_connections,
           count(*) FILTER (WHERE state = 'idle') as idle_connections
         FROM pg_stat_activity
       `,
-      prisma().$queryRaw`
+      prisma().$queryRaw<Array<{
+        schemaname: string;
+        tablename: string;
+        size: string;
+      }>>`
         SELECT 
           schemaname,
           tablename,
@@ -187,16 +195,16 @@ async function getDatabaseMetrics() {
     ])
     
     // Convert BigInt values to numbers
-    const connectionData = connections[0] as any
+    const connectionData = connections[0]
     const processedConnections = {
-      total_connections: Number(connectionData?.total_connections) || 0,
-      active_connections: Number(connectionData?.active_connections) || 0,
-      idle_connections: Number(connectionData?.idle_connections) || 0
+      total_connections: Number(connectionData?.total_connections ?? 0),
+      active_connections: Number(connectionData?.active_connections ?? 0),
+      idle_connections: Number(connectionData?.idle_connections ?? 0)
     }
     
     return {
       connections: processedConnections,
-      tableSizes: tableSizes
+      tableSizes
     }
   } catch (error) {
     return {

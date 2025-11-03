@@ -71,6 +71,36 @@ describe('ShopifyPricing', () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid price');
     });
+
+    it('should handle multiple user errors and preserve all messages', async () => {
+      const mockResponse = {
+        data: {
+          productVariantUpdate: {
+            productVariant: null,
+            userErrors: [
+              { field: ['price'], message: 'Price must be positive' },
+              { field: ['compareAtPrice'], message: 'Compare at price must be greater than price' },
+              { message: 'Variant validation failed' },
+            ],
+          },
+        },
+      };
+
+      mockClient.post.mockResolvedValue(mockResponse);
+
+      const result = await pricing.updateVariantPrice({
+        variantId: '123',
+        price: '-10.00',
+        compareAtPrice: '5.00',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Price must be positive');
+      expect(result.error).toContain('Compare at price must be greater than price');
+      expect(result.error).toContain('Variant validation failed');
+      // Verify all errors are joined with semicolon separator
+      expect(result.error?.split('; ')).toHaveLength(3);
+    });
   });
 
   describe('updateVariantPricesBulk', () => {

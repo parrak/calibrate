@@ -73,10 +73,16 @@ export class ShopifyPricing {
       const { productVariantUpdate } = (response as any).data;
 
       if (productVariantUpdate.userErrors.length > 0) {
+        // Collect all error messages to preserve full validation feedback
+        const errorMessages = productVariantUpdate.userErrors.map((err: any) => {
+          const field = err.field && err.field.length > 0 ? err.field.join('.') : null;
+          return field ? `${field}: ${err.message}` : err.message;
+        });
+        
         return {
           success: false,
           variantId: update.variantId,
-          error: productVariantUpdate.userErrors[0].message || 'Unknown error',
+          error: errorMessages.join('; ') || 'Unknown error',
         };
       }
 

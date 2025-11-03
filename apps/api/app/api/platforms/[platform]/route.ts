@@ -11,6 +11,7 @@ import { ConnectorRegistry } from '@calibr/platform-connector';
 import '@/lib/platforms/register'
 import { prisma } from '@calibr/db';
 import { withSecurity } from '@/lib/security-headers';
+import { createId } from '@paralleldrive/cuid2';
 
 export const runtime = 'nodejs';
 
@@ -250,6 +251,7 @@ export const POST = withSecurity(async function POST(
       const integration = await db.shopifyIntegration.upsert({
         where: { shopDomain: credentials.shopDomain },
         create: {
+          id: createId(),
           projectId: project.id,
           shopDomain: credentials.shopDomain,
           accessToken: credentials.accessToken,
@@ -291,6 +293,7 @@ export const POST = withSecurity(async function POST(
           },
         },
         create: {
+          id: createId(),
           projectId: project.id,
           sellerId: credentials.sellerId,
           marketplaceId: credentials.marketplaceId || 'ATVPDKIKX0DER',

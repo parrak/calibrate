@@ -148,12 +148,9 @@ function verifyShopifyHMAC(
 ): boolean {
   try {
     // Get all parameters except 'hmac'
-    const params: Array<[string, string]> = [];
-    for (const [key, value] of searchParams.entries()) {
-      if (key !== 'hmac') {
-        params.push([key, value]);
-      }
-    }
+    const params: Array<[string, string]> = Array.from(searchParams.entries()).filter(
+      ([key]) => key !== 'hmac'
+    );
 
     // Sort parameters alphabetically by key (Shopify requirement)
     params.sort(([a], [b]) => a.localeCompare(b));
