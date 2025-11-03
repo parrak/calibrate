@@ -57,19 +57,19 @@ export function CodeTabs() {
         document.body.appendChild(textArea)
         textArea.focus()
         textArea.select()
-        
+
         try {
           document.execCommand('copy')
           setCopyStatus('success')
           setTimeout(() => setCopyStatus('idle'), 2000)
-        } catch (err) {
+        } catch {
           setCopyStatus('error')
           setTimeout(() => setCopyStatus('idle'), 2000)
         } finally {
           document.body.removeChild(textArea)
         }
       }
-    } catch (err) {
+    } catch {
       setCopyStatus('error')
       setTimeout(() => setCopyStatus('idle'), 2000)
     }
@@ -100,7 +100,7 @@ export function CodeTabs() {
         <code>{snippets[tab]}</code>
       </pre>
       <p className="text-xs text-mute mt-2">
-        Use your project slug in <code>X-Calibr-Project</code> (e.g., <code>demo</code>). 
+        Use your project slug in <code>X-Calibr-Project</code> (e.g., <code>demo</code>).
         <a href="https://docs.calibr.lat" className="text-brand hover:underline ml-1">View full API docs →</a>
       </p>
     </div>
