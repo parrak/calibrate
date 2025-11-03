@@ -15,15 +15,28 @@ export async function getAnalyticsOverview(
   const endDate = new Date()
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
 
-  // Get SKUs
+  // Get SKUs (through Product relation)
   const skus = await prisma().sku.findMany({
-    where: { projectId },
+    where: {
+      product: {
+        projectId,
+      },
+    },
     select: {
       id: true,
-      sku: true,
+      code: true,
       name: true,
-      priceAmount: true,
-      cost: true,
+      prices: {
+        where: {
+          status: 'ACTIVE',
+        },
+        select: {
+          amount: true,
+          currency: true,
+        },
+        take: 1,
+      },
+      attributes: true,
     },
   })
 
@@ -69,7 +82,9 @@ export async function getAnalyticsOverview(
   }
 
   // Calculate average price trend
-  const prices = skus.map((s) => s.priceAmount).filter((p): p is number => p !== null)
+  const prices = skus
+    .map((s) => s.prices[0]?.amount)
+    .filter((p): p is number => p !== undefined && p !== null)
   const avgPrice = prices.length > 0
     ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length)
     : 0
@@ -88,20 +103,29 @@ export async function getAnalyticsOverview(
   // Top performers by price (simplified - would need sales data for real analysis)
   const topPerformers: AnalyticsOverview['topPerformers'] = {
     bySales: skus
-      .filter((s) => s.priceAmount !== null)
+      .filter((s) => s.prices[0]?.amount !== undefined)
       .slice(0, 5)
       .map((s) => ({
-        sku: s.sku,
+        sku: s.code,
         name: s.name,
-        price: s.priceAmount!,
+        price: s.prices[0]!.amount,
       })),
     byMargin: skus
-      .filter((s) => s.priceAmount !== null && s.cost !== null)
+      .map((s) => {
+        const price = s.prices[0]?.amount
+        const cost = s.attributes && typeof s.attributes === 'object' && 'cost' in s.attributes
+          ? (s.attributes as any).cost
+          : null
+        return { sku: s.code, name: s.name, price, cost }
+      })
+      .filter((s): s is { sku: string; name: string; price: number; cost: number } => 
+        s.price !== undefined && s.price !== null && s.cost !== null && s.cost > 0
+      )
       .map((s) => ({
         sku: s.sku,
         name: s.name,
-        price: s.priceAmount!,
-        margin: s.cost ? ((s.priceAmount! - s.cost) / s.cost) * 100 : undefined,
+        price: s.price,
+        margin: ((s.price - s.cost) / s.cost) * 100,
       }))
       .sort((a, b) => (b.margin || 0) - (a.margin || 0))
       .slice(0, 5),
