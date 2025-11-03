@@ -1,10 +1,9 @@
-import { prisma } from '@calibr/db'
-
 export async function ensureIdempotent(
-  key: string, 
+  db: { event: { findFirst: Function; create: Function } },
+  key: string,
   scope: string
 ): Promise<boolean> {
-  const found = await prisma().event.findFirst({ 
+  const found = await db.findFirst({ 
     where: { 
       kind: 'IDEMPOTENCY', 
       payload: { 
@@ -16,7 +15,7 @@ export async function ensureIdempotent(
   
   if (found) return false
   
-  await prisma().event.create({ 
+  await db.create({ 
     data: { 
       kind: 'IDEMPOTENCY', 
       payload: { key, scope } 

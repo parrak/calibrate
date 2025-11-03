@@ -8,9 +8,7 @@
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@calibr/db": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@vitest/ui": "^4.0.4",
     "vitest": "^4.0.4"
