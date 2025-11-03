@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         include: {
           CompetitorProduct: {
             where: { isActive: true },
-            include: { prices: { orderBy: { createdAt: 'desc' }, take: 1 } }
+            include: { CompetitorPrice: { orderBy: { createdAt: 'desc' }, take: 1 } }
           }
         }
       })

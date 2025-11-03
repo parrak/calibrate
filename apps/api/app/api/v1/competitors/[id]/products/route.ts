@@ -26,7 +26,7 @@ export async function GET(
       },
       include: {
         Sku: true,
-        prices: {
+        CompetitorPrice: {
           orderBy: { createdAt: 'desc' },
           take: 1
         }

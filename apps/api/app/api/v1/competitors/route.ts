@@ -30,7 +30,7 @@ export const GET = withSecurity(async (request: NextRequest) => {
       include: {
         CompetitorProduct: {
           include: {
-            prices: {
+            CompetitorPrice: {
               orderBy: { createdAt: 'desc' },
               take: 1
             }

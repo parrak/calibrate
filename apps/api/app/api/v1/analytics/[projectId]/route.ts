@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { withSecurity } from '@/lib/security-headers'
-import { getAnalyticsOverview } from '@calibr/analytics'
+import { getAnalyticsOverview } from '../../../../../../../packages/analytics/index'
 
 export const runtime = 'nodejs'
 
