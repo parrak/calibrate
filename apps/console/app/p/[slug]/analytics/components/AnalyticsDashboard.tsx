@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { AnalyticsOverview } from '@calibr/analytics'
+import type { AnalyticsOverview, SkuPerformance } from '@calibr/analytics'
 
 interface Props {
   projectSlug: string
@@ -122,7 +122,7 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
             <div className="bg-white rounded-lg border p-6">
               <h2 className="text-xl font-semibold mb-4">Top Margins</h2>
               <div className="space-y-3">
-                {data.topPerformers.byMargin.slice(0, 5).map((item, idx) => (
+                {data.topPerformers.byMargin.slice(0, 5).map((item: SkuPerformance, idx: number) => (
                   <div
                     key={item.sku}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded"
@@ -151,7 +151,7 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
             <div className="bg-white rounded-lg border p-6">
               <h2 className="text-xl font-semibold mb-4">Recent Products</h2>
               <div className="space-y-3">
-                {data.topPerformers.bySales.slice(0, 5).map((item) => (
+                {data.topPerformers.bySales.slice(0, 5).map((item: SkuPerformance) => (
                   <div
                     key={item.sku}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded"

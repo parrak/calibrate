@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import clsx from 'clsx'
-import { Button, Drawer, DiffCard, EmptyState, JSONView, PolicyList, StatusPill, Table, useToast } from '@/lib/components'
+import { Button, Drawer, DiffCard, EmptyState, JSONView, PolicyList, StatusPill, useToast } from '@/lib/components'
+import { SimpleTable as Table } from '@/lib/components/SimpleTable'
 
 type ConnectorState = 'QUEUED' | 'SYNCING' | 'SYNCED' | 'ERROR'
 type PriceChangeStatus = 'PENDING' | 'APPROVED' | 'APPLIED' | 'REJECTED' | 'FAILED' | 'ROLLED_BACK'
@@ -380,7 +381,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         {initialized && items.length === 0 && !loading && !error && (
           <EmptyState
             title="No price changes yet"
-            description="When Calibr generates new price suggestions you'll see them here."
+            desc="When Calibr generates new price suggestions you'll see them here."
           />
         )}
 

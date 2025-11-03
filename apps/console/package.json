@@ -12,6 +12,8 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@calibr/ai-engine": "workspace:*",
+    "@calibr/analytics": "workspace:*",
     "@calibr/db": "workspace:*",
     "@calibr/ui": "workspace:*",
     "bcryptjs": "^2.4.3",
