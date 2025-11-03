@@ -33,7 +33,8 @@
     "agents:cli": "node agents/bin/agents-cli.mjs",
     "agents:list": "node agents/bin/agents-cli.mjs list-inbox",
     "encrypt:credentials": "tsx scripts/encrypt-credentials.ts",
-    "encrypt:credentials:dry": "tsx scripts/encrypt-credentials.ts --dry-run --verbose"
+    "encrypt:credentials:dry": "tsx scripts/encrypt-credentials.ts --dry-run --verbose",
+    "aggregate:analytics": "tsx scripts/aggregate-analytics.ts"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.2.0",

@@ -14,6 +14,7 @@
     "dev:api": "next dev -p 3000"
   },
   "dependencies": {
+    "openai": "^4.75.0",
     "@calibr/connectors": "workspace:*",
     "@calibr/platform-connector": "workspace:*",
     "@calibr/amazon-connector": "workspace:*",

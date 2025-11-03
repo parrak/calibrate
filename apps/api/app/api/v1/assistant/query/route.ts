@@ -8,8 +8,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withSecurity } from '@/lib/security-headers'
 import { prisma } from '@calibr/db'
+import { generateSQL } from '@/lib/openai'
 
 export const runtime = 'nodejs'
+
+const DATABASE_SCHEMA = `
+Table: Sku
+- id: String (PK)
+- projectId: String (FK)
+- sku: String
+- name: String
+- priceAmount: Int (in cents)
+- currency: String
+- cost: Int (in cents)
+
+Table: PriceChange
+- id: String (PK)
+- projectId: String (FK)
+- skuId: String (FK)
+- fromAmount: Int (cents)
+- toAmount: Int (cents)
+- status: Enum(PENDING, APPROVED, REJECTED)
+- createdAt: Timestamp
+- policyResult: JSON
+
+Table: Project
+- id: String (PK)
+- slug: String
+- name: String
+`
 
 /**
  * POST /api/v1/assistant/query
@@ -33,9 +60,18 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
 
     console.log('[Assistant] Query:', { projectId, query })
 
-    // Parse and route query to appropriate handler
-    const result = await handleQuery(projectId, query, context)
+    // Try AI-powered query generation first
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        const aiResult = await handleAIQuery(projectId, query, context)
+        return NextResponse.json(aiResult, { status: 200 })
+      } catch (error) {
+        console.warn('[Assistant] AI query failed, falling back to patterns:', error)
+      }
+    }
 
+    // Fallback to pattern matching
+    const result = await handleQuery(projectId, query, context)
     return NextResponse.json(result, { status: 200 })
   } catch (error) {
     console.error('[Assistant API] Error:', error)
@@ -50,8 +86,58 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
 })
 
 /**
- * Handle natural language queries
- * (Simplified version - would use LLM in production)
+ * Handle queries using AI (GPT-4)
+ */
+async function handleAIQuery(
+  projectId: string,
+  query: string,
+  context?: any
+): Promise<{
+  answer: string
+  data?: any
+  sql?: string
+  method: 'ai'
+}> {
+  // Generate SQL using GPT-4
+  const { sql, explanation } = await generateSQL(query, DATABASE_SCHEMA)
+
+  // Validate query is read-only
+  const sqlLower = sql.toLowerCase().trim()
+  if (
+    !sqlLower.startsWith('select') ||
+    sqlLower.includes('insert') ||
+    sqlLower.includes('update') ||
+    sqlLower.includes('delete') ||
+    sqlLower.includes('drop')
+  ) {
+    throw new Error('Only SELECT queries are allowed')
+  }
+
+  // Inject projectId constraint for security
+  const secureSQL = sql.includes('WHERE')
+    ? sql.replace(/WHERE/i, `WHERE "projectId" = '${projectId}' AND`)
+    : sql.replace(/FROM\s+"(\w+)"/i, `FROM "$1" WHERE "projectId" = '${projectId}'`)
+
+  try {
+    // Execute query
+    const data = await prisma().$queryRawUnsafe(secureSQL)
+
+    return {
+      answer: explanation,
+      data,
+      sql: secureSQL,
+      method: 'ai',
+    }
+  } catch (error) {
+    throw new Error(
+      `Query execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    )
+  }
+}
+
+/**
+ * Handle natural language queries using pattern matching
+ * (Fallback when OpenAI not available)
  */
 async function handleQuery(
   projectId: string,
