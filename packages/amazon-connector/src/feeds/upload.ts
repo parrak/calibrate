@@ -1,11 +1,13 @@
 export async function uploadFeedDocument(url: string, body: Buffer | Uint8Array, contentType = 'text/xml; charset=UTF-8') {
+  // Ensure BodyInit compatibility for TypeScript DOM typings
+  const bodyInit: any = body instanceof Uint8Array ? body : new Uint8Array(body as any)
   const res = await fetch(url, {
     method: 'PUT',
     headers: {
       'Content-Type': contentType,
       'Content-Length': String(body.byteLength),
     },
-    body,
+    body: bodyInit,
   })
   if (!res.ok) {
     const text = await safeText(res)
