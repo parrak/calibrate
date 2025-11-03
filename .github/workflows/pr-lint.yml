@@ -16,7 +16,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const core = require('@actions/core');
             const pr = context.payload.pull_request;
             if (!pr) {
               core.info('No pull request found in context — skipping.');
