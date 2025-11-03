@@ -434,6 +434,10 @@ importers:
         version: 1.6.1(@types/node@20.19.22)(@vitest/ui@4.0.4)(jsdom@22.1.0)
 
   packages/security:
+    dependencies:
+      '@calibr/db':
+        specifier: workspace:*
+        version: link:../db
     devDependencies:
       '@vitest/ui':
         specifier: ^4.0.4
