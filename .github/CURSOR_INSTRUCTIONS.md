@@ -38,9 +38,11 @@
 2. Added `@prisma/client` to console dependencies (commit `b31915d`) - still failed
 3. Removed redundant `pnpm --filter @calibr/db install` (commit `f96e753`) - still failed
 4. Use direct cd + shamefully-hoist (commit `493b15f`) - still failed
-5. Use `pnpm exec prisma generate` for workspace context (commit `1fe9007`) - testing now
+5. Use `pnpm exec prisma generate` for workspace context (commit `1fe9007`) - still failed
+6. Add local pnpm install in db before generate (commit `7bc2d52`) - still failed
+7. Remove redundant install from buildCommand (commit `81e8012`) - testing now
 
-**Current Theory**: Prisma's generate command tries to install @prisma/client internally but doesn't understand pnpm workspaces. Using `pnpm exec` should run it in proper workspace context.
+**Root Cause Found**: buildCommand was running `pnpm install` AGAIN after installCommand already ran it, removing 403 packages and breaking workspace. Fixed by removing duplicate install from buildCommand.
 
 ---
 
@@ -281,8 +283,10 @@ All agents working on same branch (`chore/update-docs-and-scripts`):
 - [x] Attempt 3: add @prisma/client to console (b31915d) - still failed
 - [x] Attempt 4: remove redundant db install (f96e753) - still failed
 - [x] Attempt 5: direct cd + shamefully-hoist (493b15f) - still failed
-- [x] Attempt 6: use pnpm exec for workspace context (1fe9007) - testing now
-- [x] Monitor deployment - waiting for build with latest fix
+- [x] Attempt 6: use pnpm exec for workspace context (1fe9007) - still failed
+- [x] Attempt 7: add local pnpm install in db (7bc2d52) - still failed
+- [x] Attempt 8: remove duplicate install from buildCommand (81e8012) - testing now
+- [x] Found root cause: buildCommand was undoing installCommand's work
 - [ ] Wait for Codex to finish
 - [ ] Fix remaining 6 small files (14 errors total)
 - [ ] Monitor PR checks until all pass
@@ -299,7 +303,7 @@ All agents working on same branch (`chore/update-docs-and-scripts`):
 
 ✅ **Current Session - Completed**:
 - Agent A: Fixed ShopifyConnector.ts (8 errors)
-- Agent B: Debugging Vercel Prisma deployment (6 attempts, latest: pnpm exec for workspace context)
+- Agent B: Debugging Vercel Prisma deployment (8 attempts, found root cause: duplicate install)
 
 🔄 **Current Session - In Progress**:
 - Codex: Fixing ShopifyPricingOperations.ts + workflows
