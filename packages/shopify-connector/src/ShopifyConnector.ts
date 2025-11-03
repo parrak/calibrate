@@ -206,7 +206,8 @@ export class ShopifyConnector implements PlatformConnector {
     }
   }
 
-  // // eslint-disable-next-line @typescript-eslint/no-explicit-anyAdditional Shopify-specific methods
+  // Additional Shopify-specific methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getConnectionStatus(): Promise<{
     connected: boolean;
     rateLimit: any;

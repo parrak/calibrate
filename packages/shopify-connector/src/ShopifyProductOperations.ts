@@ -93,7 +93,8 @@ export class ShopifyProductOperations implements ProductOperations {
         throw new Error(`Invalid response from Shopify API: products is not an array. Got: ${typeof response.products}`);
       }
 
-      // // eslint-disable-next-line @typescript-eslint/no-explicit-anyExtract the last product ID for cursor-based pagination
+      // Extract the last product ID for cursor-based pagination
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const lastProductId = response.products.length > 0
         ? response.products[response.products.length - 1]?.id?.toString()
         : null;
@@ -105,7 +106,8 @@ export class ShopifyProductOperations implements ProductOperations {
           limit: filter?.limit || 50,
           hasNext: response.page_info?.has_next_page || false,
           hasPrev: response.page_info?.has_previous_page || false,
-          // // eslint-disable-next-line @typescript-eslint/no-explicit-anyUse nextCursor for cursor-based pagination (Shopify uses since_id)
+          // Use nextCursor for cursor-based pagination (Shopify uses since_id)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           nextCursor: lastProductId || undefined,
         },
       };
@@ -245,7 +247,8 @@ export class ShopifyProductOperations implements ProductOperations {
       // Search for products with the SKU using searchProducts
       const response = await this.connector.underlyingProducts!.searchProducts(sku);
 
-      // // eslint-disable-next-line @typescript-eslint/no-explicit-anyFind the product with matching SKU in variants
+      // Find the product with matching SKU in variants
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const product of response.products) {
         const variant = product.variants.find((v: any) => v.sku === sku);
         if (variant) {
@@ -321,7 +324,8 @@ export class ShopifyProductOperations implements ProductOperations {
       if (response.pagination.nextCursor) {
         sinceId = response.pagination.nextCursor;
       } else if (response.data.length > 0) {
-        // // eslint-disable-next-line @typescript-eslint/no-explicit-anyFallback: extract ID from last product if nextCursor not in pagination
+        // Fallback: extract ID from last product if nextCursor not in pagination
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const lastProduct = response.data[response.data.length - 1];
         sinceId = lastProduct.externalId;
       } else {

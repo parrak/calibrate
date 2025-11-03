@@ -76,8 +76,7 @@ export class ShopifyPricing {
         return {
           success: false,
           variantId: update.variantId,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          // eslint-disable-next-line @typescript-eslint/no-explicit-anyerror: productVariantUpdate.userErrors.map((e: any) => e.message).join(', '),
+          error: productVariantUpdate.userErrors[0].message || 'Unknown error',
         };
       }
 
@@ -178,8 +177,6 @@ export class ShopifyPricing {
 
       const pricingMap = new Map<string, ShopifyVariant>();
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (response as any).data.nodes.forEach((node: any) => {
         if (node) {
