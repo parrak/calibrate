@@ -69,7 +69,7 @@ jobs:
               const body = pr.body || '';
               const changelogMention = /CHANGELOG.md|Unreleased/i.test(body);
               if (!hasMdUpdate && !changelogMention) {
-                const comment2 = `:information_source: **Docs update required**\n\nThis PR changes source code files but does not include any Markdown documentation updates or a changelog entry.\n\nPlease add at least one of the following to this branch or PR body:\n- Update ` + '`CHANGELOG.md`' + ` under Unreleased with a short summary\n- Update the relevant package or app README/DEPLOYMENT.md with the change\n- Add a small `{branch}-verification.md` under `.github/` describing steps you ran\n\nKeeping docs up to date ensures future agents and reviewers understand the context of changes.`;
+                const comment2 = ':information_source: **Docs update required**\\n\\nThis PR changes source code files but does not include any Markdown documentation updates or a changelog entry.\\n\\nPlease add at least one of the following to this branch or PR body:\\n- Update CHANGELOG.md under Unreleased with a short summary\\n- Update the relevant package or app README/DEPLOYMENT.md with the change\\n- Add a small verification markdown file under .github/ describing steps you ran\\n\\nKeeping docs up to date ensures future agents and reviewers understand the context of changes.';
                 await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, body: comment2 });
                 core.setFailed('PR missing documentation (Markdown) updates for code changes.');
               } else {
