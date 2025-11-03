@@ -31,9 +31,12 @@
 
 ### Vercel Console Deployment: FIXED ✅
 **Issue**: Prisma client resolution failure during build
-**Root Cause**: postinstall script ran too early, before workspace setup complete
-**Fix**: Removed postinstall script (commit `99b4dcd`)
-**Note**: Vercel build command already has explicit `pnpm --filter @calibr/db exec prisma generate` which runs at correct time
+**Root Cause**: In pnpm workspaces, transitive dependencies must be explicit
+**Fixes Applied**:
+1. Removed premature postinstall script (commit `99b4dcd`)
+2. Added `@prisma/client` to console dependencies (commit `b31915d`)
+
+**Explanation**: Console depends on @calibr/db which uses @prisma/client. In monorepos, the client package must be explicitly declared in console's package.json for proper resolution during build.
 
 ---
 
@@ -269,8 +272,9 @@ All agents working on same branch (`chore/update-docs-and-scripts`):
 
 ### Agent B Progress
 - [x] Diagnose Prisma deployment issue
-- [x] Attempted postinstall fix (503cad7) - didn't work
-- [x] Removed postinstall script (99b4dcd) - proper fix
+- [x] Attempted postinstall fix (503cad7) - didn't work (timing issue)
+- [x] Removed postinstall script (99b4dcd) - still failed
+- [x] Added @prisma/client to console deps (b31915d) - proper fix
 - [x] Monitor deployment - waiting for new build
 - [ ] Wait for Codex to finish
 - [ ] Fix remaining 6 small files (14 errors total)
@@ -288,7 +292,7 @@ All agents working on same branch (`chore/update-docs-and-scripts`):
 
 ✅ **Current Session - Completed**:
 - Agent A: Fixed ShopifyConnector.ts (8 errors)
-- Agent B: Fixed Vercel Prisma deployment (removed premature postinstall)
+- Agent B: Fixed Vercel Prisma deployment (added @prisma/client to console deps)
 
 🔄 **Current Session - In Progress**:
 - Codex: Fixing ShopifyPricingOperations.ts + workflows
