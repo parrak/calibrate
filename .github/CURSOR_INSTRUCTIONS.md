@@ -6,6 +6,13 @@
 
 ---
 
+## Agent B Progress Log
+
+- 2025-01-13 10:42 — Created `fix/typescript-packages` branch from latest `chore/update-docs-and-scripts`; baseline `pnpm --filter @calibr/api typecheck` reported 28 errors within `packages/**` and `apps/api/lib/**`.
+- 2025-01-13 11:12 — Started amazon-connector refactor; product list/get/sync return normalized products, pricing fixes in progress.
+
+---
+
 ## 🅰️ AGENT A — API Routes Team
 
 **Branch**: `fix/typescript-routes` (forked from `chore/update-docs-and-scripts`)
@@ -100,6 +107,18 @@
 ✅ **Task 6 (DONE)**: Fix remaining route errors (analytics import path, `JsonValue` casts in price-changes, `LogEntry` property usage via `metadata`)
 
 ✅ **Task 7 (DONE)**: Typecheck for routes is clean; remaining errors are outside Agent A scope (tests, packages)
+
+---
+
+## 🎉 AGENT A: ALL TASKS COMPLETE!
+
+**Status**: ✅ All 65+ route errors fixed. Ready to finalize.
+
+**Next Action**: See [AGENT_A_NEXT_STEPS.md](.github/AGENT_A_NEXT_STEPS.md) for finalization steps:
+1. Final verification typecheck
+2. Push branch to origin/fix/typescript-routes
+ 3. Coordinate with Agent B for merge readiness
+ 4. Wait for Agent B confirmation before opening any PR (shared branch)
 
 ---
 
