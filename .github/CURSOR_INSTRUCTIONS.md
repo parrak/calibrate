@@ -29,14 +29,16 @@
 - `deployment-validation.yml:21`: Invalid pnpm action input `version-file`
 - `lockfile-check.yml:17`: Invalid pnpm action input `version-file`
 
-### Vercel Console Deployment: FIXED ✅
+### Vercel Console Deployment: IN PROGRESS 🔄
 **Issue**: Prisma client resolution failure during build
-**Root Cause**: In pnpm workspaces, transitive dependencies must be explicit
-**Fixes Applied**:
-1. Removed premature postinstall script (commit `99b4dcd`)
-2. Added `@prisma/client` to console dependencies (commit `b31915d`)
+**Root Cause**: Redundant isolated install breaking workspace dependency resolution
 
-**Explanation**: Console depends on @calibr/db which uses @prisma/client. In monorepos, the client package must be explicitly declared in console's package.json for proper resolution during build.
+**Fixes Applied**:
+1. Removed premature postinstall script (commit `99b4dcd`) - timing issue
+2. Added `@prisma/client` to console dependencies (commit `b31915d`) - still failed
+3. Removed redundant `pnpm --filter @calibr/db install` from build command (commit `f96e753`)
+
+**Explanation**: The build command was running `pnpm --filter @calibr/db install` after the global `pnpm install`, which re-installed the db package in isolation, breaking workspace dependency resolution. Prisma couldn't find @prisma/client because the isolated install broke the workspace structure.
 
 ---
 
@@ -272,10 +274,11 @@ All agents working on same branch (`chore/update-docs-and-scripts`):
 
 ### Agent B Progress
 - [x] Diagnose Prisma deployment issue
-- [x] Attempted postinstall fix (503cad7) - didn't work (timing issue)
-- [x] Removed postinstall script (99b4dcd) - still failed
-- [x] Added @prisma/client to console deps (b31915d) - proper fix
-- [x] Monitor deployment - waiting for new build
+- [x] Attempt 1: postinstall script (503cad7) - timing issue
+- [x] Attempt 2: remove postinstall (99b4dcd) - still failed
+- [x] Attempt 3: add @prisma/client to console (b31915d) - still failed
+- [x] Attempt 4: remove redundant db install (f96e753) - testing now
+- [x] Monitor deployment - waiting for build with latest fix
 - [ ] Wait for Codex to finish
 - [ ] Fix remaining 6 small files (14 errors total)
 - [ ] Monitor PR checks until all pass
@@ -292,7 +295,7 @@ All agents working on same branch (`chore/update-docs-and-scripts`):
 
 ✅ **Current Session - Completed**:
 - Agent A: Fixed ShopifyConnector.ts (8 errors)
-- Agent B: Fixed Vercel Prisma deployment (added @prisma/client to console deps)
+- Agent B: Debugging Vercel Prisma deployment (4 attempts, latest: removed redundant install)
 
 🔄 **Current Session - In Progress**:
 - Codex: Fixing ShopifyPricingOperations.ts + workflows
