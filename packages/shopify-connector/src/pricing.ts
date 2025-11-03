@@ -104,7 +104,7 @@ export class ShopifyPricing {
     // Process updates in batches
     for (let i = 0; i < bulkUpdate.updates.length; i += batchSize) {
       const batch = bulkUpdate.updates.slice(i, i + batchSize);
-      
+
       // Process batch concurrently
       const batchPromises = batch.map(update => this.updateVariantPrice(update));
       const batchResults = await Promise.allSettled(batchPromises);
@@ -174,7 +174,7 @@ export class ShopifyPricing {
       });
 
       const pricingMap = new Map<string, ShopifyVariant>();
-      
+
       (response as any).data.nodes.forEach((node: any) => {
         if (node) {
           const variantId = node.id.split('/').pop();
@@ -210,9 +210,9 @@ export class ShopifyPricing {
   calculatePriceChangePercentage(oldPrice: string, newPrice: string): number {
     const old = parseFloat(oldPrice);
     const newPriceNum = parseFloat(newPrice);
-    
+
     if (old === 0) return 0;
-    
+
     return ((newPriceNum - old) / old) * 100;
   }
 
@@ -268,38 +268,38 @@ export class ShopifyPricing {
   ): Promise<BulkPriceUpdateResult> {
     // Get current pricing
     const currentPricing = await this.getVariantPricing(variantIds);
-    
+
     // Apply rules to create updates
     const updates: ShopifyPriceUpdate[] = [];
-    
+
     currentPricing.forEach((variant, variantId) => {
       let newPrice = parseFloat(variant.price);
-      
+
       // Apply markup
       if (rules.markup) {
         newPrice = newPrice * (1 + rules.markup / 100);
       }
-      
+
       // Apply discount
       if (rules.discount) {
         newPrice = newPrice * (1 - rules.discount / 100);
       }
-      
+
       // Apply min/max constraints
       if (rules.minPrice) {
         newPrice = Math.max(newPrice, parseFloat(rules.minPrice));
       }
-      
+
       if (rules.maxPrice) {
         newPrice = Math.min(newPrice, parseFloat(rules.maxPrice));
       }
-      
+
       updates.push({
         variantId,
         price: this.formatPrice(newPrice),
       });
     });
-    
+
     return await this.updateVariantPricesBulk({ updates });
   }
 }

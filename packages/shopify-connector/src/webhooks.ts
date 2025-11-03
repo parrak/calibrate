@@ -84,7 +84,7 @@ export class ShopifyWebhooks {
       const hmac = crypto.createHmac('sha256', this.webhookSecret);
       hmac.update(payload, 'utf8');
       const hash = hmac.digest('base64');
-      
+
       const isValid = crypto.timingSafeEqual(
         Buffer.from(hash, 'base64'),
         Buffer.from(signature, 'base64')
@@ -158,7 +158,7 @@ export class ShopifyWebhooks {
    */
   async cleanupWebhooks(keepTopics: string[]): Promise<void> {
     const webhooks = await this.listWebhooks();
-    
+
     for (const webhook of webhooks) {
       if (!keepTopics.includes(webhook.topic)) {
         try {

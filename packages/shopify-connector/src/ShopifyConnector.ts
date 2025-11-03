@@ -61,7 +61,7 @@ export class ShopifyConnector implements PlatformConnector {
   private pricingOperations: any = null;
   private webhooks: ShopifyWebhooks | null = null;
   private credentials: ShopifyCredentials | null = null;
-  
+
   // Expose underlying Shopify classes for operations
   public underlyingProducts: ShopifyProducts | null = null;
   private underlyingPricing: ShopifyPricing | null = null;
@@ -116,7 +116,7 @@ export class ShopifyConnector implements PlatformConnector {
 
   async initialize(credentials: PlatformCredentials): Promise<void> {
     this.credentials = credentials as ShopifyCredentials;
-    
+
     // Validate credentials
     if (!this.credentials.shopDomain || !this.credentials.accessToken) {
       throw new PlatformError(
@@ -146,7 +146,7 @@ export class ShopifyConnector implements PlatformConnector {
     this.productOperations = new ShopifyProductOperations(this);
     this.pricingOperations = new ShopifyPricingOperations(this);
     this.webhooks = new ShopifyWebhooks(this.client, this.config.webhookSecret);
-    
+
     // Initialize underlying Shopify classes
     this.underlyingProducts = new ShopifyProducts(this.client);
     this.underlyingPricing = new ShopifyPricing(this.client);
@@ -200,7 +200,7 @@ export class ShopifyConnector implements PlatformConnector {
   async testConnection(): Promise<boolean> {
     try {
       if (!this.client) return false;
-      
+
       await this.client.get('/shop.json');
       return true;
     } catch {
@@ -217,7 +217,7 @@ export class ShopifyConnector implements PlatformConnector {
     try {
       const connected = await this.testConnection();
       const rateLimit = this.client?.getRateLimit() || null;
-      
+
       let shopInfo;
       if (connected && this.client) {
         try {

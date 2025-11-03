@@ -125,7 +125,7 @@ export class ShopifyProducts {
     for (const update of updates) {
       try {
         await this.client.waitIfNeeded();
-        
+
         const variantData = {
           variant: {
             id: update.variantId,
@@ -192,7 +192,7 @@ export class ShopifyProducts {
    */
   async getRecentlyUpdatedProducts(hours: number = 24, options: Omit<ProductListOptions, 'updated_at_min'> = {}): Promise<ProductListResponse> {
     const updatedAtMin = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
-    
+
     return await this.listProducts({
       ...options,
       updated_at_min: updatedAtMin,

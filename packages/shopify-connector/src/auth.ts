@@ -36,7 +36,7 @@ export class ShopifyAuthManager {
     redirectUri: string
   ): Promise<ShopifyOAuthResponse> {
     const tokenUrl = `https://${shopDomain}/admin/oauth/access_token`;
-    
+
     const response = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
@@ -69,7 +69,7 @@ export class ShopifyAuthManager {
     const hmac = crypto.createHmac('sha256', secret);
     hmac.update(payload, 'utf8');
     const hash = hmac.digest('base64');
-    
+
     return crypto.timingSafeEqual(
       Buffer.from(hash, 'base64'),
       Buffer.from(signature, 'base64')
@@ -98,11 +98,11 @@ export class ShopifyAuthManager {
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname;
-      
+
       if (hostname.endsWith('.myshopify.com')) {
         return hostname;
       }
-      
+
       return null;
     } catch {
       return null;
@@ -120,7 +120,7 @@ export class ShopifyAuthManager {
       shopDomain,
       accessToken: response.access_token,
       scope: response.scope,
-      expiresAt: response.expires_in 
+      expiresAt: response.expires_in
         ? new Date(Date.now() + response.expires_in * 1000)
         : undefined,
     };

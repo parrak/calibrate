@@ -60,13 +60,13 @@ export class ShopifyProductOperations implements ProductOperations {
     if (filter?.vendor) requestParams.vendor = filter.vendor;
     if (filter?.productType) requestParams.product_type = filter.productType;
     if (filter?.search) requestParams.title = filter.search;
-    
+
     // Format date parameter if provided
     if (filter?.updatedAfter) {
-      const date = filter.updatedAfter instanceof Date 
-        ? filter.updatedAfter 
+      const date = filter.updatedAfter instanceof Date
+        ? filter.updatedAfter
         : new Date(filter.updatedAfter);
-      
+
       // Validate date
       if (isNaN(date.getTime())) {
         throw new PlatformError(
@@ -75,7 +75,7 @@ export class ShopifyProductOperations implements ProductOperations {
           'shopify'
         );
       }
-      
+
       // Shopify expects ISO 8601 format, remove milliseconds if present
       const isoString = date.toISOString();
       requestParams.updated_at_min = isoString;
@@ -94,7 +94,7 @@ export class ShopifyProductOperations implements ProductOperations {
       }
 
       // Extract the last product ID for cursor-based pagination
-      const lastProductId = response.products.length > 0 
+      const lastProductId = response.products.length > 0
         ? response.products[response.products.length - 1]?.id?.toString()
         : null;
 
@@ -114,11 +114,11 @@ export class ShopifyProductOperations implements ProductOperations {
       let errorMessage = 'Unknown error';
       let shopifyErrorDetails: any = null;
       let statusCode: number | undefined;
-      
+
       if (error instanceof Error) {
         errorMessage = error.message;
         statusCode = (error as any)?.statusCode;
-        
+
         // Check if the error has response data from axios
         if ((error as any).response?.data) {
           shopifyErrorDetails = (error as any).response.data;
@@ -131,7 +131,7 @@ export class ShopifyProductOperations implements ProductOperations {
         shopifyErrorDetails = error.response.data;
         const data = error.response.data;
         statusCode = error.response.status;
-        
+
         if (data.errors && typeof data.errors === 'object') {
           const errorMessages: string[] = [];
           for (const key in data.errors) {
@@ -141,8 +141,8 @@ export class ShopifyProductOperations implements ProductOperations {
               errorMessages.push(data.errors[key]);
             }
           }
-          errorMessage = errorMessages.length > 0 
-            ? errorMessages.join(', ') 
+          errorMessage = errorMessages.length > 0
+            ? errorMessages.join(', ')
             : (data.message || 'Shopify API error');
         } else if (data.message) {
           errorMessage = data.message;
@@ -159,8 +159,8 @@ export class ShopifyProductOperations implements ProductOperations {
               errorMessages.push(errors[key]);
             }
           }
-          errorMessage = errorMessages.length > 0 
-            ? errorMessages.join(', ') 
+          errorMessage = errorMessages.length > 0
+            ? errorMessages.join(', ')
             : 'Shopify API error';
         }
         shopifyErrorDetails = error.errors;
@@ -172,7 +172,7 @@ export class ShopifyProductOperations implements ProductOperations {
 
       // Get final status code
       const finalStatusCode = statusCode || (error as any)?.response?.status || (error as any)?.statusCode;
-      
+
       // Log detailed error information for 400 and 401 errors
       if (finalStatusCode === 400 || finalStatusCode === 401 || errorMessage.includes('400') || errorMessage.includes('401')) {
         console.error(`Shopify API ${finalStatusCode} error details:`, {
@@ -189,14 +189,14 @@ export class ShopifyProductOperations implements ProductOperations {
       }
 
       // Create a proper Error object if needed
-      const originalError = error instanceof Error 
-        ? error 
+      const originalError = error instanceof Error
+        ? error
         : new Error(errorMessage);
 
       // Enhance error message with Shopify error details if available
       if (shopifyErrorDetails && finalStatusCode === 400) {
-        const detailsStr = typeof shopifyErrorDetails === 'object' 
-          ? JSON.stringify(shopifyErrorDetails) 
+        const detailsStr = typeof shopifyErrorDetails === 'object'
+          ? JSON.stringify(shopifyErrorDetails)
           : String(shopifyErrorDetails);
         errorMessage = `${errorMessage}${detailsStr ? ` | Shopify details: ${detailsStr}` : ''}`;
       }
@@ -244,7 +244,7 @@ export class ShopifyProductOperations implements ProductOperations {
     try {
       // Search for products with the SKU using searchProducts
       const response = await this.connector.underlyingProducts!.searchProducts(sku);
-      
+
       // Find the product with matching SKU in variants
       for (const product of response.products) {
         const variant = product.variants.find((v: any) => v.sku === sku);
@@ -301,7 +301,7 @@ export class ShopifyProductOperations implements ProductOperations {
         ...filter,
         limit: filter?.limit || 50,
       } as any;
-      
+
       if (sinceId) {
         listFilter.sinceId = sinceId;
       }

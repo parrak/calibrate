@@ -17,10 +17,10 @@ export class ShopifyClient {
     this.config = config;
     this.shopDomain = config.shopDomain;
     this.accessToken = config.accessToken;
-    
+
     // Use shopDomain if provided, otherwise fall back to apiKey (for backwards compatibility)
     const domain = this.shopDomain || `${config.apiKey}.myshopify.com`;
-    
+
     this.client = axios.create({
       baseURL: `https://${domain}/admin/api/${config.apiVersion || '2024-10'}`,
       timeout: 30000,
@@ -97,7 +97,7 @@ export class ShopifyClient {
       const enhancedError = error;
       const data = (error as any).response.data;
       const statusCode = (error as any).response.status;
-      
+
       // Enhance error message with Shopify error details
       if (data.errors && typeof data.errors === 'object') {
         const errorMessages: string[] = [];
@@ -112,10 +112,10 @@ export class ShopifyClient {
           enhancedError.message = `${error.message} | ${errorMessages.join(', ')}`;
         }
       }
-      
+
       (enhancedError as any).statusCode = statusCode;
       (enhancedError as any).responseData = data;
-      
+
       // Log detailed error for 400 errors
       if (statusCode === 400) {
         console.error('Shopify API 400 error:', {
@@ -126,10 +126,10 @@ export class ShopifyClient {
           responseData: data,
         });
       }
-      
+
       return enhancedError;
     }
-    
+
     // If it's already a proper Error instance, return it
     if (error instanceof Error) {
       return error;
@@ -139,11 +139,11 @@ export class ShopifyClient {
     let errorMessage = 'Unknown error';
     let statusCode: number | undefined;
     let responseData: any = null;
-    
+
     if (error.response?.data) {
       statusCode = error.response.status;
       responseData = error.response.data;
-      
+
       if (responseData.errors && typeof responseData.errors === 'object') {
         // Format Shopify API errors
         const errorMessages: string[] = [];
@@ -154,8 +154,8 @@ export class ShopifyClient {
             errorMessages.push(responseData.errors[key]);
           }
         }
-        errorMessage = errorMessages.length > 0 
-          ? errorMessages.join(', ') 
+        errorMessage = errorMessages.length > 0
+          ? errorMessages.join(', ')
           : (responseData.message || 'Shopify API error');
       } else if (responseData.message) {
         errorMessage = responseData.message;
@@ -197,7 +197,7 @@ export class ShopifyClient {
         params: error.config.params,
       };
     }
-    
+
     return err;
   }
 
