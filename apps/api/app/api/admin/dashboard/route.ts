@@ -22,7 +22,7 @@ export const GET = withSecurity(withAdminAuth(async (req: NextRequest, context) 
     if (projectSlug) {
       project = await prisma().project.findUnique({
         where: { slug: projectSlug },
-        include: { tenant: true }
+        include: { Tenant: true }
       })
     }
     
@@ -34,11 +34,11 @@ export const GET = withSecurity(withAdminAuth(async (req: NextRequest, context) 
       recentActivity,
       topProducts
     ] = await Promise.all([
-      getOverviewMetrics(project?.id, startDate),
-      getPriceChangeMetrics(project?.id, startDate),
+      getOverviewMetrics(project?.id ?? null, startDate),
+      getPriceChangeMetrics(project?.id ?? null, startDate),
       getSystemHealthMetrics(),
-      getRecentActivity(project?.id, startDate),
-      getTopProducts(project?.id, startDate)
+      getRecentActivity(project?.id ?? null, startDate),
+      getTopProducts(project?.id ?? null, startDate)
     ])
     
     const responseTime = Date.now() - startTime
@@ -51,7 +51,7 @@ export const GET = withSecurity(withAdminAuth(async (req: NextRequest, context) 
         id: project.id,
         name: project.name,
         slug: project.slug,
-        tenant: project.tenant.name
+        tenant: project.Tenant?.name ?? null
       } : null,
       dashboard: {
         overview,
@@ -173,29 +173,36 @@ async function getRecentActivity(projectId: string | null, startDate: Date) {
   const activities = await prisma().priceChange.findMany({
     where,
     orderBy: { createdAt: 'desc' },
-    take: 10,
+    take: 10
+  })
+  
+  // Fetch SKUs separately since PriceChange doesn't have a Sku relation
+  const skuIds = [...new Set(activities.map(a => a.skuId))]
+  const skus = await prisma().sku.findMany({
+    where: { id: { in: skuIds } },
     include: {
-      sku: {
-        include: {
-          product: true
-        }
-      }
+      Product: true
     }
   })
   
-  return activities.map(activity => ({
-    id: activity.id,
-    type: 'price_change',
-    status: activity.status,
-    source: activity.source,
-    skuCode: activity.sku.code,
-    productName: activity.sku.product.name,
-    fromAmount: activity.fromAmount,
-    toAmount: activity.toAmount,
-    currency: activity.currency,
-    createdAt: activity.createdAt,
-    context: activity.context
-  }))
+  const skuMap = new Map(skus.map(s => [s.id, s]))
+  
+  return activities.map(activity => {
+    const sku = skuMap.get(activity.skuId)
+    return {
+      id: activity.id,
+      type: 'price_change',
+      status: activity.status,
+      source: activity.source,
+      skuCode: sku?.code ?? 'unknown',
+      productName: sku?.Product?.name ?? 'unknown',
+      fromAmount: activity.fromAmount,
+      toAmount: activity.toAmount,
+      currency: activity.currency,
+      createdAt: activity.createdAt,
+      context: activity.context
+    }
+  })
 }
 
 async function getTopProducts(projectId: string | null, startDate: Date) {

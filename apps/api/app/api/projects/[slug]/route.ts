@@ -52,16 +52,42 @@ export async function GET(
       )
     }
 
-    // Get integrations
-    const integrations = await db.platformIntegration.findMany({
-      where: { projectId: project.id },
-      select: {
-        id: true,
-        platform: true,
-        status: true,
-        lastSyncAt: true,
-      },
-    })
+    // Get integrations (Shopify and Amazon separately since there's no unified PlatformIntegration model)
+    const [shopifyIntegrations, amazonIntegrations] = await Promise.all([
+      db.shopifyIntegration.findMany({
+        where: { projectId: project.id },
+        select: {
+          id: true,
+          shopDomain: true,
+          isActive: true,
+          lastSyncAt: true,
+        },
+      }),
+      db.amazonIntegration.findMany({
+        where: { projectId: project.id },
+        select: {
+          id: true,
+          sellerId: true,
+          isActive: true,
+        },
+      }),
+    ])
+
+    // Combine integrations with platform identifiers
+    const integrations = [
+      ...shopifyIntegrations.map((i) => ({
+        id: i.id,
+        platform: 'shopify' as const,
+        status: i.isActive ? 'active' : 'inactive',
+        lastSyncAt: i.lastSyncAt,
+      })),
+      ...amazonIntegrations.map((i) => ({
+        id: i.id,
+        platform: 'amazon' as const,
+        status: i.isActive ? 'active' : 'inactive',
+        lastSyncAt: null,
+      })),
+    ]
 
     // Get counts
     const productsCount = await db.product.count({

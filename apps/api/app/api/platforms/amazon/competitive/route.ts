@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { getCompetitivePrice } from '@calibr/amazon-connector'
 import { withSecurity } from '@/lib/security-headers'
+import { createId } from '@paralleldrive/cuid2'
 
 export const runtime = 'nodejs'
 
@@ -37,6 +38,7 @@ export const POST = withSecurity(async (req: NextRequest) => {
 
     const saved = await prisma().amazonCompetitivePrice.create({
       data: {
+        id: createId(),
         asin: snapshot.asin,
         marketplaceId: snapshot.marketplaceId,
         lowestPriceCents: snapshot.lowestPrice != null ? Math.round(Number(snapshot.lowestPrice) * 100) : null,

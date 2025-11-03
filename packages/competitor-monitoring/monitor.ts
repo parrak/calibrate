@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import crypto from 'crypto'
 import { 
   CompetitorData, 
   CompetitorProductData, 
@@ -21,9 +22,9 @@ export class CompetitorMonitor {
         isActive: true
       },
       include: {
-        products: {
+        CompetitorProduct: {
           where: { isActive: true },
-          include: { prices: { orderBy: { createdAt: 'desc' }, take: 1 } }
+          include: { CompetitorPrice: { orderBy: { createdAt: 'desc' }, take: 1 } }
         }
       }
     })
@@ -60,7 +61,7 @@ export class CompetitorMonitor {
       })
 
       // For each product, fetch current price
-      for (const product of competitor.products) {
+      for (const product of competitor.CompetitorProduct) {
         try {
           productsChecked++
           
@@ -70,13 +71,14 @@ export class CompetitorMonitor {
           if (currentPrice) {
             await this.db.competitorPrice.create({
               data: {
-                productId: product.id,
+                id: crypto.randomUUID(),
                 amount: currentPrice.amount,
                 currency: currentPrice.currency,
                 channel: currentPrice.channel,
                 isOnSale: currentPrice.isOnSale,
                 saleEndsAt: currentPrice.saleEndsAt,
-                stockStatus: currentPrice.stockStatus
+                stockStatus: currentPrice.stockStatus,
+                CompetitorProduct: { connect: { id: product.id } }
               }
             })
             pricesUpdated++
@@ -129,11 +131,11 @@ export class CompetitorMonitor {
     const sku = await this.db.sku.findFirst({
       where: { id: skuId },
       include: {
-        prices: { where: { status: 'ACTIVE' } },
-        competitorProducts: {
+        Price: { where: { status: 'ACTIVE' } },
+        CompetitorProduct: {
           include: {
-            competitor: true,
-            prices: {
+            Competitor: true,
+            CompetitorPrice: {
               orderBy: { createdAt: 'desc' },
               take: 1
             }
@@ -144,15 +146,15 @@ export class CompetitorMonitor {
 
     if (!sku) return []
 
-    const ourPrice = sku.prices[0]?.amount || 0
+    const ourPrice = sku.Price[0]?.amount || 0
     const competitorPrices = []
 
-    for (const competitorProduct of sku.competitorProducts) {
-      const latestPrice = competitorProduct.prices[0]
+    for (const competitorProduct of sku.CompetitorProduct) {
+      const latestPrice = competitorProduct.CompetitorPrice[0]
       if (latestPrice) {
         competitorPrices.push({
-          competitorId: competitorProduct.competitor.id,
-          competitorName: competitorProduct.competitor.name,
+          competitorId: competitorProduct.Competitor.id,
+          competitorName: competitorProduct.Competitor.name,
           price: latestPrice.amount,
           currency: latestPrice.currency,
           isOnSale: latestPrice.isOnSale,

@@ -28,9 +28,9 @@ export async function POST(request: NextRequest) {
       const competitor = await db().competitor.findUnique({
         where: { id: competitorId },
         include: {
-          products: {
+          CompetitorProduct: {
             where: { isActive: true },
-            include: { prices: { orderBy: { createdAt: 'desc' }, take: 1 } }
+            include: { CompetitorPrice: { orderBy: { createdAt: 'desc' }, take: 1 } }
           }
         }
       })

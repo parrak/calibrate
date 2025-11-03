@@ -4,6 +4,7 @@ import { evaluatePolicy } from '@calibr/pricing-engine'
 import { withSecurity } from '@/lib/security-headers'
 import { trackPerformance } from '@/lib/performance-middleware'
 import { errorJson, getPCForProject, inferConnectorTarget, requireProjectAccess, toPriceChangeDTO } from '../../utils'
+import { createId } from '@paralleldrive/cuid2'
 
 type RulesShape = {
   maxPctDelta?: number
@@ -143,6 +144,7 @@ export const POST = withSecurity(
 
         await tx.priceVersion.create({
           data: {
+            id: createId(),
             priceId: currentPrice.id,
             amount: currentPrice.amount,
             note: `Apply price change ${pc.id}`,
@@ -156,6 +158,7 @@ export const POST = withSecurity(
 
         await tx.event.create({
           data: {
+            id: createId(),
             tenantId: pc.tenantId,
             projectId: pc.projectId,
             kind: 'PRICE_APPLIED',

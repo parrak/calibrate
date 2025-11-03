@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     
     const responseTime = Date.now() - startTime
     
-    const response = {
+    const baseResponse = {
       timestamp: new Date().toISOString(),
       timeRange,
       responseTime: `${responseTime}ms`,
@@ -66,16 +66,18 @@ export async function GET(req: NextRequest) {
       recommendations: generateRecommendations(performanceStats, resourceTrends)
     }
     
-    // Include detailed metrics if requested
-    if (includeDetails) {
-      response.details = {
-        performanceMetrics: Object.fromEntries(getAllPerformanceMetrics()),
-        errorMetrics: Object.fromEntries(getAllErrorMetrics()),
-        resourceMetrics: Object.fromEntries(getAllResourceMetrics())
-      }
-    }
-    
-    return NextResponse.json(response)
+    return NextResponse.json(
+      includeDetails
+        ? {
+            ...baseResponse,
+            details: {
+              performanceMetrics: Object.fromEntries(getAllPerformanceMetrics()),
+              errorMetrics: Object.fromEntries(getAllErrorMetrics()),
+              resourceMetrics: Object.fromEntries(getAllResourceMetrics())
+            }
+          }
+        : baseResponse
+    )
   } catch (error) {
     console.error('Performance metrics collection failed:', error)
     return NextResponse.json({

@@ -26,8 +26,8 @@ export interface ProjectAccess {
 
 export interface SecurityPolicy {
   requireAuth: boolean
-  requireProject: boolean
-  requireTenant: boolean
+  requireProject?: boolean
+  requireTenant?: boolean
   allowedRoles?: string[]
   requiredPermissions?: string[]
   rateLimit?: {
@@ -161,7 +161,7 @@ export class AuthSecurityManager {
     try {
       const project = await prisma().project.findUnique({
         where: { slug: projectId },
-        include: { tenant: true }
+        include: { Tenant: true }
       })
 
       if (project) {

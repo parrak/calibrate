@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { withSecurity } from '@/lib/security-headers'
+import { createId } from '@paralleldrive/cuid2'
 
 /**
  * Projects API
@@ -66,15 +67,18 @@ export const POST = withSecurity(async (req: NextRequest) => {
     // Create project
     const project = await db.project.create({
       data: {
+        id: createId(),
         name,
         slug,
         tenantId: finalTenantId,
+        updatedAt: new Date(),
       },
     })
 
     // Create owner membership
     await db.membership.create({
       data: {
+        id: createId(),
         userId: user.id,
         projectId: project.id,
         role: 'OWNER',
@@ -114,16 +118,16 @@ export const GET = withSecurity(async (req: NextRequest) => {
     const memberships = await db.membership.findMany({
       where: { userId },
       include: {
-        project: {
+        Project: {
           include: {
-            shopifyIntegrations: {
+            ShopifyIntegration: {
               select: {
                 id: true,
                 shopDomain: true,
                 isActive: true,
               },
             },
-            amazonIntegrations: {
+            AmazonIntegration: {
               select: {
                 id: true,
                 sellerId: true,
@@ -134,29 +138,29 @@ export const GET = withSecurity(async (req: NextRequest) => {
         },
       },
       orderBy: {
-        project: {
+        Project: {
           createdAt: 'desc',
         },
       },
     })
 
     const projects = memberships.map((m) => {
-      const shopifyIntegrations = m.project.shopifyIntegrations || []
-      const amazonIntegrations = m.project.amazonIntegrations || []
+      const shopifyIntegrations = m.Project.ShopifyIntegration || []
+      const amazonIntegrations = m.Project.AmazonIntegration || []
       const integrations = {
         shopify: shopifyIntegrations,
         amazon: amazonIntegrations,
       }
 
       return {
-        id: m.project.id,
-        slug: m.project.slug,
-        name: m.project.name,
+        id: m.Project.id,
+        slug: m.Project.slug,
+        name: m.Project.name,
         role: m.role,
         integrationCount: shopifyIntegrations.length + amazonIntegrations.length,
         integrations,
-        createdAt: m.project.createdAt,
-        updatedAt: m.project.updatedAt,
+        createdAt: m.Project.createdAt,
+        updatedAt: m.Project.updatedAt,
       }
     })
 

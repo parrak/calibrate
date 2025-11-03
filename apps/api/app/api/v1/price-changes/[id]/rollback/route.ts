@@ -3,6 +3,7 @@ import { prisma } from '@calibr/db'
 import { withSecurity } from '@/lib/security-headers'
 import { trackPerformance } from '@/lib/performance-middleware'
 import { errorJson, getPCForProject, inferConnectorTarget, requireProjectAccess, toPriceChangeDTO } from '../../utils'
+import { createId } from '@paralleldrive/cuid2'
 
 export const POST = withSecurity(
   trackPerformance(async (req: NextRequest, context: { params: Promise<{ id: string }> }) => {
@@ -62,6 +63,7 @@ export const POST = withSecurity(
 
         await tx.priceVersion.create({
           data: {
+            id: createId(),
             priceId: price.id,
             amount: price.amount,
             note: `Rollback price change ${pc.id}`,
@@ -75,6 +77,7 @@ export const POST = withSecurity(
 
         await tx.event.create({
           data: {
+            id: createId(),
             tenantId: pc.tenantId,
             projectId: pc.projectId,
             kind: 'PRICE_ROLLED_BACK',

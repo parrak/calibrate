@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { getCompetitivePrice } from '@calibr/amazon-connector'
 import { withSecurity } from '@/lib/security-headers'
+import { createId } from '@paralleldrive/cuid2'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -22,6 +23,7 @@ export const POST = withSecurity(async (req: NextRequest) => {
         const snap = await getCompetitivePrice(w.asin)
         await prisma().amazonCompetitivePrice.create({
           data: {
+            id: createId(),
             asin: snap.asin,
             marketplaceId: snap.marketplaceId,
             lowestPriceCents: snap.lowestPrice != null ? Math.round(Number(snap.lowestPrice) * 100) : null,

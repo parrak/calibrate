@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@calibr/db'
+import { prisma, Prisma } from '@calibr/db'
 import { withSecurity } from '@/lib/security-headers'
 import { trackPerformance } from '@/lib/performance-middleware'
 import { errorJson, getPCForProject, requireProjectAccess, toPriceChangeDTO } from '../../utils'
@@ -60,7 +60,7 @@ export const POST = withSecurity(
       where: { id: pc.id },
       data: {
         status: 'REJECTED',
-        connectorStatus: pc.connectorStatus,
+        connectorStatus: pc.connectorStatus as Prisma.InputJsonValue,
       },
     })
 

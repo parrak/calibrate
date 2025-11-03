@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { verifyHmac } from '@calibr/security'
+import { createId } from '@paralleldrive/cuid2'
 
 const db = () => prisma()
 
@@ -52,11 +53,13 @@ export async function POST(request: NextRequest) {
 
     const rule = await db().competitorRule.create({
       data: {
+        id: createId(),
         tenantId,
         projectId,
         name,
         description,
-        rules
+        rules,
+        updatedAt: new Date()
       }
     })
 

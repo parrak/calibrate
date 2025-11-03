@@ -111,7 +111,7 @@ class Logger {
   // Request-specific logging
   logRequest(req: NextRequest, message: string, level: LogLevel = LogLevel.INFO, context?: Partial<LogEntry>) {
     const requestId = req.headers.get('x-request-id') || generateRequestId()
-    const projectId = req.headers.get('x-calibr-project')
+    const projectId = req.headers.get('x-calibr-project') || undefined
     
     this.log(level, message, {
       ...context,

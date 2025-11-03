@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ShopifyWebhooks } from '@calibr/shopify-connector';
 import { prisma } from '@calibr/db';
+import { createId } from '@paralleldrive/cuid2';
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     // Find the integration
     const integration = await prisma().shopifyIntegration.findUnique({
       where: { shopDomain },
-      include: { project: true },
+      include: { Project: true },
     });
 
     if (!integration) {
@@ -110,6 +111,7 @@ async function handleProductUpdate(payload: any, integration: any): Promise<void
     // Log the product update
     await prisma().event.create({
       data: {
+        id: createId(),
         tenantId: integration.project.tenantId,
         projectId: integration.projectId,
         kind: 'shopify_product_update',
@@ -137,6 +139,7 @@ async function handleProductDelete(payload: any, integration: any): Promise<void
     // Log the product deletion
     await prisma().event.create({
       data: {
+        id: createId(),
         tenantId: integration.project.tenantId,
         projectId: integration.projectId,
         kind: 'shopify_product_delete',
@@ -162,6 +165,7 @@ async function handleInventoryUpdate(payload: any, integration: any): Promise<vo
     // Log the inventory update
     await prisma().event.create({
       data: {
+        id: createId(),
         tenantId: integration.project.tenantId,
         projectId: integration.projectId,
         kind: 'shopify_inventory_update',
@@ -188,6 +192,7 @@ async function handleOrderUpdate(payload: any, integration: any): Promise<void> 
     // Log the order update
     await prisma().event.create({
       data: {
+        id: createId(),
         tenantId: integration.project.tenantId,
         projectId: integration.projectId,
         kind: 'shopify_order_update',
