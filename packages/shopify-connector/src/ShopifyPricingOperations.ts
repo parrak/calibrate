@@ -14,10 +14,23 @@ import {
 } from '@calibr/platform-connector';
 import { ShopifyConnector } from './ShopifyConnector';
 
-interface ShopifyUserError {
+type ShopifyUserError = {
   message: string;
-  field?: string[];
-}
+  field?: string[] | null;
+};
+
+type ShopifyVariantUpdateResponse = {
+  data: {
+    productVariantUpdate: {
+      productVariant: {
+        id: string;
+        price?: string | null;
+        compareAtPrice?: string | null;
+      } | null;
+      userErrors: ShopifyUserError[];
+    };
+  };
+};
 
 export class ShopifyPricingOperations implements PricingOperations {
   constructor(private connector: ShopifyConnector) {}
@@ -105,19 +118,19 @@ export class ShopifyPricingOperations implements PricingOperations {
         },
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response: any = await this.connector['client'].post('/graphql.json', {
-        query: mutation,
-        variables,
-      });
+      const response = await this.connector['client'].post<ShopifyVariantUpdateResponse>(
+        '/graphql.json',
+        {
+          query: mutation,
+          variables,
+        }
+      );
 
-      if (response.data.productVariantUpdate.userErrors.length > 0) {
-        const errors = response.data.productVariantUpdate.userErrors;
-        throw new PlatformError(
-          'validation',
-          errors.map((e: ShopifyUserError) => e.message).join(', '),
-          'shopify'
-        );
+      const { userErrors } = response.data.productVariantUpdate;
+
+      if (userErrors.length > 0) {
+        const combinedErrors = userErrors.map((errorItem) => errorItem.message).join(', ');
+        throw new PlatformError('validation', combinedErrors, 'shopify');
       }
 
       return {
@@ -206,11 +219,15 @@ export class ShopifyPricingOperations implements PricingOperations {
   }
 
   private isRetryableError(error: unknown): boolean {
-    // Check if error is retryable (rate limits, server errors)
-    if (typeof error === 'object' && error !== null && 'status' in error) {
-      const statusError = error as { status?: number };
-      if (statusError.status === 429) return true; // Rate limit
-      if (statusError.status && statusError.status >= 500) return true; // Server error
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'status' in error &&
+      typeof (error as { status?: unknown }).status === 'number'
+    ) {
+      const status = (error as { status: number }).status;
+      if (status === 429) return true;
+      if (status >= 500) return true;
     }
     return false;
   }

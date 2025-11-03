@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ShopifyAuth } from '../src/auth';
+import { ShopifyAuthManager } from '../src/auth';
 import { ShopifyConfig } from '../src/types';
 
 // Mock crypto
@@ -27,7 +27,7 @@ vi.mock('crypto', async (importOriginal) => {
 global.fetch = vi.fn();
 
 describe('ShopifyAuth', () => {
-  let auth: ShopifyAuth;
+  let auth: ShopifyAuthManager;
   let config: ShopifyConfig;
 
   beforeEach(() => {
@@ -38,7 +38,7 @@ describe('ShopifyAuth', () => {
       webhookSecret: 'test-webhook-secret',
     };
 
-    auth = new ShopifyAuth(config);
+    auth = new ShopifyAuthManager(config);
     vi.clearAllMocks();
   });
 
