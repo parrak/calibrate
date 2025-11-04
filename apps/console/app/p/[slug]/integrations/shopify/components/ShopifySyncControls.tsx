@@ -56,7 +56,7 @@ export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncContro
       onUpdate({
         ...integration,
         lastSyncAt: data.timestamp,
-        syncStatus: 'success',
+        syncStatus: 'SUCCESS',
         syncError: null,
       });
 
@@ -67,7 +67,7 @@ export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncContro
 
       onUpdate({
         ...integration,
-        syncStatus: 'error',
+        syncStatus: 'ERROR',
         syncError: error instanceof Error ? error.message : 'Sync operation failed',
       });
     } finally {
@@ -82,7 +82,8 @@ export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncContro
     alert('Price update feature coming soon! This will allow you to push approved price changes to Shopify.');
   };
 
-  const isDisabled = syncing || integration.syncStatus === 'in_progress';
+  const normalizedStatus = integration.syncStatus?.toUpperCase() ?? null;
+  const isDisabled = syncing || normalizedStatus === 'IN_PROGRESS';
 
   return (
     <div className="space-y-6">

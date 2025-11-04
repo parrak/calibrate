@@ -12,23 +12,37 @@ export type PlatformType = 'shopify' | 'amazon' | 'google_shopping' | 'woocommer
 
 /**
  * Connection status for platform integrations
+ *
+ * The connector layer historically used lowercase identifiers while the API
+ * and console UIs expect uppercase variants (e.g. `CONNECTED`). To keep the
+ * shared types compatible across both contexts we expose a union that
+ * includes the base lowercase literals and their uppercase counterparts.
  */
-export type ConnectionStatus =
+type ConnectionStatusBase =
   | 'connected'      // Successfully connected and active
   | 'disconnected'   // Not connected or disconnected by user
   | 'error'          // Connection error or authentication failed
   | 'pending'        // Connection in progress
   | 'expired';       // Credentials expired, needs re-authentication
 
+export type ConnectionStatus = ConnectionStatusBase | Uppercase<ConnectionStatusBase>;
+
 /**
  * Sync status for platform data synchronization
+ *
+ * Similar to connection status, sync states can be emitted in either casing
+ * depending on the API surface. We also support the Shopify specific
+ * `in_progress` state to cover long running background syncs.
  */
-export type SyncStatus =
+type SyncStatusBase =
   | 'idle'           // No sync in progress
   | 'syncing'        // Sync currently in progress
   | 'success'        // Last sync completed successfully
   | 'error'          // Last sync failed
-  | 'partial';       // Sync partially completed
+  | 'partial'        // Sync partially completed
+  | 'in_progress';   // Sync currently in progress via job queue
+
+export type SyncStatus = SyncStatusBase | Uppercase<SyncStatusBase>;
 
 /**
  * Platform health status

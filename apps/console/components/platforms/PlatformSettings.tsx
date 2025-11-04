@@ -2,14 +2,11 @@
 
 import { useState } from 'react'
 import { platformsApi } from '@/lib/api-client'
+import type { Integration, PlatformSummary } from '@/lib/api-client'
 
 interface PlatformSettingsProps {
-  platform: {
-    platform: string
-    name: string
-    description: string
-  }
-  integration: any | null
+  platform: PlatformSummary & { description: string }
+  integration: Integration | null
   projectSlug: string
   onClose: () => void
   onUpdate: () => void

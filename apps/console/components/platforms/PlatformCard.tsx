@@ -3,16 +3,12 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { platformsApi } from '@/lib/api-client'
+import type { Integration, PlatformSummary } from '@/lib/api-client'
 import { PlatformSettings } from './PlatformSettings'
 
 interface PlatformCardProps {
-  platform: {
-    platform: string
-    name: string
-    description?: string
-    available: boolean
-  }
-  integration: any | null
+  platform: PlatformSummary
+  integration: Integration | null
   projectSlug: string
   onUpdate?: () => void
 }
@@ -94,9 +90,9 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
             <div className="text-sm text-gray-600 space-y-1">
               <div className="flex justify-between">
                 <span>Status:</span>
-                <span className="font-medium text-gray-900">{integration.status}</span>
+                <span className="font-medium text-gray-900">{integration?.status}</span>
               </div>
-              {integration.lastSyncAt && (
+              {integration?.lastSyncAt && (
                 <div className="flex justify-between">
                   <span>Last Sync:</span>
                   <span className="font-medium text-gray-900">
@@ -104,7 +100,7 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
                   </span>
                 </div>
               )}
-              {integration.syncStatus && (
+              {integration?.syncStatus && (
                 <div className="flex justify-between">
                   <span>Sync Status:</span>
                   <span className="font-medium text-gray-900">{integration.syncStatus}</span>
@@ -122,10 +118,10 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
               </Link>
               <button
                 onClick={handleSync}
-                disabled={syncing || integration.syncStatus === 'SYNCING'}
+                disabled={syncing || integration?.syncStatus === 'SYNCING'}
                 className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {syncing || integration.syncStatus === 'SYNCING' ? 'Syncing...' : 'Sync Now'}
+                {syncing || integration?.syncStatus === 'SYNCING' ? 'Syncing...' : 'Sync Now'}
               </button>
               <button
                 onClick={() => setShowSettings(true)}

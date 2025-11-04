@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useToast } from '@/components/Toast'
 import { platformsApi } from '@/lib/api-client'
+import type { Integration, PlatformSummary } from '@/lib/api-client'
 import { PlatformCard } from '@/components/platforms/PlatformCard'
 import { IntegrationStats } from '@/components/platforms/IntegrationStats'
 import { SyncHistoryViewer } from '@/components/platforms/SyncHistoryViewer'
 
 export default function IntegrationsPage({ params }: { params: { slug: string } }) {
-  const [platforms, setPlatforms] = useState<any[]>([])
-  const [integrations, setIntegrations] = useState<Record<string, any>>({})
+  const [platforms, setPlatforms] = useState<PlatformSummary[]>([])
+  const [integrations, setIntegrations] = useState<Record<string, Integration | null>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const toast = useToast()
@@ -24,7 +25,7 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
       setPlatforms(availablePlatforms)
 
       // Get integration status for each platform
-      const integrationData: Record<string, any> = {}
+      const integrationData: Record<string, Integration | null> = {}
       await Promise.all(
         availablePlatforms.map(async (platform) => {
           try {
@@ -56,7 +57,9 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
     loadData()
   }, [params.slug])
 
-  const allIntegrations = Object.values(integrations)
+  const allIntegrations = Object.values(integrations).filter(
+    (integration): integration is Integration => Boolean(integration),
+  )
 
   return (
     <div className="space-y-6 p-6">

@@ -30,6 +30,9 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
   const [syncing, setSyncing] = useState(false);
   const [currentIntegration, setCurrentIntegration] = useState<ShopifyIntegration>(integration);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const normalizedSyncStatus = currentIntegration.syncStatus
+    ? currentIntegration.syncStatus.toUpperCase()
+    : null;
 
   // Sync prop changes to local state
   useEffect(() => {
@@ -38,7 +41,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
 
   // Poll for live status updates when sync is in progress
   useEffect(() => {
-    const isSyncing = currentIntegration.syncStatus === 'SYNCING' || currentIntegration.syncStatus === 'in_progress';
+    const isSyncing = normalizedSyncStatus === 'SYNCING' || normalizedSyncStatus === 'IN_PROGRESS';
     
     if (isSyncing && projectSlug) {
       // Poll every 2 seconds when sync is active
@@ -74,7 +77,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
         clearInterval(pollingIntervalRef.current);
       }
     };
-  }, [currentIntegration.syncStatus, projectSlug]);
+  }, [normalizedSyncStatus, projectSlug]);
 
   const handleSync = async () => {
     if (!projectSlug) {
@@ -107,7 +110,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       const errorMessage = error instanceof Error ? error.message : 'Sync operation failed';
       const updated: ShopifyIntegration = {
         ...currentIntegration,
-        syncStatus: 'error',
+        syncStatus: 'ERROR',
         syncError: errorMessage,
       };
       setCurrentIntegration(updated);
@@ -151,11 +154,11 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       }
 
       const data = await response.json();
-      
+
       // Update local state
       const updated = {
         ...currentIntegration,
-        syncStatus: data.result?.connected ? 'success' : 'error',
+        syncStatus: data.result?.connected ? 'SUCCESS' : 'ERROR',
         syncError: data.result?.connected ? null : (data.result?.status?.message || 'Connection failed'),
         lastSyncAt: new Date().toISOString(),
       };
@@ -180,7 +183,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       
       const updated = {
         ...currentIntegration,
-        syncStatus: 'error',
+        syncStatus: 'ERROR',
         syncError: errorMessage,
       };
       setCurrentIntegration(updated);
@@ -198,12 +201,12 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       return <Badge variant="danger">Inactive</Badge>;
     }
     
-    switch (currentIntegration.syncStatus) {
-      case 'success':
+    switch (normalizedSyncStatus) {
+      case 'SUCCESS':
         return <Badge variant="primary">Connected</Badge>;
-      case 'error':
+      case 'ERROR':
         return <Badge variant="danger">Error</Badge>;
-      case 'in_progress':
+      case 'IN_PROGRESS':
         return <Badge variant="primary">Syncing</Badge>;
       default:
         return <Badge>Unknown</Badge>;
@@ -258,14 +261,14 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
             Actions
           </h3>
           <div className="space-y-2">
-            <Button 
+            <Button
               onClick={handleSync}
-              disabled={syncing || currentIntegration.syncStatus === 'SYNCING' || currentIntegration.syncStatus === 'in_progress'}
+              disabled={syncing || normalizedSyncStatus === 'SYNCING' || normalizedSyncStatus === 'IN_PROGRESS'}
               variant="primary"
               className="w-full"
             >
-              {syncing || currentIntegration.syncStatus === 'SYNCING' || currentIntegration.syncStatus === 'in_progress' 
-                ? 'Syncing...' 
+              {syncing || normalizedSyncStatus === 'SYNCING' || normalizedSyncStatus === 'IN_PROGRESS'
+                ? 'Syncing...'
                 : 'Sync Products'}
             </Button>
             <Button 
@@ -300,7 +303,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       )}
 
       {/* Success Message */}
-      {currentIntegration.syncStatus === 'success' && !currentIntegration.syncError && (
+      {normalizedSyncStatus === 'SUCCESS' && !currentIntegration.syncError && (
         <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
           <div className="flex items-start">
             <svg className="w-5 h-5 text-green-400 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -12,11 +12,11 @@ interface AmazonIntegration {
   id: string
   platformName: string
   status: string
-  isActive: boolean
+  isActive?: boolean
   lastSyncAt: string | null
   syncStatus: string | null
   syncError: string | null
-  connectedAt: string
+  connectedAt: string | null
 }
 
 interface AmazonIntegrationPageProps {

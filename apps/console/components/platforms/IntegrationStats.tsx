@@ -1,7 +1,9 @@
 'use client'
 
+import type { Integration } from '@/lib/api-client'
+
 interface IntegrationStatsProps {
-  integrations: any[]
+  integrations: Integration[]
   loading?: boolean
 }
 

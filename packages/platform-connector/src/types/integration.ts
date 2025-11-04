@@ -17,11 +17,11 @@ export interface PlatformIntegration {
   externalId?: string;         // Platform-specific identifier
   status: ConnectionStatus;
   isActive: boolean;
-  connectedAt: Date;
-  lastSyncAt?: Date;
-  lastHealthCheck?: Date;
-  syncStatus?: SyncStatus;
-  syncError?: string;
+  connectedAt: Date | string;
+  lastSyncAt?: Date | string | null;
+  lastHealthCheck?: Date | string | null;
+  syncStatus?: SyncStatus | null;
+  syncError?: string | null;
   metadata?: Record<string, any>; // Platform-specific data
 }
 

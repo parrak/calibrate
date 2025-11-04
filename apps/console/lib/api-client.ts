@@ -8,6 +8,26 @@
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
 
+export type PlatformSummary = {
+  platform: string
+  name: string
+  description?: string
+  available?: boolean
+}
+
+export type Integration = {
+  id: string
+  platform: string
+  platformName: string
+  status: string
+  isActive?: boolean
+  connectedAt: string | null
+  lastSyncAt: string | null
+  syncStatus: string | null
+  syncError: string | null
+  metadata?: Record<string, unknown>
+}
+
 class ApiError extends Error {
   constructor(
     message: string,
@@ -118,13 +138,22 @@ export const competitorsApi = {
 // Platforms API
 export const platformsApi = {
   list: async () => {
-    return fetchApi<{ platforms: any[]; count: number }>('/api/platforms')
+    const result = await fetchApi<{ platforms?: PlatformSummary[]; count?: number }>(
+      '/api/platforms',
+    )
+
+    const platforms = Array.isArray(result?.platforms) ? result.platforms : []
+
+    return {
+      platforms,
+      count: typeof result?.count === 'number' ? result.count : platforms.length,
+    }
   },
 
   getStatus: async (platform: string, projectSlug: string) => {
     return fetchApi<{
       platform: string
-      integration: any | null
+      integration: Integration | null
       isConnected: boolean
     }>(`/api/platforms/${platform}?project=${projectSlug}`)
   },
@@ -153,14 +182,7 @@ export const platformsApi = {
     const queryParam = projectId ? `projectId=${projectId}` : `projectSlug=${projectSlug}`
     return fetchApi<{
       success: boolean
-      integration: {
-        id: string
-        platformName: string
-        status: string
-        syncStatus: string | null
-        lastSyncAt: string | null
-        syncError: string | null
-      }
+      integration: Integration | null
       syncLogs: Array<{
         id: string
         syncType: string
