@@ -7,6 +7,11 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Fixed
+- API: Fixed 410 error on POST /api/platforms/shopify/sync endpoint
+  - Deprecated endpoint now forwards requests to /api/integrations/shopify/sync
+  - Maps syncType parameter to action for backward compatibility
+  - Maintains compatibility with existing console code using platformsApi.triggerSync
+
 - Console: Price Changes page UI fixes
   - Fixed Drawer component black overlay persisting when closed
   - Added authentication check to prevent 401 errors on page load
