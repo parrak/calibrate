@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ShopifyConnector, type ShopifyProduct } from '@calibr/shopify-connector';
+import { ShopifyConnector, type ShopifyProduct, type ShopifyPriceUpdate } from '@calibr/shopify-connector';
 import { prisma } from '@calibr/db';
 import type { Prisma } from '@calibr/db';
 import { withSecurity } from '@/lib/security-headers';
@@ -232,9 +232,37 @@ async function updatePrices(connector: ShopifyConnector, integration: ShopifyInt
 
   const pricingClient = getPricingClient(connector);
   const dataWithPriceUpdates = data as { priceUpdates: unknown[]; batchSize?: number };
-  const priceUpdates = Array.isArray(dataWithPriceUpdates.priceUpdates)
-    ? dataWithPriceUpdates.priceUpdates as Array<{ variantId: string; price: number }>
+  const rawPriceUpdates = Array.isArray(dataWithPriceUpdates.priceUpdates)
+    ? dataWithPriceUpdates.priceUpdates
     : [];
+  
+  // Convert to ShopifyPriceUpdate format (price must be string)
+  const priceUpdates: ShopifyPriceUpdate[] = rawPriceUpdates.map((update: unknown) => {
+    if (update && typeof update === 'object' && 'variantId' in update && 'price' in update) {
+      const updateObj = update as { variantId: unknown; price: unknown; compareAtPrice?: unknown };
+      const variantId = String(updateObj.variantId);
+      // Convert price to string - handle both number (cents) and string formats
+      const price = typeof updateObj.price === 'number' 
+        ? (updateObj.price / 100).toFixed(2) 
+        : String(updateObj.price);
+      const compareAtPrice = updateObj.compareAtPrice 
+        ? (typeof updateObj.compareAtPrice === 'number'
+            ? (updateObj.compareAtPrice / 100).toFixed(2)
+            : String(updateObj.compareAtPrice))
+        : undefined;
+      
+      const result: ShopifyPriceUpdate = {
+        variantId,
+        price,
+      };
+      if (compareAtPrice) {
+        result.compareAtPrice = compareAtPrice;
+      }
+      return result;
+    }
+    throw new Error('Invalid price update format');
+  });
+  
   const results = await pricingClient.updateVariantPricesBulk({
     updates: priceUpdates,
     batchSize: dataWithPriceUpdates.batchSize || 10,
