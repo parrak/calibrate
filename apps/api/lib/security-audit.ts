@@ -3,9 +3,7 @@
  * Comprehensive security scanning and vulnerability assessment
  */
 
-import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
-import crypto from 'crypto'
 
 export interface SecurityVulnerability {
   id: string
@@ -19,7 +17,7 @@ export interface SecurityVulnerability {
   owasp?: string
   detectedAt: Date
   resolved: boolean
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface SecurityAuditResult {
@@ -57,7 +55,7 @@ export class SecurityAuditor {
    */
   async runSecurityAudit(): Promise<SecurityAuditResult> {
     const vulnerabilities: SecurityVulnerability[] = []
-    
+
     // Run all security checks
     const checks = await Promise.all([
       this.checkAuthenticationSecurity(),
@@ -81,13 +79,13 @@ export class SecurityAuditor {
 
     // Calculate overall score
     const overallScore = this.calculateSecurityScore(vulnerabilities)
-    
+
     // Generate recommendations
     const recommendations = this.generateRecommendations(vulnerabilities)
-    
+
     // Calculate compliance scores
     const compliance = this.calculateComplianceScores(vulnerabilities)
-    
+
     // Generate summary
     const summary = this.generateSummary(vulnerabilities)
 
@@ -451,7 +449,7 @@ export class SecurityAuditor {
    */
   private calculateSecurityScore(vulnerabilities: SecurityVulnerability[]): number {
     let score = 100
-    
+
     const weights = {
       critical: 20,
       high: 15,
@@ -508,22 +506,22 @@ export class SecurityAuditor {
    */
   private calculateComplianceScores(vulnerabilities: SecurityVulnerability[]): { owasp: number; pci: number; gdpr: number } {
     const unresolvedVulns = vulnerabilities.filter(v => !v.resolved)
-    
+
     // OWASP Top 10 compliance
     const owaspVulns = unresolvedVulns.filter(v => v.owasp)
     const owaspScore = Math.max(0, 100 - (owaspVulns.length * 10))
 
     // PCI DSS compliance (simplified)
-    const pciVulns = unresolvedVulns.filter(v => 
-      v.type === 'authentication' || 
-      v.type === 'authorization' || 
+    const pciVulns = unresolvedVulns.filter(v =>
+      v.type === 'authentication' ||
+      v.type === 'authorization' ||
       v.type === 'data_exposure'
     )
     const pciScore = Math.max(0, 100 - (pciVulns.length * 15))
 
     // GDPR compliance (simplified)
-    const gdprVulns = unresolvedVulns.filter(v => 
-      v.type === 'data_exposure' || 
+    const gdprVulns = unresolvedVulns.filter(v =>
+      v.type === 'data_exposure' ||
       v.type === 'logging'
     )
     const gdprScore = Math.max(0, 100 - (gdprVulns.length * 12))
@@ -546,7 +544,7 @@ export class SecurityAuditor {
     low: number
   } {
     const unresolved = vulnerabilities.filter(v => !v.resolved)
-    
+
     return {
       totalVulnerabilities: unresolved.length,
       critical: unresolved.filter(v => v.severity === 'critical').length,

@@ -132,7 +132,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
 /**
  * Verify Shopify HMAC signature
  * Shopify docs: https://shopify.dev/docs/apps/auth/oauth/getting-started#step-5-verify-the-request
- * 
+ *
  * Shopify OAuth HMAC validation:
  * 1. Get all query parameters except 'hmac'
  * 2. Sort them alphabetically by key

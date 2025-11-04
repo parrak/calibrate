@@ -18,15 +18,15 @@ export const GET = withSecurity(async (request: NextRequest) => {
       return NextResponse.json({ error: 'Amazon connector not registered' }, { status: 500 })
     }
     const status = await pollFeedUntilDone(feedId, { intervalMs: 1000, timeoutMs: 15000 })
-    let summary: any
+    let summary: unknown
     if (parse && status.done && status.resultDocumentId) {
       summary = await downloadAndParseFeedResult(status.resultDocumentId)
     }
     return NextResponse.json({ status, summary })
-  } catch (error: any) {
-    return NextResponse.json({ error: error?.message || String(error) }, { status: 500 })
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 })
   }
 })
 
-export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
+export const OPTIONS = withSecurity(async (_req: NextRequest) => new NextResponse(null, { status: 204 }))
 

@@ -58,7 +58,7 @@ export function createRateLimit(config: RateLimitConfig) {
     // Check rate limit
     if (entry.count >= maxRequests) {
       const retryAfter = Math.ceil((entry.resetTime - now) / 1000)
-      
+
       return NextResponse.json({
         error: 'Too Many Requests',
         message: `Rate limit exceeded. Try again in ${retryAfter} seconds.`,

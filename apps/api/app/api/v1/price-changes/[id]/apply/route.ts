@@ -18,7 +18,7 @@ type RulesShape = {
 
 function extractRuleValue(rules: RulesShape | undefined, key: string, skuCode?: string) {
   if (!rules) return undefined
-  const direct = (rules as any)[key]
+  const direct = rules[key as keyof RulesShape]
   if (typeof direct === 'number') return direct
   if (skuCode) {
     const pluralKey = `${key}s` as keyof RulesShape
@@ -78,7 +78,7 @@ export const POST = withSecurity(
       })
     }
 
-    const contextData = (pc.context ?? {}) as Record<string, any>
+    const contextData = (pc.context ?? {}) as Record<string, unknown>
     if (contextData?.simulateConnectorError) {
       const msg =
         typeof contextData.simulateConnectorError === 'string'
@@ -191,8 +191,8 @@ export const POST = withSecurity(
       })
 
       return NextResponse.json({ ok: true, item: toPriceChangeDTO(updated) })
-    } catch (err: any) {
-      if (err?.code === 'PRICE_NOT_FOUND') {
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'PRICE_NOT_FOUND') {
         return errorJson({
           status: 404,
           error: 'NotFound',

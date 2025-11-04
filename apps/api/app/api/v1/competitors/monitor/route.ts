@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     const monitor = new CompetitorMonitor(db())
-    
+
     let results
     if (competitorId) {
       // Monitor specific competitor

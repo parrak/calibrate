@@ -113,10 +113,10 @@ export async function GET(
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching project:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch project', message: error?.message || String(error) },
+      { error: 'Failed to fetch project', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

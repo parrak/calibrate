@@ -17,7 +17,7 @@ export const GET = withSecurity(async (req: NextRequest, context?: { params: Pro
     const marketplaceId = searchParams.get('marketplaceId') || undefined
 
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-    const where: any = { asin, retrievedAt: { gte: since } }
+    const where: { asin: string; retrievedAt: { gte: Date }; marketplaceId?: string } = { asin, retrievedAt: { gte: since } }
     if (marketplaceId) where.marketplaceId = marketplaceId
 
     const rows = await prisma().amazonCompetitivePrice.findMany({

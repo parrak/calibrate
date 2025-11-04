@@ -34,10 +34,10 @@ export class StagingDatabaseManager {
 
       // Run migrations
       await this.runMigrations()
-      
+
       // Seed test data
       await this.seedTestData()
-      
+
       this.isInitialized = true
       console.log('✅ Staging database initialized successfully')
     } catch (error) {
@@ -53,7 +53,7 @@ export class StagingDatabaseManager {
     try {
       // This would typically use Prisma migrate or a custom migration runner
       console.log('🔄 Running staging database migrations...')
-      
+
       // For now, we'll just verify the connection
       await this.prisma.$queryRaw`SELECT 1`
       console.log('✅ Staging database migrations completed')
@@ -69,7 +69,7 @@ export class StagingDatabaseManager {
   private async seedTestData(): Promise<void> {
     try {
       console.log('🌱 Seeding staging database with test data...')
-      
+
       // Check if data already exists
       const existingTenants = await this.prisma.tenant.count()
       if (existingTenants > 0) {
@@ -203,7 +203,7 @@ export class StagingDatabaseManager {
   async cleanupTestData(): Promise<void> {
     try {
       console.log('🧹 Cleaning up staging test data...')
-      
+
       // Delete test data in reverse order of dependencies
       await this.prisma.priceChange.deleteMany({
         where: {
@@ -247,13 +247,13 @@ export class StagingDatabaseManager {
   async reset(): Promise<void> {
     try {
       console.log('🔄 Resetting staging database...')
-      
+
       // Clean up existing data
       await this.cleanupTestData()
-      
+
       // Re-seed with fresh test data
       await this.seedTestData()
-      
+
       console.log('✅ Staging database reset completed')
     } catch (error) {
       console.error('❌ Failed to reset staging database:', error)
@@ -274,7 +274,7 @@ export class StagingDatabaseManager {
       const connected = await this.testConnection()
       const migrations = await this.checkMigrations()
       const testData = await this.checkTestData()
-      
+
       return {
         connected,
         migrations,
@@ -299,7 +299,7 @@ export class StagingDatabaseManager {
     try {
       await this.prisma.$queryRaw`SELECT 1`
       return true
-    } catch (error) {
+    } catch {
       return false
     }
   }
@@ -313,7 +313,7 @@ export class StagingDatabaseManager {
       // For now, just return true if we can query
       await this.prisma.$queryRaw`SELECT 1`
       return true
-    } catch (error) {
+    } catch {
       return false
     }
   }
@@ -329,7 +329,7 @@ export class StagingDatabaseManager {
         }
       })
       return tenantCount > 0
-    } catch (error) {
+    } catch {
       return false
     }
   }

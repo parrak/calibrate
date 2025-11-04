@@ -64,9 +64,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdminAuth(async (req: NextRequest, context) => {
+  return withAdminAuth(async (req: NextRequest, _context) => {
     try {
-      const { action, vulnerabilityId, thresholds } = await req.json()
+      const { action, vulnerabilityId } = await req.json()
 
       if (action === 'resolve' && vulnerabilityId) {
         const resolved = securityAuditor.resolveVulnerability(vulnerabilityId)

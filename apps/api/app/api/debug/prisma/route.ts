@@ -8,7 +8,7 @@ export async function GET() {
   try {
     // Test 1: Can we import the package?
     let importTest = 'FAILED'
-    let prismaFunction: any = undefined
+    let prismaFunction: (() => unknown) | undefined = undefined
 
     try {
       const dbPackage = await import('@calibr/db')
@@ -20,7 +20,7 @@ export async function GET() {
 
     // Test 2: Can we call prisma()?
     let prismaCallTest = 'NOT_ATTEMPTED'
-    let clientInfo: any = {}
+    let clientInfo: { hasProject?: boolean; hasUser?: boolean; keys?: string[] } = {}
     let dbConnectionTest = 'NOT_ATTEMPTED'
 
     if (prismaFunction) {
@@ -28,10 +28,11 @@ export async function GET() {
         const client = prismaFunction()
         prismaCallTest = client ? 'SUCCESS' : 'RETURNED_UNDEFINED'
         if (client) {
+          const clientObj = client as Record<string, unknown>
           clientInfo = {
-            hasProject: !!(client as any).project,
-            hasUser: !!(client as any).user,
-            keys: Object.keys(client).filter(k => !k.startsWith('_') && !k.startsWith('$')).slice(0, 10)
+            hasProject: !!clientObj.project,
+            hasUser: !!clientObj.user,
+            keys: Object.keys(clientObj).filter(k => !k.startsWith('_') && !k.startsWith('$')).slice(0, 10)
           }
 
           // Test 2b: Try to actually query the database
@@ -54,7 +55,7 @@ export async function GET() {
       DATABASE_URL: dbUrl ? 'SET' : 'NOT_SET',
       DATABASE_URL_PREFIX: dbUrl ? dbUrl.substring(0, 15) : 'N/A',
       DATABASE_URL_LENGTH: dbUrl ? dbUrl.length : 0,
-      hasPrismaClient: typeof (globalThis as any).prisma !== 'undefined',
+      hasPrismaClient: typeof (globalThis as Record<string, unknown>).prisma !== 'undefined',
       allEnvKeys: Object.keys(process.env).filter(k =>
         k.includes('DATABASE') || k.includes('PRISMA') || k === 'NODE_ENV' || k === 'PORT'
       )

@@ -57,7 +57,7 @@ export class SecurityHeadersManager {
    */
   applySecurityHeaders(response: NextResponse): NextResponse {
     const headers = this.generateSecurityHeaders()
-    
+
     Object.entries(headers).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         response.headers.set(key, value)
@@ -159,7 +159,7 @@ export class SecurityHeadersManager {
 /**
  * Middleware to apply security headers
  */
-export function withSecurityHeaders<TCtx = any>(
+export function withSecurityHeaders<TCtx = unknown>(
   handler: (req: NextRequest, ctx?: TCtx) => Promise<NextResponse>,
   config?: SecurityHeadersConfig
 ) {
@@ -321,7 +321,7 @@ export class CORSManager {
 /**
  * Middleware to apply CORS
  */
-export function withCORS<TCtx = any>(
+export function withCORS<TCtx = unknown>(
   handler: (req: NextRequest, ctx?: TCtx) => Promise<NextResponse>,
   config?: CORSConfig
 ) {
@@ -336,7 +336,7 @@ export function withCORS<TCtx = any>(
 
     // Process the request
     const response = await handler(req, ctx)
-    
+
     // Apply CORS headers
     return corsManager.applyCORSHeaders(req, response)
   }
@@ -345,7 +345,7 @@ export function withCORS<TCtx = any>(
 /**
  * Combined security middleware
  */
-export function withSecurity<TCtx = any>(
+export function withSecurity<TCtx = unknown>(
   handler: (req: NextRequest, ctx?: TCtx) => Promise<NextResponse>,
   options?: {
     securityHeaders?: SecurityHeadersConfig

@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { loadavg } from 'os'
 import { prisma } from '@calibr/db'
 
 // Performance metrics storage (in production, this would be Redis or similar)
@@ -82,8 +83,10 @@ export interface PerformanceStats {
 /**
  * Middleware to track performance metrics
  */
-export function withPerformanceTracking(handler: Function) {
-  return async (req: NextRequest, ...args: any[]) => {
+type RouteHandler = (req: NextRequest, ...args: unknown[]) => Promise<NextResponse>
+
+export function withPerformanceTracking(handler: RouteHandler) {
+  return async (req: NextRequest, ...args: unknown[]) => {
     const startTime = Date.now()
     const endpoint = req.nextUrl.pathname
     const method = req.method
@@ -103,7 +106,7 @@ export function withPerformanceTracking(handler: Function) {
       throw error
     } finally {
       const responseTime = Date.now() - startTime
-      
+
       // Record performance metric
       recordPerformanceMetric({
         timestamp: startTime,
@@ -141,19 +144,19 @@ export function withPerformanceTracking(handler: Function) {
  */
 export function recordPerformanceMetric(metric: PerformanceMetric) {
   const key = `${metric.endpoint}:${metric.method}`
-  
+
   if (!performanceMetrics.has(key)) {
     performanceMetrics.set(key, [])
   }
-  
+
   const metrics = performanceMetrics.get(key)!
   metrics.push(metric)
-  
+
   // Keep only recent metrics
   if (metrics.length > MAX_METRICS_HISTORY) {
     metrics.splice(0, metrics.length - MAX_METRICS_HISTORY)
   }
-  
+
   // Clean up old metrics
   cleanupOldMetrics()
 }
@@ -163,14 +166,14 @@ export function recordPerformanceMetric(metric: PerformanceMetric) {
  */
 export function recordErrorMetric(metric: ErrorMetric) {
   const key = `${metric.endpoint}:${metric.method}`
-  
+
   if (!errorMetrics.has(key)) {
     errorMetrics.set(key, [])
   }
-  
+
   const metrics = errorMetrics.get(key)!
   metrics.push(metric)
-  
+
   // Keep only recent metrics
   if (metrics.length > MAX_METRICS_HISTORY) {
     metrics.splice(0, metrics.length - MAX_METRICS_HISTORY)
@@ -183,7 +186,7 @@ export function recordErrorMetric(metric: ErrorMetric) {
 export function recordResourceMetric() {
   const memoryUsage = process.memoryUsage()
   const uptime = process.uptime()
-  
+
   const metric: ResourceMetric = {
     timestamp: Date.now(),
     memory: {
@@ -193,7 +196,7 @@ export function recordResourceMetric() {
       rss: memoryUsage.rss
     },
     cpu: {
-      loadAverage: process.platform === 'win32' ? [0, 0, 0] : require('os').loadavg()
+      loadAverage: process.platform === 'win32' ? [0, 0, 0] : loadavg()
     },
     database: {
       connections: 0, // Will be populated by database monitoring
@@ -202,15 +205,15 @@ export function recordResourceMetric() {
     },
     uptime
   }
-  
+
   const key = 'system'
   if (!resourceMetrics.has(key)) {
     resourceMetrics.set(key, [])
   }
-  
+
   const metrics = resourceMetrics.get(key)!
   metrics.push(metric)
-  
+
   // Keep only recent metrics
   if (metrics.length > MAX_METRICS_HISTORY) {
     metrics.splice(0, metrics.length - MAX_METRICS_HISTORY)
@@ -226,9 +229,9 @@ export function getPerformanceStats(
 ): PerformanceStats {
   const now = Date.now()
   const startTime = now - timeRangeMs
-  
-  let allMetrics: PerformanceMetric[] = []
-  
+
+  const allMetrics: PerformanceMetric[] = []
+
   if (endpoint) {
     // Get metrics for specific endpoint
     for (const [key, metrics] of performanceMetrics.entries()) {
@@ -242,7 +245,7 @@ export function getPerformanceStats(
       allMetrics.push(...metrics.filter(m => m.timestamp >= startTime))
     }
   }
-  
+
   if (allMetrics.length === 0) {
     return {
       totalRequests: 0,
@@ -256,25 +259,25 @@ export function getPerformanceStats(
       errorBreakdown: []
     }
   }
-  
+
   // Calculate response time percentiles
   const responseTimes = allMetrics.map(m => m.responseTime).sort((a, b) => a - b)
   const p50Index = Math.floor(responseTimes.length * 0.5)
   const p95Index = Math.floor(responseTimes.length * 0.95)
   const p99Index = Math.floor(responseTimes.length * 0.99)
-  
+
   const p50ResponseTime = responseTimes[p50Index] || 0
   const p95ResponseTime = responseTimes[p95Index] || 0
   const p99ResponseTime = responseTimes[p99Index] || 0
-  
+
   // Calculate error rate
   const errorCount = allMetrics.filter(m => m.statusCode >= 400).length
   const errorRate = (errorCount / allMetrics.length) * 100
-  
+
   // Calculate throughput (requests per second)
   const timeRangeSeconds = timeRangeMs / 1000
   const throughput = allMetrics.length / timeRangeSeconds
-  
+
   // Calculate slowest endpoints
   const endpointStats = new Map<string, { totalTime: number; count: number }>()
   for (const metric of allMetrics) {
@@ -285,7 +288,7 @@ export function getPerformanceStats(
       count: existing.count + 1
     })
   }
-  
+
   const slowestEndpoints = Array.from(endpointStats.entries())
     .map(([endpoint, stats]) => ({
       endpoint,
@@ -294,14 +297,14 @@ export function getPerformanceStats(
     }))
     .sort((a, b) => b.averageTime - a.averageTime)
     .slice(0, 10)
-  
+
   // Calculate error breakdown
   const errorBreakdown = new Map<string, number>()
   for (const metric of allMetrics.filter(m => m.statusCode >= 400)) {
     const errorType = getErrorType(metric.statusCode)
     errorBreakdown.set(errorType, (errorBreakdown.get(errorType) || 0) + 1)
   }
-  
+
   const errorBreakdownArray = Array.from(errorBreakdown.entries())
     .map(([errorType, count]) => ({
       errorType,
@@ -309,7 +312,7 @@ export function getPerformanceStats(
       percentage: (count / errorCount) * 100
     }))
     .sort((a, b) => b.count - a.count)
-  
+
   return {
     totalRequests: allMetrics.length,
     averageResponseTime: responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length,
@@ -329,7 +332,7 @@ export function getPerformanceStats(
 export function getResourceStats(timeRangeMs: number = 60 * 60 * 1000): ResourceMetric[] {
   const now = Date.now()
   const startTime = now - timeRangeMs
-  
+
   const metrics = resourceMetrics.get('system') || []
   return metrics.filter(m => m.timestamp >= startTime)
 }
@@ -361,7 +364,7 @@ export function getAllResourceMetrics(): Map<string, ResourceMetric[]> {
 function cleanupOldMetrics() {
   const now = Date.now()
   const cutoffTime = now - METRICS_RETENTION_MS
-  
+
   // Clean up performance metrics
   for (const [key, metrics] of performanceMetrics.entries()) {
     const filtered = metrics.filter(m => m.timestamp >= cutoffTime)
@@ -371,7 +374,7 @@ function cleanupOldMetrics() {
       performanceMetrics.set(key, filtered)
     }
   }
-  
+
   // Clean up error metrics
   for (const [key, metrics] of errorMetrics.entries()) {
     const filtered = metrics.filter(m => m.timestamp >= cutoffTime)
@@ -381,7 +384,7 @@ function cleanupOldMetrics() {
       errorMetrics.set(key, filtered)
     }
   }
-  
+
   // Clean up resource metrics
   for (const [key, metrics] of resourceMetrics.entries()) {
     const filtered = metrics.filter(m => m.timestamp >= cutoffTime)
@@ -414,10 +417,10 @@ export function startResourceMonitoring(intervalMs: number = 30000) {
   if (resourceMonitoringInterval) {
     clearInterval(resourceMonitoringInterval)
   }
-  
+
   // Record initial metric
   recordResourceMetric()
-  
+
   // Set up new interval
   resourceMonitoringInterval = setInterval(() => {
     recordResourceMetric()
@@ -434,13 +437,41 @@ export function stopResourceMonitoring() {
   }
 }
 
+interface SlowQuery {
+  query: string | null
+  mean_time: number | null
+  calls: bigint | number | null
+  total_time: number | null
+}
+
+interface ConnectionStat {
+  total_connections: bigint | number | null
+  active_connections: bigint | number | null
+  idle_connections: bigint | number | null
+  idle_in_transaction: bigint | number | null
+}
+
+interface QueryStat {
+  datname: string | null
+  numbackends: bigint | number | null
+  xact_commit: bigint | number | null
+  xact_rollback: bigint | number | null
+  blks_read: bigint | number | null
+  blks_hit: bigint | number | null
+  tup_returned: bigint | number | null
+  tup_fetched: bigint | number | null
+  tup_inserted: bigint | number | null
+  tup_updated: bigint | number | null
+  tup_deleted: bigint | number | null
+}
+
 /**
  * Get database performance metrics
  */
 export async function getDatabasePerformanceMetrics() {
   try {
-    const [slowQueries, connectionStats, queryStats] = await (Promise.all([
-      prisma().$queryRaw`
+    const [slowQueries, connectionStats, queryStats] = await Promise.all([
+      prisma().$queryRaw<SlowQuery[]>`
         SELECT 
           query,
           mean_time,
@@ -451,7 +482,7 @@ export async function getDatabasePerformanceMetrics() {
         ORDER BY mean_time DESC
         LIMIT 10
       `,
-      prisma().$queryRaw`
+      prisma().$queryRaw<ConnectionStat[]>`
         SELECT 
           count(*) as total_connections,
           count(*) FILTER (WHERE state = 'active') as active_connections,
@@ -459,7 +490,7 @@ export async function getDatabasePerformanceMetrics() {
           count(*) FILTER (WHERE state = 'idle in transaction') as idle_in_transaction
         FROM pg_stat_activity
       `,
-      prisma().$queryRaw`
+      prisma().$queryRaw<QueryStat[]>`
         SELECT 
           datname,
           numbackends,
@@ -475,12 +506,12 @@ export async function getDatabasePerformanceMetrics() {
         FROM pg_stat_database 
         WHERE datname = current_database()
       `
-    ]) as Promise<[any[], any[], any[]]>)
-    
+    ])
+
     return {
       slowQueries,
-      connectionStats: connectionStats[0] as any,
-      queryStats: queryStats[0] as any
+      connectionStats: connectionStats[0] ?? null,
+      queryStats: queryStats[0] ?? null
     }
   } catch (error) {
     console.error('Failed to get database performance metrics:', error)

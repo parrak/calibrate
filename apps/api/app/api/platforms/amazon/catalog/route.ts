@@ -25,5 +25,5 @@ export const GET = withSecurity(async (req: NextRequest) => {
   }
 })
 
-export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
+export const OPTIONS = withSecurity(async (_req: NextRequest) => new NextResponse(null, { status: 204 }))
 

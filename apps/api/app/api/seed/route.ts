@@ -196,7 +196,7 @@ export async function POST() {
           create: {
             id: createId(),
             // Ensure required fields for Sku
-            name: (skuInfo as any).name ?? skuInfo.code,
+            name: (skuInfo as { name?: string }).name ?? skuInfo.code,
             code: skuInfo.code,
             productId: product.id,
           },
@@ -287,10 +287,10 @@ export async function POST() {
       project: project.name,
       products: createdProducts,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error seeding database:', error)
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

@@ -4,19 +4,20 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { loadavg } from 'os'
 import { stagingDatabase } from '@/lib/staging-database'
 import { stagingConfig } from '@/config/staging'
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const startTime = Date.now()
-  
+
   try {
     // Get staging database health
     const dbHealth = await stagingDatabase.getHealthStatus()
-    
+
     // Get system metrics
     const systemMetrics = await getSystemMetrics()
-    
+
     // Get staging-specific configuration
     const config = {
       environment: stagingConfig.NODE_ENV,
@@ -24,12 +25,12 @@ export async function GET(req: NextRequest) {
       monitoring: stagingConfig.monitoring,
       security: stagingConfig.security
     }
-    
+
     const responseTime = Date.now() - startTime
-    
+
     // Determine overall health
     const isHealthy = dbHealth.connected && dbHealth.migrations && dbHealth.testData
-    
+
     return NextResponse.json({
       status: isHealthy ? 'healthy' : 'unhealthy',
       timestamp: new Date().toISOString(),
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
     })
   } catch (error) {
     console.error('Staging health check failed:', error)
-    
+
     return NextResponse.json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
@@ -81,7 +82,7 @@ export async function GET(req: NextRequest) {
 async function getSystemMetrics() {
   const memoryUsage = process.memoryUsage()
   const uptime = process.uptime()
-  
+
   return {
     uptime: Math.floor(uptime),
     memory: {
@@ -90,7 +91,7 @@ async function getSystemMetrics() {
       external: Math.round(memoryUsage.external / 1024 / 1024)
     },
     cpu: {
-      loadAverage: process.platform === 'win32' ? [0, 0, 0] : require('os').loadavg()
+      loadAverage: process.platform === 'win32' ? [0, 0, 0] : loadavg()
     },
     node: {
       version: process.version,

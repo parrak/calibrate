@@ -10,7 +10,7 @@ export type PriceChangeStatus =
   | 'REJECTED'
   | 'FAILED'
   | 'ROLLED_BACK'
-export type PolicyCheck = { name: string; ok: boolean; [k: string]: any }
+export type PolicyCheck = { name: string; ok: boolean; [k: string]: unknown }
 
 export type PriceChangeDTO = {
   id: string
@@ -20,7 +20,7 @@ export type PriceChangeDTO = {
   toAmount: number
   createdAt: string
   source?: string
-  context?: any
+  context?: Record<string, unknown>
   policyResult?: { ok: boolean; checks: PolicyCheck[] }
   approvedBy?: string | null
   appliedAt?: string | null
@@ -35,7 +35,7 @@ export type ApiErrorShape = {
   status: number
   error: string
   message?: string
-  details?: any
+  details?: Record<string, unknown>
 }
 
 const ROLE_ORDER: Record<ProjectRole, number> = {
@@ -120,14 +120,14 @@ export function toPriceChangeDTO(pc: PriceChange): PriceChangeDTO {
     createdAt: pc.createdAt.toISOString(),
     source: pc.source ?? undefined,
     context: pc.context ?? undefined,
-    policyResult: pc.policyResult as any,
+    policyResult: pc.policyResult as { ok: boolean; checks: PolicyCheck[] } | null | undefined,
     approvedBy: pc.approvedBy,
     appliedAt: pc.appliedAt ? pc.appliedAt.toISOString() : null,
     connectorStatus: normalizeConnectorStatus(pc.connectorStatus),
   }
 }
 
-function normalizeConnectorStatus(raw: any) {
+function normalizeConnectorStatus(raw: unknown) {
   if (!raw) return undefined
   const target = typeof raw.target === 'string' ? (raw.target as string) : undefined
   const state = typeof raw.state === 'string' ? (raw.state as ConnectorState) : undefined
@@ -148,11 +148,13 @@ function normalizeConnectorStatus(raw: any) {
 }
 
 export function inferConnectorTarget(pc: PriceChange): string {
-  const fromStatus = (pc.connectorStatus as any)?.target
+  const connectorStatus = pc.connectorStatus as { target?: string } | null | undefined
+  const fromStatus = connectorStatus?.target
   if (typeof fromStatus === 'string' && fromStatus.length) {
     return fromStatus
   }
-  const contextTarget = (pc.context as any)?.target
+  const contextObj = pc.context as { target?: string } | null | undefined
+  const contextTarget = contextObj?.target
   if (typeof contextTarget === 'string' && contextTarget.length) {
     return contextTarget
   }

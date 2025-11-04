@@ -12,7 +12,7 @@ export const GET = withSecurity(withAdminAuth(async (req: NextRequest) => {
   try {
     const url = new URL(req.url)
     const action = url.searchParams.get('action')
-    
+
     switch (action) {
       case 'status':
         return await getStagingStatus()
@@ -39,7 +39,7 @@ export const POST = withSecurity(withAdminAuth(async (req: NextRequest) => {
   try {
     const url = new URL(req.url)
     const action = url.searchParams.get('action')
-    
+
     switch (action) {
       case 'reset':
         return await resetStagingEnvironment()
@@ -64,7 +64,7 @@ export const POST = withSecurity(withAdminAuth(async (req: NextRequest) => {
 
 async function getStagingStatus() {
   const dbHealth = await stagingDatabase.getHealthStatus()
-  
+
   return NextResponse.json({
     environment: 'staging',
     timestamp: new Date().toISOString(),
@@ -80,7 +80,7 @@ async function getStagingStatus() {
 
 async function getStagingHealth() {
   const dbHealth = await stagingDatabase.getHealthStatus()
-  
+
   return NextResponse.json({
     environment: 'staging',
     timestamp: new Date().toISOString(),
@@ -100,7 +100,7 @@ async function getStagingHealth() {
 
 async function getStagingConfig() {
   const { stagingConfig } = await import('@/config/staging')
-  
+
   return NextResponse.json({
     environment: 'staging',
     timestamp: new Date().toISOString(),
@@ -132,7 +132,7 @@ async function getStagingConfig() {
 async function resetStagingEnvironment() {
   try {
     await stagingDatabase.reset()
-    
+
     return NextResponse.json({
       success: true,
       message: 'Staging environment reset successfully',
@@ -146,7 +146,7 @@ async function resetStagingEnvironment() {
 async function seedStagingData() {
   try {
     await stagingDatabase.initialize()
-    
+
     return NextResponse.json({
       success: true,
       message: 'Staging data seeded successfully',
@@ -172,6 +172,6 @@ async function cleanupStagingData() {
 }
 
 // Handle OPTIONS preflight requests
-export const OPTIONS = withSecurity(async (req: NextRequest) => {
+export const OPTIONS = withSecurity(async (_req: NextRequest) => {
   return new NextResponse(null, { status: 204 })
 })

@@ -26,12 +26,12 @@ export const POST = withSecurity(async (req: NextRequest) => {
             lowestPriceCents: snapshot.lowestPrice != null ? Math.round(Number(snapshot.lowestPrice) * 100) : null,
             buyBoxPriceCents: snapshot.buyBoxPrice != null ? Math.round(Number(snapshot.buyBoxPrice) * 100) : null,
             offerCount: snapshot.offerCount || 0,
-            data: snapshot as any,
+            data: snapshot as Record<string, unknown>,
           },
         })
         results.push({ asin, ok: true, id: saved.id })
-      } catch (err: any) {
-        results.push({ asin, ok: false, error: err?.message || 'unknown error' })
+      } catch (err: unknown) {
+        results.push({ asin, ok: false, error: err instanceof Error ? err.message : 'unknown error' })
       }
     }
 
@@ -42,4 +42,4 @@ export const POST = withSecurity(async (req: NextRequest) => {
   }
 })
 
-export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
+export const OPTIONS = withSecurity(async (_req: NextRequest) => new NextResponse(null, { status: 204 }))

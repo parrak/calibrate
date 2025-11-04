@@ -54,7 +54,7 @@ export const GET = withSecurity(trackPerformance(async (req: NextRequest) => {
     return errorJson(access.error)
   }
 
-  const where: any = { projectId: access.project.id }
+  const where: { projectId: string; status?: PriceChangeStatus; OR?: Array<{ source?: { contains: string; mode: string } } | { context?: { path: string[]; string_contains: string; mode: string } }> } = { projectId: access.project.id }
   if (statusFilter) {
     where.status = statusFilter
   }
@@ -72,7 +72,13 @@ export const GET = withSecurity(trackPerformance(async (req: NextRequest) => {
     ]
   }
 
-  const query: any = {
+  const query: {
+    where: typeof where
+    orderBy: { createdAt: 'desc' }
+    take: number
+    cursor?: { id: string }
+    skip?: number
+  } = {
     where,
     orderBy: { createdAt: 'desc' },
     take: PAGE_SIZE + 1,
@@ -86,11 +92,11 @@ export const GET = withSecurity(trackPerformance(async (req: NextRequest) => {
   let records
   try {
     records = await prisma().priceChange.findMany(query)
-  } catch (err: any) {
+  } catch (err: unknown) {
     return errorJson({
       status: 400,
       error: 'InvalidCursor',
-      message: err?.message ?? 'Invalid cursor supplied.',
+      message: err instanceof Error ? err.message : 'Invalid cursor supplied.',
     })
   }
 
@@ -105,6 +111,6 @@ export const GET = withSecurity(trackPerformance(async (req: NextRequest) => {
 }))
 
 // Handle OPTIONS preflight requests
-export const OPTIONS = withSecurity(async (req: NextRequest) => {
+export const OPTIONS = withSecurity(async (_req: NextRequest) => {
   return new NextResponse(null, { status: 204 })
 })

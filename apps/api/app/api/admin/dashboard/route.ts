@@ -146,12 +146,12 @@ async function getPriceChangeMetrics(projectId: string | null, startDate: Date) 
 async function getSystemHealthMetrics() {
   const memoryUsage = process.memoryUsage()
   const uptime = process.uptime()
-  
+
   // Test database connection
   const dbStart = Date.now()
   await prisma().$queryRaw`SELECT 1`
   const dbLatency = Date.now() - dbStart
-  
+
   return {
     uptime: Math.floor(uptime),
     memory: {

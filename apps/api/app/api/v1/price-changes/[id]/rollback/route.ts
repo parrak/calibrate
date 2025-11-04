@@ -103,8 +103,8 @@ export const POST = withSecurity(
       })
 
       return NextResponse.json({ ok: true, item: toPriceChangeDTO(updated) })
-    } catch (err: any) {
-      if (err?.code === 'PRICE_NOT_FOUND') {
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'PRICE_NOT_FOUND') {
         return errorJson({
           status: 404,
           error: 'NotFound',

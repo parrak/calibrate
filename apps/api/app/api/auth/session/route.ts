@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
     const ctx = authSecurityManager.createAuthContext({ userId, roles: roles || ['admin'], projectId, tenantId })
     const token = authSecurityManager.generateSessionToken(ctx)
     return NextResponse.json({ token, context: ctx })
-  } catch (err: any) {
-    return NextResponse.json({ error: 'Failed to create session', message: err?.message || String(err) }, { status: 500 })
+  } catch (err: unknown) {
+    return NextResponse.json({ error: 'Failed to create session', message: err instanceof Error ? err.message : String(err) }, { status: 500 })
   }
 }
 

@@ -49,7 +49,8 @@ export const GET = withSecurity(async function GET(
       console.error('[platform GET] Prisma client is undefined')
       return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
     }
-    if (!(db as any)?.project) {
+    const dbRecord = db as Record<string, unknown>
+    if (!dbRecord.project) {
       console.error('[platform GET] Prisma client missing model accessors', { hasDb: !!db, dbKeys: Object.keys(db || {}) })
       return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
     }
@@ -65,7 +66,7 @@ export const GET = withSecurity(async function GET(
     }
 
     // Check if platform is registered
-    if (!ConnectorRegistry.isRegistered(platform as any)) {
+    if (!ConnectorRegistry.isRegistered(platform as 'shopify' | 'amazon')) {
       return NextResponse.json(
         { error: `Platform '${platform}' is not registered` },
         { status: 404 }
@@ -174,7 +175,7 @@ export const POST = withSecurity(async function POST(
     }
 
     // Check if platform is registered
-    if (!ConnectorRegistry.isRegistered(platform as any)) {
+    if (!ConnectorRegistry.isRegistered(platform as 'shopify' | 'amazon')) {
       return NextResponse.json(
         { error: `Platform '${platform}' is not registered` },
         { status: 404 }
@@ -194,7 +195,7 @@ export const POST = withSecurity(async function POST(
     }
 
     // Build platform-specific connector config
-    let connectorConfig: any;
+    let connectorConfig: { platform: 'shopify' | 'amazon'; apiKey?: string; apiSecret?: string; scopes?: string[]; webhookSecret?: string; apiVersion?: string } | undefined;
     if (platform === 'shopify') {
       connectorConfig = {
         platform: 'shopify' as const,
@@ -219,14 +220,14 @@ export const POST = withSecurity(async function POST(
 
     // Test connection with credentials
     const connector = await ConnectorRegistry.createConnector(
-      platform as any,
+      platform as 'shopify' | 'amazon',
       connectorConfig
     );
 
     // Initialize connector before testing connection
     await connector.initialize({
       ...credentials,
-      platform: platform as any,
+      platform: platform as 'shopify' | 'amazon',
     });
 
     const isConnected = await connector.testConnection();
@@ -445,6 +446,6 @@ export const DELETE = withSecurity(async function DELETE(
 /**
  * OPTIONS handler for CORS preflight
  */
-export const OPTIONS = withSecurity(async function OPTIONS(req: NextRequest) {
+export const OPTIONS = withSecurity(async function OPTIONS(_req: NextRequest) {
   return new NextResponse(null, { status: 204 });
 });

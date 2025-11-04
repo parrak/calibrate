@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ShopifyConnector, type ShopifyProduct } from '@calibr/shopify-connector';
 import { prisma } from '@calibr/db';
+import type { Prisma } from '@calibr/db';
 import { withSecurity } from '@/lib/security-headers';
 import { createId } from '@paralleldrive/cuid2';
 import {
@@ -14,6 +15,8 @@ import {
   getWebhooksClient,
   getPricingClient,
 } from '@/lib/shopify-connector';
+
+type ShopifyIntegration = Prisma.ShopifyIntegrationGetPayload<Record<string, never>>;
 
 export const runtime = 'nodejs';
 
@@ -94,25 +97,25 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
       });
     }
 
-    let result: any;
+    let result: unknown;
 
     switch (action) {
       case 'sync_products':
         result = await syncProducts(connector, integration);
         break;
-      
+
       case 'update_prices':
         result = await updatePrices(connector, integration, data);
         break;
-      
+
       case 'test_connection':
         result = await testConnection(connector, integration);
         break;
-      
+
       case 'setup_webhooks':
         result = await setupWebhooks(connector, integration);
         break;
-      
+
       default:
         throw new Error(`Unknown sync action: ${action}`);
     }
@@ -183,15 +186,15 @@ export const OPTIONS = withSecurity(async () => {
 /**
  * Sync products from Shopify
  */
-async function syncProducts(connector: ShopifyConnector, integration: any) {
+async function syncProducts(connector: ShopifyConnector, integration: ShopifyIntegration) {
   const productsClient = getProductsClient(connector);
   const products = await productsClient.listProducts({ limit: 100 });
-  
+
   // Get project to get tenantId
   const project = await prisma().project.findUnique({
     where: { id: integration.projectId },
   });
-  
+
   if (project) {
     // Log sync event
     await prisma().event.create({
@@ -222,22 +225,23 @@ async function syncProducts(connector: ShopifyConnector, integration: any) {
 /**
  * Update prices in Shopify
  */
-async function updatePrices(connector: ShopifyConnector, integration: any, data: any) {
-  if (!data?.priceUpdates || !Array.isArray(data.priceUpdates)) {
+async function updatePrices(connector: ShopifyConnector, integration: ShopifyIntegration, data: unknown) {
+  if (!data || typeof data !== 'object' || !('priceUpdates' in data) || !Array.isArray((data as { priceUpdates: unknown }).priceUpdates)) {
     throw new Error('priceUpdates array is required');
   }
 
   const pricingClient = getPricingClient(connector);
+  const dataWithPriceUpdates = data as { priceUpdates: unknown[]; batchSize?: number };
   const results = await pricingClient.updateVariantPricesBulk({
-    updates: data.priceUpdates,
-    batchSize: data.batchSize || 10,
+    updates: dataWithPriceUpdates.priceUpdates,
+    batchSize: dataWithPriceUpdates.batchSize || 10,
   });
 
   // Get project to get tenantId
   const project = await prisma().project.findUnique({
     where: { id: integration.projectId },
   });
-  
+
   if (project) {
     // Log price update event
     await prisma().event.create({
@@ -262,10 +266,10 @@ async function updatePrices(connector: ShopifyConnector, integration: any, data:
 /**
  * Test connection to Shopify
  */
-async function testConnection(connector: ShopifyConnector, integration: any) {
+async function testConnection(connector: ShopifyConnector, _integration: ShopifyIntegration) {
   const isConnected = await connector.testConnection();
   const status = await connector.getConnectionStatus();
-  
+
   return {
     connected: isConnected,
     status,
@@ -275,7 +279,7 @@ async function testConnection(connector: ShopifyConnector, integration: any) {
 /**
  * Setup webhooks for Shopify integration
  */
-async function setupWebhooks(connector: ShopifyConnector, integration: any) {
+async function setupWebhooks(connector: ShopifyConnector, integration: ShopifyIntegration) {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE;
   if (!baseUrl) {
     throw new Error('NEXT_PUBLIC_API_BASE is not configured');
@@ -283,7 +287,7 @@ async function setupWebhooks(connector: ShopifyConnector, integration: any) {
 
   const webhooksClient = getWebhooksClient(connector);
   const webhooks = await webhooksClient.subscribeToCommonWebhooks(baseUrl);
-  
+
   // Store webhook subscriptions in database
   for (const webhook of webhooks) {
     await prisma().shopifyWebhookSubscription.upsert({

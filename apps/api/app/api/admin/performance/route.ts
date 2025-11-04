@@ -1,41 +1,76 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { 
-  getPerformanceStats, 
+import {
+  getPerformanceStats,
   getResourceStats,
   getDatabasePerformanceMetrics
 } from '@/lib/performance-monitor'
 
+interface ResourceStat {
+  timestamp: number
+  memory: {
+    used: number
+    total: number
+    external: number
+    rss: number
+  }
+  cpu: {
+    loadAverage: [number, number, number]
+  }
+  database: {
+    connections: number
+    activeQueries: number
+    slowQueries: number
+  }
+  uptime: number
+}
+
+interface PerformanceStats {
+  totalRequests: number
+  averageResponseTime: number
+  errorRate: number
+  throughput: number
+  p50ResponseTime: number
+  p95ResponseTime: number
+  p99ResponseTime: number
+  slowestEndpoints: Array<{ endpoint: string; averageTime: number }>
+  errorBreakdown: Record<string, number>
+}
+
+interface DatabaseMetrics {
+  slowQueries: unknown[]
+  connectionStats: unknown
+  queryStats: unknown
+}
+
 export async function GET(req: NextRequest) {
   try {
     const startTime = Date.now()
-    
+
     // Get query parameters
     const timeRange = req.nextUrl.searchParams.get('timeRange') || '24h'
-    const projectId = req.nextUrl.searchParams.get('project') || undefined
-    
+    const _projectId = req.nextUrl.searchParams.get('project') || undefined
+
     // Calculate time range
     const timeRangeMs = getTimeRangeMs(timeRange)
-    
+
     // Get comprehensive performance data
     const [
       performanceStats,
       resourceStats,
-      databaseMetrics,
-      healthMetrics
+      databaseMetrics
     ] = await Promise.all([
       getPerformanceStats(timeRangeMs, undefined),
       getResourceStats(timeRangeMs),
-      getDatabasePerformanceMetrics(),
-      getHealthMetrics()
+      getDatabasePerformanceMetrics()
     ])
-    
+
     // Calculate trends and insights
-    const trends = calculateTrends(resourceStats, timeRangeMs)
+    const trends = calculateTrends(resourceStats)
     const insights = generateInsights(performanceStats, resourceStats, databaseMetrics)
     const alerts = generateAlerts(performanceStats, resourceStats, databaseMetrics)
-    
+
     const responseTime = Date.now() - startTime
-    
+
     return NextResponse.json({
       timestamp: new Date().toISOString(),
       timeRange,
@@ -106,8 +141,8 @@ function getTimeRangeMs(timeRange: string): number {
 async function getHealthMetrics() {
   try {
     const { prisma } = await import('@calibr/db')
-    
-    const [dbHealth, systemHealth] = await Promise.all([
+
+    const [_dbHealth, systemHealth] = await Promise.all([
       prisma().$queryRaw`SELECT 1 as health`,
       Promise.resolve({
         uptime: process.uptime(),
@@ -116,7 +151,7 @@ async function getHealthMetrics() {
         nodeVersion: process.version
       })
     ])
-    
+
     return {
       database: { status: 'healthy', latency: 0 },
       system: systemHealth
@@ -129,7 +164,7 @@ async function getHealthMetrics() {
   }
 }
 
-function calculateTrends(resourceStats: any[], timeRangeMs: number) {
+function calculateTrends(resourceStats: ResourceStat[]) {
   if (resourceStats.length < 2) {
     return {
       memory: { direction: 'stable', change: 0 },
@@ -137,14 +172,14 @@ function calculateTrends(resourceStats: any[], timeRangeMs: number) {
       database: { direction: 'stable', change: 0 }
     }
   }
-  
+
   const latest = resourceStats[resourceStats.length - 1]
   const previous = resourceStats[Math.max(0, resourceStats.length - 2)]
-  
+
   const memoryChange = ((latest.memory.used - previous.memory.used) / previous.memory.used) * 100
   const cpuChange = latest.cpu.loadAverage[0] - previous.cpu.loadAverage[0]
   const dbChange = latest.database.connections - previous.database.connections
-  
+
   return {
     memory: {
       direction: memoryChange > 5 ? 'increasing' : memoryChange < -5 ? 'decreasing' : 'stable',
@@ -161,17 +196,17 @@ function calculateTrends(resourceStats: any[], timeRangeMs: number) {
   }
 }
 
-function calculateHealthScore(performanceStats: any, resourceStats: any[]): number {
+function calculateHealthScore(performanceStats: PerformanceStats, resourceStats: ResourceStat[]): number {
   let score = 100
-  
+
   // Deduct points for high error rate
   if (performanceStats.errorRate > 5) score -= 25
   else if (performanceStats.errorRate > 1) score -= 15
-  
+
   // Deduct points for slow response times
   if (performanceStats.p95ResponseTime > 2000) score -= 25
   else if (performanceStats.p95ResponseTime > 1000) score -= 15
-  
+
   // Deduct points for high memory usage
   const latestMemory = resourceStats[resourceStats.length - 1]?.memory
   if (latestMemory) {
@@ -179,52 +214,52 @@ function calculateHealthScore(performanceStats: any, resourceStats: any[]): numb
     if (memoryUsagePercent > 90) score -= 20
     else if (memoryUsagePercent > 80) score -= 10
   }
-  
+
   // Deduct points for high CPU load
   const latestCpu = resourceStats[resourceStats.length - 1]?.cpu
   if (latestCpu && latestCpu.loadAverage[0] > 2) {
     score -= 15
   }
-  
+
   return Math.max(0, score)
 }
 
-function calculateMemoryUsage(resourceStats: any[]) {
+function calculateMemoryUsage(resourceStats: ResourceStat[]) {
   if (resourceStats.length === 0) return { used: 0, total: 0, percentage: 0 }
-  
+
   const latest = resourceStats[resourceStats.length - 1]
   const used = latest.memory.used
   const total = latest.memory.total
   const percentage = Math.round((used / total) * 100)
-  
+
   return { used, total, percentage }
 }
 
-function calculateCpuLoad(resourceStats: any[]) {
+function calculateCpuLoad(resourceStats: ResourceStat[]) {
   if (resourceStats.length === 0) return { load1: 0, load5: 0, load15: 0 }
-  
+
   const latest = resourceStats[resourceStats.length - 1]
   const [load1, load5, load15] = latest.cpu.loadAverage
-  
+
   return { load1, load5, load15 }
 }
 
-function generateInsights(performanceStats: any, resourceStats: any[], databaseMetrics: any): string[] {
+function generateInsights(performanceStats: PerformanceStats, resourceStats: ResourceStat[], databaseMetrics: DatabaseMetrics): string[] {
   const insights: string[] = []
-  
+
   // Performance insights
   if (performanceStats.p95ResponseTime > 1000) {
     insights.push(`95th percentile response time is ${Math.round(performanceStats.p95ResponseTime)}ms, which is above recommended 1000ms threshold`)
   }
-  
+
   if (performanceStats.errorRate > 1) {
     insights.push(`Error rate is ${performanceStats.errorRate.toFixed(2)}%, which exceeds the 1% threshold`)
   }
-  
+
   if (performanceStats.throughput > 1000) {
     insights.push(`High throughput detected: ${Math.round(performanceStats.throughput)} requests/second`)
   }
-  
+
   // Resource insights
   const latestMemory = resourceStats[resourceStats.length - 1]?.memory
   if (latestMemory) {
@@ -233,18 +268,18 @@ function generateInsights(performanceStats: any, resourceStats: any[], databaseM
       insights.push(`Memory usage is at ${Math.round(memoryUsagePercent)}%, consider monitoring for potential issues`)
     }
   }
-  
+
   // Database insights
   if (databaseMetrics.slowQueries && databaseMetrics.slowQueries.length > 0) {
     insights.push(`${databaseMetrics.slowQueries.length} slow queries detected in the database`)
   }
-  
+
   return insights
 }
 
-function generateAlerts(performanceStats: any, resourceStats: any[], databaseMetrics: any): Array<{type: string, message: string, severity: string}> {
+function generateAlerts(performanceStats: PerformanceStats, resourceStats: ResourceStat[], _databaseMetrics: DatabaseMetrics): Array<{type: string, message: string, severity: string}> {
   const alerts: Array<{type: string, message: string, severity: string}> = []
-  
+
   // Performance alerts
   if (performanceStats.errorRate > 5) {
     alerts.push({
@@ -259,7 +294,7 @@ function generateAlerts(performanceStats: any, resourceStats: any[], databaseMet
       severity: 'warning'
     })
   }
-  
+
   if (performanceStats.p95ResponseTime > 2000) {
     alerts.push({
       type: 'response_time',
@@ -267,7 +302,7 @@ function generateAlerts(performanceStats: any, resourceStats: any[], databaseMet
       severity: 'critical'
     })
   }
-  
+
   // Resource alerts
   const latestMemory = resourceStats[resourceStats.length - 1]?.memory
   if (latestMemory) {
@@ -286,35 +321,35 @@ function generateAlerts(performanceStats: any, resourceStats: any[], databaseMet
       })
     }
   }
-  
+
   return alerts
 }
 
-function generateResponseTimeChart(resourceStats: any[]) {
+function generateResponseTimeChart(resourceStats: ResourceStat[]) {
   // Generate chart data for response times over time
-  return resourceStats.map((stat, index) => ({
+  return resourceStats.map((stat) => ({
     timestamp: stat.timestamp,
     value: stat.memory?.used || 0 // Placeholder - would be actual response time data
   }))
 }
 
-function generateThroughputChart(resourceStats: any[]) {
+function generateThroughputChart(resourceStats: ResourceStat[]) {
   // Generate chart data for throughput over time
-  return resourceStats.map((stat, index) => ({
-    timestamp: stat.timestamp,
+  return resourceStats.map((_stat, index) => ({
+    timestamp: _stat.timestamp,
     value: index * 10 // Placeholder - would be actual throughput data
   }))
 }
 
-function generateErrorRateChart(resourceStats: any[]) {
+function generateErrorRateChart(resourceStats: ResourceStat[]) {
   // Generate chart data for error rate over time
-  return resourceStats.map((stat, index) => ({
+  return resourceStats.map((stat, _index) => ({
     timestamp: stat.timestamp,
     value: Math.random() * 5 // Placeholder - would be actual error rate data
   }))
 }
 
-function generateResourceUsageChart(resourceStats: any[]) {
+function generateResourceUsageChart(resourceStats: ResourceStat[]) {
   // Generate chart data for resource usage over time
   return resourceStats.map(stat => ({
     timestamp: stat.timestamp,

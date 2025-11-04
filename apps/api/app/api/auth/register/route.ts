@@ -95,10 +95,10 @@ export const POST = withSecurity(async (req: NextRequest) => {
       },
       { status: 201 }
     )
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('User registration failed:', error)
     return NextResponse.json(
-      { error: 'Failed to register user', message: error?.message || String(error) },
+      { error: 'Failed to register user', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

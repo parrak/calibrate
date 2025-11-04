@@ -9,12 +9,12 @@ import { prisma } from '@calibr/db'
 export async function GET() {
   try {
     const db = prisma()
-    
+
     // Check if passwordHash column exists by trying to query it
     let columnExists = false
     let userHasPassword = false
     let userExists = false
-    
+
     try {
       // Try to query passwordHash - if column doesn't exist, this will fail
       const user = await db.user.findUnique({
@@ -25,11 +25,11 @@ export async function GET() {
           passwordHash: true,
         },
       })
-      
+
       userExists = !!user
       columnExists = true // If we got here, column exists
       userHasPassword = !!user?.passwordHash
-      
+
       return NextResponse.json({
         success: true,
         checks: {
@@ -47,9 +47,10 @@ export async function GET() {
             : '⚠️ User exists but has no passwordHash'
           : '❌ User does not exist',
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If query failed, column probably doesn't exist
-      if (error.message?.includes('passwordHash') || error.message?.includes('column')) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (errorMessage.includes('passwordHash') || errorMessage.includes('column')) {
         columnExists = false
         return NextResponse.json({
           success: false,
@@ -59,15 +60,15 @@ export async function GET() {
             userHasPassword: false,
           },
           message: '❌ passwordHash column does not exist - migration not applied',
-          error: error.message,
+          error: errorMessage,
         }, { status: 500 })
       }
       throw error
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json({
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
     }, { status: 500 })
   }
 }

@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     // Parse state to get project info
     let projectId: string;
     let shopDomain: string;
-    
+
     try {
       const stateData = JSON.parse(state);
       projectId = stateData.projectId;
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     const shopifyAuth = auth.createAuthFromResponse(shopDomain, oauthResponse);
 
     // Store integration in database
-    const integration = await prisma().shopifyIntegration.upsert({
+    await prisma().shopifyIntegration.upsert({
       where: { shopDomain },
       update: {
         accessToken: shopifyAuth.accessToken,
@@ -77,12 +77,12 @@ export async function GET(request: NextRequest) {
 
     // Redirect to success page
     const successUrl = `${process.env.NEXT_PUBLIC_CONSOLE_URL}/p/${projectId}/integrations/shopify?success=true`;
-    
+
     return NextResponse.redirect(successUrl);
 
   } catch (error) {
     console.error('Shopify OAuth callback error:', error);
-    
+
     // Redirect to error page
     const errorUrl = `${process.env.NEXT_PUBLIC_CONSOLE_URL}/p/integrations/shopify?error=oauth_failed`;
     return NextResponse.redirect(errorUrl);

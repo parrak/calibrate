@@ -17,17 +17,17 @@ export interface ValidationRule {
   min?: number
   max?: number
   pattern?: RegExp
-  enum?: any[]
-  custom?: (value: any) => boolean | string
+  enum?: unknown[]
+  custom?: (value: unknown) => boolean | string
   sanitize?: boolean
   trim?: boolean
 }
 
 export interface ValidationResult {
   valid: boolean
-  value?: any
+  value?: unknown
   errors: string[]
-  sanitized?: any
+  sanitized?: unknown
 }
 
 export interface ValidationSchema {
@@ -55,9 +55,9 @@ export class InputValidator {
   /**
    * Validate input against schema
    */
-  validate(input: any, schema: ValidationSchema | string): ValidationResult {
+  validate(input: Record<string, unknown>, schema: ValidationSchema | string): ValidationResult {
     const validationSchema = typeof schema === 'string' ? this.schemas.get(schema) : schema
-    
+
     if (!validationSchema) {
       return {
         valid: false,
@@ -67,12 +67,12 @@ export class InputValidator {
     }
 
     const errors: string[] = []
-    const result: any = {}
+    const result: Record<string, unknown> = {}
 
     for (const [field, rules] of Object.entries(validationSchema)) {
       const fieldValue = input[field]
       const fieldResult = this.validateField(field, fieldValue, rules)
-      
+
       if (!fieldResult.valid) {
         errors.push(...fieldResult.errors)
       } else {
@@ -91,7 +91,7 @@ export class InputValidator {
   /**
    * Validate a single field
    */
-  private validateField(field: string, value: any, rules: ValidationRule): ValidationResult {
+  private validateField(field: string, value: unknown, rules: ValidationRule): ValidationResult {
     const errors: string[] = []
 
     // Check if required
@@ -178,7 +178,7 @@ export class InputValidator {
   /**
    * Validate data type
    */
-  private validateType(field: string, value: any, type: string): ValidationResult {
+  private validateType(field: string, value: unknown, type: string): ValidationResult {
     const errors: string[] = []
     let convertedValue = value
 
@@ -266,18 +266,18 @@ export class InputValidator {
   private sanitizeString(input: string): string {
     // Remove null bytes
     let sanitized = input.replace(/\0/g, '')
-    
+
     // HTML sanitization: strip HTML tags (server-safe)
     sanitized = sanitized.replace(/<[^>]*>/g, '')
-    
+
     // Remove potential SQL injection patterns
     sanitized = sanitized.replace(/['";\\]/g, '')
-    
+
     // Remove potential XSS patterns
     sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     sanitized = sanitized.replace(/javascript:/gi, '')
     sanitized = sanitized.replace(/on\w+\s*=/gi, '')
-    
+
     return sanitized
   }
 
@@ -288,7 +288,7 @@ export class InputValidator {
     try {
       const body = await req.json()
       return this.validate(body, schema)
-    } catch (error) {
+    } catch {
       return {
         valid: false,
         errors: ['Invalid JSON in request body'],
@@ -309,7 +309,7 @@ export class InputValidator {
    * Validate headers
    */
   validateHeaders(req: NextRequest, schema: ValidationSchema | string): ValidationResult {
-    const headers: any = {}
+    const headers: Record<string, string> = {}
     req.headers.forEach((value, key) => {
       headers[key] = value
     })

@@ -16,7 +16,7 @@ export const runtime = 'nodejs';
  *
  * List all registered platform connectors
  */
-export const GET = withSecurity(async (request: NextRequest) => {
+export const GET = withSecurity(async (_request: NextRequest) => {
   try {
     const platforms = ConnectorRegistry.getRegisteredPlatforms();
 
@@ -25,7 +25,7 @@ export const GET = withSecurity(async (request: NextRequest) => {
       // Platform metadata with better naming
       let name: string = platform;
       let description = '';
-      
+
       switch (platform) {
         case 'shopify':
           name = 'Shopify';
@@ -38,7 +38,7 @@ export const GET = withSecurity(async (request: NextRequest) => {
         default:
           name = platform.charAt(0).toUpperCase() + platform.slice(1);
       }
-      
+
       return {
         platform,
         name,
