@@ -207,7 +207,7 @@ function redirectToConsoleWithError(projectSlug: string | null, error: string): 
   const consoleBase = process.env.NEXT_PUBLIC_CONSOLE_URL || 'https://console.calibr.lat';
   const consoleUrl = projectSlug
     ? `${consoleBase}/p/${projectSlug}/integrations/shopify?error=${error}`
-    : `${consoleBase}/integrations?error=${error}`;
+    : `${consoleBase}/integrations/shopify?error=${error}`;
 
   return NextResponse.redirect(consoleUrl);
 }

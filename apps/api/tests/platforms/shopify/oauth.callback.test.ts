@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 // Import the route handler from the App Router file
-import { GET as callbackGET } from '../../app/api/platforms/shopify/oauth/callback/route.ts'
+import { GET as callbackGET } from '@/app/api/platforms/shopify/oauth/callback/route'
 
 describe('Shopify OAuth Callback Route', () => {
   const OLD_ENV = process.env
