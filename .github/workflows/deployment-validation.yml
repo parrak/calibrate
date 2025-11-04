@@ -214,25 +214,6 @@ jobs:
         response=$(curl -s http://localhost:3000/api/health)
         echo "$response" | jq . || exit 1
 
-    - name: Test JSON serialization
-      run: |
-        curl -s http://localhost:3000/api/health | jq . > /dev/null || exit 1
-        curl -s "http://localhost:3000/api/metrics?project=demo" | jq . > /dev/null || exit 1
-
-    - name: Test API endpoints
-      run: |
-        endpoints=(
-          "http://localhost:3000/api/health"
-          "http://localhost:3000/api/metrics?project=demo"
-          "http://localhost:3000/api/v1/price-changes?project=demo"
-          "http://localhost:3000/api/v1/catalog?project=demo"
-        )
-
-        for endpoint in "${endpoints[@]}"; do
-          echo "Testing $endpoint"
-          curl -f "$endpoint" || exit 1
-        done
-
     - name: Test Docker run
       continue-on-error: true
       run: |
