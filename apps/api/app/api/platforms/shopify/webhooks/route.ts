@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { withSecurity } from '@/lib/security-headers';
 
 export const runtime = 'nodejs';

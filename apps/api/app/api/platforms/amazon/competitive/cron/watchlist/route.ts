@@ -29,7 +29,7 @@ export const POST = withSecurity(async (req: NextRequest) => {
             lowestPriceCents: snap.lowestPrice != null ? Math.round(Number(snap.lowestPrice) * 100) : null,
             buyBoxPriceCents: snap.buyBoxPrice != null ? Math.round(Number(snap.buyBoxPrice) * 100) : null,
             offerCount: snap.offerCount || 0,
-            data: snap as any,
+            data: snap as Record<string, unknown>,
           },
         })
         ok++

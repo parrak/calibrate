@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Process the webhook based on topic
-    const parsedPayload = typeof verification.payload === 'string' 
+    const parsedPayload = typeof verification.payload === 'string'
       ? (JSON.parse(verification.payload) as Record<string, unknown>)
       : (verification.payload as Record<string, unknown>);
     await processWebhookByTopic(topic, parsedPayload, integration);

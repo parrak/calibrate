@@ -92,10 +92,10 @@ export const POST = withSecurity(async (req: NextRequest) => {
       tenantId: project.tenantId,
       createdAt: project.createdAt,
     }, { status: 201 })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating project:', error)
     return NextResponse.json(
-      { error: 'Failed to create project', message: error?.message || String(error) },
+      { error: 'Failed to create project', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }
@@ -165,10 +165,10 @@ export const GET = withSecurity(async (req: NextRequest) => {
     })
 
     return NextResponse.json({ projects })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching projects:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch projects', message: error?.message || String(error) },
+      { error: 'Failed to fetch projects', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

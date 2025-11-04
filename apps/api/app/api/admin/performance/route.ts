@@ -48,7 +48,6 @@ export async function GET(req: NextRequest) {
 
     // Get query parameters
     const timeRange = req.nextUrl.searchParams.get('timeRange') || '24h'
-    const _projectId = req.nextUrl.searchParams.get('project') || undefined
 
     // Calculate time range
     const timeRangeMs = getTimeRangeMs(timeRange)
@@ -136,32 +135,6 @@ function getTimeRangeMs(timeRange: string): number {
     '30d': 30 * 24 * 60 * 60 * 1000
   }
   return ranges[timeRange] || ranges['24h']
-}
-
-async function getHealthMetrics() {
-  try {
-    const { prisma } = await import('@calibr/db')
-
-    const [_dbHealth, systemHealth] = await Promise.all([
-      prisma().$queryRaw`SELECT 1 as health`,
-      Promise.resolve({
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        platform: process.platform,
-        nodeVersion: process.version
-      })
-    ])
-
-    return {
-      database: { status: 'healthy', latency: 0 },
-      system: systemHealth
-    }
-  } catch (error) {
-    return {
-      database: { status: 'unhealthy', error: error instanceof Error ? error.message : 'Unknown error' },
-      system: null
-    }
-  }
 }
 
 function calculateTrends(resourceStats: ResourceStat[]) {
@@ -277,6 +250,7 @@ function generateInsights(performanceStats: PerformanceStats, resourceStats: Res
   return insights
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function generateAlerts(performanceStats: PerformanceStats, resourceStats: ResourceStat[], _databaseMetrics: DatabaseMetrics): Array<{type: string, message: string, severity: string}> {
   const alerts: Array<{type: string, message: string, severity: string}> = []
 
@@ -343,6 +317,7 @@ function generateThroughputChart(resourceStats: ResourceStat[]) {
 
 function generateErrorRateChart(resourceStats: ResourceStat[]) {
   // Generate chart data for error rate over time
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return resourceStats.map((stat, _index) => ({
     timestamp: stat.timestamp,
     value: Math.random() * 5 // Placeholder - would be actual error rate data

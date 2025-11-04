@@ -44,7 +44,7 @@ export const POST = withSecurity(async (req: NextRequest) => {
         lowestPriceCents: snapshot.lowestPrice != null ? Math.round(Number(snapshot.lowestPrice) * 100) : null,
         buyBoxPriceCents: snapshot.buyBoxPrice != null ? Math.round(Number(snapshot.buyBoxPrice) * 100) : null,
         offerCount: snapshot.offerCount || 0,
-        data: snapshot as any,
+        data: snapshot as Record<string, unknown>,
       },
     })
 

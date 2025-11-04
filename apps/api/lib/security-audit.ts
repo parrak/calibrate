@@ -3,8 +3,6 @@
  * Comprehensive security scanning and vulnerability assessment
  */
 
-import { prisma } from '@calibr/db'
-
 export interface SecurityVulnerability {
   id: string
   type: 'authentication' | 'authorization' | 'input_validation' | 'injection' | 'xss' | 'csrf' | 'headers' | 'rate_limiting' | 'logging' | 'data_exposure'

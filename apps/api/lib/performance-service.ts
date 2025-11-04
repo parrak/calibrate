@@ -7,8 +7,6 @@ import { randomUUID } from 'crypto'
 import {
   getPerformanceStats,
   getResourceStats,
-  getAllPerformanceMetrics,
-  getAllErrorMetrics,
   getDatabasePerformanceMetrics
 } from './performance-monitor'
 
@@ -199,8 +197,6 @@ export class PerformanceService {
    */
   async generateReport(timeRangeMs: number = 24 * 60 * 60 * 1000) {
     const summary = await this.getPerformanceSummary(timeRangeMs)
-    const _allMetrics = getAllPerformanceMetrics()
-    const _allErrors = getAllErrorMetrics()
 
     return {
       ...summary,
