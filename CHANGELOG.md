@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
+
+### Fixed
+- Console: Price Changes page UI fixes
+  - Fixed Drawer component black overlay persisting when closed
+  - Added authentication check to prevent 401 errors on page load
+  - Improved pagination cursor error handling to gracefully stop instead of showing error banner
+  - Resolves "You reached the start of the range" error message
+
 - Amazon Connector (Agent B)
   - Initial SP-API pricing feed flow merged to master
   - Adds feed XML builder, AES-256-GCM encryption + upload, optional submission
