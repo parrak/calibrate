@@ -205,7 +205,7 @@ jobs:
       env:
         DATABASE_URL: postgresql://user:pass@localhost:5432/calibr
       run: |
-        pnpm dev:api &
+        pnpm --filter @calibr/api dev &
         sleep 15
 
     - name: Test health check
