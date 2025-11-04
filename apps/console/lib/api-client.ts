@@ -21,16 +21,23 @@ class ApiError extends Error {
 
 async function fetchApi<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit & { token?: string } = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
+  const { token, ...fetchOptions } = options
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(fetchOptions.headers as Record<string, string>),
+  }
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
 
   const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    ...fetchOptions,
+    headers,
   })
 
   if (!response.ok) {
@@ -47,27 +54,32 @@ async function fetchApi<T>(
 
 // Price Changes API
 export const priceChangesApi = {
-  list: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
+  list: async (projectSlug: string, token?: string): Promise<Array<Record<string, unknown>>> => {
     // API returns shape: { items: [...] }
-    const res = await fetchApi<{ items?: Array<Record<string, unknown>> }>(`/api/v1/price-changes?project=${projectSlug}`)
+    const res = await fetchApi<{ items?: Array<Record<string, unknown>> }>(`/api/v1/price-changes?project=${projectSlug}`, {
+      token,
+    })
     return Array.isArray(res?.items) ? res.items : []
   },
 
-  approve: async (id: string) => {
+  approve: async (id: string, token?: string) => {
     return fetchApi(`/api/v1/price-changes/${id}/approve`, {
       method: 'POST',
+      token,
     })
   },
 
-  reject: async (id: string) => {
+  reject: async (id: string, token?: string) => {
     return fetchApi(`/api/v1/price-changes/${id}/reject`, {
       method: 'POST',
+      token,
     })
   },
 
-  apply: async (id: string) => {
+  apply: async (id: string, token?: string) => {
     return fetchApi(`/api/v1/price-changes/${id}/apply`, {
       method: 'POST',
+      token,
     })
   },
 }

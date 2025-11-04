@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { priceChangesApi } from '@/lib/api-client'
 
 interface Stats {
@@ -11,9 +12,12 @@ interface Stats {
 }
 
 export default function ProjectDashboard({ params }: { params: { slug: string } }) {
+  const { data: session } = useSession()
   const [stats, setStats] = useState<Stats>({ pending: 0, approvedToday: 0, appliedToday: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const apiToken = (session as { apiToken?: string })?.apiToken
 
   useEffect(() => {
     async function loadStats() {
@@ -21,7 +25,7 @@ export default function ProjectDashboard({ params }: { params: { slug: string } 
         setLoading(true)
         setError(null)
 
-        const changesRaw = await priceChangesApi.list(params.slug)
+        const changesRaw = await priceChangesApi.list(params.slug, apiToken)
 
         const now = new Date()
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -53,7 +57,7 @@ export default function ProjectDashboard({ params }: { params: { slug: string } 
     }
 
     loadStats()
-  }, [params.slug])
+  }, [params.slug, apiToken])
 
   return (
     <div className="space-y-6 p-6">
