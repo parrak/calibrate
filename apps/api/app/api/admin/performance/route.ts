@@ -250,7 +250,6 @@ function generateInsights(performanceStats: PerformanceStats, resourceStats: Res
   return insights
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function generateAlerts(performanceStats: PerformanceStats, resourceStats: ResourceStat[], _databaseMetrics: DatabaseMetrics): Array<{type: string, message: string, severity: string}> {
   const alerts: Array<{type: string, message: string, severity: string}> = []
 
@@ -317,7 +316,6 @@ function generateThroughputChart(resourceStats: ResourceStat[]) {
 
 function generateErrorRateChart(resourceStats: ResourceStat[]) {
   // Generate chart data for error rate over time
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return resourceStats.map((stat, _index) => ({
     timestamp: stat.timestamp,
     value: Math.random() * 5 // Placeholder - would be actual error rate data
