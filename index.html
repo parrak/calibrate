@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calibrate API Documentation</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.9.0/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.9.0/favicon-16x16.png" sizes="16x16" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#0B0B0C',
+            surface: '#141416',
+            border: '#1F2023',
+            fg: '#E5E7EB',
+            mute: '#9CA3AF',
+            brand: '#00C2A8',
+            'brand-700': '#00A693',
+            accent: '#7A6FF0',
+            danger: '#EF4444',
+            warning: '#F59E0B',
+            success: '#10B981'
+          },
+          borderRadius: {
+            md: '12px',
+            xl: '20px'
+          },
+          fontFamily: {
+            sans: "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'",
+            mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html {
+      box-sizing: border-box;
+      overflow: -moz-scrollbars-vertical;
+      overflow-y: scroll;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+    body {
+      margin: 0;
+      background: #0B0B0C;
+      color: #E5E7EB;
+      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+    }
+    .swagger-ui .topbar {
+      background-color: #141416;
+      border-bottom: 1px solid #1F2023;
+    }
+    .swagger-ui .topbar .download-url-wrapper {
+      display: none;
+    }
+    .swagger-ui .topbar .topbar-wrapper {
+      background-color: #141416;
+    }
+    .swagger-ui .topbar .topbar-wrapper .link {
+      color: #E5E7EB;
+    }
+    .swagger-ui .topbar .topbar-wrapper .link:hover {
+      color: #00C2A8;
+    }
+    .custom-header {
+      background: linear-gradient(135deg, #00C2A8 0%, #7A6FF0 100%);
+      color: white;
+      padding: 3rem 0;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .custom-header h1 {
+      margin: 0;
+      font-size: 3rem;
+      font-weight: 600;
+      font-family: "Inter", sans-serif;
+    }
+    .custom-header p {
+      margin: 1rem 0 0 0;
+      font-size: 1.25rem;
+      opacity: 0.95;
+      font-weight: 400;
+    }
+    .custom-header .version {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+      font-size: 0.9rem;
+      margin-left: 1rem;
+      display: inline-block;
+      font-weight: 500;
+    }
+    .api-info {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin: 3rem 0;
+    }
+    .quick-link {
+      background: #141416;
+      border: 1px solid #1F2023;
+      border-radius: 12px;
+      padding: 2rem;
+      text-decoration: none;
+      color: #E5E7EB;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .quick-link::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00C2A8, #7A6FF0);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    .quick-link:hover::before {
+      transform: scaleX(1);
+    }
+    .quick-link:hover {
+      border-color: #00C2A8;
+      box-shadow: 0 8px 25px rgba(0, 194, 168, 0.15);
+      transform: translateY(-2px);
+    }
+    .quick-link h3 {
+      margin: 0 0 0.75rem 0;
+      color: #00C2A8;
+      font-size: 1.25rem;
+      font-weight: 600;
+      font-family: "Inter", sans-serif;
+    }
+    .quick-link p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #9CA3AF;
+      line-height: 1.5;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.375rem 0.875rem;
+      border-radius: 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-left: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .status-live {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10B981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .status-dev {
+      background: rgba(245, 158, 11, 0.2);
+      color: #F59E0B;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    /* Swagger UI Dark Theme Overrides */
+    .swagger-ui {
+      background: #0B0B0C;
+    }
+    .swagger-ui .info {
+      background: #141416;
+      border: 1px solid #1F2023;
+      border-radius: 12px;
+      margin: 2rem 0;
+    }
+    .swagger-ui .info .title {
+      color: #E5E7EB;
+      font-family: "Inter", sans-serif;
+    }
+    .swagger-ui .info .description {
+      color: #9CA3AF;
+    }
+    .swagger-ui .scheme-container {
+      background: #141416;
+      border: 1px solid #1F2023;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .swagger-ui .opblock {
+      background: #141416;
+      border: 1px solid #1F2023;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+    .swagger-ui .opblock.opblock-post {
+      border-left: 4px solid #10B981;
+    }
+    .swagger-ui .opblock.opblock-get {
+      border-left: 4px solid #3B82F6;
+    }
+    .swagger-ui .opblock.opblock-put {
+      border-left: 4px solid #F59E0B;
+    }
+    .swagger-ui .opblock.opblock-delete {
+      border-left: 4px solid #EF4444;
+    }
+    .swagger-ui .opblock-summary {
+      color: #E5E7EB;
+    }
+    .swagger-ui .opblock-description-wrapper p {
+      color: #9CA3AF;
+    }
+    .swagger-ui .parameter__name {
+      color: #E5E7EB;
+    }
+    .swagger-ui .parameter__type {
+      color: #00C2A8;
+    }
+    .swagger-ui .response-col_status {
+      color: #E5E7EB;
+    }
+    .swagger-ui .response-col_description__inner p {
+      color: #9CA3AF;
+    }
+    .swagger-ui .btn {
+      background: #00C2A8;
+      color: #0B0B0C;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .swagger-ui .btn:hover {
+      background: #00A693;
+    }
+    .swagger-ui .btn.cancel {
+      background: #EF4444;
+    }
+    .swagger-ui .btn.cancel:hover {
+      background: #DC2626;
+    }
+  </style>
+</head>
+<body>
+  <div class="custom-header">
+    <div class="api-info">
+      <h1>Calibrate API Documentation</h1>
+      <p>Smart Pricing Platform API for automated price change management and policy evaluation</p>
+      <span class="version">v1.0.0</span>
+      <span class="status-badge status-live">LIVE</span>
+    </div>
+  </div>
+
+  <div class="api-info">
+    <div class="quick-links">
+      <a href="#/Health" class="quick-link">
+        <h3>🏥 Health & Monitoring</h3>
+        <p>System health checks, metrics, and performance monitoring endpoints</p>
+      </a>
+      <a href="#/Webhooks" class="quick-link">
+        <h3>🔗 Webhooks</h3>
+        <p>Submit price suggestions and receive real-time updates</p>
+      </a>
+      <a href="#/Price%20Changes" class="quick-link">
+        <h3>💰 Price Management</h3>
+        <p>Approve, apply, and manage price changes across your products</p>
+      </a>
+      <a href="#/Catalog" class="quick-link">
+        <h3>📦 Product Catalog</h3>
+        <p>Access product information and pricing data</p>
+      </a>
+      <a href="#/Analytics" class="quick-link">
+        <h3>📊 Analytics</h3>
+        <p>Detailed metrics and insights for your pricing strategy</p>
+      </a>
+      <a href="#/Admin" class="quick-link">
+        <h3>⚙️ Administration</h3>
+        <p>Admin dashboard and system management tools</p>
+      </a>
+    </div>
+  </div>
+
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function() {
+      const ui = SwaggerUIBundle({
+        url: './api/openapi.yaml',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout",
+        tryItOutEnabled: true,
+        requestInterceptor: (request) => {
+          // Add common headers for testing
+          if (request.url.includes('api.calibr.lat') || request.url.includes('calibrapi-production.up.railway.app')) {
+            request.headers['X-Calibr-Project'] = 'demo';
+          }
+          return request;
+        },
+        onComplete: () => {
+          // Add custom styling after Swagger UI loads
+          const style = document.createElement('style');
+          style.textContent = `
+            .swagger-ui .info .title {
+              display: none;
+            }
+            .swagger-ui .info .description {
+              display: none;
+            }
+            .swagger-ui .scheme-container {
+              background: #141416;
+              border: 1px solid #1F2023;
+              border-radius: 12px;
+              padding: 1.5rem;
+              margin: 1.5rem 0;
+            }
+            .swagger-ui .opblock.opblock-post {
+              border-left: 4px solid #10b981;
+            }
+            .swagger-ui .opblock.opblock-get {
+              border-left: 4px solid #3b82f6;
+            }
+            .swagger-ui .opblock.opblock-put {
+              border-left: 4px solid #f59e0b;
+            }
+            .swagger-ui .opblock.opblock-delete {
+              border-left: 4px solid #ef4444;
+            }
+            .swagger-ui .opblock-summary {
+              color: #E5E7EB;
+            }
+            .swagger-ui .opblock-description-wrapper p {
+              color: #9CA3AF;
+            }
+            .swagger-ui .parameter__name {
+              color: #E5E7EB;
+            }
+            .swagger-ui .parameter__type {
+              color: #00C2A8;
+            }
+            .swagger-ui .response-col_status {
+              color: #E5E7EB;
+            }
+            .swagger-ui .response-col_description__inner p {
+              color: #9CA3AF;
+            }
+            .swagger-ui .btn {
+              background: #00C2A8;
+              color: #0B0B0C;
+              border: none;
+              border-radius: 6px;
+              font-weight: 600;
+            }
+            .swagger-ui .btn:hover {
+              background: #00A693;
+            }
+            .swagger-ui .btn.cancel {
+              background: #EF4444;
+            }
+            .swagger-ui .btn.cancel:hover {
+              background: #DC2626;
+            }
+            .swagger-ui .model {
+              color: #E5E7EB;
+            }
+            .swagger-ui .model-title {
+              color: #E5E7EB;
+            }
+            .swagger-ui .prop-name {
+              color: #E5E7EB;
+            }
+            .swagger-ui .prop-type {
+              color: #00C2A8;
+            }
+            .swagger-ui .prop-format {
+              color: #9CA3AF;
+            }
+            .swagger-ui .table-container {
+              background: #141416;
+              border: 1px solid #1F2023;
+              border-radius: 8px;
+            }
+            .swagger-ui .table-container table {
+              background: transparent;
+            }
+            .swagger-ui .table-container th {
+              background: #1F2023;
+              color: #E5E7EB;
+            }
+            .swagger-ui .table-container td {
+              color: #9CA3AF;
+            }
+          `;
+          document.head.appendChild(style);
+        }
+      });
+    };
+  </script>
+</body>
+</html>

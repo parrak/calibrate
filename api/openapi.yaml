@@ -1,0 +1,1014 @@
+openapi: 3.0.3
+info:
+  title: Calibrate API
+  description: |
+    Smart Pricing Platform API for automated price change management and policy evaluation.
+    
+    ## Features
+    - Secure webhook API for price suggestions
+    - Policy-based price change evaluation
+    - Multi-tenant architecture
+    - Real-time monitoring and analytics
+    - Rate limiting and security
+    
+    ## Authentication
+    All webhook endpoints require HMAC signature verification using the `X-Calibr-Signature` header.
+    
+    ## Rate Limiting
+    - General API: 1000 requests per 15 minutes
+    - Webhooks: 60 requests per minute per project
+    - Price Changes: 100 requests per 5 minutes per project
+    
+  version: 1.0.0
+  contact:
+    name: Calibrate Support
+    url: https://calibr.lat/support
+    email: support@calibr.lat
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.calibr.lat
+    description: Production server
+  - url: https://calibrapi-production.up.railway.app
+    description: Railway production server
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: Health
+    description: System health and monitoring endpoints
+  - name: Webhooks
+    description: Webhook endpoints for price suggestions
+  - name: Price Changes
+    description: Price change management and approval
+  - name: Catalog
+    description: Product catalog and pricing information
+  - name: Analytics
+    description: Metrics and analytics endpoints
+  - name: Admin
+    description: Administrative and dashboard endpoints
+
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      description: Returns comprehensive system health information including database status, memory usage, and performance metrics.
+      operationId: getHealth
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  summary: Healthy system response
+                  value:
+                    status: "ok"
+                    timestamp: "2025-10-25T21:09:07.387Z"
+                    service: "calibr-api"
+                    version: "1.0.0"
+                    environment: "production"
+                    uptime: 3600
+                    responseTime: "17ms"
+                    database:
+                      status: "healthy"
+                      latency: "7ms"
+                      connections: 1
+                      migrations: 5
+                    memory:
+                      used: "19MB"
+                      total: "21MB"
+                      external: "4MB"
+                    system:
+                      platform: "linux"
+                      nodeVersion: "v20.19.5"
+                      pid: 1
+        '503':
+          description: System is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/metrics:
+    get:
+      tags:
+        - Analytics
+      summary: System Metrics
+      description: Returns detailed system metrics including price change statistics, performance data, and database health.
+      operationId: getMetrics
+      parameters:
+        - name: project
+          in: query
+          description: Project slug to filter metrics
+          required: false
+          schema:
+            type: string
+            example: "demo"
+        - name: timeRange
+          in: query
+          description: Time range for metrics
+          required: false
+          schema:
+            type: string
+            enum: [1h, 24h, 7d, 30d]
+            default: "24h"
+      responses:
+        '200':
+          description: Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/admin/dashboard:
+    get:
+      tags:
+        - Admin
+      summary: Admin Dashboard Data
+      description: Returns comprehensive dashboard data including overview metrics, price change analytics, and recent activity.
+      operationId: getAdminDashboard
+      parameters:
+        - name: project
+          in: query
+          description: Project slug to filter dashboard data
+          required: false
+          schema:
+            type: string
+            example: "demo"
+        - name: timeRange
+          in: query
+          description: Time range for dashboard data
+          required: false
+          schema:
+            type: string
+            enum: [1h, 24h, 7d, 30d]
+            default: "24h"
+      responses:
+        '200':
+          description: Dashboard data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+
+  /api/v1/webhooks/price-suggestion:
+    post:
+      tags:
+        - Webhooks
+      summary: Submit Price Suggestion
+      description: |
+        Submit a price change suggestion for evaluation against project policies.
+        
+        **Authentication Required:** HMAC signature in `X-Calibr-Signature` header
+        **Rate Limit:** 60 requests per minute per project
+      operationId: submitPriceSuggestion
+      security:
+        - HMACAuth: []
+      parameters:
+        - name: X-Calibr-Project
+          in: header
+          description: Project identifier
+          required: true
+          schema:
+            type: string
+            example: "demo"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriceSuggestionRequest'
+            examples:
+              basic:
+                summary: Basic price suggestion
+                value:
+                  skuCode: "PRO-MONTHLY"
+                  fromAmount: 4900
+                  toAmount: 5200
+                  currency: "USD"
+                  source: "MANUAL"
+                  idempotencyKey: "suggestion-123"
+              withContext:
+                summary: Price suggestion with context
+                value:
+                  skuCode: "PRO-MONTHLY"
+                  fromAmount: 4900
+                  toAmount: 5200
+                  currency: "USD"
+                  source: "ai-optimizer"
+                  idempotencyKey: "suggestion-456"
+                  context:
+                    reason: "Competitor price increase detected"
+                    confidence: 0.85
+                    competitorPrice: 5500
+      responses:
+        '200':
+          description: Price suggestion processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceSuggestionResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid HMAC signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Project, SKU, or price not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+  /api/v1/price-changes:
+    get:
+      tags:
+        - Price Changes
+      summary: List Price Changes
+      description: Retrieve a list of price changes for a project with optional filtering.
+      operationId: listPriceChanges
+      parameters:
+        - name: project
+          in: query
+          description: Project slug
+          required: true
+          schema:
+            type: string
+            example: "demo"
+        - name: status
+          in: query
+          description: Filter by price change status
+          required: false
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, APPLIED, REJECTED, FAILED, ROLLED_BACK]
+      responses:
+        '200':
+          description: Price changes retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceChangesListResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/price-changes/{id}/approve:
+    post:
+      tags:
+        - Price Changes
+      summary: Approve Price Change
+      description: Approve a pending price change.
+      operationId: approvePriceChange
+      parameters:
+        - name: id
+          in: path
+          description: Price change ID
+          required: true
+          schema:
+            type: string
+            example: "cmh6qhjhq0014mpdudd4jaqej"
+      responses:
+        '200':
+          description: Price change approved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResponse'
+        '404':
+          description: Price change not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Price change cannot be approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/price-changes/{id}/apply:
+    post:
+      tags:
+        - Price Changes
+      summary: Apply Price Change
+      description: Apply an approved price change to update the actual price.
+      operationId: applyPriceChange
+      parameters:
+        - name: id
+          in: path
+          description: Price change ID
+          required: true
+          schema:
+            type: string
+            example: "cmh6qhjhq0014mpdudd4jaqej"
+      responses:
+        '200':
+          description: Price change applied successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplyResponse'
+        '404':
+          description: Price change not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Price change cannot be applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/price-changes/{id}/reject:
+    post:
+      tags:
+        - Price Changes
+      summary: Reject Price Change
+      description: Reject a pending price change.
+      operationId: rejectPriceChange
+      parameters:
+        - name: id
+          in: path
+          description: Price change ID
+          required: true
+          schema:
+            type: string
+            example: "cmh6qhjhq0014mpdudd4jaqej"
+      responses:
+        '200':
+          description: Price change rejected successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResponse'
+        '404':
+          description: Price change not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/catalog:
+    get:
+      tags:
+        - Catalog
+      summary: Get Product Catalog
+      description: Retrieve product catalog information. Can return all products or a specific product by code.
+      operationId: getCatalog
+      parameters:
+        - name: project
+          in: query
+          description: Project slug
+          required: true
+          schema:
+            type: string
+            example: "demo"
+        - name: productCode
+          in: query
+          description: Specific product code to retrieve
+          required: false
+          schema:
+            type: string
+            example: "PRO"
+      responses:
+        '200':
+          description: Catalog retrieved successfully
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/CatalogListResponse'
+                  - $ref: '#/components/schemas/CatalogSingleResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Project or product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/seed:
+    post:
+      tags:
+        - Admin
+      summary: Seed Database
+      description: Seed the database with demo data for testing and development.
+      operationId: seedDatabase
+      responses:
+        '200':
+          description: Database seeded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeedResponse'
+
+components:
+  securitySchemes:
+    HMACAuth:
+      type: apiKey
+      in: header
+      name: X-Calibr-Signature
+      description: HMAC signature for webhook authentication
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        timestamp:
+          type: string
+          format: date-time
+        service:
+          type: string
+        version:
+          type: string
+        environment:
+          type: string
+        uptime:
+          type: integer
+          description: Uptime in seconds
+        responseTime:
+          type: string
+          description: Response time in milliseconds
+        database:
+          $ref: '#/components/schemas/DatabaseHealth'
+        memory:
+          $ref: '#/components/schemas/MemoryUsage'
+        system:
+          $ref: '#/components/schemas/SystemInfo'
+
+    DatabaseHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        latency:
+          type: string
+          description: Database latency in milliseconds
+        connections:
+          type: integer
+          description: Number of active connections
+        migrations:
+          type: integer
+          description: Number of applied migrations
+
+    MemoryUsage:
+      type: object
+      properties:
+        used:
+          type: string
+          description: Used memory in MB
+        total:
+          type: string
+          description: Total memory in MB
+        external:
+          type: string
+          description: External memory in MB
+
+    SystemInfo:
+      type: object
+      properties:
+        platform:
+          type: string
+        nodeVersion:
+          type: string
+        pid:
+          type: integer
+
+    MetricsResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        timeRange:
+          type: string
+        responseTime:
+          type: string
+        project:
+          $ref: '#/components/schemas/ProjectInfo'
+        metrics:
+          $ref: '#/components/schemas/MetricsData'
+
+    ProjectInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        tenant:
+          type: string
+
+    MetricsData:
+      type: object
+      properties:
+        priceChanges:
+          $ref: '#/components/schemas/PriceChangeMetrics'
+        webhooks:
+          $ref: '#/components/schemas/WebhookMetrics'
+        system:
+          $ref: '#/components/schemas/SystemMetrics'
+        database:
+          $ref: '#/components/schemas/DatabaseMetrics'
+        errors:
+          $ref: '#/components/schemas/ErrorMetrics'
+
+    PriceChangeMetrics:
+      type: object
+      properties:
+        total:
+          type: integer
+        byStatus:
+          type: object
+          additionalProperties:
+            type: integer
+        bySource:
+          type: object
+          additionalProperties:
+            type: integer
+
+    WebhookMetrics:
+      type: object
+      properties:
+        total:
+          type: integer
+        successful:
+          type: integer
+        failed:
+          type: integer
+        averageResponseTime:
+          type: number
+
+    SystemMetrics:
+      type: object
+      properties:
+        uptime:
+          type: integer
+        memory:
+          type: object
+          properties:
+            used:
+              type: integer
+            total:
+              type: integer
+            external:
+              type: integer
+        cpu:
+          type: object
+          properties:
+            loadAverage:
+              type: array
+              items:
+                type: number
+
+    DatabaseMetrics:
+      type: object
+      properties:
+        connections:
+          type: object
+          properties:
+            total_connections:
+              type: integer
+            active_connections:
+              type: integer
+            idle_connections:
+              type: integer
+        tableSizes:
+          type: array
+          items:
+            type: object
+            properties:
+              schemaname:
+                type: string
+              tablename:
+                type: string
+              size:
+                type: string
+
+    ErrorMetrics:
+      type: object
+      properties:
+        total:
+          type: integer
+        byType:
+          type: object
+          additionalProperties:
+            type: integer
+        recent:
+          type: array
+          items:
+            type: object
+
+    DashboardResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        timeRange:
+          type: string
+        responseTime:
+          type: string
+        project:
+          $ref: '#/components/schemas/ProjectInfo'
+        dashboard:
+          $ref: '#/components/schemas/DashboardData'
+
+    DashboardData:
+      type: object
+      properties:
+        overview:
+          $ref: '#/components/schemas/OverviewMetrics'
+        priceChanges:
+          $ref: '#/components/schemas/PriceChangeAnalytics'
+        systemHealth:
+          $ref: '#/components/schemas/SystemHealth'
+        recentActivity:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityItem'
+        topProducts:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopProduct'
+
+    OverviewMetrics:
+      type: object
+      properties:
+        totalPriceChanges:
+          type: integer
+        pendingChanges:
+          type: integer
+        approvedChanges:
+          type: integer
+        appliedChanges:
+          type: integer
+        rejectedChanges:
+          type: integer
+        approvalRate:
+          type: number
+        applicationRate:
+          type: number
+
+    PriceChangeAnalytics:
+      type: object
+      properties:
+        hourlyData:
+          type: array
+          items:
+            type: object
+        bySource:
+          type: object
+          additionalProperties:
+            type: integer
+
+    SystemHealth:
+      type: object
+      properties:
+        uptime:
+          type: integer
+        memory:
+          type: object
+          properties:
+            used:
+              type: integer
+            total:
+              type: integer
+            percentage:
+              type: integer
+        database:
+          type: object
+          properties:
+            status:
+              type: string
+            latency:
+              type: integer
+        status:
+          type: string
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        source:
+          type: string
+        skuCode:
+          type: string
+        productName:
+          type: string
+        fromAmount:
+          type: integer
+        toAmount:
+          type: integer
+        currency:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        context:
+          type: object
+
+    TopProduct:
+      type: object
+      properties:
+        product_name:
+          type: string
+        product_code:
+          type: string
+        change_count:
+          type: integer
+        avg_change_amount:
+          type: number
+
+    PriceSuggestionRequest:
+      type: object
+      required:
+        - skuCode
+        - fromAmount
+        - toAmount
+        - currency
+        - source
+        - idempotencyKey
+      properties:
+        skuCode:
+          type: string
+          description: SKU code for the product
+          example: "PRO-MONTHLY"
+        fromAmount:
+          type: integer
+          description: Current price in cents
+          example: 4900
+        toAmount:
+          type: integer
+          description: Proposed price in cents
+          example: 5200
+        currency:
+          type: string
+          description: Currency code
+          example: "USD"
+        source:
+          type: string
+          description: Source of the price suggestion
+          enum: [MANUAL, ai-optimizer, competitor-monitor, system]
+          example: "MANUAL"
+        idempotencyKey:
+          type: string
+          description: Unique key to prevent duplicate processing
+          example: "suggestion-123"
+        context:
+          type: object
+          description: Additional context for the price suggestion
+          additionalProperties: true
+
+    PriceSuggestionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Price change ID
+        status:
+          type: string
+          enum: [PENDING, APPROVED, APPLIED, REJECTED, FAILED]
+          description: Status of the price change
+        policyResult:
+          $ref: '#/components/schemas/PolicyResult'
+
+    PolicyResult:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Whether the policy evaluation passed
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyCheck'
+
+    PolicyCheck:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        name:
+          type: string
+        limit:
+          type: number
+        deltaPct:
+          type: number
+        floor:
+          type: number
+        ceiling:
+          type: number
+        proposedAmount:
+          type: number
+
+    PriceChangesListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PriceChange'
+
+    PriceChange:
+      type: object
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        projectId:
+          type: string
+        skuId:
+          type: string
+        source:
+          type: string
+        fromAmount:
+          type: integer
+        toAmount:
+          type: integer
+        currency:
+          type: string
+        context:
+          type: object
+        status:
+          type: string
+          enum: [PENDING, APPROVED, APPLIED, REJECTED, FAILED, ROLLED_BACK]
+        policyResult:
+          $ref: '#/components/schemas/PolicyResult'
+        approvedBy:
+          type: string
+          nullable: true
+        appliedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    CatalogListResponse:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogProduct'
+
+    CatalogSingleResponse:
+      type: object
+      properties:
+        product:
+          $ref: '#/components/schemas/ProductInfo'
+        skus:
+          type: array
+          items:
+            $ref: '#/components/schemas/SKUInfo'
+
+    CatalogProduct:
+      type: object
+      properties:
+        product:
+          $ref: '#/components/schemas/ProductInfo'
+        skus:
+          type: array
+          items:
+            $ref: '#/components/schemas/SKUInfo'
+
+    ProductInfo:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+
+    SKUInfo:
+      type: object
+      properties:
+        code:
+          type: string
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/PriceInfo'
+
+    PriceInfo:
+      type: object
+      properties:
+        currency:
+          type: string
+        amount:
+          type: integer
+
+    ActionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    ApplyResponse:
+      type: object
+      properties:
+        priceId:
+          type: string
+        amount:
+          type: integer
+
+    SeedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        tenant:
+          type: string
+        project:
+          type: string
+        products:
+          type: array
+          items:
+            type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+          nullable: true
+
+    RateLimitError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        retryAfter:
+          type: integer
+        limit:
+          type: integer
+        remaining:
+          type: integer
+        resetTime:
+          type: integer
