@@ -12,10 +12,13 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Maps syncType parameter to action for backward compatibility
   - Maintains compatibility with existing console code using platformsApi.triggerSync
 
-- Console: Price Changes page UI fixes
+- Console: Price Changes page improvements
   - Fixed Drawer component black overlay persisting when closed
-  - Added authentication check to prevent 401 errors on page load
+  - Enhanced authentication error handling with helpful user messages
+  - Added server-side logging for auth token fetch failures
   - Improved pagination cursor error handling to gracefully stop instead of showing error banner
+  - Color-coded status filter buttons for better UX (Pending=yellow, Applied=green, Failed=red, etc.)
+  - Better error messages explaining CONSOLE_INTERNAL_TOKEN configuration requirements
   - Resolves "You reached the start of the range" error message
 
 - Amazon Connector (Agent B)
