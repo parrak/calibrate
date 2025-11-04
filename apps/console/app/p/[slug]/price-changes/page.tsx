@@ -123,6 +123,13 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
   const load = useCallback(
     async ({ reset, cursor: cursorOverride }: { reset?: boolean; cursor?: string | undefined } = {}) => {
       if (loadingRef.current) return
+
+      // Don't load if no token available yet
+      if (!token) {
+        setInitialized(true)
+        return
+      }
+
       loadingRef.current = true
       setLoading(true)
       if (reset) {
@@ -148,7 +155,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         const res = await fetch(`${API_BASE}/api/v1/price-changes?${params.toString()}`, {
           headers: {
             Accept: 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            Authorization: `Bearer ${token}`,
           },
           cache: 'no-store',
         })
@@ -156,6 +163,14 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         const data = await res.json().catch(() => ({}))
         if (!res.ok) {
           const message = data?.message || data?.error || `Failed with status ${res.status}`
+
+          // For cursor errors, just stop pagination instead of showing error
+          if (res.status === 400 && message.includes('cursor')) {
+            setCursor(undefined)
+            cursorRef.current = undefined
+            return
+          }
+
           if (reset) {
             setItems([])
             setCursor(undefined)
