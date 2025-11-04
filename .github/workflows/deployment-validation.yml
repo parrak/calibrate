@@ -230,3 +230,23 @@ jobs:
       run: |
         docker compose down || true
         docker stop $(docker ps -q) || true
+
+  validate-deployment:
+    name: validate-deployment
+    runs-on: ubuntu-latest
+    needs: [setup, typecheck, lint, test, build, docker-build, integration-tests]
+    if: always()
+    steps:
+    - name: Check all jobs status
+      run: |
+        if [ "${{ needs.setup.result }}" != "success" ] || \
+           [ "${{ needs.typecheck.result }}" != "success" ] || \
+           [ "${{ needs.lint.result }}" != "success" ] || \
+           [ "${{ needs.test.result }}" != "success" ] || \
+           [ "${{ needs.build.result }}" != "success" ] || \
+           [ "${{ needs.docker-build.result }}" != "success" ] || \
+           [ "${{ needs.integration-tests.result }}" != "success" ]; then
+          echo "One or more validation jobs failed"
+          exit 1
+        fi
+        echo "All validation jobs passed successfully"
