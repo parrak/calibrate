@@ -33,14 +33,14 @@ type PriceChangeDTO = {
 
 type FilterStatus = PriceChangeStatus | 'ALL'
 
-const STATUS_OPTIONS: Array<{ label: string; value: FilterStatus }> = [
-  { label: 'Pending', value: 'PENDING' },
-  { label: 'Approved', value: 'APPROVED' },
-  { label: 'Applied', value: 'APPLIED' },
-  { label: 'Rejected', value: 'REJECTED' },
-  { label: 'Failed', value: 'FAILED' },
-  { label: 'Rolled Back', value: 'ROLLED_BACK' },
-  { label: 'All', value: 'ALL' },
+const STATUS_OPTIONS: Array<{ label: string; value: FilterStatus; color: string }> = [
+  { label: 'Pending', value: 'PENDING', color: 'bg-yellow-600 hover:bg-yellow-700' },
+  { label: 'Approved', value: 'APPROVED', color: 'bg-blue-600 hover:bg-blue-700' },
+  { label: 'Applied', value: 'APPLIED', color: 'bg-emerald-600 hover:bg-emerald-700' },
+  { label: 'Rejected', value: 'REJECTED', color: 'bg-gray-600 hover:bg-gray-700' },
+  { label: 'Failed', value: 'FAILED', color: 'bg-red-600 hover:bg-red-700' },
+  { label: 'Rolled Back', value: 'ROLLED_BACK', color: 'bg-orange-600 hover:bg-orange-700' },
+  { label: 'All', value: 'ALL', color: 'bg-zinc-700 hover:bg-zinc-800' },
 ]
 
 const ROLE_WEIGHT: Record<ProjectRole, number> = {
@@ -124,9 +124,16 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
     async ({ reset, cursor: cursorOverride }: { reset?: boolean; cursor?: string | undefined } = {}) => {
       if (loadingRef.current) return
 
-      // Don't load if no token available yet
-      if (!token) {
+      // Check if session is loaded but token is missing
+      if (session && !token) {
         setInitialized(true)
+        setError('Authentication failed. Please sign out and sign in again.')
+        setItems([])
+        return
+      }
+
+      // Wait for session to load
+      if (!session || !token) {
         return
       }
 
@@ -171,6 +178,15 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
             return
           }
 
+          // For auth errors, show helpful message
+          if (res.status === 401) {
+            setError('Authentication failed. Please sign out and sign in again.')
+            setItems([])
+            setCursor(undefined)
+            cursorRef.current = undefined
+            return
+          }
+
           if (reset) {
             setItems([])
             setCursor(undefined)
@@ -202,7 +218,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         setInitialized(true)
       }
     },
-    [slug, status, debouncedQ, token, fallbackRole, setMsg]
+    [slug, status, debouncedQ, token, session, fallbackRole, setMsg]
   )
 
   useEffect(() => {
@@ -355,10 +371,10 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
             <button
               key={option.value}
               className={clsx(
-                'rounded-full px-3 py-1 text-sm transition',
+                'rounded-full px-3 py-1 text-sm text-white font-medium transition',
                 status === option.value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-surface border border-border text-mute hover:text-fg'
+                  ? option.color
+                  : 'bg-surface/50 border border-border text-mute hover:bg-surface hover:text-fg'
               )}
               onClick={() => {
                 if (status === option.value) return
@@ -401,7 +417,13 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
 
         {error && (
           <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {error}
+            <div className="font-medium mb-1">{error}</div>
+            {error.includes('Authentication failed') && (
+              <div className="text-xs text-red-300 mt-2">
+                This usually means the API authentication token is missing or invalid.
+                Please ensure CONSOLE_INTERNAL_TOKEN is configured correctly in both Console and API environments.
+              </div>
+            )}
           </div>
         )}
 
