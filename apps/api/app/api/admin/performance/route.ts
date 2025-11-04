@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   getPerformanceStats,
   getResourceStats,
-  getDatabasePerformanceMetrics
+  getDatabasePerformanceMetrics,
+  type ResourceMetric,
+  type PerformanceStats as PerformanceStatsType
 } from '@/lib/performance-monitor'
 
 interface ResourceStat {
@@ -36,6 +38,31 @@ interface PerformanceStats {
   errorBreakdown: Record<string, number>
 }
 
+// Convert ResourceMetric[] to ResourceStat[]
+function convertResourceMetrics(metrics: ResourceMetric[]): ResourceStat[] {
+  return metrics.map(metric => ({
+    ...metric,
+    cpu: {
+      loadAverage: metric.cpu.loadAverage
+    }
+  }))
+}
+
+// Convert PerformanceStatsType to PerformanceStats
+function convertPerformanceStats(stats: PerformanceStatsType): PerformanceStats {
+  const errorBreakdown = Array.isArray(stats.errorBreakdown)
+    ? stats.errorBreakdown.reduce((acc, item) => {
+        acc[item.errorType] = item.count
+        return acc
+      }, {} as Record<string, number>)
+    : stats.errorBreakdown
+
+  return {
+    ...stats,
+    errorBreakdown
+  }
+}
+
 interface DatabaseMetrics {
   slowQueries: unknown[]
   connectionStats: unknown
@@ -54,14 +81,18 @@ export async function GET(req: NextRequest) {
 
     // Get comprehensive performance data
     const [
-      performanceStats,
-      resourceStats,
+      performanceStatsRaw,
+      resourceStatsRaw,
       databaseMetrics
     ] = await Promise.all([
       getPerformanceStats(timeRangeMs, undefined),
       getResourceStats(timeRangeMs),
       getDatabasePerformanceMetrics()
     ])
+
+    // Convert types
+    const performanceStats = convertPerformanceStats(performanceStatsRaw)
+    const resourceStats = convertResourceMetrics(resourceStatsRaw)
 
     // Calculate trends and insights
     const trends = calculateTrends(resourceStats)
@@ -169,7 +200,10 @@ function calculateTrends(resourceStats: ResourceStat[]) {
   }
 }
 
-function calculateHealthScore(performanceStats: PerformanceStats, resourceStats: ResourceStat[]): number {
+function calculateHealthScore(
+  performanceStats: { errorRate: number; p95ResponseTime: number },
+  resourceStats: ResourceStat[]
+): number {
   let score = 100
 
   // Deduct points for high error rate
@@ -217,7 +251,11 @@ function calculateCpuLoad(resourceStats: ResourceStat[]) {
   return { load1, load5, load15 }
 }
 
-function generateInsights(performanceStats: PerformanceStats, resourceStats: ResourceStat[], databaseMetrics: DatabaseMetrics): string[] {
+function generateInsights(
+  performanceStats: { p95ResponseTime: number; errorRate: number; throughput: number },
+  resourceStats: ResourceStat[],
+  databaseMetrics: DatabaseMetrics
+): string[] {
   const insights: string[] = []
 
   // Performance insights
@@ -250,7 +288,11 @@ function generateInsights(performanceStats: PerformanceStats, resourceStats: Res
   return insights
 }
 
-function generateAlerts(performanceStats: PerformanceStats, resourceStats: ResourceStat[], _databaseMetrics: DatabaseMetrics): Array<{type: string, message: string, severity: string}> {
+function generateAlerts(
+  performanceStats: { errorRate: number; p95ResponseTime: number },
+  resourceStats: ResourceStat[],
+  _databaseMetrics: DatabaseMetrics
+): Array<{type: string, message: string, severity: string}> {
   const alerts: Array<{type: string, message: string, severity: string}> = []
 
   // Performance alerts

@@ -232,8 +232,11 @@ async function updatePrices(connector: ShopifyConnector, integration: ShopifyInt
 
   const pricingClient = getPricingClient(connector);
   const dataWithPriceUpdates = data as { priceUpdates: unknown[]; batchSize?: number };
+  const priceUpdates = Array.isArray(dataWithPriceUpdates.priceUpdates)
+    ? dataWithPriceUpdates.priceUpdates as Array<{ variantId: string; price: number }>
+    : [];
   const results = await pricingClient.updateVariantPricesBulk({
-    updates: dataWithPriceUpdates.priceUpdates,
+    updates: priceUpdates,
     batchSize: dataWithPriceUpdates.batchSize || 10,
   });
 
@@ -251,7 +254,7 @@ async function updatePrices(connector: ShopifyConnector, integration: ShopifyInt
         projectId: integration.projectId,
         kind: 'shopify_price_update',
         payload: {
-          updatesCount: data.priceUpdates.length,
+          updatesCount: priceUpdates.length,
           successCount: results.successCount,
           errorCount: results.errorCount,
           updatedAt: new Date().toISOString(),

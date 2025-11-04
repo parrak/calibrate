@@ -31,7 +31,8 @@ function extractRuleValue(rules: RulesShape | undefined, key: string, skuCode?: 
 }
 
 export const POST = withSecurity(
-  trackPerformance(async (req: NextRequest, context: { params: Promise<{ id: string }> }) => {
+  trackPerformance(async (req: NextRequest, ...args: unknown[]) => {
+    const context = args[0] as { params: Promise<{ id: string }> }
     const projectSlug = req.headers.get('X-Calibr-Project')?.trim()
     if (!projectSlug) {
       return errorJson({
@@ -199,10 +200,13 @@ export const POST = withSecurity(
           message: 'Price record not found for this SKU and currency.',
         })
       }
+      const errorMessage = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
+        ? err.message
+        : 'Failed to apply price change.'
       return errorJson({
         status: 500,
         error: 'ApplyFailed',
-        message: err?.message ?? 'Failed to apply price change.',
+        message: errorMessage,
       })
     }
   })

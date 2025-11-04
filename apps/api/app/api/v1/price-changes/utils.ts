@@ -111,6 +111,23 @@ export function errorJson(err: ApiErrorShape) {
 }
 
 export function toPriceChangeDTO(pc: PriceChange): PriceChangeDTO {
+  // Convert context to Record<string, unknown> if it exists
+  let context: Record<string, unknown> | undefined = undefined
+  if (pc.context) {
+    if (typeof pc.context === 'object' && pc.context !== null && !Array.isArray(pc.context)) {
+      context = pc.context as Record<string, unknown>
+    }
+  }
+
+  // Convert policyResult, handling null
+  let policyResult: { ok: boolean; checks: PolicyCheck[] } | undefined = undefined
+  if (pc.policyResult) {
+    const result = pc.policyResult as { ok: boolean; checks: PolicyCheck[] } | null
+    if (result) {
+      policyResult = result
+    }
+  }
+
   return {
     id: pc.id,
     status: pc.status as PriceChangeStatus,
@@ -119,8 +136,8 @@ export function toPriceChangeDTO(pc: PriceChange): PriceChangeDTO {
     toAmount: pc.toAmount,
     createdAt: pc.createdAt.toISOString(),
     source: pc.source ?? undefined,
-    context: pc.context ?? undefined,
-    policyResult: pc.policyResult as { ok: boolean; checks: PolicyCheck[] } | null | undefined,
+    context,
+    policyResult,
     approvedBy: pc.approvedBy,
     appliedAt: pc.appliedAt ? pc.appliedAt.toISOString() : null,
     connectorStatus: normalizeConnectorStatus(pc.connectorStatus),
@@ -128,17 +145,20 @@ export function toPriceChangeDTO(pc: PriceChange): PriceChangeDTO {
 }
 
 function normalizeConnectorStatus(raw: unknown) {
-  if (!raw) return undefined
-  const target = typeof raw.target === 'string' ? (raw.target as string) : undefined
-  const state = typeof raw.state === 'string' ? (raw.state as ConnectorState) : undefined
+  if (!raw || typeof raw !== 'object') return undefined
+  
+  const rawObj = raw as Record<string, unknown>
+  const target = typeof rawObj.target === 'string' ? rawObj.target : undefined
+  const state = typeof rawObj.state === 'string' ? (rawObj.state as ConnectorState) : undefined
   if (!target || !state) return undefined
+  
   const errorMessage =
-    typeof raw.errorMessage === 'string'
-      ? raw.errorMessage
-      : raw.errorMessage === null
+    typeof rawObj.errorMessage === 'string'
+      ? rawObj.errorMessage
+      : rawObj.errorMessage === null
       ? null
-      : typeof raw.message === 'string'
-      ? raw.message
+      : typeof rawObj.message === 'string'
+      ? rawObj.message
       : undefined
   return {
     target,

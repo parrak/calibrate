@@ -7,7 +7,8 @@ import {
   getAllPerformanceMetrics,
   getAllErrorMetrics,
   getAllResourceMetrics,
-  getDatabasePerformanceMetrics
+  getDatabasePerformanceMetrics,
+  type ResourceMetric
 } from '@/lib/performance-monitor'
 
 export async function GET(req: NextRequest) {
@@ -28,7 +29,8 @@ export async function GET(req: NextRequest) {
     const performanceStats = getPerformanceStats(timeRangeMs, endpoint)
 
     // Get resource statistics
-    const resourceStats = getResourceStats(timeRangeMs)
+    const resourceStatsRaw = getResourceStats(timeRangeMs)
+    const resourceStats = convertResourceMetrics(resourceStatsRaw)
 
     // Get database performance metrics
     const databaseMetrics = await getDatabasePerformanceMetrics()
@@ -103,6 +105,15 @@ interface ResourceStat {
   memory: { used: number }
   cpu: { loadAverage: [number, number, number] }
   database: { connections: number }
+}
+
+// Convert ResourceMetric[] to ResourceStat[]
+function convertResourceMetrics(metrics: ResourceMetric[]): ResourceStat[] {
+  return metrics.map(metric => ({
+    memory: { used: metric.memory.used },
+    cpu: { loadAverage: metric.cpu.loadAverage },
+    database: { connections: metric.database.connections }
+  }))
 }
 
 function calculateResourceTrends(resourceStats: ResourceStat[]) {
@@ -189,7 +200,7 @@ function generateResourceAlerts(resourceTrends: { memory: { trend: string; chang
   return alerts
 }
 
-function generateRecommendations(performanceStats: { p95ResponseTime: number; errorRate: number }, resourceTrends: { memory: { trend: string }; cpu: { trend: string } }): string[] {
+function generateRecommendations(performanceStats: { p95ResponseTime: number; errorRate: number; throughput?: number }, resourceTrends: { memory: { trend: string }; cpu: { trend: string } }): string[] {
   const recommendations: string[] = []
 
   if (performanceStats.p95ResponseTime > 1000) {
@@ -204,7 +215,7 @@ function generateRecommendations(performanceStats: { p95ResponseTime: number; er
     recommendations.push('Monitor memory usage and consider memory optimization')
   }
 
-  if (performanceStats.throughput > 1000) {
+  if (performanceStats.throughput && performanceStats.throughput > 1000) {
     recommendations.push('Consider horizontal scaling for high traffic')
   }
 

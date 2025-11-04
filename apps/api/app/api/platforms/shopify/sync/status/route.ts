@@ -71,7 +71,7 @@ export const GET = withSecurity(async function GET(request: NextRequest) {
 
     // Try to query sync logs if model exists
     try {
-      const prismaClient = prisma() as Record<string, unknown>
+      const prismaClient = prisma() as unknown as Record<string, unknown>
       const platformSyncLog = prismaClient.platformSyncLog as { findMany?: (args: { where: { integrationId: string }; orderBy: { startedAt: string }; take: number }) => Promise<unknown[]> } | undefined
       const logs = await platformSyncLog?.findMany?.({
         where: { integrationId: integration.id },

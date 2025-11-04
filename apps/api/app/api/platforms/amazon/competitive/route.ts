@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@calibr/db'
+import { prisma, Prisma } from '@calibr/db'
 import { getCompetitivePrice } from '@calibr/amazon-connector'
 import { withSecurity } from '@/lib/security-headers'
 import { createId } from '@paralleldrive/cuid2'
@@ -44,7 +44,7 @@ export const POST = withSecurity(async (req: NextRequest) => {
         lowestPriceCents: snapshot.lowestPrice != null ? Math.round(Number(snapshot.lowestPrice) * 100) : null,
         buyBoxPriceCents: snapshot.buyBoxPrice != null ? Math.round(Number(snapshot.buyBoxPrice) * 100) : null,
         offerCount: snapshot.offerCount || 0,
-        data: snapshot as Record<string, unknown>,
+        data: snapshot as Prisma.InputJsonValue,
       },
     })
 

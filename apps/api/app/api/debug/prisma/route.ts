@@ -13,7 +13,7 @@ export async function GET() {
     try {
       const dbPackage = await import('@calibr/db')
       prismaFunction = dbPackage.prisma
-      importTest = prismaFunction ? 'SUCCESS' : 'IMPORTED_BUT_UNDEFINED'
+      importTest = typeof prismaFunction === 'function' ? 'SUCCESS' : 'IMPORTED_BUT_UNDEFINED'
     } catch (e) {
       importTest = `IMPORT_ERROR: ${e instanceof Error ? e.message : String(e)}`
     }
@@ -23,7 +23,7 @@ export async function GET() {
     let clientInfo: { hasProject?: boolean; hasUser?: boolean; keys?: string[] } = {}
     let dbConnectionTest = 'NOT_ATTEMPTED'
 
-    if (prismaFunction) {
+    if (typeof prismaFunction === 'function') {
       try {
         const client = prismaFunction()
         prismaCallTest = client ? 'SUCCESS' : 'RETURNED_UNDEFINED'
@@ -37,8 +37,13 @@ export async function GET() {
 
           // Test 2b: Try to actually query the database
           try {
-            await client.$queryRaw`SELECT 1 as test`
-            dbConnectionTest = 'SUCCESS'
+            const prismaClient = client as { $queryRaw: (template: TemplateStringsArray, ...args: unknown[]) => Promise<unknown> }
+            if (typeof prismaClient.$queryRaw === 'function') {
+              await prismaClient.$queryRaw`SELECT 1 as test`
+              dbConnectionTest = 'SUCCESS'
+            } else {
+              dbConnectionTest = 'QUERY_ERROR: $queryRaw not available'
+            }
           } catch (e) {
             dbConnectionTest = `QUERY_ERROR: ${e instanceof Error ? e.message : String(e)}`
           }

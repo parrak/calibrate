@@ -49,7 +49,7 @@ export interface ResourceMetric {
     rss: number
   }
   cpu: {
-    loadAverage: number[]
+    loadAverage: [number, number, number]
     usage?: number
   }
   database: {
@@ -77,7 +77,7 @@ export interface PerformanceStats {
     errorType: string
     count: number
     percentage: number
-  }>
+  }> | Record<string, number>
 }
 
 /**
@@ -187,6 +187,14 @@ export function recordResourceMetric() {
   const memoryUsage = process.memoryUsage()
   const uptime = process.uptime()
 
+  // Ensure loadAverage is always a tuple of 3 numbers
+  const rawLoadAvg = process.platform === 'win32' ? [0, 0, 0] : loadavg()
+  const loadAverage: [number, number, number] = [
+    rawLoadAvg[0] ?? 0,
+    rawLoadAvg[1] ?? 0,
+    rawLoadAvg[2] ?? 0
+  ]
+
   const metric: ResourceMetric = {
     timestamp: Date.now(),
     memory: {
@@ -196,7 +204,7 @@ export function recordResourceMetric() {
       rss: memoryUsage.rss
     },
     cpu: {
-      loadAverage: process.platform === 'win32' ? [0, 0, 0] : loadavg()
+      loadAverage
     },
     database: {
       connections: 0, // Will be populated by database monitoring

@@ -49,7 +49,7 @@ export const GET = withSecurity(async function GET(
       console.error('[platform GET] Prisma client is undefined')
       return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
     }
-    const dbRecord = db as Record<string, unknown>
+    const dbRecord = db as unknown as Record<string, unknown>
     if (!dbRecord.project) {
       console.error('[platform GET] Prisma client missing model accessors', { hasDb: !!db, dbKeys: Object.keys(db || {}) })
       return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
@@ -219,9 +219,14 @@ export const POST = withSecurity(async function POST(
     }
 
     // Test connection with credentials
+    const fullConnectorConfig = {
+      ...connectorConfig,
+      name: `${platform}_test_${Date.now()}`,
+      isActive: true,
+    };
     const connector = await ConnectorRegistry.createConnector(
       platform as 'shopify' | 'amazon',
-      connectorConfig
+      fullConnectorConfig
     );
 
     // Initialize connector before testing connection

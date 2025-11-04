@@ -5,7 +5,8 @@ import { trackPerformance } from '@/lib/performance-middleware'
 import { errorJson, getPCForProject, requireProjectAccess, toPriceChangeDTO } from '../../utils'
 
 export const POST = withSecurity(
-  trackPerformance(async (req: NextRequest, context: { params: Promise<{ id: string }> }) => {
+  trackPerformance(async (req: NextRequest, ...args: unknown[]) => {
+    const context = args[0] as { params: Promise<{ id: string }> }
     const projectSlug = req.headers.get('X-Calibr-Project')?.trim()
     if (!projectSlug) {
       return errorJson({

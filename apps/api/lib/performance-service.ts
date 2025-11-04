@@ -179,7 +179,13 @@ export class PerformanceService {
       getDatabasePerformanceMetrics()
     ])
 
-    const healthScore = this.calculateHealthScore(performanceStats, resourceStats)
+    // Convert resourceStats to the format expected by calculateHealthScore
+    const resourceStatsForHealth = resourceStats.map(stat => ({
+      memory: stat.memory,
+      cpu: stat.cpu
+    }))
+
+    const healthScore = this.calculateHealthScore(performanceStats, resourceStatsForHealth)
     const activeAlerts = this.getActiveAlerts()
 
     return {
@@ -259,7 +265,7 @@ export class PerformanceService {
     return Math.max(0, score)
   }
 
-  private generateRecommendations(summary: { performance: { p95ResponseTime: number; errorRate: number } }): string[] {
+  private generateRecommendations(summary: { performance: { p95ResponseTime: number; errorRate: number; throughput?: number }; resources: Array<{ memory?: { used: number; total: number } }>; alerts: Array<unknown> }): string[] {
     const recommendations: string[] = []
 
     if (summary.performance.p95ResponseTime > 1000) {
@@ -278,7 +284,7 @@ export class PerformanceService {
       }
     }
 
-    if (summary.performance.throughput > 1000) {
+    if (summary.performance.throughput && summary.performance.throughput > 1000) {
       recommendations.push('Consider horizontal scaling for high traffic')
     }
 

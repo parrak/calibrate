@@ -54,19 +54,26 @@ export const GET = withSecurity(trackPerformance(async (req: NextRequest) => {
     return errorJson(access.error)
   }
 
-  const where: { projectId: string; status?: PriceChangeStatus; OR?: Array<{ source?: { contains: string; mode: string } } | { context?: { path: string[]; string_contains: string; mode: string } }> } = { projectId: access.project.id }
+  const where: {
+    projectId: string
+    status?: PriceChangeStatus
+    OR?: Array<
+      | { source?: { contains: string; mode?: 'insensitive' | 'default' } }
+      | { context?: { path: string[]; string_contains: string; mode?: 'insensitive' | 'default' } }
+    >
+  } = { projectId: access.project.id }
   if (statusFilter) {
     where.status = statusFilter
   }
 
   if (q) {
     where.OR = [
-      { source: { contains: q, mode: 'insensitive' } },
+      { source: { contains: q, mode: 'insensitive' as const } },
       {
         context: {
           path: ['skuCode'],
           string_contains: q,
-          mode: 'insensitive',
+          mode: 'insensitive' as const,
         },
       },
     ]

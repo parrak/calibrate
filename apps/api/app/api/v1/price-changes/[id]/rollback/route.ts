@@ -6,7 +6,8 @@ import { errorJson, getPCForProject, inferConnectorTarget, requireProjectAccess,
 import { createId } from '@paralleldrive/cuid2'
 
 export const POST = withSecurity(
-  trackPerformance(async (req: NextRequest, context: { params: Promise<{ id: string }> }) => {
+  trackPerformance(async (req: NextRequest, ...args: unknown[]) => {
+    const context = args[0] as { params: Promise<{ id: string }> }
     const projectSlug = req.headers.get('X-Calibr-Project')?.trim()
     if (!projectSlug) {
       return errorJson({
@@ -111,10 +112,13 @@ export const POST = withSecurity(
           message: 'Price record not found for this SKU and currency.',
         })
       }
+      const errorMessage = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
+        ? err.message
+        : 'Failed to rollback price change.'
       return errorJson({
         status: 500,
         error: 'RollbackFailed',
-        message: err?.message ?? 'Failed to rollback price change.',
+        message: errorMessage,
       })
     }
   })
