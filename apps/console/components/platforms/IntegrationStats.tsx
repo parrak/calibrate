@@ -2,7 +2,7 @@
 
 interface Integration {
   status?: string
-  syncStatus?: string
+  syncStatus?: string | null
 }
 
 interface IntegrationStatsProps {

@@ -146,12 +146,12 @@ export function toPriceChangeDTO(pc: PriceChange): PriceChangeDTO {
 
 function normalizeConnectorStatus(raw: unknown) {
   if (!raw || typeof raw !== 'object') return undefined
-  
+
   const rawObj = raw as Record<string, unknown>
   const target = typeof rawObj.target === 'string' ? rawObj.target : undefined
   const state = typeof rawObj.state === 'string' ? (rawObj.state as ConnectorState) : undefined
   if (!target || !state) return undefined
-  
+
   const errorMessage =
     typeof rawObj.errorMessage === 'string'
       ? rawObj.errorMessage

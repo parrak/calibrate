@@ -2,6 +2,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { CompetitorMonitor } from './monitor'
 import { PrismaClient } from '@prisma/client'
 
+// Mock scrapers module
+vi.mock('./scrapers', () => ({
+  scrapePrice: vi.fn().mockResolvedValue({
+    price: {
+      id: 'mock-price-id',
+      productId: 'prod1',
+      amount: 1000,
+      currency: 'USD',
+      channel: 'shopify',
+      isOnSale: false,
+      stockStatus: 'in_stock',
+      createdAt: new Date()
+    },
+    error: undefined
+  })
+}))
+
 // Mock Prisma client
 const mockPrisma = {
   competitor: {
@@ -32,11 +49,13 @@ describe('CompetitorMonitor', () => {
         {
           id: 'comp1',
           name: 'Competitor 1',
-          products: [
+          channel: 'shopify',
+          CompetitorProduct: [
             {
               id: 'prod1',
               name: 'Product 1',
-              prices: [{ amount: 1000, currency: 'USD', createdAt: new Date() }]
+              url: 'https://example.com/product1',
+              CompetitorPrice: [{ amount: 1000, currency: 'USD', createdAt: new Date() }]
             }
           ]
         }
@@ -58,9 +77,9 @@ describe('CompetitorMonitor', () => {
           isActive: true
         },
         include: {
-          products: {
+          CompetitorProduct: {
             where: { isActive: true },
-            include: { prices: { orderBy: { createdAt: 'desc' }, take: 1 } }
+            include: { CompetitorPrice: { orderBy: { createdAt: 'desc' }, take: 1 } }
           }
         }
       })
@@ -71,11 +90,11 @@ describe('CompetitorMonitor', () => {
     it('should return price comparisons for a SKU', async () => {
       const mockSku = {
         id: 'sku1',
-        prices: [{ amount: 1200, status: 'ACTIVE' }],
-        competitorProducts: [
+        Price: [{ amount: 1200, status: 'ACTIVE' }],
+        CompetitorProduct: [
           {
-            competitor: { id: 'comp1', name: 'Competitor 1' },
-            prices: [{ amount: 1000, currency: 'USD', isOnSale: false }]
+            Competitor: { id: 'comp1', name: 'Competitor 1' },
+            CompetitorPrice: [{ amount: 1000, currency: 'USD', isOnSale: false }]
           }
         ]
       }

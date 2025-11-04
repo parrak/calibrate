@@ -14,12 +14,16 @@ import type {
   PriceUpdate,
   PriceUpdateResult,
   AuthStatus,
-  NormalizedProduct,} from '@calibr/platform-connector'
+  NormalizedProduct,
+} from '@calibr/platform-connector'
 import { PlatformError } from '@calibr/platform-connector'
 import { createSpApiClient, loadConfigFromEnv } from './spapi-client'
 
 export class AmazonConnector implements PlatformConnector {
   readonly platform = 'amazon'
+  get key() {
+    return this.platform
+  }
   readonly name = 'Amazon'
   readonly version = '1.0.0'
   readonly capabilities: PlatformCapabilities = {

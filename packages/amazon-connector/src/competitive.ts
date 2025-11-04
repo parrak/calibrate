@@ -21,7 +21,7 @@ export async function getCompetitivePrice(asin: string): Promise<CompetitivePric
       asin,
       marketplaceId,
       currency: 'USD',
-      lowestPrice: 0,
+      lowestPrice: null,
       buyBoxPrice: null,
       offerCount: 0,
       offers: [],

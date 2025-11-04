@@ -235,22 +235,22 @@ async function updatePrices(connector: ShopifyConnector, integration: ShopifyInt
   const rawPriceUpdates = Array.isArray(dataWithPriceUpdates.priceUpdates)
     ? dataWithPriceUpdates.priceUpdates
     : [];
-  
+
   // Convert to ShopifyPriceUpdate format (price must be string)
-  const priceUpdates: ShopifyPriceUpdate[] = rawPriceUpdates.map((update: unknown) => {
+  const priceUpdates: ShopifyPriceUpdate[] = rawPriceUpdates.map((update: unknown): ShopifyPriceUpdate => {
     if (update && typeof update === 'object' && 'variantId' in update && 'price' in update) {
       const updateObj = update as { variantId: unknown; price: unknown; compareAtPrice?: unknown };
       const variantId = String(updateObj.variantId);
       // Convert price to string - handle both number (cents) and string formats
-      const price = typeof updateObj.price === 'number' 
-        ? (updateObj.price / 100).toFixed(2) 
+      const price = typeof updateObj.price === 'number'
+        ? (updateObj.price / 100).toFixed(2)
         : String(updateObj.price);
-      const compareAtPrice = updateObj.compareAtPrice 
+      const compareAtPrice = updateObj.compareAtPrice
         ? (typeof updateObj.compareAtPrice === 'number'
             ? (updateObj.compareAtPrice / 100).toFixed(2)
             : String(updateObj.compareAtPrice))
         : undefined;
-      
+
       const result: ShopifyPriceUpdate = {
         variantId,
         price,
@@ -262,7 +262,7 @@ async function updatePrices(connector: ShopifyConnector, integration: ShopifyInt
     }
     throw new Error('Invalid price update format');
   });
-  
+
   const results = await pricingClient.updateVariantPricesBulk({
     updates: priceUpdates,
     batchSize: dataWithPriceUpdates.batchSize || 10,
