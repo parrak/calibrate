@@ -14,7 +14,10 @@ export const GET = withSecurity(async (req: NextRequest) => {
     const marketplaceId = searchParams.get('marketplaceId') || undefined
 
     // Fetch last N rows, then de-duplicate by ASIN in code (latest wins)
-    const where: any = {}
+    const where: {
+      asin?: { contains: string; mode: 'insensitive' }
+      marketplaceId?: string
+    } = {}
     if (q) where.asin = { contains: q, mode: 'insensitive' }
     if (marketplaceId) where.marketplaceId = marketplaceId
     const rows = await prisma().amazonCompetitivePrice.findMany({
@@ -24,7 +27,7 @@ export const GET = withSecurity(async (req: NextRequest) => {
     })
 
     const seen = new Set<string>()
-    const uniquesAll: any[] = []
+    const uniquesAll: typeof rows = []
     for (const row of rows) {
       if (!seen.has(row.asin)) {
         seen.add(row.asin)
@@ -42,5 +45,5 @@ export const GET = withSecurity(async (req: NextRequest) => {
   }
 })
 
-export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
+export const OPTIONS = withSecurity(async (_req: NextRequest) => new NextResponse(null, { status: 204 }))
 

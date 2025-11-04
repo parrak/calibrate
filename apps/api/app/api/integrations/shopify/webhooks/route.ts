@@ -6,6 +6,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ShopifyWebhooks } from '@calibr/shopify-connector';
 import { prisma } from '@calibr/db';
+import type { Prisma } from '@calibr/db';
+import { createId } from '@paralleldrive/cuid2';
+
+type ShopifyIntegrationWithProject = Prisma.ShopifyIntegrationGetPayload<{
+  include: { Project: true };
+}>;
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,13 +31,13 @@ export async function POST(request: NextRequest) {
 
     // Initialize webhook handler
     const webhooks = new ShopifyWebhooks(
-      null as any, // We don't need the client for verification
+      null as unknown as never, // We don't need the client for verification
       process.env.SHOPIFY_WEBHOOK_SECRET!
     );
 
     // Verify webhook signature
     const verification = webhooks.verifyWebhookSignature(payload, signature);
-    
+
     if (!verification.isValid) {
       console.error('Invalid webhook signature:', verification.error);
       return NextResponse.json(
@@ -43,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Find the integration
     const integration = await prisma().shopifyIntegration.findUnique({
       where: { shopDomain },
-      include: { project: true },
+      include: { Project: true },
     });
 
     if (!integration) {
@@ -55,7 +61,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Process the webhook based on topic
-    await processWebhookByTopic(topic, verification.payload, integration);
+    const parsedPayload = typeof verification.payload === 'string'
+      ? (JSON.parse(verification.payload) as unknown)
+      : verification.payload;
+    const payloadObj = parsedPayload && typeof parsedPayload === 'object' && parsedPayload !== null
+      ? (parsedPayload as Record<string, unknown>)
+      : {};
+    await processWebhookByTopic(topic, payloadObj, integration);
 
     return NextResponse.json({ success: true });
 
@@ -73,30 +85,30 @@ export async function POST(request: NextRequest) {
  */
 async function processWebhookByTopic(
   topic: string,
-  payload: any,
-  integration: any
+  payload: Record<string, unknown>,
+  integration: ShopifyIntegrationWithProject
 ): Promise<void> {
   switch (topic) {
     case 'products/update':
     case 'products/create':
       await handleProductUpdate(payload, integration);
       break;
-    
+
     case 'products/delete':
       await handleProductDelete(payload, integration);
       break;
-    
+
     case 'inventory_levels/update':
       await handleInventoryUpdate(payload, integration);
       break;
-    
+
     case 'orders/create':
     case 'orders/updated':
     case 'orders/paid':
     case 'orders/cancelled':
       await handleOrderUpdate(payload, integration);
       break;
-    
+
     default:
       console.log(`Unhandled webhook topic: ${topic}`);
   }
@@ -105,12 +117,13 @@ async function processWebhookByTopic(
 /**
  * Handle product updates
  */
-async function handleProductUpdate(payload: any, integration: any): Promise<void> {
+async function handleProductUpdate(payload: Record<string, unknown>, integration: ShopifyIntegrationWithProject): Promise<void> {
   try {
     // Log the product update
     await prisma().event.create({
       data: {
-        tenantId: integration.project.tenantId,
+        id: createId(),
+        tenantId: integration.Project.tenantId,
         projectId: integration.projectId,
         kind: 'shopify_product_update',
         payload: {
@@ -119,7 +132,7 @@ async function handleProductUpdate(payload: any, integration: any): Promise<void
           handle: payload.handle,
           variants: payload.variants,
           updatedAt: payload.updated_at,
-        },
+        } as Prisma.InputJsonValue,
       },
     });
 
@@ -132,19 +145,20 @@ async function handleProductUpdate(payload: any, integration: any): Promise<void
 /**
  * Handle product deletion
  */
-async function handleProductDelete(payload: any, integration: any): Promise<void> {
+async function handleProductDelete(payload: Record<string, unknown>, integration: ShopifyIntegrationWithProject): Promise<void> {
   try {
     // Log the product deletion
     await prisma().event.create({
       data: {
-        tenantId: integration.project.tenantId,
+        id: createId(),
+        tenantId: integration.Project.tenantId,
         projectId: integration.projectId,
         kind: 'shopify_product_delete',
         payload: {
           productId: payload.id,
           title: payload.title,
           deletedAt: new Date().toISOString(),
-        },
+        } as Prisma.InputJsonValue,
       },
     });
 
@@ -157,12 +171,13 @@ async function handleProductDelete(payload: any, integration: any): Promise<void
 /**
  * Handle inventory updates
  */
-async function handleInventoryUpdate(payload: any, integration: any): Promise<void> {
+async function handleInventoryUpdate(payload: Record<string, unknown>, integration: ShopifyIntegrationWithProject): Promise<void> {
   try {
     // Log the inventory update
     await prisma().event.create({
       data: {
-        tenantId: integration.project.tenantId,
+        id: createId(),
+        tenantId: integration.Project.tenantId,
         projectId: integration.projectId,
         kind: 'shopify_inventory_update',
         payload: {
@@ -170,7 +185,7 @@ async function handleInventoryUpdate(payload: any, integration: any): Promise<vo
           locationId: payload.location_id,
           available: payload.available,
           updatedAt: payload.updated_at,
-        },
+        } as Prisma.InputJsonValue,
       },
     });
 
@@ -183,12 +198,13 @@ async function handleInventoryUpdate(payload: any, integration: any): Promise<vo
 /**
  * Handle order updates
  */
-async function handleOrderUpdate(payload: any, integration: any): Promise<void> {
+async function handleOrderUpdate(payload: Record<string, unknown>, integration: ShopifyIntegrationWithProject): Promise<void> {
   try {
     // Log the order update
     await prisma().event.create({
       data: {
-        tenantId: integration.project.tenantId,
+        id: createId(),
+        tenantId: integration.Project.tenantId,
         projectId: integration.projectId,
         kind: 'shopify_order_update',
         payload: {
@@ -198,7 +214,7 @@ async function handleOrderUpdate(payload: any, integration: any): Promise<void> 
           currency: payload.currency,
           status: payload.financial_status,
           updatedAt: payload.updated_at,
-        },
+        } as Prisma.InputJsonValue,
       },
     });
 

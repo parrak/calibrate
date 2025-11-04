@@ -16,16 +16,16 @@ export const runtime = 'nodejs';
  *
  * List all registered platform connectors
  */
-export const GET = withSecurity(async (request: NextRequest) => {
+export const GET = withSecurity(async (_request: NextRequest) => {
   try {
     const platforms = ConnectorRegistry.getRegisteredPlatforms();
 
     // Get platform capabilities for each registered platform
     const platformsWithInfo = platforms.map((platform) => {
       // Platform metadata with better naming
-      let name = platform;
+      let name: string = platform;
       let description = '';
-      
+
       switch (platform) {
         case 'shopify':
           name = 'Shopify';
@@ -38,7 +38,7 @@ export const GET = withSecurity(async (request: NextRequest) => {
         default:
           name = platform.charAt(0).toUpperCase() + platform.slice(1);
       }
-      
+
       return {
         platform,
         name,
@@ -66,6 +66,6 @@ export const GET = withSecurity(async (request: NextRequest) => {
 /**
  * OPTIONS handler for CORS preflight
  */
-export const OPTIONS = withSecurity(async (req: NextRequest) => {
+export const OPTIONS = withSecurity(async () => {
   return new NextResponse(null, { status: 204 });
 });

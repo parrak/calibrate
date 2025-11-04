@@ -2,6 +2,7 @@
  * Shopify-specific types and interfaces
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ShopifyConfig {
   apiKey: string;
   apiSecret: string;
@@ -27,6 +28,10 @@ export interface ShopifyProduct {
   variants: ShopifyVariant[];
   createdAt: string;
   updatedAt: string;
+  body_html?: string;
+  status?: 'active' | 'archived' | 'draft';
+  images?: Array<{ src: string }>;
+  publishedAt?: string;
 }
 
 export interface ShopifyVariant {
@@ -42,6 +47,12 @@ export interface ShopifyVariant {
   inventoryManagement?: string;
   createdAt: string;
   updatedAt: string;
+  option1?: string;
+  option2?: string;
+  option3?: string;
+  barcode?: string;
+  image?: { src: string };
+  inventoryItemId?: string;
 }
 
 export interface ShopifyPriceUpdate {
@@ -64,7 +75,7 @@ export interface ShopifyWebhookPayload {
   topic: string;
   shop_domain: string;
   created_at: string;
-  data: any;
+  data: unknown;
 }
 
 export interface ShopifyOAuthResponse {

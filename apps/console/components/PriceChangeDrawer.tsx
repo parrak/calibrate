@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 
 type Item = {
   id:string; status:string; currency:string; fromAmount:number; toAmount:number;
-  createdAt:string; context?:any; source?:string; policyResult?:{ ok:boolean; checks:any[] }
+  createdAt:string; context?:Record<string, unknown>; source?:string; policyResult?:{ ok:boolean; checks:Array<Record<string, unknown>> }
 }
 
 export function PriceChangeDrawer({
@@ -29,7 +29,7 @@ export function PriceChangeDrawer({
             <div className="text-sm">{new Date(i.createdAt).toLocaleString()}</div>
           </div>
         </div>
-        <PolicyList checks={i.policyResult?.checks ?? []}/>
+        <PolicyList checks={(i.policyResult?.checks ?? []) as unknown as Array<{ name: string; ok: boolean }>}/>
         <div>
           <div className="text-sm font-medium mb-2">Context</div>
           <JSONView value={i.context}/>

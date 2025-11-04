@@ -3,8 +3,15 @@
  * Handles HTTP requests to Shopify Admin API with rate limiting and error handling
  */
 
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { ShopifyConfig, ShopifyApiError, ShopifyRateLimit } from './types';
+import axios, { AxiosInstance, AxiosResponse, AxiosError, AxiosRequestConfig } from 'axios';
+import { ShopifyConfig, ShopifyRateLimit } from './types';
+
+interface AxiosErrorWithResponse extends AxiosError {
+  response?: AxiosResponse<{
+    errors?: Record<string, string[]>;
+    message?: string;
+  }>;
+}
 
 export class ShopifyClient {
   private client: AxiosInstance;
@@ -17,10 +24,10 @@ export class ShopifyClient {
     this.config = config;
     this.shopDomain = config.shopDomain;
     this.accessToken = config.accessToken;
-    
+
     // Use shopDomain if provided, otherwise fall back to apiKey (for backwards compatibility)
     const domain = this.shopDomain || `${config.apiKey}.myshopify.com`;
-    
+
     this.client = axios.create({
       baseURL: `https://${domain}/admin/api/${config.apiVersion || '2024-10'}`,
       timeout: 30000,
@@ -91,87 +98,96 @@ export class ShopifyClient {
   /**
    * Handle API errors and convert to standardized format
    */
-  private handleError(error: any): Error {
+  private handleError(error: unknown): Error {
     // If it's already an Error instance with response data, enhance it
-    if (error instanceof Error && (error as any).response?.data) {
-      const enhancedError = error;
-      const data = (error as any).response.data;
-      const statusCode = (error as any).response.status;
-      
-      // Enhance error message with Shopify error details
-      if (data.errors && typeof data.errors === 'object') {
-        const errorMessages: string[] = [];
-        for (const key in data.errors) {
-          if (Array.isArray(data.errors[key])) {
-            errorMessages.push(...data.errors[key]);
-          } else if (typeof data.errors[key] === 'string') {
-            errorMessages.push(data.errors[key]);
+    if (error instanceof Error) {
+      const axiosError = error as AxiosErrorWithResponse;
+      if (axiosError.response?.data) {
+        const enhancedError = error;
+        const data = axiosError.response.data;
+        const statusCode = axiosError.response.status;
+
+        // Enhance error message with Shopify error details
+        if (data.errors && typeof data.errors === 'object') {
+          const errorMessages: string[] = [];
+          for (const key in data.errors) {
+            if (Array.isArray(data.errors[key])) {
+              errorMessages.push(...data.errors[key]);
+            } else if (typeof data.errors[key] === 'string') {
+              errorMessages.push(data.errors[key]);
+            }
+          }
+          if (errorMessages.length > 0) {
+            enhancedError.message = `${error.message} | ${errorMessages.join(', ')}`;
           }
         }
-        if (errorMessages.length > 0) {
-          enhancedError.message = `${error.message} | ${errorMessages.join(', ')}`;
+
+        (enhancedError as Error & { statusCode?: number }).statusCode = statusCode;
+        (enhancedError as Error & { responseData?: unknown }).responseData = data;
+
+        // Log detailed error for 400 errors
+        if (statusCode === 400) {
+          const requestConfig = axiosError.config as AxiosRequestConfig | undefined;
+          console.error('Shopify API 400 error:', {
+            url: requestConfig?.url,
+            method: requestConfig?.method,
+            params: requestConfig?.params,
+            statusCode,
+            responseData: data,
+          });
         }
+
+        return enhancedError;
       }
-      
-      (enhancedError as any).statusCode = statusCode;
-      (enhancedError as any).responseData = data;
-      
-      // Log detailed error for 400 errors
-      if (statusCode === 400) {
-        console.error('Shopify API 400 error:', {
-          url: (error as any).config?.url,
-          method: (error as any).config?.method,
-          params: (error as any).config?.params,
-          statusCode,
-          responseData: data,
-        });
-      }
-      
-      return enhancedError;
-    }
-    
-    // If it's already a proper Error instance, return it
-    if (error instanceof Error) {
+
+      // If it's already a proper Error instance, return it
       return error;
     }
 
     // Extract error message from Shopify API response
+    const axiosError = error as AxiosErrorWithResponse;
     let errorMessage = 'Unknown error';
     let statusCode: number | undefined;
-    let responseData: any = null;
-    
-    if (error.response?.data) {
-      statusCode = error.response.status;
-      responseData = error.response.data;
-      
-      if (responseData.errors && typeof responseData.errors === 'object') {
+    let responseData: unknown = null;
+
+    if (axiosError.response?.data) {
+      statusCode = axiosError.response.status;
+      responseData = axiosError.response.data;
+
+      if (responseData && typeof responseData === 'object' && 'errors' in responseData) {
+        const data = responseData as { errors?: Record<string, string[]>; message?: string };
         // Format Shopify API errors
-        const errorMessages: string[] = [];
-        for (const key in responseData.errors) {
-          if (Array.isArray(responseData.errors[key])) {
-            errorMessages.push(...responseData.errors[key]);
-          } else if (typeof responseData.errors[key] === 'string') {
-            errorMessages.push(responseData.errors[key]);
+        if (data.errors && typeof data.errors === 'object') {
+          const errorMessages: string[] = [];
+          for (const key in data.errors) {
+            if (Array.isArray(data.errors[key])) {
+              errorMessages.push(...data.errors[key]);
+            } else if (typeof data.errors[key] === 'string') {
+              errorMessages.push(data.errors[key]);
+            }
           }
+          errorMessage = errorMessages.length > 0
+            ? errorMessages.join(', ')
+            : (data.message || 'Shopify API error');
+        } else if (data.message) {
+          errorMessage = data.message;
+        } else if (statusCode) {
+          errorMessage = `Request failed with status code ${statusCode}`;
         }
-        errorMessage = errorMessages.length > 0 
-          ? errorMessages.join(', ') 
-          : (responseData.message || 'Shopify API error');
-      } else if (responseData.message) {
-        errorMessage = responseData.message;
       } else if (statusCode) {
         errorMessage = `Request failed with status code ${statusCode}`;
       }
-    } else if (error.message) {
-      errorMessage = error.message;
+    } else if (axiosError.message) {
+      errorMessage = axiosError.message;
     }
 
     // Log detailed error for 400 and 401 errors
     if (statusCode === 400 || statusCode === 401) {
+      const requestConfig = axiosError.config as AxiosRequestConfig | undefined;
       console.error(`Shopify API ${statusCode} error:`, {
-        url: error.config?.url,
-        method: error.config?.method,
-        params: error.config?.params,
+        url: requestConfig?.url,
+        method: requestConfig?.method,
+        params: requestConfig?.params,
         statusCode,
         responseData,
       });
@@ -185,26 +201,27 @@ export class ShopifyClient {
     // Create a proper Error instance with additional context
     const err = new Error(errorMessage);
     if (statusCode) {
-      (err as any).statusCode = statusCode;
+      (err as Error & { statusCode?: number }).statusCode = statusCode;
     }
     if (responseData) {
-      (err as any).responseData = responseData;
+      (err as Error & { responseData?: unknown }).responseData = responseData;
     }
-    if (error.config) {
-      (err as any).requestConfig = {
-        url: error.config.url,
-        method: error.config.method,
-        params: error.config.params,
+    const requestConfig = axiosError.config as AxiosRequestConfig | undefined;
+    if (requestConfig) {
+      (err as Error & { requestConfig?: { url?: string; method?: string; params?: unknown } }).requestConfig = {
+        url: requestConfig.url,
+        method: requestConfig.method,
+        params: requestConfig.params,
       };
     }
-    
+
     return err;
   }
 
   /**
    * Make a GET request to Shopify Admin API
    */
-  async get<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
+  async get<T>(endpoint: string, params?: Record<string, string | number | boolean>): Promise<T> {
     const response = await this.client.get(endpoint, { params });
     return response.data;
   }
@@ -212,7 +229,7 @@ export class ShopifyClient {
   /**
    * Make a POST request to Shopify Admin API
    */
-  async post<T>(endpoint: string, data?: any): Promise<T> {
+  async post<T>(endpoint: string, data?: unknown): Promise<T> {
     const response = await this.client.post(endpoint, data);
     return response.data;
   }
@@ -220,6 +237,7 @@ export class ShopifyClient {
   /**
    * Make a PUT request to Shopify Admin API
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async put<T>(endpoint: string, data?: any): Promise<T> {
     const response = await this.client.put(endpoint, data);
     return response.data;

@@ -21,7 +21,7 @@ export async function getCompetitivePrice(asin: string): Promise<CompetitivePric
       asin,
       marketplaceId,
       currency: 'USD',
-      lowestPrice: 0,
+      lowestPrice: null,
       buyBoxPrice: null,
       offerCount: 0,
       offers: [],
@@ -31,7 +31,8 @@ export async function getCompetitivePrice(asin: string): Promise<CompetitivePric
   try {
     // Try common pricing endpoint. If not available, fall back gracefully.
     // SP-API Products Pricing: getItemOffers
-    const res = await client.callAPI({
+    const api = client as any
+    const res = await api.callAPI({
       operation: 'getItemOffers',
       path: { asin },
       query: { marketplaceId, ItemCondition: 'New' },

@@ -132,7 +132,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
 /**
  * Verify Shopify HMAC signature
  * Shopify docs: https://shopify.dev/docs/apps/auth/oauth/getting-started#step-5-verify-the-request
- * 
+ *
  * Shopify OAuth HMAC validation:
  * 1. Get all query parameters except 'hmac'
  * 2. Sort them alphabetically by key
@@ -148,12 +148,9 @@ function verifyShopifyHMAC(
 ): boolean {
   try {
     // Get all parameters except 'hmac'
-    const params: Array<[string, string]> = [];
-    for (const [key, value] of searchParams.entries()) {
-      if (key !== 'hmac') {
-        params.push([key, value]);
-      }
-    }
+    const params: Array<[string, string]> = Array.from(searchParams.entries()).filter(
+      ([key]) => key !== 'hmac'
+    );
 
     // Sort parameters alphabetically by key (Shopify requirement)
     params.sort(([a], [b]) => a.localeCompare(b));
@@ -210,7 +207,7 @@ function redirectToConsoleWithError(projectSlug: string | null, error: string): 
   const consoleBase = process.env.NEXT_PUBLIC_CONSOLE_URL || 'https://console.calibr.lat';
   const consoleUrl = projectSlug
     ? `${consoleBase}/p/${projectSlug}/integrations/shopify?error=${error}`
-    : `${consoleBase}/integrations?error=${error}`;
+    : `${consoleBase}/integrations/shopify?error=${error}`;
 
   return NextResponse.redirect(consoleUrl);
 }

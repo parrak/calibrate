@@ -22,15 +22,12 @@ export function createRateLimit(config: RateLimitConfig) {
   const {
     windowMs,
     maxRequests,
-    keyGenerator = (req) => req.ip || 'unknown',
-    skipSuccessfulRequests = false,
-    skipFailedRequests = false
+    keyGenerator = (req) => req.ip || 'unknown'
   } = config
 
   return async (req: NextRequest, handler: (req: NextRequest) => Promise<NextResponse>) => {
     const key = keyGenerator(req)
     const now = Date.now()
-    const windowStart = now - windowMs
 
     // Clean up expired entries
     Object.keys(store).forEach(k => {
@@ -58,7 +55,7 @@ export function createRateLimit(config: RateLimitConfig) {
     // Check rate limit
     if (entry.count >= maxRequests) {
       const retryAfter = Math.ceil((entry.resetTime - now) / 1000)
-      
+
       return NextResponse.json({
         error: 'Too Many Requests',
         message: `Rate limit exceeded. Try again in ${retryAfter} seconds.`,

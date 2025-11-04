@@ -4,15 +4,10 @@
  */
 
 import { randomUUID } from 'crypto'
-import { 
-  getPerformanceStats, 
-  getResourceStats, 
-  getAllPerformanceMetrics,
-  getAllErrorMetrics,
-  getDatabasePerformanceMetrics,
-  PerformanceMetric,
-  ErrorMetric,
-  ResourceMetric
+import {
+  getPerformanceStats,
+  getResourceStats,
+  getDatabasePerformanceMetrics
 } from './performance-monitor'
 
 export interface PerformanceAlert {
@@ -22,7 +17,7 @@ export interface PerformanceAlert {
   message: string
   timestamp: number
   resolved: boolean
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface PerformanceThresholds {
@@ -56,7 +51,7 @@ export class PerformanceService {
    */
   async checkPerformance(timeRangeMs: number = 60 * 60 * 1000): Promise<PerformanceAlert[]> {
     const newAlerts: PerformanceAlert[] = []
-    
+
     try {
       const [performanceStats, resourceStats, databaseMetrics] = await Promise.all([
         getPerformanceStats(timeRangeMs),
@@ -69,9 +64,9 @@ export class PerformanceService {
         // Check if we already have an active error rate alert
         const existingAlert = Array.from(this.alerts.values())
           .find(alert => alert.type === 'error_rate' && !alert.resolved)
-        
+
         if (!existingAlert) {
-          const alert = this.createAlert('error_rate', 'high', 
+          const alert = this.createAlert('error_rate', 'high',
             `Error rate is ${performanceStats.errorRate.toFixed(2)}%, exceeding threshold of ${this.thresholds.errorRate}%`,
             { errorRate: performanceStats.errorRate, threshold: this.thresholds.errorRate }
           )
@@ -184,7 +179,13 @@ export class PerformanceService {
       getDatabasePerformanceMetrics()
     ])
 
-    const healthScore = this.calculateHealthScore(performanceStats, resourceStats)
+    // Convert resourceStats to the format expected by calculateHealthScore
+    const resourceStatsForHealth = resourceStats.map(stat => ({
+      memory: stat.memory,
+      cpu: stat.cpu
+    }))
+
+    const healthScore = this.calculateHealthScore(performanceStats, resourceStatsForHealth)
     const activeAlerts = this.getActiveAlerts()
 
     return {
@@ -202,8 +203,6 @@ export class PerformanceService {
    */
   async generateReport(timeRangeMs: number = 24 * 60 * 60 * 1000) {
     const summary = await this.getPerformanceSummary(timeRangeMs)
-    const allMetrics = getAllPerformanceMetrics()
-    const allErrors = getAllErrorMetrics()
 
     return {
       ...summary,
@@ -225,7 +224,7 @@ export class PerformanceService {
     type: PerformanceAlert['type'],
     severity: PerformanceAlert['severity'],
     message: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): PerformanceAlert {
     return {
       id: `${type}_${Date.now()}_${randomUUID()}`,
@@ -238,7 +237,7 @@ export class PerformanceService {
     }
   }
 
-  private calculateHealthScore(performanceStats: any, resourceStats: any[]): number {
+  private calculateHealthScore(performanceStats: { errorRate: number; p95ResponseTime: number }, resourceStats: Array<{ memory?: { used: number; total: number }; cpu?: { loadAverage: [number, number, number] } }>): number {
     let score = 100
 
     // Deduct points for high error rate
@@ -266,7 +265,7 @@ export class PerformanceService {
     return Math.max(0, score)
   }
 
-  private generateRecommendations(summary: any): string[] {
+  private generateRecommendations(summary: { performance: { p95ResponseTime: number; errorRate: number; throughput?: number }; resources: Array<{ memory?: { used: number; total: number } }>; alerts: Array<unknown> }): string[] {
     const recommendations: string[] = []
 
     if (summary.performance.p95ResponseTime > 1000) {
@@ -285,7 +284,7 @@ export class PerformanceService {
       }
     }
 
-    if (summary.performance.throughput > 1000) {
+    if (summary.performance.throughput && summary.performance.throughput > 1000) {
       recommendations.push('Consider horizontal scaling for high traffic')
     }
 

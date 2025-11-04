@@ -11,13 +11,15 @@ import {
   PlatformHealth,
   PlatformCapabilities,
   PlatformError,
-  PlatformErrorType,
 } from '@calibr/platform-connector';
 import { ShopifyClient } from './client';
-import { ShopifyAuthManager } from './auth';
 import { ShopifyProducts } from './products';
 import { ShopifyPricing } from './pricing';
 import { ShopifyWebhooks } from './webhooks';
+import type { ShopifyRateLimit } from './types';
+import type { ShopifyAuthOperations } from './ShopifyAuthOperations';
+import type { ShopifyProductOperations } from './ShopifyProductOperations';
+import type { ShopifyPricingOperations } from './ShopifyPricingOperations';
 
 export interface ShopifyCredentials extends PlatformCredentials {
   platform: 'shopify';
@@ -56,12 +58,12 @@ export class ShopifyConnector implements PlatformConnector {
   };
 
   private client: ShopifyClient | null = null;
-  private authOperations: any = null;
-  private productOperations: any = null;
-  private pricingOperations: any = null;
+  private authOperations: ShopifyAuthOperations | null = null;
+  private productOperations: ShopifyProductOperations | null = null;
+  private pricingOperations: ShopifyPricingOperations | null = null;
   private webhooks: ShopifyWebhooks | null = null;
   private credentials: ShopifyCredentials | null = null;
-  
+
   // Expose underlying Shopify classes for operations
   public underlyingProducts: ShopifyProducts | null = null;
   private underlyingPricing: ShopifyPricing | null = null;
@@ -76,7 +78,7 @@ export class ShopifyConnector implements PlatformConnector {
   }
 
   // Implement required properties
-  get auth(): any {
+  get auth(): ShopifyAuthOperations {
     if (!this.authOperations) {
       throw new PlatformError(
         'authentication',
@@ -87,7 +89,7 @@ export class ShopifyConnector implements PlatformConnector {
     return this.authOperations;
   }
 
-  get products(): any {
+  get products(): ShopifyProductOperations {
     if (!this.productOperations) {
       throw new PlatformError(
         'authentication',
@@ -98,7 +100,7 @@ export class ShopifyConnector implements PlatformConnector {
     return this.productOperations;
   }
 
-  get pricing(): any {
+  get pricing(): ShopifyPricingOperations {
     if (!this.pricingOperations) {
       throw new PlatformError(
         'authentication',
@@ -116,7 +118,7 @@ export class ShopifyConnector implements PlatformConnector {
 
   async initialize(credentials: PlatformCredentials): Promise<void> {
     this.credentials = credentials as ShopifyCredentials;
-    
+
     // Validate credentials
     if (!this.credentials.shopDomain || !this.credentials.accessToken) {
       throw new PlatformError(
@@ -146,7 +148,7 @@ export class ShopifyConnector implements PlatformConnector {
     this.productOperations = new ShopifyProductOperations(this);
     this.pricingOperations = new ShopifyPricingOperations(this);
     this.webhooks = new ShopifyWebhooks(this.client, this.config.webhookSecret);
-    
+
     // Initialize underlying Shopify classes
     this.underlyingProducts = new ShopifyProducts(this.client);
     this.underlyingPricing = new ShopifyPricing(this.client);
@@ -200,7 +202,7 @@ export class ShopifyConnector implements PlatformConnector {
   async testConnection(): Promise<boolean> {
     try {
       if (!this.client) return false;
-      
+
       await this.client.get('/shop.json');
       return true;
     } catch {
@@ -211,18 +213,18 @@ export class ShopifyConnector implements PlatformConnector {
   // Additional Shopify-specific methods
   async getConnectionStatus(): Promise<{
     connected: boolean;
-    rateLimit: any;
-    shopInfo?: any;
+    rateLimit: ShopifyRateLimit | null;
+    shopInfo?: unknown;
   }> {
     try {
       const connected = await this.testConnection();
       const rateLimit = this.client?.getRateLimit() || null;
-      
+
       let shopInfo;
       if (connected && this.client) {
         try {
           shopInfo = await this.client.get('/shop.json');
-        } catch (error) {
+        } catch {
           // Shop info is optional
         }
       }
@@ -232,7 +234,7 @@ export class ShopifyConnector implements PlatformConnector {
         rateLimit,
         shopInfo,
       };
-    } catch (error) {
+    } catch {
       return {
         connected: false,
         rateLimit: null,

@@ -5,10 +5,10 @@ export default function Home() {
         <h1 className="text-4xl font-bold text-gray-900 mb-8">
           Calibrate Documentation
         </h1>
-        
+
         <div className="bg-white rounded-lg shadow p-8">
           <h2 className="text-2xl font-semibold mb-4">API Endpoints</h2>
-          
+
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium mb-2">Webhooks</h3>
@@ -17,7 +17,7 @@ export default function Home() {
                 <div className="text-gray-600 mt-1">Submit price change suggestions</div>
               </div>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-medium mb-2">Price Changes</h3>
               <div className="space-y-2">
@@ -35,7 +35,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-medium mb-2">Catalog</h3>
               <div className="bg-gray-100 p-4 rounded font-mono text-sm">
@@ -44,10 +44,10 @@ export default function Home() {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-8 p-4 bg-blue-50 rounded-lg">
             <p className="text-blue-800">
-              <strong>Note:</strong> Full documentation coming soon. 
+              <strong>Note:</strong> Full documentation coming soon.
               For now, check the API routes in the source code.
             </p>
           </div>

@@ -11,6 +11,7 @@ import { ConnectorRegistry } from '@calibr/platform-connector';
 import '@/lib/platforms/register'
 import { prisma } from '@calibr/db';
 import { withSecurity } from '@/lib/security-headers';
+import { createId } from '@paralleldrive/cuid2';
 
 export const runtime = 'nodejs';
 
@@ -48,7 +49,8 @@ export const GET = withSecurity(async function GET(
       console.error('[platform GET] Prisma client is undefined')
       return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
     }
-    if (!(db as any)?.project) {
+    const dbRecord = db as unknown as Record<string, unknown>
+    if (!dbRecord.project) {
       console.error('[platform GET] Prisma client missing model accessors', { hasDb: !!db, dbKeys: Object.keys(db || {}) })
       return NextResponse.json({ error: 'Database client not initialized' }, { status: 500 })
     }
@@ -64,7 +66,7 @@ export const GET = withSecurity(async function GET(
     }
 
     // Check if platform is registered
-    if (!ConnectorRegistry.isRegistered(platform as any)) {
+    if (!ConnectorRegistry.isRegistered(platform as 'shopify' | 'amazon')) {
       return NextResponse.json(
         { error: `Platform '${platform}' is not registered` },
         { status: 404 }
@@ -173,7 +175,7 @@ export const POST = withSecurity(async function POST(
     }
 
     // Check if platform is registered
-    if (!ConnectorRegistry.isRegistered(platform as any)) {
+    if (!ConnectorRegistry.isRegistered(platform as 'shopify' | 'amazon')) {
       return NextResponse.json(
         { error: `Platform '${platform}' is not registered` },
         { status: 404 }
@@ -193,7 +195,7 @@ export const POST = withSecurity(async function POST(
     }
 
     // Build platform-specific connector config
-    let connectorConfig: any;
+    let connectorConfig: { platform: 'shopify' | 'amazon'; apiKey?: string; apiSecret?: string; scopes?: string[]; webhookSecret?: string; apiVersion?: string } | undefined;
     if (platform === 'shopify') {
       connectorConfig = {
         platform: 'shopify' as const,
@@ -217,15 +219,20 @@ export const POST = withSecurity(async function POST(
     }
 
     // Test connection with credentials
+    const fullConnectorConfig = {
+      ...connectorConfig,
+      name: `${platform}_test_${Date.now()}`,
+      isActive: true,
+    };
     const connector = await ConnectorRegistry.createConnector(
-      platform as any,
-      connectorConfig
+      platform as 'shopify' | 'amazon',
+      fullConnectorConfig
     );
 
     // Initialize connector before testing connection
     await connector.initialize({
       ...credentials,
-      platform: platform as any,
+      platform: platform as 'shopify' | 'amazon',
     });
 
     const isConnected = await connector.testConnection();
@@ -250,6 +257,7 @@ export const POST = withSecurity(async function POST(
       const integration = await db.shopifyIntegration.upsert({
         where: { shopDomain: credentials.shopDomain },
         create: {
+          id: createId(),
           projectId: project.id,
           shopDomain: credentials.shopDomain,
           accessToken: credentials.accessToken,
@@ -291,6 +299,7 @@ export const POST = withSecurity(async function POST(
           },
         },
         create: {
+          id: createId(),
           projectId: project.id,
           sellerId: credentials.sellerId,
           marketplaceId: credentials.marketplaceId || 'ATVPDKIKX0DER',
@@ -442,6 +451,6 @@ export const DELETE = withSecurity(async function DELETE(
 /**
  * OPTIONS handler for CORS preflight
  */
-export const OPTIONS = withSecurity(async function OPTIONS(req: NextRequest) {
+export const OPTIONS = withSecurity(async function OPTIONS(_req: NextRequest) {
   return new NextResponse(null, { status: 204 });
 });

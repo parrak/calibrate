@@ -3,6 +3,7 @@
  * Handles webhook subscription, verification, and processing
  */
 
+import * as crypto from 'crypto';
 import { ShopifyClient } from './client';
 import { ShopifyWebhook, ShopifyWebhookPayload, ShopifyWebhookVerification } from './types';
 
@@ -78,13 +79,13 @@ export class ShopifyWebhooks {
   /**
    * Verify webhook signature
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   verifyWebhookSignature(payload: string, signature: string): ShopifyWebhookVerification {
     try {
-      const crypto = require('crypto');
       const hmac = crypto.createHmac('sha256', this.webhookSecret);
       hmac.update(payload, 'utf8');
       const hash = hmac.digest('base64');
-      
+
       const isValid = crypto.timingSafeEqual(
         Buffer.from(hash, 'base64'),
         Buffer.from(signature, 'base64')
@@ -102,11 +103,12 @@ export class ShopifyWebhooks {
           error: 'Invalid signature',
         };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
         isValid: false,
         payload: null,
-        error: `Verification failed: ${error?.message || 'Unknown error'}`,
+        error: `Verification failed: ${errorMessage}`,
       };
     }
   }
@@ -158,7 +160,7 @@ export class ShopifyWebhooks {
    */
   async cleanupWebhooks(keepTopics: string[]): Promise<void> {
     const webhooks = await this.listWebhooks();
-    
+
     for (const webhook of webhooks) {
       if (!keepTopics.includes(webhook.topic)) {
         try {

@@ -12,8 +12,8 @@ export const GET = withSecurity(async (req: NextRequest) => {
     const limit = Math.min(Math.max(Number(searchParams.get('limit') || '50'), 1), 200)
     const page = Math.max(Number(searchParams.get('page') || '1'), 1)
 
-    const where: any = { active: true }
-    if (q) where.asin = { contains: q, mode: 'insensitive' }
+    const where: { active: boolean; asin?: { contains: string; mode?: 'insensitive' | 'default' } } = { active: true }
+    if (q) where.asin = { contains: q, mode: 'insensitive' as const }
 
     const [total, items] = await Promise.all([
       prisma().amazonWatchlist.count({ where }),
@@ -68,5 +68,5 @@ export const DELETE = withSecurity(async (req: NextRequest) => {
   }
 })
 
-export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
+export const OPTIONS = withSecurity(async (_req: NextRequest) => new NextResponse(null, { status: 204 }))
 

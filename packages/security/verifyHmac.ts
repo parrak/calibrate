@@ -1,8 +1,7 @@
 import crypto from 'crypto'
-import { NextRequest } from 'next/server'
 
 export async function verifyHmac(
-  request: NextRequest,
+  request: any,
   secret?: string,
   toleranceSec = 300
 ): Promise<{ valid: boolean; projectId?: string; body?: string }> {
@@ -18,7 +17,7 @@ export async function verifyHmac(
     const rawBody = await request.text()
 
     const parts = Object.fromEntries(
-      sig.split(',').map(p => p.split('='))
+      sig.split(',').map((p: string) => p.split('='))
     )
     const ts = Number(parts['t'])
     const v1 = parts['v1']

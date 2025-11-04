@@ -3,9 +3,11 @@ import { prisma } from '@calibr/db'
 import { withSecurity } from '@/lib/security-headers'
 import { trackPerformance } from '@/lib/performance-middleware'
 import { errorJson, getPCForProject, inferConnectorTarget, requireProjectAccess, toPriceChangeDTO } from '../../utils'
+import { createId } from '@paralleldrive/cuid2'
 
 export const POST = withSecurity(
-  trackPerformance(async (req: NextRequest, context: { params: Promise<{ id: string }> }) => {
+  trackPerformance(async (req: NextRequest, ...args: unknown[]) => {
+    const context = args[0] as { params: Promise<{ id: string }> }
     const projectSlug = req.headers.get('X-Calibr-Project')?.trim()
     if (!projectSlug) {
       return errorJson({
@@ -62,6 +64,7 @@ export const POST = withSecurity(
 
         await tx.priceVersion.create({
           data: {
+            id: createId(),
             priceId: price.id,
             amount: price.amount,
             note: `Rollback price change ${pc.id}`,
@@ -75,6 +78,7 @@ export const POST = withSecurity(
 
         await tx.event.create({
           data: {
+            id: createId(),
             tenantId: pc.tenantId,
             projectId: pc.projectId,
             kind: 'PRICE_ROLLED_BACK',
@@ -100,18 +104,21 @@ export const POST = withSecurity(
       })
 
       return NextResponse.json({ ok: true, item: toPriceChangeDTO(updated) })
-    } catch (err: any) {
-      if (err?.code === 'PRICE_NOT_FOUND') {
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'PRICE_NOT_FOUND') {
         return errorJson({
           status: 404,
           error: 'NotFound',
           message: 'Price record not found for this SKU and currency.',
         })
       }
+      const errorMessage = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
+        ? err.message
+        : 'Failed to rollback price change.'
       return errorJson({
         status: 500,
         error: 'RollbackFailed',
-        message: err?.message ?? 'Failed to rollback price change.',
+        message: errorMessage,
       })
     }
   })

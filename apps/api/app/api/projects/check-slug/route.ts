@@ -39,10 +39,10 @@ export async function GET(req: NextRequest) {
       available: !existingProject,
       slug,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error checking slug availability:', error)
     return NextResponse.json(
-      { error: 'Failed to check slug availability', message: error?.message || String(error) },
+      { error: 'Failed to check slug availability', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

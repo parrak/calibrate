@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 // Import the route handler from the App Router file
-import { GET as installGET } from '../../app/api/platforms/shopify/oauth/install/route.ts'
+import { GET as installGET } from '@/app/api/platforms/shopify/oauth/install/route'
 
 describe('Shopify OAuth Install Route', () => {
   const OLD_ENV = process.env

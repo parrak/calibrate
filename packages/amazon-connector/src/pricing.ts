@@ -194,11 +194,12 @@ export async function downloadAndParseFeedResult(
   if (!res.ok) {
     return { ok: false }
   }
-  let body = await res.arrayBuffer()
+  let body: ArrayBuffer = await res.arrayBuffer()
   // Handle gzip if indicated
   if (compression && String(compression).toUpperCase().includes('GZIP')) {
     const zlib = await import('node:zlib')
-    body = zlib.gunzipSync(Buffer.from(body)).buffer
+    const decompressed: Buffer = zlib.gunzipSync(Buffer.from(body))
+    body = decompressed.buffer as ArrayBuffer
   }
   const text = Buffer.from(body).toString('utf8')
   // Naive XML summary parsing (ProcessingReport)

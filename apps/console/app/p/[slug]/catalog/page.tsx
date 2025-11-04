@@ -32,7 +32,8 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
       try {
         // Note: API may not support listing; this will evolve.
         const data = await catalogApi.listProducts(params.slug)
-        setProducts(data)
+        // Type assertion needed as API returns Record<string, unknown>
+        setProducts(data as Product[])
       } catch (err) {
         const msg = err instanceof ApiError ? err.message : 'Failed to load catalog'
         setError(msg)

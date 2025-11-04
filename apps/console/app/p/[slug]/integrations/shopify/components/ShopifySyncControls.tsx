@@ -26,7 +26,7 @@ interface ShopifySyncControlsProps {
 export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncControlsProps) {
   const [syncing, setSyncing] = useState(false);
   const [syncAction, setSyncAction] = useState<string | null>(null);
-  const [syncResult, setSyncResult] = useState<any>(null);
+  const [syncResult, setSyncResult] = useState<{ error?: string; productsCount?: number; webhooksCount?: number; successCount?: number; errorCount?: number } | null>(null);
 
   const handleSync = async (action: string) => {
     try {
@@ -91,13 +91,13 @@ export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncContro
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Sync Operations
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
               Product Sync
             </h3>
-            <Button 
+            <Button
               onClick={() => handleSync('sync_products')}
               disabled={isDisabled}
               className="w-full"
@@ -113,7 +113,7 @@ export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncContro
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
               Webhook Setup
             </h3>
-            <Button 
+            <Button
               onClick={() => handleSync('setup_webhooks')}
               disabled={isDisabled}
               variant="ghost"
@@ -133,7 +133,7 @@ export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncContro
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Price Management
         </h2>
-        
+
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <div>
@@ -144,7 +144,7 @@ export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncContro
                 Send approved price changes to your Shopify store
               </p>
             </div>
-            <Button 
+            <Button
               onClick={handlePriceUpdate}
               disabled={isDisabled}
               variant="primary"
@@ -161,7 +161,7 @@ export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncContro
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Sync Results
           </h2>
-          
+
           {syncResult.error ? (
             <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
               <div className="flex items-start">
@@ -188,7 +188,7 @@ export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncContro
                   <Badge variant="primary">{syncResult.productsCount}</Badge>
                 </div>
               )}
-              
+
               {syncResult.webhooksCount && (
                 <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
@@ -197,7 +197,7 @@ export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncContro
                   <Badge variant="primary">{syncResult.webhooksCount}</Badge>
                 </div>
               )}
-              
+
               {syncResult.successCount && (
                 <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                   <span className="text-sm font-medium text-green-800 dark:text-green-200">
@@ -206,7 +206,7 @@ export function ShopifySyncControls({ integration, onUpdate }: ShopifySyncContro
                   <Badge variant="primary">{syncResult.successCount}</Badge>
                 </div>
               )}
-              
+
               {syncResult.errorCount && syncResult.errorCount > 0 && (
                 <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                   <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">

@@ -7,24 +7,23 @@ import type {
   PlatformCredentials,
   PlatformHealth,
   PlatformCapabilities,
-  ProductLookupParams,
-  Product,
-  PriceUpdate,
-  PriceUpdateResult,
-  AuthCredentials,
-  AuthStatus,
   ProductFilter,
   ProductSyncResult,
-  ProductCountResult,
   BatchPriceUpdate,
-  BatchPriceUpdateResult,
-  PriceValidationResult,
+  BatchUpdateResult,
+  PriceUpdate,
+  PriceUpdateResult,
+  AuthStatus,
+  NormalizedProduct,
 } from '@calibr/platform-connector'
 import { PlatformError } from '@calibr/platform-connector'
-import { createSpApiClient, loadConfigFromEnv, AmazonConnectorConfig } from './spapi-client'
+import { createSpApiClient, loadConfigFromEnv } from './spapi-client'
 
 export class AmazonConnector implements PlatformConnector {
-  readonly platform = 'amazon' as const
+  readonly platform = 'amazon'
+  get key() {
+    return this.platform
+  }
   readonly name = 'Amazon'
   readonly version = '1.0.0'
   readonly capabilities: PlatformCapabilities = {
@@ -41,7 +40,7 @@ export class AmazonConnector implements PlatformConnector {
     },
   }
 
-  private config: PlatformConfig
+  readonly config: PlatformConfig
   private credentials: PlatformCredentials | null = null
   private spClient: any = null
 
@@ -141,13 +140,8 @@ export class AmazonConnector implements PlatformConnector {
         const cfg = loadConfigFromEnv()
         const hasLwa = Boolean(cfg.lwaClientId && cfg.lwaClientSecret && cfg.refreshToken)
         return {
-          platform: 'amazon',
-          connected: hasLwa,
-          details: {
-            marketplaceId: cfg.marketplaceId,
-            region: cfg.region,
-            mode: hasLwa ? 'live' : 'dry-run',
-          },
+          isAuthenticated: hasLwa,
+          userId: cfg.sellerId,
         }
       },
       authenticate: async (credentials: PlatformCredentials): Promise<void> => {
@@ -157,10 +151,10 @@ export class AmazonConnector implements PlatformConnector {
         await this.disconnect()
       },
       getAuthorizationUrl: (): string => {
-        throw new PlatformError('not_supported', 'Amazon uses LWA authentication, not OAuth', 'amazon')
+        throw new PlatformError('unknown', 'Amazon uses LWA authentication, not OAuth', 'amazon')
       },
       handleOAuthCallback: async (): Promise<any> => {
-        throw new PlatformError('not_supported', 'Amazon uses LWA authentication, not OAuth', 'amazon')
+        throw new PlatformError('unknown', 'Amazon uses LWA authentication, not OAuth', 'amazon')
       },
     }
   }
@@ -209,7 +203,7 @@ export class AmazonConnector implements PlatformConnector {
         }
       },
 
-      get: async (externalId: string): Promise<Product> => {
+      get: async (externalId: string): Promise<NormalizedProduct> => {
         if (!this.spClient) {
           throw new PlatformError('authentication', 'Connector not initialized', 'amazon')
         }
@@ -235,8 +229,7 @@ export class AmazonConnector implements PlatformConnector {
         }
       },
 
-      getBySku: async (params: ProductLookupParams): Promise<Product | null> => {
-        const sku = params.sku
+      getBySku: async (sku: string): Promise<NormalizedProduct | null> => {
         const cfg = loadConfigFromEnv()
         const marketplaceId = cfg.marketplaceId || 'ATVPDKIKX0DER'
         
@@ -305,7 +298,7 @@ export class AmazonConnector implements PlatformConnector {
 
       sync: async (productId: string, externalId: string): Promise<ProductSyncResult> => {
         try {
-          const product = await this.get(externalId)
+          const product = await this.products.get(externalId)
           
           // In a real implementation, this would update the local database
           return {
@@ -333,10 +326,10 @@ export class AmazonConnector implements PlatformConnector {
         let hasMore = true
 
         while (hasMore) {
-          const response = await this.list({ ...filter, page, limit: 50 })
+          const response = await this.products.list({ ...filter, page, limit: 50 })
 
           for (const product of response.data) {
-            const result = await this.sync(`cal-${product.externalId}`, product.externalId)
+            const result = await this.products.sync(`cal-${product.externalId}`, product.externalId)
             results.push(result)
           }
 
@@ -347,13 +340,10 @@ export class AmazonConnector implements PlatformConnector {
         return results
       },
 
-      count: async (filter?: ProductFilter): Promise<ProductCountResult> => {
+      count: async (filter?: ProductFilter): Promise<number> => {
         try {
-          const response = await this.list({ ...filter, limit: 1 })
-          return {
-            total: response.pagination.total || 0,
-            platform: 'amazon',
-          }
+          const response = await this.products.list({ ...filter, limit: 1 })
+          return response.pagination.total || 0
         } catch (error) {
           throw new PlatformError(
             'server',
@@ -410,7 +400,7 @@ export class AmazonConnector implements PlatformConnector {
           // Delegate to local pricing util which handles dry-run vs real submission
           const { applyPriceChange } = await import('./pricing')
           const res = await applyPriceChange({
-            skuCode: update.sku,
+            skuCode: update.sku || update.externalId,
             currency: update.currency,
             amount: update.price,
             submit: true,
@@ -424,8 +414,8 @@ export class AmazonConnector implements PlatformConnector {
             newPrice: update.price,
             currency: update.currency,
             updatedAt: new Date(),
-            error: res.ok ? undefined : res.message,
-            retryable: !res.ok && res.message.includes('rate limit'),
+            error: res.ok ? undefined : res.message || undefined,
+            retryable: !res.ok && (res.message?.includes('rate limit') || false),
           }
         } catch (error) {
           return {
@@ -440,7 +430,7 @@ export class AmazonConnector implements PlatformConnector {
         }
       },
 
-      batchUpdatePrices: async (batchUpdate: BatchPriceUpdate): Promise<BatchPriceUpdateResult> => {
+      batchUpdatePrices: async (batchUpdate: BatchPriceUpdate): Promise<BatchUpdateResult> => {
         const results: PriceUpdateResult[] = []
 
         for (const update of batchUpdate.updates) {
@@ -470,7 +460,7 @@ export class AmazonConnector implements PlatformConnector {
         }
       },
 
-      validatePriceUpdate: async (update: PriceUpdate): Promise<PriceValidationResult> => {
+      validatePriceUpdate: async (update: PriceUpdate): Promise<{ valid: boolean; errors?: string[]; }> => {
         const errors: string[] = []
 
         // Validate price is positive
@@ -484,7 +474,8 @@ export class AmazonConnector implements PlatformConnector {
         }
 
         // Validate SKU format (Amazon SKUs are typically alphanumeric)
-        if (!/^[A-Z0-9\-_]+$/i.test(update.sku)) {
+        const skuToValidate = update.sku || update.externalId
+        if (!/^[A-Z0-9\-_]+$/i.test(skuToValidate)) {
           errors.push('Invalid SKU format for Amazon')
         }
 
@@ -496,7 +487,7 @@ export class AmazonConnector implements PlatformConnector {
     }
   }
 
-  private normalizeProduct(amazonItem: any): Product {
+  private normalizeProduct(amazonItem: any): NormalizedProduct {
     return {
       externalId: amazonItem.asin || amazonItem.productId,
       platform: 'amazon',
@@ -535,3 +526,4 @@ export class AmazonConnector implements PlatformConnector {
     }
   }
 }
+

@@ -6,18 +6,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { recordPerformanceMetric, recordErrorMetric, PerformanceMetric, ErrorMetric } from './performance-monitor'
 
-export function withPerformanceMonitoring(handler: Function) {
-  return async (req: NextRequest, ...args: any[]) => {
+type RouteHandler = (req: NextRequest, ...args: unknown[]) => Promise<NextResponse>
+
+export function withPerformanceMonitoring(handler: RouteHandler) {
+  return async (req: NextRequest, ...args: unknown[]) => {
     const startTime = Date.now()
     const endpoint = req.nextUrl.pathname
     const method = req.method
-    
+
     // Extract context information
     const projectId = req.headers.get('x-calibr-project') || undefined
     const userId = req.headers.get('x-user-id') || undefined
     const userAgent = req.headers.get('user-agent') || undefined
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined
-    
+
     let response: NextResponse
     let statusCode = 200
     let error: Error | null = null
@@ -29,7 +31,7 @@ export function withPerformanceMonitoring(handler: Function) {
     } catch (err) {
       error = err as Error
       statusCode = 500
-      
+
       // Create error response
       response = NextResponse.json({
         error: 'Internal Server Error',
@@ -37,7 +39,7 @@ export function withPerformanceMonitoring(handler: Function) {
       }, { status: 500 })
     } finally {
       const responseTime = Date.now() - startTime
-      
+
       // Record performance metric
       const performanceMetric: PerformanceMetric = {
         timestamp: startTime,
@@ -50,9 +52,9 @@ export function withPerformanceMonitoring(handler: Function) {
         userAgent,
         ip
       }
-      
+
       recordPerformanceMetric(performanceMetric)
-      
+
       // Record error metric if there was an error
       if (statusCode >= 400 || error) {
         const errorMetric: ErrorMetric = {
@@ -66,7 +68,7 @@ export function withPerformanceMonitoring(handler: Function) {
           userId,
           statusCode
         }
-        
+
         recordErrorMetric(errorMetric)
       }
     }
@@ -78,7 +80,7 @@ export function withPerformanceMonitoring(handler: Function) {
 /**
  * Higher-order function to wrap API route handlers with performance monitoring
  */
-export function trackPerformance(handler: Function) {
+export function trackPerformance(handler: RouteHandler) {
   return withPerformanceMonitoring(handler)
 }
 
@@ -89,18 +91,18 @@ export function trackMetrics(metrics: {
   endpoint?: string
   customTags?: Record<string, string>
 }) {
-  return function(handler: Function) {
-    return async (req: NextRequest, ...args: any[]) => {
+  return function(handler: RouteHandler) {
+    return async (req: NextRequest, ...args: unknown[]) => {
       const startTime = Date.now()
       const endpoint = metrics.endpoint || req.nextUrl.pathname
       const method = req.method
-      
+
       // Extract context
       const projectId = req.headers.get('x-calibr-project') || undefined
       const userId = req.headers.get('x-user-id') || undefined
       const userAgent = req.headers.get('user-agent') || undefined
       const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined
-      
+
       let response: NextResponse
       let statusCode = 200
       let error: Error | null = null
@@ -117,7 +119,7 @@ export function trackMetrics(metrics: {
         }, { status: 500 })
       } finally {
         const responseTime = Date.now() - startTime
-        
+
         // Record performance metric with custom tags
         const performanceMetric: PerformanceMetric = {
           timestamp: startTime,
@@ -130,9 +132,9 @@ export function trackMetrics(metrics: {
           userAgent,
           ip
         }
-        
+
         recordPerformanceMetric(performanceMetric)
-        
+
         // Record error if applicable
         if (statusCode >= 400 || error) {
           const errorMetric: ErrorMetric = {
@@ -146,7 +148,7 @@ export function trackMetrics(metrics: {
             userId,
             statusCode
           }
-          
+
           recordErrorMetric(errorMetric)
         }
       }
@@ -169,7 +171,7 @@ function getErrorType(statusCode: number, error: Error | null): string {
     if (error.name === 'DatabaseError') return 'database_error'
     return 'application_error'
   }
-  
+
   if (statusCode >= 500) return 'server_error'
   if (statusCode >= 400) return 'client_error'
   if (statusCode >= 300) return 'redirect'
@@ -179,17 +181,17 @@ function getErrorType(statusCode: number, error: Error | null): string {
 /**
  * Performance monitoring decorator for class methods
  */
-export function monitorPerformance(target: any, propertyName: string, descriptor: PropertyDescriptor) {
+export function monitorPerformance(target: { constructor: { name: string } }, propertyName: string, descriptor: PropertyDescriptor) {
   const method = descriptor.value
 
-  descriptor.value = async function (...args: any[]) {
+  descriptor.value = async function (...args: unknown[]) {
     const startTime = Date.now()
     const endpoint = `${target.constructor.name}.${propertyName}`
-    
+
     try {
       const result = await method.apply(this, args)
       const responseTime = Date.now() - startTime
-      
+
       recordPerformanceMetric({
         timestamp: startTime,
         endpoint,
@@ -197,11 +199,11 @@ export function monitorPerformance(target: any, propertyName: string, descriptor
         responseTime,
         statusCode: 200
       })
-      
+
       return result
     } catch (error) {
       const responseTime = Date.now() - startTime
-      
+
       recordPerformanceMetric({
         timestamp: startTime,
         endpoint,
@@ -209,7 +211,7 @@ export function monitorPerformance(target: any, propertyName: string, descriptor
         responseTime,
         statusCode: 500
       })
-      
+
       recordErrorMetric({
         timestamp: startTime,
         endpoint,
@@ -219,7 +221,7 @@ export function monitorPerformance(target: any, propertyName: string, descriptor
         stackTrace: error instanceof Error ? error.stack : undefined,
         statusCode: 500
       })
-      
+
       throw error
     }
   }
@@ -298,17 +300,17 @@ export class PerformanceTracker {
  * Performance monitoring for database operations
  */
 export function trackDatabaseOperation(operationName: string) {
-  return function(target: any, propertyName: string, descriptor: PropertyDescriptor) {
+  return function(target: { constructor: { name: string } }, propertyName: string, descriptor: PropertyDescriptor) {
     const method = descriptor.value
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const startTime = Date.now()
       const endpoint = `database.${operationName}`
-      
+
       try {
         const result = await method.apply(this, args)
         const responseTime = Date.now() - startTime
-        
+
         recordPerformanceMetric({
           timestamp: startTime,
           endpoint,
@@ -316,11 +318,11 @@ export function trackDatabaseOperation(operationName: string) {
           responseTime,
           statusCode: 200
         })
-        
+
         return result
       } catch (error) {
         const responseTime = Date.now() - startTime
-        
+
         recordPerformanceMetric({
           timestamp: startTime,
           endpoint,
@@ -328,7 +330,7 @@ export function trackDatabaseOperation(operationName: string) {
           responseTime,
           statusCode: 500
         })
-        
+
         recordErrorMetric({
           timestamp: startTime,
           endpoint,
@@ -338,7 +340,7 @@ export function trackDatabaseOperation(operationName: string) {
           stackTrace: error instanceof Error ? error.stack : undefined,
           statusCode: 500
         })
-        
+
         throw error
       }
     }

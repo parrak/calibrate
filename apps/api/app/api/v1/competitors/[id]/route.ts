@@ -18,10 +18,10 @@ export async function GET(
     const competitor = await db().competitor.findUnique({
       where: { id },
       include: {
-        products: {
+        CompetitorProduct: {
           include: {
-            sku: true,
-            prices: {
+            Sku: true,
+            CompetitorPrice: {
               orderBy: { createdAt: 'desc' },
               take: 10
             }

@@ -12,14 +12,13 @@ interface PlatformCardProps {
     description?: string
     available: boolean
   }
-  integration: any | null
+  integration: { status?: string; platformName?: string; lastSyncAt?: string | null; syncStatus?: string | null } | null
   projectSlug: string
   onUpdate?: () => void
 }
 
 export function PlatformCard({ platform, integration, projectSlug, onUpdate }: PlatformCardProps) {
   const [syncing, setSyncing] = useState(false)
-  const [disconnecting, setDisconnecting] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
 
   const handleSync = async () => {
@@ -31,20 +30,6 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
       console.error('Sync failed:', error)
     } finally {
       setSyncing(false)
-    }
-  }
-
-  const handleDisconnect = async () => {
-    if (!confirm(`Disconnect from ${platform.name}?`)) return
-
-    try {
-      setDisconnecting(true)
-      await platformsApi.disconnect(platform.platform, projectSlug)
-      onUpdate?.()
-    } catch (error) {
-      console.error('Disconnect failed:', error)
-    } finally {
-      setDisconnecting(false)
     }
   }
 
@@ -153,10 +138,19 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
       </div>
 
       {/* Settings Modal */}
-      {showSettings && (
+      {showSettings && integration && (
         <PlatformSettings
           platform={{ ...platform, description: platform.description || '' }}
-          integration={integration}
+          integration={{
+            id: (integration as { id?: string }).id || '',
+            status: integration.status || 'UNKNOWN',
+            platformName: integration.platformName || '',
+            connectedAt: new Date().toISOString(),
+            lastSyncAt: integration.lastSyncAt,
+            syncStatus: integration.syncStatus,
+            platform: platform.platform,
+            isActive: true
+          }}
           projectSlug={projectSlug}
           onClose={() => setShowSettings(false)}
           onUpdate={() => {

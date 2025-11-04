@@ -9,12 +9,16 @@ vi.mock('@calibr/db', () => {
         count: vi.fn().mockResolvedValue(0),
         findMany: vi.fn().mockImplementation(async () => items),
         upsert: vi.fn().mockImplementation(async ({ create, update, where }: any) => {
-          const idx = items.findIndex((i) => i.asin === where.asin_marketplace_unique.asin)
+          const asin = where.asin_marketplaceId?.asin || where.asin_marketplace_unique?.asin
+          const marketplaceId = where.asin_marketplaceId?.marketplaceId || where.asin_marketplace_unique?.marketplaceId || 'ATVPDKIKX0DER'
+          const idx = items.findIndex((i) => i.asin === asin && i.marketplaceId === marketplaceId)
           if (idx >= 0) { items[idx] = { ...items[idx], ...update } } else { items.push({ id: String(items.length+1), ...create }) }
           return items[items.length-1]
         }),
         delete: vi.fn().mockImplementation(async ({ where }: any) => {
-          const idx = items.findIndex((i) => i.asin === where.asin_marketplace_unique.asin)
+          const asin = where.asin_marketplaceId?.asin || where.asin_marketplace_unique?.asin
+          const marketplaceId = where.asin_marketplaceId?.marketplaceId || where.asin_marketplace_unique?.marketplaceId || 'ATVPDKIKX0DER'
+          const idx = items.findIndex((i) => i.asin === asin && i.marketplaceId === marketplaceId)
           if (idx >= 0) items.splice(idx,1)
         }),
       }

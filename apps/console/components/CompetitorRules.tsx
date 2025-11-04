@@ -9,7 +9,7 @@ import { Label } from '../lib/components/Label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../lib/components/Select'
 import { Switch } from '../lib/components/Switch'
 import { Textarea } from '../lib/components/Textarea'
-import { Plus, Edit, Trash2, Play } from 'lucide-react'
+import { Plus, Edit, Trash2 } from 'lucide-react'
 import { competitorsApi } from '@/lib/api-client'
 
 interface CompetitorRule {
@@ -31,9 +31,7 @@ interface CompetitorRule {
 export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
   const [rules, setRules] = useState<CompetitorRule[]>([])
   const [isCreating, setIsCreating] = useState(false)
-  const [editingRule, setEditingRule] = useState<CompetitorRule | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   const [newRule, setNewRule] = useState<{
     name: string
@@ -61,12 +59,10 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
 
   const fetchRules = async () => {
     try {
-      setError(null)
       const data = await competitorsApi.getRules(projectSlug)
-      setRules(Array.isArray(data) ? data : [])
+      setRules(Array.isArray(data) ? (data as unknown as CompetitorRule[]) : [])
     } catch (error) {
       console.error('Error fetching rules:', error)
-      setError('Failed to load competitor rules')
     } finally {
       setLoading(false)
     }
@@ -92,22 +88,7 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
     }
   }
 
-  const updateRule = async (rule: CompetitorRule) => {
-    try {
-      const response = await fetch(`/api/v1/competitors/rules/${rule.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(rule)
-      })
-
-      if (response.ok) {
-        await fetchRules()
-        setEditingRule(null)
-      }
-    } catch (error) {
-      console.error('Error updating rule:', error)
-    }
-  }
+  // updateRule function removed - not currently used
 
   const deleteRule = async (ruleId: string) => {
     try {
@@ -176,7 +157,11 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
                 <Label htmlFor="type">Rule Type</Label>
                 <Select
                   value={newRule.type}
-                  onValueChange={(value: any) => setNewRule({ ...newRule, type: value })}
+                  onValueChange={(value: string) => {
+                    if (value === 'beat_by_percent' || value === 'beat_by_amount' || value === 'match' || value === 'avoid_race_to_bottom') {
+                      setNewRule({ ...newRule, type: value })
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -317,7 +302,10 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEditingRule(rule)}
+                      onClick={() => {
+                        // TODO: Implement edit functionality
+                        console.log('Edit rule:', rule)
+                      }}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>

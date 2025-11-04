@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { verifyHmac } from '@calibr/security'
 import { withSecurity } from '@/lib/security-headers'
+import { createId } from '@paralleldrive/cuid2'
 
 const db = () => prisma()
 
@@ -27,9 +28,9 @@ export const GET = withSecurity(async (request: NextRequest) => {
         projectId
       },
       include: {
-        products: {
+        CompetitorProduct: {
           include: {
-            prices: {
+            CompetitorPrice: {
               orderBy: { createdAt: 'desc' },
               take: 1
             }
@@ -63,11 +64,13 @@ export const POST = withSecurity(async (request: NextRequest) => {
 
     const competitor = await db().competitor.create({
       data: {
+        id: createId(),
         tenantId,
         projectId,
         name,
         domain,
-        channel
+        channel,
+        updatedAt: new Date()
       }
     })
 
@@ -81,6 +84,6 @@ export const POST = withSecurity(async (request: NextRequest) => {
 /**
  * OPTIONS handler for CORS preflight
  */
-export const OPTIONS = withSecurity(async (req: NextRequest) => {
+export const OPTIONS = withSecurity(async (_req: NextRequest) => {
   return new NextResponse(null, { status: 204 });
 });

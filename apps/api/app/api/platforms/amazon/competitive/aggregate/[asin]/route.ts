@@ -6,15 +6,18 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 // GET /api/platforms/amazon/competitive/aggregate/:asin?days=7&marketplaceId=ATVPDKIKX0DER
-export const GET = withSecurity(async (req: NextRequest, context: { params: Promise<{ asin: string }> }) => {
+export const GET = withSecurity(async (req: NextRequest, context?: { params: Promise<{ asin: string }> }) => {
   try {
-    const { asin } = await context.params
+    const asin = context ? (await context.params).asin : undefined
+    if (!asin) {
+      return NextResponse.json({ error: 'asin required' }, { status: 400 })
+    }
     const { searchParams } = new URL(req.url)
     const days = Math.max(1, Math.min(90, Number(searchParams.get('days') || '7')))
     const marketplaceId = searchParams.get('marketplaceId') || undefined
 
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-    const where: any = { asin, retrievedAt: { gte: since } }
+    const where: { asin: string; retrievedAt: { gte: Date }; marketplaceId?: string } = { asin, retrievedAt: { gte: since } }
     if (marketplaceId) where.marketplaceId = marketplaceId
 
     const rows = await prisma().amazonCompetitivePrice.findMany({
@@ -50,5 +53,5 @@ export const GET = withSecurity(async (req: NextRequest, context: { params: Prom
   }
 })
 
-export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
+export const OPTIONS = withSecurity(async () => new NextResponse(null, { status: 204 }))
 

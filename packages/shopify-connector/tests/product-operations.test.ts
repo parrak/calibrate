@@ -76,7 +76,6 @@ describe('ShopifyProductOperations', () => {
       expect(connector['underlyingProducts'].listProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           limit: 50,
-          page: 1,
         })
       )
       expect(result.data).toHaveLength(1)

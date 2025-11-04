@@ -91,10 +91,10 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
 async function handleAIQuery(
   projectId: string,
   query: string,
-  context?: any
+  _context?: unknown
 ): Promise<{
   answer: string
-  data?: any
+  data?: unknown
   sql?: string
   method: 'ai'
 }> {
@@ -126,7 +126,7 @@ async function handleAIQuery(
       answer: explanation,
       data,
       sql: secureSQL,
-      method: 'ai',
+      method: 'ai' as const,
     }
   } catch (error) {
     throw new Error(
@@ -142,10 +142,10 @@ async function handleAIQuery(
 async function handleQuery(
   projectId: string,
   query: string,
-  context?: any
+  context?: unknown
 ): Promise<{
   answer: string
-  data?: any
+  data?: unknown
   sql?: string
   suggestions?: string[]
 }> {
@@ -192,15 +192,10 @@ async function handleQuery(
 /**
  * Explain a recent price change
  */
-async function explainPriceChange(projectId: string, context?: any): Promise<any> {
+async function explainPriceChange(projectId: string, _context?: unknown): Promise<{ answer: string; data?: unknown; sql?: string }> {
   const priceChange = await prisma().priceChange.findFirst({
     where: { projectId },
     orderBy: { createdAt: 'desc' },
-    include: {
-      sku: {
-        select: { sku: true, name: true },
-      },
-    },
   })
 
   if (!priceChange) {
@@ -209,22 +204,28 @@ async function explainPriceChange(projectId: string, context?: any): Promise<any
     }
   }
 
+  // Fetch the related Sku separately since PriceChange doesn't have a direct relation
+  const sku = await prisma().sku.findUnique({
+    where: { id: priceChange.skuId },
+    select: { code: true, name: true },
+  })
+
   const delta = priceChange.toAmount - priceChange.fromAmount
   const deltaPercent = ((delta / priceChange.fromAmount) * 100).toFixed(1)
   const direction = delta > 0 ? 'increased' : 'decreased'
 
-  const policyResult = priceChange.policyResult as any
+  const policyResult = priceChange.policyResult as { checks?: Array<{ ok: boolean }> } | null | undefined
 
-  const answer = `Price ${direction} by ${Math.abs(delta)}¢ (${Math.abs(parseFloat(deltaPercent))}%) for ${priceChange.sku.name || priceChange.sku.sku}. ` +
+  const answer = `Price ${direction} by ${Math.abs(delta)}¢ (${Math.abs(parseFloat(deltaPercent))}%) for ${sku?.name || sku?.code || priceChange.skuId}. ` +
     `Status: ${priceChange.status}. ` +
     (policyResult?.checks
-      ? `Policy checks: ${policyResult.checks.length} evaluated, ${policyResult.checks.filter((c: any) => c.ok).length} passed.`
+      ? `Policy checks: ${policyResult.checks.length} evaluated, ${policyResult.checks.filter((c) => c.ok).length} passed.`
       : '')
 
   return {
     answer,
     data: {
-      sku: priceChange.sku.sku,
+      sku: sku?.code || priceChange.skuId,
       from: priceChange.fromAmount,
       to: priceChange.toAmount,
       delta,
@@ -239,29 +240,48 @@ async function explainPriceChange(projectId: string, context?: any): Promise<any
 /**
  * Simulate a price increase
  */
-async function simulatePriceIncrease(projectId: string, percent: number): Promise<any> {
+async function simulatePriceIncrease(projectId: string, percent: number): Promise<{ answer: string; data?: unknown }> {
+  // Sku is related to Product, which has projectId
   const skus = await prisma().sku.findMany({
-    where: { projectId },
+    where: {
+      Product: {
+        projectId,
+      },
+    },
     select: {
-      sku: true,
+      id: true,
+      code: true,
       name: true,
-      priceAmount: true,
-      cost: true,
+      Price: {
+        where: {
+          status: 'ACTIVE',
+        },
+        select: {
+          amount: true,
+          currency: true,
+        },
+        take: 1,
+      },
+      attributes: true,
     },
   })
 
   const simulated = skus
-    .filter((s) => s.priceAmount !== null)
+    .filter((s) => s.Price[0]?.amount !== null && s.Price[0]?.amount !== undefined)
     .map((s) => {
-      const newPrice = Math.round(s.priceAmount! * (1 + percent / 100))
-      const currentMargin = s.cost ? ((s.priceAmount! - s.cost) / s.cost) * 100 : null
-      const newMargin = s.cost ? ((newPrice - s.cost) / s.cost) * 100 : null
+      const currentPrice = s.Price[0]?.amount || 0
+      const newPrice = Math.round(currentPrice * (1 + percent / 100))
+      // Extract cost from attributes if available (cost is not directly on Sku)
+      const attributes = s.attributes as { cost?: number } | null | undefined
+      const cost = attributes?.cost
+      const currentMargin = cost ? ((currentPrice - cost) / cost) * 100 : null
+      const newMargin = cost ? ((newPrice - cost) / cost) * 100 : null
 
       return {
-        sku: s.sku,
-        currentPrice: s.priceAmount,
+        sku: s.code,
+        currentPrice,
         newPrice,
-        delta: newPrice - s.priceAmount!,
+        delta: newPrice - currentPrice,
         currentMargin,
         newMargin,
       }
@@ -291,29 +311,51 @@ async function simulatePriceIncrease(projectId: string, percent: number): Promis
 /**
  * Find products with low margins
  */
-async function findLowMarginProducts(projectId: string): Promise<any> {
+async function findLowMarginProducts(projectId: string): Promise<{ answer: string; data?: unknown; sql?: string }> {
+  // Sku is related to Product, which has projectId. Cost and priceAmount are not directly on Sku.
   const skus = await prisma().sku.findMany({
     where: {
-      projectId,
-      cost: { not: null },
-      priceAmount: { not: null },
+      Product: {
+        projectId,
+      },
     },
     select: {
-      sku: true,
+      id: true,
+      code: true,
       name: true,
-      priceAmount: true,
-      cost: true,
+      Price: {
+        where: {
+          status: 'ACTIVE',
+        },
+        select: {
+          amount: true,
+          currency: true,
+        },
+        take: 1,
+      },
+      attributes: true,
     },
   })
 
   const withMargins = skus
-    .map((s) => ({
-      sku: s.sku,
-      name: s.name,
-      price: s.priceAmount!,
-      cost: s.cost!,
-      margin: ((s.priceAmount! - s.cost!) / s.cost!) * 100,
-    }))
+    .filter((s) => {
+      const price = s.Price[0]?.amount
+      const attributes = s.attributes as { cost?: number } | null | undefined
+      const cost = attributes?.cost
+      return price !== null && price !== undefined && cost !== null && cost !== undefined && cost > 0
+    })
+    .map((s) => {
+      const price = s.Price[0]!.amount
+      const attributes = s.attributes as { cost: number } | null
+      const cost = attributes!.cost
+      return {
+        sku: s.code,
+        name: s.name,
+        price,
+        cost,
+        margin: ((price - cost) / cost) * 100,
+      }
+    })
     .sort((a, b) => a.margin - b.margin)
 
   const lowMargin = withMargins.filter((s) => s.margin < 20)
@@ -325,14 +367,14 @@ async function findLowMarginProducts(projectId: string): Promise<any> {
   return {
     answer,
     data: lowMargin.slice(0, 10),
-    sql: `SELECT *, ((priceAmount - cost) / cost * 100) as margin FROM "Sku" WHERE "projectId" = '${projectId}' AND cost IS NOT NULL ORDER BY margin ASC`,
+    sql: `SELECT s.*, p.amount as priceAmount, (s.attributes->>'cost')::int as cost, ((p.amount - (s.attributes->>'cost')::int) / (s.attributes->>'cost')::int * 100) as margin FROM "Sku" s JOIN "Price" p ON s.id = p."skuId" JOIN "Product" pr ON s."productId" = pr.id WHERE pr."projectId" = '${projectId}' AND (s.attributes->>'cost') IS NOT NULL ORDER BY margin ASC`,
   }
 }
 
 /**
  * Count recent price changes
  */
-async function countRecentPriceChanges(projectId: string): Promise<any> {
+async function countRecentPriceChanges(projectId: string): Promise<{ answer: string; data?: unknown; sql?: string }> {
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
   const total = await prisma().priceChange.count({

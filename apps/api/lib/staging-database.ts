@@ -5,6 +5,7 @@
 
 import { PrismaClient } from '@calibr/db'
 import { stagingConfig } from '../config/staging'
+import { createId } from '@paralleldrive/cuid2'
 
 export class StagingDatabaseManager {
   private prisma: PrismaClient
@@ -33,10 +34,10 @@ export class StagingDatabaseManager {
 
       // Run migrations
       await this.runMigrations()
-      
+
       // Seed test data
       await this.seedTestData()
-      
+
       this.isInitialized = true
       console.log('✅ Staging database initialized successfully')
     } catch (error) {
@@ -52,7 +53,7 @@ export class StagingDatabaseManager {
     try {
       // This would typically use Prisma migrate or a custom migration runner
       console.log('🔄 Running staging database migrations...')
-      
+
       // For now, we'll just verify the connection
       await this.prisma.$queryRaw`SELECT 1`
       console.log('✅ Staging database migrations completed')
@@ -68,7 +69,7 @@ export class StagingDatabaseManager {
   private async seedTestData(): Promise<void> {
     try {
       console.log('🌱 Seeding staging database with test data...')
-      
+
       // Check if data already exists
       const existingTenants = await this.prisma.tenant.count()
       if (existingTenants > 0) {
@@ -79,99 +80,92 @@ export class StagingDatabaseManager {
       // Create test tenant
       const testTenant = await this.prisma.tenant.create({
         data: {
-          name: 'Calibrate Staging',
-          slug: 'calibrate-staging',
-          settings: {
-            webhookUrl: 'https://staging-webhook.calibr.lat/webhook',
-            notificationEmail: 'staging@calibr.lat',
-            features: {
-              autoApprove: false,
-              notifications: true,
-              analytics: true
-            }
-          }
+          id: createId(),
+          name: 'Calibrate Staging'
         }
       })
 
       // Create test project
       const testProject = await this.prisma.project.create({
         data: {
+          id: createId(),
           name: 'Staging Test Project',
           slug: 'staging-test',
           tenantId: testTenant.id,
-          settings: {
-            webhookUrl: 'https://staging-webhook.calibr.lat/webhook',
-            notificationEmail: 'staging@calibr.lat',
-            features: {
-              autoApprove: false,
-              notifications: true,
-              analytics: true
-            }
-          }
+          updatedAt: new Date()
         }
       })
 
       // Create test products
       const testProducts = [
         {
+          id: createId(),
           code: 'STAGING-PRODUCT-001',
           name: 'Staging Test Product 1',
-          currentPrice: 29.99,
-          currency: 'USD',
-          category: 'Test Category',
+          tenantId: testTenant.id,
           projectId: testProject.id
         },
         {
+          id: createId(),
           code: 'STAGING-PRODUCT-002',
           name: 'Staging Test Product 2',
-          currentPrice: 49.99,
-          currency: 'USD',
-          category: 'Test Category',
+          tenantId: testTenant.id,
           projectId: testProject.id
         },
         {
+          id: createId(),
           code: 'STAGING-PRODUCT-003',
           name: 'Staging Test Product 3',
-          currentPrice: 99.99,
-          currency: 'USD',
-          category: 'Test Category',
+          tenantId: testTenant.id,
           projectId: testProject.id
         }
       ]
 
+      const createdProducts = []
       for (const productData of testProducts) {
-        await this.prisma.product.create({
+        const product = await this.prisma.product.create({
           data: productData
         })
+        createdProducts.push(product)
+      }
+
+      // Create SKUs for products
+      const skus = []
+      for (const product of createdProducts) {
+        const sku = await this.prisma.sku.create({
+          data: {
+            id: createId(),
+            productId: product.id,
+            code: `${product.code}-SKU`,
+            name: `${product.name} - Default SKU`
+          }
+        })
+        skus.push({ sku, product })
       }
 
       // Create test price changes
       const testPriceChanges = [
         {
-          productCode: 'STAGING-PRODUCT-001',
-          oldPrice: 29.99,
-          newPrice: 34.99,
-          changeAmount: 5.00,
-          changePercentage: 16.67,
-          status: 'pending',
+          sku: skus[0].sku,
+          fromAmount: 2999, // $29.99 in cents
+          toAmount: 3499,   // $34.99 in cents
+          currency: 'USD',
           source: 'manual',
-          projectId: testProject.id,
-          metadata: {
+          status: 'PENDING' as const,
+          context: {
             reason: 'Test price increase',
             approvedBy: 'staging-test-user',
             notes: 'Staging environment test data'
           }
         },
         {
-          productCode: 'STAGING-PRODUCT-002',
-          oldPrice: 49.99,
-          newPrice: 44.99,
-          changeAmount: -5.00,
-          changePercentage: -10.00,
-          status: 'approved',
+          sku: skus[1].sku,
+          fromAmount: 4999, // $49.99 in cents
+          toAmount: 4499,   // $44.99 in cents
+          currency: 'USD',
           source: 'api',
-          projectId: testProject.id,
-          metadata: {
+          status: 'APPROVED' as const,
+          context: {
             reason: 'Test price decrease',
             approvedBy: 'staging-test-user',
             notes: 'Staging environment test data'
@@ -181,7 +175,18 @@ export class StagingDatabaseManager {
 
       for (const priceChangeData of testPriceChanges) {
         await this.prisma.priceChange.create({
-          data: priceChangeData
+          data: {
+            id: createId(),
+            tenantId: testTenant.id,
+            projectId: testProject.id,
+            skuId: priceChangeData.sku.id,
+            fromAmount: priceChangeData.fromAmount,
+            toAmount: priceChangeData.toAmount,
+            currency: priceChangeData.currency,
+            source: priceChangeData.source,
+            status: priceChangeData.status,
+            context: priceChangeData.context
+          }
         })
       }
 
@@ -198,11 +203,11 @@ export class StagingDatabaseManager {
   async cleanupTestData(): Promise<void> {
     try {
       console.log('🧹 Cleaning up staging test data...')
-      
+
       // Delete test data in reverse order of dependencies
       await this.prisma.priceChange.deleteMany({
         where: {
-          metadata: {
+          context: {
             path: ['notes'],
             equals: 'Staging environment test data'
           }
@@ -225,7 +230,7 @@ export class StagingDatabaseManager {
 
       await this.prisma.tenant.deleteMany({
         where: {
-          slug: 'calibrate-staging'
+          name: 'Calibrate Staging'
         }
       })
 
@@ -242,13 +247,13 @@ export class StagingDatabaseManager {
   async reset(): Promise<void> {
     try {
       console.log('🔄 Resetting staging database...')
-      
+
       // Clean up existing data
       await this.cleanupTestData()
-      
+
       // Re-seed with fresh test data
       await this.seedTestData()
-      
+
       console.log('✅ Staging database reset completed')
     } catch (error) {
       console.error('❌ Failed to reset staging database:', error)
@@ -269,7 +274,7 @@ export class StagingDatabaseManager {
       const connected = await this.testConnection()
       const migrations = await this.checkMigrations()
       const testData = await this.checkTestData()
-      
+
       return {
         connected,
         migrations,
@@ -294,7 +299,7 @@ export class StagingDatabaseManager {
     try {
       await this.prisma.$queryRaw`SELECT 1`
       return true
-    } catch (error) {
+    } catch {
       return false
     }
   }
@@ -308,7 +313,7 @@ export class StagingDatabaseManager {
       // For now, just return true if we can query
       await this.prisma.$queryRaw`SELECT 1`
       return true
-    } catch (error) {
+    } catch {
       return false
     }
   }
@@ -320,11 +325,11 @@ export class StagingDatabaseManager {
     try {
       const tenantCount = await this.prisma.tenant.count({
         where: {
-          slug: 'calibrate-staging'
+          name: 'Calibrate Staging'
         }
       })
       return tenantCount > 0
-    } catch (error) {
+    } catch {
       return false
     }
   }

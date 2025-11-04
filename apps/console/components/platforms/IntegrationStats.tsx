@@ -1,7 +1,12 @@
 'use client'
 
+interface Integration {
+  status?: string
+  syncStatus?: string | null
+}
+
 interface IntegrationStatsProps {
-  integrations: any[]
+  integrations: Integration[]
   loading?: boolean
 }
 

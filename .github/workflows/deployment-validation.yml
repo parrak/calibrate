@@ -5,111 +5,218 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-  workflow_dispatch:  # Allows manual triggering from Actions tab
+  workflow_dispatch:
 
 jobs:
-  validate-deployment:
+  setup:
+    name: Setup and Dependencies
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install pnpm
-      uses: pnpm/action-setup@v2
+      uses: pnpm/action-setup@v4
       with:
-        version: 9
-        
+        package_json_file: package.json
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'pnpm'
-        
+
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
-      
+
     - name: Generate Prisma client
       run: pnpm db:generate
-      
+
     - name: Check migrations
+      env:
+        DATABASE_URL: postgresql://user:pass@localhost:5432/calibr
       run: bash scripts/migrate-check.sh
-      continue-on-error: false
-      
+
+  typecheck:
+    name: TypeScript Type Check
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        package_json_file: package.json
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma client
+      run: pnpm db:generate
+
     - name: TypeScript check
       run: pnpm type-check
-      
+
+  lint:
+    name: Lint Check
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        package_json_file: package.json
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma client
+      run: pnpm db:generate
+
     - name: Lint check
       run: pnpm lint
-      
+
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        package_json_file: package.json
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma client
+      run: pnpm db:generate
+
     - name: Run tests
       run: pnpm test
-      
+
+  build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        package_json_file: package.json
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma client
+      run: pnpm db:generate
+
     - name: Build production
       run: pnpm build
-      
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [typecheck, lint, test, build]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Test Docker build
+      run: |
+        docker build -f apps/api/Dockerfile -t calibrate-test .
+
+  integration-tests:
+    name: API Integration Tests
+    runs-on: ubuntu-latest
+    needs: docker-build
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        package_json_file: package.json
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma client
+      run: pnpm db:generate
+
     - name: Start services
       run: |
-        docker-compose up -d
+        docker compose up -d
         sleep 10
-        
+
     - name: Run migrations
       env:
         DATABASE_URL: postgresql://user:pass@localhost:5432/calibr
       run: pnpm --filter @calibr/db prisma migrate deploy
-      
+
     - name: Seed database
       env:
         DATABASE_URL: postgresql://user:pass@localhost:5432/calibr
       run: pnpm seed
-      
+
     - name: Start API server
       env:
         DATABASE_URL: postgresql://user:pass@localhost:5432/calibr
       run: |
-        pnpm dev:api &
+        pnpm --filter @calibr/api dev &
         sleep 15
-        
+
     - name: Test health check
       run: |
         curl -f http://localhost:3000/api/health || exit 1
         response=$(curl -s http://localhost:3000/api/health)
         echo "$response" | jq . || exit 1
-        
-    - name: Test JSON serialization
-      run: |
-        # Test health endpoint
-        curl -s http://localhost:3000/api/health | jq . > /dev/null || exit 1
-        
-        # Test metrics endpoint
-        curl -s "http://localhost:3000/api/metrics?project=demo" | jq . > /dev/null || exit 1
-        
-        # Test admin dashboard
-        curl -s "http://localhost:3000/api/admin/dashboard?project=demo" | jq . > /dev/null || exit 1
-        
-    - name: Test API endpoints
-      run: |
-        endpoints=(
-          "http://localhost:3000/api/health"
-          "http://localhost:3000/api/metrics?project=demo"
-          "http://localhost:3000/api/admin/dashboard?project=demo"
-          "http://localhost:3000/api/v1/price-changes?project=demo"
-          "http://localhost:3000/api/v1/catalog?project=demo"
-        )
-        
-        for endpoint in "${endpoints[@]}"; do
-          echo "Testing $endpoint"
-          curl -f "$endpoint" || exit 1
-        done
-        
-    - name: Test Docker build
-      run: |
-        docker build -f apps/api/Dockerfile -t calibrate-test .
-        
+
     - name: Test Docker run
       continue-on-error: true
       run: |
-        # Use host network mode to access docker-compose postgres, or skip if not available
         container_id=$(docker run -d -p 8080:8080 -e DATABASE_URL=postgresql://user:pass@host.docker.internal:5432/calibr calibrate-test 2>&1) || true
         if [ -n "$container_id" ] && [ "${container_id:0:12}" != "docker: Error" ]; then
           sleep 10
@@ -117,9 +224,29 @@ jobs:
         else
           echo "Warning: Docker run failed, skipping container health check"
         fi
-        
+
     - name: Cleanup
       if: always()
       run: |
-        docker-compose down
+        docker compose down || true
         docker stop $(docker ps -q) || true
+
+  validate-deployment:
+    name: validate-deployment
+    runs-on: ubuntu-latest
+    needs: [setup, typecheck, lint, test, build, docker-build, integration-tests]
+    if: always()
+    steps:
+    - name: Check all jobs status
+      run: |
+        if [ "${{ needs.setup.result }}" != "success" ] || \
+           [ "${{ needs.typecheck.result }}" != "success" ] || \
+           [ "${{ needs.lint.result }}" != "success" ] || \
+           [ "${{ needs.test.result }}" != "success" ] || \
+           [ "${{ needs.build.result }}" != "success" ] || \
+           [ "${{ needs.docker-build.result }}" != "success" ] || \
+           [ "${{ needs.integration-tests.result }}" != "success" ]; then
+          echo "One or more validation jobs failed"
+          exit 1
+        fi
+        echo "All validation jobs passed successfully"

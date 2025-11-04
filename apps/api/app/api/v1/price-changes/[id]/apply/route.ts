@@ -4,6 +4,7 @@ import { evaluatePolicy } from '@calibr/pricing-engine'
 import { withSecurity } from '@/lib/security-headers'
 import { trackPerformance } from '@/lib/performance-middleware'
 import { errorJson, getPCForProject, inferConnectorTarget, requireProjectAccess, toPriceChangeDTO } from '../../utils'
+import { createId } from '@paralleldrive/cuid2'
 
 type RulesShape = {
   maxPctDelta?: number
@@ -17,7 +18,7 @@ type RulesShape = {
 
 function extractRuleValue(rules: RulesShape | undefined, key: string, skuCode?: string) {
   if (!rules) return undefined
-  const direct = (rules as any)[key]
+  const direct = rules[key as keyof RulesShape]
   if (typeof direct === 'number') return direct
   if (skuCode) {
     const pluralKey = `${key}s` as keyof RulesShape
@@ -30,7 +31,8 @@ function extractRuleValue(rules: RulesShape | undefined, key: string, skuCode?: 
 }
 
 export const POST = withSecurity(
-  trackPerformance(async (req: NextRequest, context: { params: Promise<{ id: string }> }) => {
+  trackPerformance(async (req: NextRequest, ...args: unknown[]) => {
+    const context = args[0] as { params: Promise<{ id: string }> }
     const projectSlug = req.headers.get('X-Calibr-Project')?.trim()
     if (!projectSlug) {
       return errorJson({
@@ -77,7 +79,7 @@ export const POST = withSecurity(
       })
     }
 
-    const contextData = (pc.context ?? {}) as Record<string, any>
+    const contextData = (pc.context ?? {}) as Record<string, unknown>
     if (contextData?.simulateConnectorError) {
       const msg =
         typeof contextData.simulateConnectorError === 'string'
@@ -143,6 +145,7 @@ export const POST = withSecurity(
 
         await tx.priceVersion.create({
           data: {
+            id: createId(),
             priceId: currentPrice.id,
             amount: currentPrice.amount,
             note: `Apply price change ${pc.id}`,
@@ -156,6 +159,7 @@ export const POST = withSecurity(
 
         await tx.event.create({
           data: {
+            id: createId(),
             tenantId: pc.tenantId,
             projectId: pc.projectId,
             kind: 'PRICE_APPLIED',
@@ -188,18 +192,21 @@ export const POST = withSecurity(
       })
 
       return NextResponse.json({ ok: true, item: toPriceChangeDTO(updated) })
-    } catch (err: any) {
-      if (err?.code === 'PRICE_NOT_FOUND') {
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'PRICE_NOT_FOUND') {
         return errorJson({
           status: 404,
           error: 'NotFound',
           message: 'Price record not found for this SKU and currency.',
         })
       }
+      const errorMessage = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
+        ? err.message
+        : 'Failed to apply price change.'
       return errorJson({
         status: 500,
         error: 'ApplyFailed',
-        message: err?.message ?? 'Failed to apply price change.',
+        message: errorMessage,
       })
     }
   })

@@ -7,16 +7,17 @@ import { verifyHmac } from '@calibr/security'
 import { ensureIdempotent } from '@calibr/security'
 import { withRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { createRequestLogger } from '@/lib/logger'
+import { createId } from '@paralleldrive/cuid2'
 
 export const dynamic = 'force-dynamic'
 
 async function handleWebhook(req: NextRequest) {
   const logger = createRequestLogger(req)
   const startTime = Date.now()
-  
+
   try {
     logger.info('Processing price suggestion webhook')
-    
+
     // Verify HMAC signature (also returns the body to avoid double-read)
     const authResult = await verifyHmac(req)
     if (!authResult.valid) {
@@ -31,13 +32,14 @@ async function handleWebhook(req: NextRequest) {
     try {
       body = PriceSuggestionPayload.parse(JSON.parse(raw))
     } catch (error) {
-      logger.warn('Invalid payload format', { error: error instanceof Error ? error.message : 'Unknown error' })
+      const errorObj = error instanceof Error ? error : new Error(String(error))
+      logger.warn('Invalid payload format', errorObj)
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
     }
 
-    const ok = await ensureIdempotent(body.idempotencyKey, 'price-suggestion')
+    const ok = await ensureIdempotent({ event: prisma().event }, body.idempotencyKey, 'price-suggestion')
     if (!ok) {
-      logger.info('Duplicate request detected', { idempotencyKey: body.idempotencyKey })
+      logger.info('Duplicate request detected', { metadata: { idempotencyKey: body.idempotencyKey } })
       return NextResponse.json({ status: 'duplicate' })
     }
 
@@ -46,35 +48,35 @@ async function handleWebhook(req: NextRequest) {
       logger.warn('Missing project identifier')
       return NextResponse.json({ error: 'Missing project identifier' }, { status: 400 })
     }
-    
+
     const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
     if (!project) {
-      logger.warn('Project not found', { projectSlug })
+      logger.warn('Project not found', { metadata: { projectSlug } })
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    const sku = await prisma().sku.findFirst({ 
-      where: { code: body.skuCode, product: { projectId: project.id } }, 
-      include: { product: true } 
+    const sku = await prisma().sku.findFirst({
+      where: { code: body.skuCode, Product: { projectId: project.id } },
+      include: { Product: true }
     })
     if (!sku) {
-      logger.warn('SKU not found', { skuCode: body.skuCode, projectSlug })
+      logger.warn('SKU not found', { metadata: { skuCode: body.skuCode, projectSlug } })
       return NextResponse.json({ error: 'SKU not found' }, { status: 404 })
     }
 
-    const price = await prisma().price.findFirst({ 
-      where: { skuId: sku.id, currency: body.currency } 
+    const price = await prisma().price.findFirst({
+      where: { skuId: sku.id, currency: body.currency }
     })
     if (!price) {
-      logger.warn('Price not found', { skuCode: body.skuCode, currency: body.currency })
+      logger.warn('Price not found', { metadata: { skuCode: body.skuCode, currency: body.currency } })
       return NextResponse.json({ error: 'Price not found' }, { status: 404 })
     }
 
-    const policy = await prisma().policy.findFirst({ 
-      where: { projectId: project.id } 
+    const policy = await prisma().policy.findFirst({
+      where: { projectId: project.id }
     })
-    const rules: any = policy?.rules ?? {}
-    
+    const rules = (policy?.rules ?? {}) as { maxPctDelta?: number; floors?: Record<string, number>; ceilings?: Record<string, number>; dailyChangeBudgetPct?: number }
+
     const evalRes = evaluatePolicy(price.amount, body.proposedAmount, {
       maxPctDelta: rules.maxPctDelta ?? 0.15,
       floor: rules.floors?.[body.skuCode],
@@ -84,10 +86,11 @@ async function handleWebhook(req: NextRequest) {
     })
 
     const status = (policy?.autoApply && evalRes.ok) ? 'APPROVED' : 'PENDING'
-    
+
     const pc = await prisma().priceChange.create({
       data: {
-        tenantId: sku.product.tenantId,
+        id: createId(),
+        tenantId: sku.Product.tenantId,
         projectId: project.id,
         skuId: sku.id,
         source: body.source,
@@ -100,43 +103,47 @@ async function handleWebhook(req: NextRequest) {
       }
     })
 
-    logger.info('Price change created', { 
-      priceChangeId: pc.id, 
-      status: pc.status, 
-      skuCode: body.skuCode,
-      fromAmount: price.amount,
-      toAmount: body.proposedAmount
+    logger.info('Price change created', {
+      metadata: {
+        priceChangeId: pc.id,
+        status: pc.status,
+        skuCode: body.skuCode,
+        fromAmount: price.amount,
+        toAmount: body.proposedAmount
+      }
     })
 
     if (status === 'APPROVED' && policy?.autoApply) {
-      try { 
+      try {
         await applyPriceChange(pc.id)
-        logger.info('Price change auto-applied', { priceChangeId: pc.id })
-      } catch (error) { 
-        logger.error('Failed to auto-apply price change', error as Error, { priceChangeId: pc.id })
-        await prisma().priceChange.update({ 
-          where: { id: pc.id }, 
-          data: { status: 'FAILED' } 
-        }) 
+        logger.info('Price change auto-applied', { metadata: { priceChangeId: pc.id } })
+      } catch (error) {
+        logger.error('Failed to auto-apply price change', error as Error, { metadata: { priceChangeId: pc.id } })
+        await prisma().priceChange.update({
+          where: { id: pc.id },
+          data: { status: 'FAILED' }
+        })
       }
     }
 
     const responseTime = Date.now() - startTime
-    logger.info('Webhook processed successfully', { 
-      priceChangeId: pc.id, 
-      responseTime: `${responseTime}ms` 
+    logger.info('Webhook processed successfully', {
+      metadata: {
+        priceChangeId: pc.id,
+        responseTime: `${responseTime}ms`
+      }
     })
 
-    return NextResponse.json({ 
-      id: pc.id, 
-      status: pc.status, 
-      policyResult: evalRes 
+    return NextResponse.json({
+      id: pc.id,
+      status: pc.status,
+      policyResult: evalRes
     })
   } catch (error) {
     const responseTime = Date.now() - startTime
-    logger.error('Webhook processing failed', error as Error, { responseTime: `${responseTime}ms` })
-    
-    return NextResponse.json({ 
+    logger.error('Webhook processing failed', error as Error, { metadata: { responseTime: `${responseTime}ms` } })
+
+    return NextResponse.json({
       error: 'Internal server error',
       message: 'Failed to process price suggestion'
     }, { status: 500 })

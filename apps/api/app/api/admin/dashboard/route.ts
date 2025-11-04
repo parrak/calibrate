@@ -3,29 +3,29 @@ import { prisma } from '@calibr/db'
 import { withAdminAuth } from '@/lib/auth-security'
 import { withSecurity } from '@/lib/security-headers'
 
-export const GET = withSecurity(withAdminAuth(async (req: NextRequest, context) => {
+export const GET = withSecurity(withAdminAuth(async (req: NextRequest) => {
   try {
     const startTime = Date.now()
-    
+
     // Get query parameters
     const url = new URL(req.url)
     const projectSlug = url.searchParams.get('project')
     const timeRange = url.searchParams.get('timeRange') || '24h'
-    
+
     // Calculate time range
     const now = new Date()
     const timeRangeMs = getTimeRangeMs(timeRange)
     const startDate = new Date(now.getTime() - timeRangeMs)
-    
+
     // Get project if specified
     let project = null
     if (projectSlug) {
       project = await prisma().project.findUnique({
         where: { slug: projectSlug },
-        include: { tenant: true }
+        include: { Tenant: true }
       })
     }
-    
+
     // Collect dashboard data
     const [
       overview,
@@ -34,15 +34,15 @@ export const GET = withSecurity(withAdminAuth(async (req: NextRequest, context) 
       recentActivity,
       topProducts
     ] = await Promise.all([
-      getOverviewMetrics(project?.id, startDate),
-      getPriceChangeMetrics(project?.id, startDate),
+      getOverviewMetrics(project?.id ?? null, startDate),
+      getPriceChangeMetrics(project?.id ?? null, startDate),
       getSystemHealthMetrics(),
-      getRecentActivity(project?.id, startDate),
-      getTopProducts(project?.id, startDate)
+      getRecentActivity(project?.id ?? null, startDate),
+      getTopProducts(project?.id ?? null, startDate)
     ])
-    
+
     const responseTime = Date.now() - startTime
-    
+
     return NextResponse.json({
       timestamp: now.toISOString(),
       timeRange,
@@ -51,7 +51,7 @@ export const GET = withSecurity(withAdminAuth(async (req: NextRequest, context) 
         id: project.id,
         name: project.name,
         slug: project.slug,
-        tenant: project.tenant.name
+        tenant: project.Tenant?.name ?? null
       } : null,
       dashboard: {
         overview,
@@ -81,8 +81,8 @@ function getTimeRangeMs(timeRange: string): number {
 }
 
 async function getOverviewMetrics(projectId: string | null, startDate: Date) {
-  const where = projectId ? { projectId, createdAt: { gte: startDate } } : { createdAt: { gte: startDate } }
-  
+  const whereClause = projectId ? { projectId, createdAt: { gte: startDate } } : { createdAt: { gte: startDate } }
+
   const [
     totalPriceChanges,
     pendingChanges,
@@ -90,13 +90,13 @@ async function getOverviewMetrics(projectId: string | null, startDate: Date) {
     appliedChanges,
     rejectedChanges
   ] = await Promise.all([
-    prisma().priceChange.count({ where }),
-    prisma().priceChange.count({ where: { ...where, status: 'PENDING' } }),
-    prisma().priceChange.count({ where: { ...where, status: 'APPROVED' } }),
-    prisma().priceChange.count({ where: { ...where, status: 'APPLIED' } }),
-    prisma().priceChange.count({ where: { ...where, status: 'REJECTED' } })
+    prisma().priceChange.count({ where: whereClause }),
+    prisma().priceChange.count({ where: { ...whereClause, status: 'PENDING' } }),
+    prisma().priceChange.count({ where: { ...whereClause, status: 'APPROVED' } }),
+    prisma().priceChange.count({ where: { ...whereClause, status: 'APPLIED' } }),
+    prisma().priceChange.count({ where: { ...whereClause, status: 'REJECTED' } })
   ])
-  
+
   return {
     totalPriceChanges,
     pendingChanges,
@@ -109,8 +109,8 @@ async function getOverviewMetrics(projectId: string | null, startDate: Date) {
 }
 
 async function getPriceChangeMetrics(projectId: string | null, startDate: Date) {
-  const where = projectId ? { projectId, createdAt: { gte: startDate } } : { createdAt: { gte: startDate } }
-  
+  const whereClause = projectId ? { projectId, createdAt: { gte: startDate } } : { createdAt: { gte: startDate } }
+
   // Get price changes by hour for the last 24 hours
   const hourlyData = await prisma().$queryRaw`
     SELECT 
@@ -124,14 +124,14 @@ async function getPriceChangeMetrics(projectId: string | null, startDate: Date) 
     ORDER BY hour DESC
     LIMIT 24
   `
-  
+
   // Get price changes by source
   const bySource = await prisma().priceChange.groupBy({
     by: ['source'],
-    where,
+    where: whereClause,
     _count: { source: true }
   })
-  
+
   return {
     hourlyData,
     bySource: bySource.reduce((acc, item) => {
@@ -146,12 +146,12 @@ async function getPriceChangeMetrics(projectId: string | null, startDate: Date) 
 async function getSystemHealthMetrics() {
   const memoryUsage = process.memoryUsage()
   const uptime = process.uptime()
-  
+
   // Test database connection
   const dbStart = Date.now()
   await prisma().$queryRaw`SELECT 1`
   const dbLatency = Date.now() - dbStart
-  
+
   return {
     uptime: Math.floor(uptime),
     memory: {
@@ -168,39 +168,44 @@ async function getSystemHealthMetrics() {
 }
 
 async function getRecentActivity(projectId: string | null, startDate: Date) {
-  const where = projectId ? { projectId, createdAt: { gte: startDate } } : { createdAt: { gte: startDate } }
-  
+  const whereClause = projectId ? { projectId, createdAt: { gte: startDate } } : { createdAt: { gte: startDate } }
+
   const activities = await prisma().priceChange.findMany({
-    where,
+    where: whereClause,
     orderBy: { createdAt: 'desc' },
-    take: 10,
+    take: 10
+  })
+
+  // Fetch SKUs separately since PriceChange doesn't have a Sku relation
+  const skuIds = [...new Set(activities.map(a => a.skuId))]
+  const skus = await prisma().sku.findMany({
+    where: { id: { in: skuIds } },
     include: {
-      sku: {
-        include: {
-          product: true
-        }
-      }
+      Product: true
     }
   })
-  
-  return activities.map(activity => ({
-    id: activity.id,
-    type: 'price_change',
-    status: activity.status,
-    source: activity.source,
-    skuCode: activity.sku.code,
-    productName: activity.sku.product.name,
-    fromAmount: activity.fromAmount,
-    toAmount: activity.toAmount,
-    currency: activity.currency,
-    createdAt: activity.createdAt,
-    context: activity.context
-  }))
+
+  const skuMap = new Map(skus.map(s => [s.id, s]))
+
+  return activities.map(activity => {
+    const sku = skuMap.get(activity.skuId)
+    return {
+      id: activity.id,
+      type: 'price_change',
+      status: activity.status,
+      source: activity.source,
+      skuCode: sku?.code ?? 'unknown',
+      productName: sku?.Product?.name ?? 'unknown',
+      fromAmount: activity.fromAmount,
+      toAmount: activity.toAmount,
+      currency: activity.currency,
+      createdAt: activity.createdAt,
+      context: activity.context
+    }
+  })
 }
 
 async function getTopProducts(projectId: string | null, startDate: Date) {
-  const where = projectId ? { projectId, createdAt: { gte: startDate } } : { createdAt: { gte: startDate } }
-  
   const topProducts = await prisma().$queryRaw`
     SELECT 
       p.name as product_name,
@@ -216,9 +221,15 @@ async function getTopProducts(projectId: string | null, startDate: Date) {
     ORDER BY change_count DESC
     LIMIT 10
   `
-  
+
   // Convert BigInt values to numbers
-  return (topProducts as any[]).map(product => ({
+  interface ProductRow {
+    product_name: string
+    product_code: string
+    change_count: bigint
+    avg_change_amount: number
+  }
+  return (topProducts as ProductRow[]).map(product => ({
     product_name: product.product_name,
     product_code: product.product_code,
     change_count: Number(product.change_count),
@@ -227,6 +238,6 @@ async function getTopProducts(projectId: string | null, startDate: Date) {
 }
 
 // Handle OPTIONS preflight requests
-export const OPTIONS = withSecurity(async (req: NextRequest) => {
+export const OPTIONS = withSecurity(async () => {
   return new NextResponse(null, { status: 204 })
 })

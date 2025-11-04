@@ -26,8 +26,8 @@ export interface ProjectAccess {
 
 export interface SecurityPolicy {
   requireAuth: boolean
-  requireProject: boolean
-  requireTenant: boolean
+  requireProject?: boolean
+  requireTenant?: boolean
   allowedRoles?: string[]
   requiredPermissions?: string[]
   rateLimit?: {
@@ -97,7 +97,7 @@ export class AuthSecurityManager {
       // Check timestamp (replay attack prevention)
       const now = Math.floor(Date.now() / 1000)
       const timeDiff = Math.abs(now - ts)
-      
+
       if (timeDiff > 300) { // 5 minutes tolerance
         return { valid: false, body: rawBody, securityScore: 0 }
       }
@@ -109,8 +109,7 @@ export class AuthSecurityManager {
 
       if (nonce) {
         // Check nonce for replay attack prevention
-        const nonceKey = `nonce:${projectId}:${nonce}`
-        // In production, use Redis for nonce storage
+        // In production, use Redis for nonce storage: `nonce:${projectId}:${nonce}`
         securityScore += 20
       }
 
@@ -161,7 +160,7 @@ export class AuthSecurityManager {
     try {
       const project = await prisma().project.findUnique({
         where: { slug: projectId },
-        include: { tenant: true }
+        include: { Tenant: true }
       })
 
       if (project) {
@@ -213,7 +212,7 @@ export class AuthSecurityManager {
       return true
     }
 
-    return requiredPermissions.every(permission => 
+    return requiredPermissions.every(permission =>
       context.permissions.includes(permission)
     )
   }
@@ -237,7 +236,7 @@ export class AuthSecurityManager {
    * Check project access
    */
   async checkProjectAccess(
-    context: AuthContext, 
+    context: AuthContext,
     projectId: string
   ): Promise<boolean> {
     if (!context.isAuthenticated) {
@@ -290,14 +289,13 @@ export class AuthSecurityManager {
    */
   validateSessionToken(token: string): AuthContext | null {
     const context = this.sessionStore.get(token)
-    
+
     if (!context) {
       return null
     }
 
     // Check if session is expired
-    const now = Date.now()
-    // In production, check token expiration from JWT payload
+    // In production, check token expiration from JWT payload (Date.now())
 
     return context
   }
@@ -314,7 +312,7 @@ export class AuthSecurityManager {
    */
   cleanupExpiredSessions(): void {
     const now = Date.now()
-    for (const [token, context] of this.sessionStore.entries()) {
+    for (const [token] of this.sessionStore.entries()) {
       // In production, check JWT expiration
       if (now - Date.now() > this.SESSION_TIMEOUT) {
         this.sessionStore.delete(token)

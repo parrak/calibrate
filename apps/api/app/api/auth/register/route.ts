@@ -3,6 +3,7 @@ import { prisma } from '@calibr/db'
 import { withSecurity } from '@/lib/security-headers'
 import { hash } from 'bcryptjs'
 import isEmail from 'validator/lib/isEmail'
+import { createId } from '@paralleldrive/cuid2'
 
 const MIN_PASSWORD_LENGTH = 8
 
@@ -59,12 +60,14 @@ export const POST = withSecurity(async (req: NextRequest) => {
     const result = await db.$transaction(async (tx) => {
       const tenant = await tx.tenant.create({
         data: {
+          id: createId(),
           name: tenantName,
         },
       })
 
       const user = await tx.user.create({
         data: {
+          id: createId(),
           email,
           name: name || email.split('@')[0],
           role: 'OWNER',
@@ -92,10 +95,10 @@ export const POST = withSecurity(async (req: NextRequest) => {
       },
       { status: 201 }
     )
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('User registration failed:', error)
     return NextResponse.json(
-      { error: 'Failed to register user', message: error?.message || String(error) },
+      { error: 'Failed to register user', message: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

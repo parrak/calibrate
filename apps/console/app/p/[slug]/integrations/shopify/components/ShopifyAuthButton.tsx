@@ -11,10 +11,9 @@ import { AlertCircle } from 'lucide-react';
 
 interface ShopifyAuthButtonProps {
   projectSlug: string;
-  onSuccess?: () => void;
 }
 
-export function ShopifyAuthButton({ projectSlug, onSuccess }: ShopifyAuthButtonProps) {
+export function ShopifyAuthButton({ projectSlug }: ShopifyAuthButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shopDomain, setShopDomain] = useState('');

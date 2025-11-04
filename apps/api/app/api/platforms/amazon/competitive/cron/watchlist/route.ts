@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@calibr/db'
+import { prisma, Prisma } from '@calibr/db'
 import { getCompetitivePrice } from '@calibr/amazon-connector'
 import { withSecurity } from '@/lib/security-headers'
+import { createId } from '@paralleldrive/cuid2'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -22,12 +23,13 @@ export const POST = withSecurity(async (req: NextRequest) => {
         const snap = await getCompetitivePrice(w.asin)
         await prisma().amazonCompetitivePrice.create({
           data: {
+            id: createId(),
             asin: snap.asin,
             marketplaceId: snap.marketplaceId,
             lowestPriceCents: snap.lowestPrice != null ? Math.round(Number(snap.lowestPrice) * 100) : null,
             buyBoxPriceCents: snap.buyBoxPrice != null ? Math.round(Number(snap.buyBoxPrice) * 100) : null,
             offerCount: snap.offerCount || 0,
-            data: snap as any,
+            data: JSON.parse(JSON.stringify(snap)) as Prisma.InputJsonValue,
           },
         })
         ok++
@@ -41,5 +43,5 @@ export const POST = withSecurity(async (req: NextRequest) => {
   }
 })
 
-export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
+export const OPTIONS = withSecurity(async (_req: NextRequest) => new NextResponse(null, { status: 204 }))
 

@@ -48,7 +48,7 @@ export const GET = withSecurity(async (request: NextRequest) => {
     // Generate OAuth URL
     const redirectUri = `${process.env.NEXT_PUBLIC_API_BASE}/api/integrations/shopify/oauth/callback`;
     const state = JSON.stringify({ projectId, shopDomain });
-    
+
     const authUrl = auth.generateAuthUrl(shopDomain, redirectUri, state);
 
     return NextResponse.json({
@@ -69,6 +69,6 @@ export const GET = withSecurity(async (request: NextRequest) => {
 /**
  * OPTIONS handler for CORS preflight
  */
-export const OPTIONS = withSecurity(async (req: NextRequest) => {
+export const OPTIONS = withSecurity(async (_req: NextRequest) => {
   return new NextResponse(null, { status: 204 });
 });

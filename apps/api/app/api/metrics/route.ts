@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { loadavg } from 'os'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 import { prisma } from '@calibr/db'
-import { 
-  getPerformanceStats, 
-  getResourceStats, 
+import {
+  getPerformanceStats,
+  getResourceStats,
   getDatabasePerformanceMetrics,
   startResourceMonitoring
 } from '@/lib/performance-monitor'
@@ -15,31 +16,31 @@ let monitoringStarted = false
 export async function GET(req: NextRequest) {
   try {
     const startTime = Date.now()
-    
+
     // Get query parameters
     const projectSlug = req.nextUrl.searchParams.get('project')
     const timeRange = req.nextUrl.searchParams.get('timeRange') || '24h'
-    
+
     // Calculate time range
     const now = new Date()
     const timeRangeMs = getTimeRangeMs(timeRange)
     const startDate = new Date(now.getTime() - timeRangeMs)
-    
+
     // Get project if specified
     let project = null
     if (projectSlug) {
       project = await prisma().project.findUnique({
         where: { slug: projectSlug },
-        include: { tenant: true }
+        include: { Tenant: true }
       })
     }
-    
+
     // Start resource monitoring if not already started
     if (!monitoringStarted) {
       startResourceMonitoring(30000) // Every 30 seconds
       monitoringStarted = true
     }
-    
+
     // Collect enhanced metrics
     const [
       priceChanges,
@@ -51,8 +52,8 @@ export async function GET(req: NextRequest) {
       resourceStats,
       databasePerformance
     ] = await Promise.all([
-      getPriceChangeMetrics(project?.id, startDate),
-      getWebhookMetrics(project?.id, startDate),
+      getPriceChangeMetrics(project?.id ?? null, startDate),
+      getWebhookMetrics(project?.id ?? null, startDate),
       getSystemMetrics(),
       getDatabaseMetrics(),
       getErrorMetrics(startDate),
@@ -60,9 +61,9 @@ export async function GET(req: NextRequest) {
       getResourceStats(timeRangeMs),
       getDatabasePerformanceMetrics()
     ])
-    
+
     const responseTime = Date.now() - startTime
-    
+
     return NextResponse.json({
       timestamp: now.toISOString(),
       timeRange,
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
         id: project.id,
         name: project.name,
         slug: project.slug,
-        tenant: project.tenant.name
+        tenant: project.Tenant?.name ?? null
       } : null,
       metrics: {
         priceChanges,
@@ -105,7 +106,7 @@ function getTimeRangeMs(timeRange: string): number {
 
 async function getPriceChangeMetrics(projectId: string | null, startDate: Date) {
   const where = projectId ? { projectId, createdAt: { gte: startDate } } : { createdAt: { gte: startDate } }
-  
+
   const [total, byStatus, bySource] = await Promise.all([
     prisma().priceChange.count({ where }),
     prisma().priceChange.groupBy({
@@ -119,7 +120,7 @@ async function getPriceChangeMetrics(projectId: string | null, startDate: Date) 
       _count: { source: true }
     })
   ])
-  
+
   return {
     total,
     byStatus: byStatus.reduce((acc, item) => {
@@ -135,7 +136,7 @@ async function getPriceChangeMetrics(projectId: string | null, startDate: Date) 
   }
 }
 
-async function getWebhookMetrics(projectId: string | null, startDate: Date) {
+async function getWebhookMetrics(_projectId: string | null, _startDate: Date) {
   // This would need to be implemented based on your webhook logging
   // For now, return placeholder data
   return {
@@ -149,7 +150,7 @@ async function getWebhookMetrics(projectId: string | null, startDate: Date) {
 async function getSystemMetrics() {
   const memoryUsage = process.memoryUsage()
   const uptime = process.uptime()
-  
+
   return {
     uptime: Math.floor(uptime),
     memory: {
@@ -159,7 +160,7 @@ async function getSystemMetrics() {
     },
     cpu: {
       // Node.js doesn't provide direct CPU usage, would need external monitoring
-      loadAverage: process.platform === 'win32' ? [0, 0, 0] : require('os').loadavg()
+      loadAverage: process.platform === 'win32' ? [0, 0, 0] : loadavg()
     }
   }
 }
@@ -167,14 +168,22 @@ async function getSystemMetrics() {
 async function getDatabaseMetrics() {
   try {
     const [connections, tableSizes] = await Promise.all([
-      prisma().$queryRaw`
+      prisma().$queryRaw<Array<{
+        total_connections: bigint | number | string | null;
+        active_connections: bigint | number | string | null;
+        idle_connections: bigint | number | string | null;
+      }>>`
         SELECT 
           count(*) as total_connections,
           count(*) FILTER (WHERE state = 'active') as active_connections,
           count(*) FILTER (WHERE state = 'idle') as idle_connections
         FROM pg_stat_activity
       `,
-      prisma().$queryRaw`
+      prisma().$queryRaw<Array<{
+        schemaname: string;
+        tablename: string;
+        size: string;
+      }>>`
         SELECT 
           schemaname,
           tablename,
@@ -185,20 +194,20 @@ async function getDatabaseMetrics() {
         LIMIT 10
       `
     ])
-    
+
     // Convert BigInt values to numbers
-    const connectionData = connections[0] as any
+    const connectionData = connections[0]
     const processedConnections = {
-      total_connections: Number(connectionData?.total_connections) || 0,
-      active_connections: Number(connectionData?.active_connections) || 0,
-      idle_connections: Number(connectionData?.idle_connections) || 0
+      total_connections: Number(connectionData?.total_connections ?? 0),
+      active_connections: Number(connectionData?.active_connections ?? 0),
+      idle_connections: Number(connectionData?.idle_connections ?? 0)
     }
-    
+
     return {
       connections: processedConnections,
-      tableSizes: tableSizes
+      tableSizes
     }
-  } catch (error) {
+  } catch {
     return {
       error: 'Failed to collect database metrics',
       connections: null,
@@ -207,7 +216,7 @@ async function getDatabaseMetrics() {
   }
 }
 
-async function getErrorMetrics(startDate: Date) {
+async function getErrorMetrics(_startDate: Date) {
   // This would need to be implemented with proper error logging
   // For now, return placeholder data
   return {

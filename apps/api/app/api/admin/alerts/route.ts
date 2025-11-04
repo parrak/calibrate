@@ -6,18 +6,18 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url)
     const type = url.searchParams.get('type') || undefined
     const includeResolved = url.searchParams.get('includeResolved') === 'true'
-    
+
     let alerts
     if (type) {
       alerts = performanceService.getAlertsByType(type)
     } else {
       alerts = performanceService.getActiveAlerts()
     }
-    
+
     if (!includeResolved) {
       alerts = alerts.filter(alert => !alert.resolved)
     }
-    
+
     return NextResponse.json({
       timestamp: new Date().toISOString(),
       alerts,
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { action, alertId, thresholds } = await req.json()
-    
+
     if (action === 'resolve' && alertId) {
       const resolved = performanceService.resolveAlert(alertId)
       return NextResponse.json({
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         message: resolved ? 'Alert resolved' : 'Alert not found'
       })
     }
-    
+
     if (action === 'updateThresholds' && thresholds) {
       performanceService.updateThresholds(thresholds)
       return NextResponse.json({
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         thresholds: performanceService.getThresholds()
       })
     }
-    
+
     if (action === 'check') {
       const newAlerts = await performanceService.checkPerformance()
       return NextResponse.json({
@@ -62,12 +62,12 @@ export async function POST(req: NextRequest) {
         count: newAlerts.length
       })
     }
-    
+
     return NextResponse.json({
       error: 'Invalid action',
       message: 'Supported actions: resolve, updateThresholds, check'
     }, { status: 400 })
-    
+
   } catch (error) {
     console.error('Failed to process alert action:', error)
     return NextResponse.json({

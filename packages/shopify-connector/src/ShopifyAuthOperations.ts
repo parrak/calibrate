@@ -103,6 +103,7 @@ export class ShopifyAuthOperations implements AuthOperations {
       );
 
       if (!response.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const errorData: any = await response.json();
         throw new PlatformError(
           'authentication',
@@ -111,6 +112,7 @@ export class ShopifyAuthOperations implements AuthOperations {
         );
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data: any = await response.json();
 
       return {
@@ -123,7 +125,7 @@ export class ShopifyAuthOperations implements AuthOperations {
       if (error instanceof PlatformError) {
         throw error;
       }
-      
+
       throw new PlatformError(
         'network',
         `OAuth callback failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -145,7 +147,7 @@ export class ShopifyAuthOperations implements AuthOperations {
   async validateCredentials(credentials: PlatformCredentials): Promise<boolean> {
     try {
       const shopifyCredentials = credentials as ShopifyCredentials;
-      
+
       if (!shopifyCredentials.shopDomain || !shopifyCredentials.accessToken) {
         return false;
       }
@@ -164,7 +166,7 @@ export class ShopifyAuthOperations implements AuthOperations {
     shopDomain: string;
   }> {
     const credentials = this.connector['credentials'] as ShopifyCredentials;
-    
+
     if (!credentials) {
       throw new PlatformError(
         'authentication',

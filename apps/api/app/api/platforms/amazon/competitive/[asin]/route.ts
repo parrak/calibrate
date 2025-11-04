@@ -6,9 +6,9 @@ export const runtime = 'nodejs'
 
 interface Params { params: Promise<{ asin: string }> }
 
-export const GET = withSecurity(async (req: NextRequest, context: Params) => {
+export const GET = withSecurity(async (req: NextRequest, context?: Params) => {
   try {
-    const { asin } = await context.params
+    const asin = context ? (await context.params).asin : undefined
     if (!asin) return NextResponse.json({ error: 'asin required' }, { status: 400 })
     const data = await getCompetitivePrice(asin)
     return NextResponse.json(data)
@@ -17,5 +17,5 @@ export const GET = withSecurity(async (req: NextRequest, context: Params) => {
   }
 })
 
-export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
+export const OPTIONS = withSecurity(async () => new NextResponse(null, { status: 204 }))
 

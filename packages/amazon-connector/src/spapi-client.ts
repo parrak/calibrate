@@ -1,3 +1,4 @@
+/// <reference path="./shims.d.ts" />
 import SellingPartner from 'selling-partner-api'
 
 export type AmazonRegion = 'na' | 'eu' | 'fe'
@@ -28,7 +29,7 @@ export function loadConfigFromEnv(): AmazonConnectorConfig {
   }
 }
 
-export function createSpApiClient(partial?: AmazonConnectorConfig): SellingPartner | null {
+export function createSpApiClient(partial?: AmazonConnectorConfig): any | null {
   const cfg = { ...loadConfigFromEnv(), ...partial }
 
   if (!cfg.lwaClientId || !cfg.lwaClientSecret) {

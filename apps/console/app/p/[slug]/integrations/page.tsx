@@ -7,9 +7,25 @@ import { PlatformCard } from '@/components/platforms/PlatformCard'
 import { IntegrationStats } from '@/components/platforms/IntegrationStats'
 import { SyncHistoryViewer } from '@/components/platforms/SyncHistoryViewer'
 
+interface Platform {
+  platform: string
+  name: string
+  description?: string
+  available: boolean
+}
+
+interface Integration {
+  id: string
+  platform: string
+  platformName: string
+  status: string
+  lastSyncAt?: string | null
+  syncStatus?: string | null | undefined
+}
+
 export default function IntegrationsPage({ params }: { params: { slug: string } }) {
-  const [platforms, setPlatforms] = useState<any[]>([])
-  const [integrations, setIntegrations] = useState<Record<string, any>>({})
+  const [platforms, setPlatforms] = useState<Platform[]>([])
+  const [integrations, setIntegrations] = useState<Record<string, Integration>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const toast = useToast()
@@ -21,30 +37,31 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
 
       // Get available platforms
       const { platforms: availablePlatforms } = await platformsApi.list()
-      setPlatforms(availablePlatforms)
+      setPlatforms(availablePlatforms as unknown as Platform[])
 
       // Get integration status for each platform
-      const integrationData: Record<string, any> = {}
+      const integrationData: Record<string, Integration> = {}
       await Promise.all(
-        availablePlatforms.map(async (platform) => {
+        availablePlatforms.map(async (platformRaw) => {
           try {
+            const platform = platformRaw as unknown as Platform
             const { integration } = await platformsApi.getStatus(
               platform.platform,
               params.slug
             )
             if (integration) {
-              integrationData[platform.platform] = integration
+              integrationData[platform.platform] = integration as unknown as Integration
             }
-          } catch (err) {
+          } catch (err: unknown) {
             // Platform not connected, that's OK
-            console.log(`Platform ${platform.platform} not connected`)
+            console.log(`Platform ${(platformRaw as unknown as Platform).platform} not connected:`, err)
           }
         })
       )
 
       setIntegrations(integrationData)
-    } catch (err: any) {
-      const msg = err?.message || 'Failed to load integrations'
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to load integrations'
       setError(msg)
       toast.error(msg)
     } finally {
@@ -56,7 +73,7 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
     loadData()
   }, [params.slug])
 
-  const allIntegrations = Object.values(integrations)
+  const allIntegrations = Object.values(integrations) as Integration[]
 
   return (
     <div className="space-y-6 p-6">
@@ -147,7 +164,7 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
       {allIntegrations.length > 0 && (
         <div>
           <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Sync Activity</h2>
-          
+
           {/* Show sync history for the first connected integration */}
           {allIntegrations.filter(i => i.status === 'CONNECTED').length > 0 && (
             <div className="space-y-4 mb-6">

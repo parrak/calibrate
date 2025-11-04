@@ -1,12 +1,11 @@
 /**
  * JSON Serialization Test Utility
- * 
+ *
  * This utility helps detect BigInt serialization issues before deployment
  * Run this as part of your pre-commit hooks and CI/CD pipeline
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@calibr/db'
 
 export interface SerializationTestResult {
   endpoint: string
@@ -22,7 +21,7 @@ export interface SerializationTestResult {
 export async function testJsonSerialization(): Promise<SerializationTestResult[]> {
   const results: SerializationTestResult[] = []
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000'
-  
+
   const endpoints = [
     '/api/health',
     '/api/metrics?project=demo',
@@ -31,7 +30,7 @@ export async function testJsonSerialization(): Promise<SerializationTestResult[]
     '/api/v1/catalog?project=demo',
     '/api/v1/catalog?project=demo&productCode=PRO'
   ]
-  
+
   for (const endpoint of endpoints) {
     const startTime = Date.now()
     const result: SerializationTestResult = {
@@ -39,15 +38,15 @@ export async function testJsonSerialization(): Promise<SerializationTestResult[]
       success: false,
       responseTime: 0
     }
-    
+
     try {
       // Create a mock request
       const url = new URL(endpoint, baseUrl)
       const request = new NextRequest(url.toString())
-      
+
       // Test the endpoint
       let response: NextResponse
-      
+
       switch (endpoint) {
         case '/api/health':
           response = await testHealthEndpoint()
@@ -70,30 +69,30 @@ export async function testJsonSerialization(): Promise<SerializationTestResult[]
         default:
           throw new Error(`Unknown endpoint: ${endpoint}`)
       }
-      
+
       // Test JSON serialization
       const jsonString = JSON.stringify(await response.json())
-      
+
       // Check for BigInt serialization issues
-      result.hasBigInt = jsonString.includes('"connections":') && 
+      result.hasBigInt = jsonString.includes('"connections":') &&
                         !jsonString.match(/"connections":\s*\d+/)
-      
+
       result.success = response.status === 200 && !result.hasBigInt
       result.responseTime = Date.now() - startTime
-      
+
       if (!result.success) {
         result.error = result.hasBigInt ? 'BigInt serialization detected' : 'HTTP error'
       }
-      
+
     } catch (error) {
       result.success = false
       result.error = error instanceof Error ? error.message : 'Unknown error'
       result.responseTime = Date.now() - startTime
     }
-    
+
     results.push(result)
   }
-  
+
   return results
 }
 
@@ -134,12 +133,12 @@ async function testCatalogSingleEndpoint(req: NextRequest): Promise<NextResponse
 /**
  * Validate that a value can be safely serialized to JSON
  */
-export function validateJsonSerialization(value: any): boolean {
+export function validateJsonSerialization(value: unknown): boolean {
   try {
     const jsonString = JSON.stringify(value)
     JSON.parse(jsonString)
     return true
-  } catch (error) {
+  } catch {
     return false
   }
 }
@@ -147,34 +146,34 @@ export function validateJsonSerialization(value: any): boolean {
 /**
  * Convert BigInt values to numbers in an object
  */
-export function convertBigIntToNumber(obj: any): any {
+export function convertBigIntToNumber(obj: unknown): unknown {
   if (obj === null || obj === undefined) {
     return obj
   }
-  
+
   if (typeof obj === 'bigint') {
     return Number(obj)
   }
-  
+
   if (Array.isArray(obj)) {
     return obj.map(convertBigIntToNumber)
   }
-  
-  if (typeof obj === 'object') {
-    const converted: any = {}
+
+  if (typeof obj === 'object' && obj !== null) {
+    const converted: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(obj)) {
       converted[key] = convertBigIntToNumber(value)
     }
     return converted
   }
-  
+
   return obj
 }
 
 /**
  * Safe JSON response helper that converts BigInt values
  */
-export function safeJsonResponse(data: any, status: number = 200): NextResponse {
+export function safeJsonResponse(data: unknown, status: number = 200): NextResponse {
   const convertedData = convertBigIntToNumber(data)
   return NextResponse.json(convertedData, { status })
 }
@@ -184,30 +183,30 @@ export function safeJsonResponse(data: any, status: number = 200): NextResponse 
  */
 export async function runSerializationTests(): Promise<string> {
   const results = await testJsonSerialization()
-  
+
   let output = 'JSON Serialization Test Results\n'
   output += '================================\n\n'
-  
+
   let allPassed = true
-  
+
   for (const result of results) {
     const status = result.success ? '✅ PASS' : '❌ FAIL'
     const time = `${result.responseTime}ms`
-    
+
     output += `${status} ${result.endpoint} (${time})\n`
-    
+
     if (!result.success) {
       allPassed = false
       output += `   Error: ${result.error}\n`
     }
-    
+
     if (result.hasBigInt) {
       output += `   Warning: Potential BigInt serialization issue\n`
     }
   }
-  
+
   output += `\nOverall: ${allPassed ? '✅ ALL TESTS PASSED' : '❌ SOME TESTS FAILED'}\n`
-  
+
   return output
 }
 

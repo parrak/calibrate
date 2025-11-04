@@ -19,10 +19,10 @@ export * from './types';
 
 // Register the connector with the platform registry
 import { ConnectorRegistry } from '@calibr/platform-connector';
-import { ShopifyConnector } from './ShopifyConnector';
+import { ShopifyConnector, ShopifyConfig, ShopifyCredentials } from './ShopifyConnector';
 
 ConnectorRegistry.register('shopify', async (config, credentials) => {
-  const connector = new ShopifyConnector(config as any, credentials as any);
+  const connector = new ShopifyConnector(config as ShopifyConfig, credentials as ShopifyCredentials);
   if (credentials) {
     await connector.initialize(credentials);
   }

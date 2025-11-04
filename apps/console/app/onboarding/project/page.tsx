@@ -42,7 +42,7 @@ export default function CreateProject() {
 
       const apiBase = process.env.NEXT_PUBLIC_API_BASE || API_FALLBACK
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-      const apiToken = (session as any)?.apiToken as string | undefined
+      const apiToken = (session as { apiToken?: string })?.apiToken
       if (apiToken) {
         headers.Authorization = `Bearer ${apiToken}`
       }
@@ -63,10 +63,10 @@ export default function CreateProject() {
         throw new Error(data.error || 'Failed to create project')
       }
 
-      const project = await res.json()
+      const project = await res.json() as { slug: string }
       router.push(`/onboarding/platform?project=${project.slug}`)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create project')
     } finally {
       setLoading(false)
     }

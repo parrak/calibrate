@@ -4,14 +4,12 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@calibr/ui'
 import { Badge } from '@calibr/ui'
 import { Button } from '@calibr/ui'
-import { 
-  Activity, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  Database, 
-  HardDrive, 
-  TrendingUp, 
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  TrendingUp,
   TrendingDown,
   RefreshCw
 } from 'lucide-react'
@@ -79,9 +77,9 @@ interface PerformanceData {
       }
     }
     database: {
-      slowQueries: any[]
-      connectionStats: any
-      queryStats: any
+      slowQueries: Array<Record<string, unknown>>
+      connectionStats: Record<string, unknown>
+      queryStats: Record<string, unknown>
       trend: {
         direction: string
         change: number
@@ -121,13 +119,13 @@ export default function PerformanceDashboard() {
     try {
       setLoading(true)
       setError(null)
-      
+
       const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
       const response = await fetch(`${base}/api/admin/performance?timeRange=${timeRange}`)
       if (!response.ok) {
         throw new Error('Failed to fetch performance data')
       }
-      
+
       const result = await response.json()
       setData(result)
     } catch (err) {
@@ -139,7 +137,7 @@ export default function PerformanceDashboard() {
 
   useEffect(() => {
     fetchData()
-    
+
     // Refresh every 30 seconds
     const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
@@ -244,7 +242,7 @@ export default function PerformanceDashboard() {
               <div className="text-sm text-gray-600">Health Score</div>
             </div>
             <Badge className={getHealthScoreBadge(data.overview.healthScore)}>
-              {data.overview.healthScore >= 90 ? 'Excellent' : 
+              {data.overview.healthScore >= 90 ? 'Excellent' :
                data.overview.healthScore >= 70 ? 'Good' : 'Needs Attention'}
             </Badge>
           </div>
@@ -346,8 +344,8 @@ export default function PerformanceDashboard() {
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full" 
+                  <div
+                    className="bg-blue-600 h-2 rounded-full"
                     style={{ width: `${data.resources.memory.usage.percentage}%` }}
                   />
                 </div>

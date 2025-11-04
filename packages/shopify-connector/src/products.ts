@@ -57,7 +57,27 @@ export class ShopifyProducts {
       console.warn(`Shopify API limit ${requestedLimit} exceeds maximum of ${maxLimit}. Using ${maxLimit} instead.`);
     }
 
-    const params: any = {
+    interface ProductListParams {
+      limit: number;
+      since_id?: string;
+      fields?: string[];
+      ids?: string[];
+      title?: string;
+      vendor?: string;
+      product_type?: string;
+      created_at_min?: string;
+      created_at_max?: string;
+      updated_at_min?: string;
+      updated_at_max?: string;
+      published_at_min?: string;
+      published_at_max?: string;
+      published_status?: 'published' | 'unpublished' | 'any';
+      collection_id?: string;
+      product_ids?: string[];
+      page?: unknown; // Allow page property to be deleted
+      [key: string]: unknown; // Index signature for dynamic property access
+    }
+    const params: ProductListParams = {
       limit,
       ...options,
     };
@@ -74,7 +94,21 @@ export class ShopifyProducts {
       }
     });
 
-    return await this.client.get<ProductListResponse>('/products.json', params);
+    // Convert to Record for client.get which expects Record<string, string | number | boolean>
+    const requestParams: Record<string, string | number | boolean> = {};
+    for (const key in params) {
+      const value = params[key];
+      if (value !== undefined) {
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          requestParams[key] = value;
+        } else if (Array.isArray(value)) {
+          // Convert arrays to comma-separated strings
+          requestParams[key] = value.join(',');
+        }
+      }
+    }
+
+    return await this.client.get<ProductListResponse>('/products.json', requestParams);
   }
 
   /**
@@ -92,8 +126,9 @@ export class ShopifyProducts {
     try {
       const response = await this.client.get<{ product: ShopifyProduct }>(`/products.json?handle=${handle}`);
       return response.product || null;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 404) {
         return null;
       }
       throw error;
@@ -125,7 +160,7 @@ export class ShopifyProducts {
     for (const update of updates) {
       try {
         await this.client.waitIfNeeded();
-        
+
         const variantData = {
           variant: {
             id: update.variantId,
@@ -192,7 +227,7 @@ export class ShopifyProducts {
    */
   async getRecentlyUpdatedProducts(hours: number = 24, options: Omit<ProductListOptions, 'updated_at_min'> = {}): Promise<ProductListResponse> {
     const updatedAtMin = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
-    
+
     return await this.listProducts({
       ...options,
       updated_at_min: updatedAtMin,
@@ -214,8 +249,9 @@ export class ShopifyProducts {
     try {
       await this.getProduct(productId);
       return true;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 404) {
         return false;
       }
       throw error;
@@ -229,8 +265,9 @@ export class ShopifyProducts {
     try {
       await this.getVariant(variantId);
       return true;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 404) {
         return false;
       }
       throw error;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withSecurity } from '@/lib/security-headers'
 import { prisma } from '@calibr/db'
+import { createId } from '@paralleldrive/cuid2'
 
 export const runtime = 'nodejs'
 
@@ -73,6 +74,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
         projectId_sellerId: { projectId: project.id, sellerId: sellingPartnerId },
       },
       create: {
+        id: createId(),
         projectId: project.id,
         sellerId: sellingPartnerId,
         marketplaceId: 'ATVPDKIKX0DER',
@@ -97,8 +99,8 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true, integration: { id: integration.id, sellerId: integration.sellerId } })
-  } catch (error: any) {
-    return NextResponse.json({ error: error?.message || String(error) }, { status: 500 })
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 })
   }
 })
 

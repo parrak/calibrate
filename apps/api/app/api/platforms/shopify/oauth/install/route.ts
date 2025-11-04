@@ -39,7 +39,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
       { status: 400 }
     );
   }
-  
+
   // Use normalized shop domain
   const finalShop = normalizedShop;
 

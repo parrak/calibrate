@@ -13,6 +13,17 @@ import {
   PlatformError,
 } from '@calibr/platform-connector';
 import { ShopifyConnector } from './ShopifyConnector';
+import { ShopifyProduct, ShopifyVariant } from './types';
+
+interface ShopifyErrorResponse {
+  response?: {
+    data?: unknown;
+    status?: number;
+  };
+  responseData?: unknown;
+  statusCode?: number;
+  status?: number;
+}
 
 export class ShopifyProductOperations implements ProductOperations {
   constructor(private connector: ShopifyConnector) {}
@@ -46,27 +57,40 @@ export class ShopifyProductOperations implements ProductOperations {
       console.warn(`Shopify API limit ${requestedLimit} exceeds maximum of ${maxLimit}. Using ${maxLimit} instead.`);
     }
 
-    const requestParams: any = {
+    interface RequestParams {
+      limit: number;
+      since_id?: string;
+      vendor?: string;
+      product_type?: string;
+      title?: string;
+      updated_at_min?: string;
+    }
+
+    const requestParams: RequestParams = {
       limit,
     };
 
     // Add cursor-based pagination if sinceId is provided
     // This is used for subsequent pages after the first page
-    if ((filter as any)?.sinceId) {
-      requestParams.since_id = (filter as any).sinceId;
+    interface FilterWithSinceId extends ProductFilter {
+      sinceId?: string;
+    }
+    const filterWithSinceId = filter as FilterWithSinceId;
+    if (filterWithSinceId?.sinceId) {
+      requestParams.since_id = filterWithSinceId.sinceId;
     }
 
     // Add optional filters, only if they have values
     if (filter?.vendor) requestParams.vendor = filter.vendor;
     if (filter?.productType) requestParams.product_type = filter.productType;
     if (filter?.search) requestParams.title = filter.search;
-    
+
     // Format date parameter if provided
     if (filter?.updatedAfter) {
-      const date = filter.updatedAfter instanceof Date 
-        ? filter.updatedAfter 
+      const date = filter.updatedAfter instanceof Date
+        ? filter.updatedAfter
         : new Date(filter.updatedAfter);
-      
+
       // Validate date
       if (isNaN(date.getTime())) {
         throw new PlatformError(
@@ -75,7 +99,7 @@ export class ShopifyProductOperations implements ProductOperations {
           'shopify'
         );
       }
-      
+
       // Shopify expects ISO 8601 format, remove milliseconds if present
       const isoString = date.toISOString();
       requestParams.updated_at_min = isoString;
@@ -94,62 +118,81 @@ export class ShopifyProductOperations implements ProductOperations {
       }
 
       // Extract the last product ID for cursor-based pagination
-      const lastProductId = response.products.length > 0 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const lastProductId = response.products.length > 0
         ? response.products[response.products.length - 1]?.id?.toString()
         : null;
 
       return {
-        data: response.products.map((product: any) => this.normalizeProduct(product)),
+        data: response.products.map((product: ShopifyProduct) => this.normalizeProduct(product)),
         pagination: {
           total: response.page_info ? undefined : response.products.length,
           limit: filter?.limit || 50,
           hasNext: response.page_info?.has_next_page || false,
           hasPrev: response.page_info?.has_previous_page || false,
           // Use nextCursor for cursor-based pagination (Shopify uses since_id)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           nextCursor: lastProductId || undefined,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Extract error message from various error types
       let errorMessage = 'Unknown error';
-      let shopifyErrorDetails: any = null;
+      let shopifyErrorDetails: unknown = null;
       let statusCode: number | undefined;
-      
+
       if (error instanceof Error) {
         errorMessage = error.message;
-        statusCode = (error as any)?.statusCode;
-        
+        const errorWithStatus = error as Error & ShopifyErrorResponse;
+        statusCode = errorWithStatus.statusCode;
+
         // Check if the error has response data from axios
-        if ((error as any).response?.data) {
-          shopifyErrorDetails = (error as any).response.data;
-          statusCode = (error as any).response.status;
-        } else if ((error as any).responseData) {
-          shopifyErrorDetails = (error as any).responseData;
+        if (errorWithStatus.response?.data) {
+          shopifyErrorDetails = errorWithStatus.response.data;
+          statusCode = errorWithStatus.response.status;
+        } else if (errorWithStatus.responseData) {
+          shopifyErrorDetails = errorWithStatus.responseData;
         }
-      } else if (error?.response?.data) {
-        // Axios error with response
-        shopifyErrorDetails = error.response.data;
-        const data = error.response.data;
-        statusCode = error.response.status;
-        
-        if (data.errors && typeof data.errors === 'object') {
-          const errorMessages: string[] = [];
-          for (const key in data.errors) {
-            if (Array.isArray(data.errors[key])) {
-              errorMessages.push(...data.errors[key]);
-            } else if (typeof data.errors[key] === 'string') {
-              errorMessages.push(data.errors[key]);
+      } else {
+        const errorWithResponse = error as ShopifyErrorResponse;
+        if (errorWithResponse.response?.data) {
+          // Axios error with response
+          shopifyErrorDetails = errorWithResponse.response.data;
+          const data = errorWithResponse.response.data;
+          statusCode = errorWithResponse.response.status;
+
+          if (data && typeof data === 'object' && 'errors' in data) {
+            const errorData = data as { errors?: Record<string, string[]>; message?: string };
+            if (errorData.errors && typeof errorData.errors === 'object') {
+              const errorMessages: string[] = [];
+              for (const key in errorData.errors) {
+                if (Array.isArray(errorData.errors[key])) {
+                  errorMessages.push(...errorData.errors[key]);
+                } else if (typeof errorData.errors[key] === 'string') {
+                  errorMessages.push(errorData.errors[key]);
+                }
+              }
+              errorMessage = errorMessages.length > 0
+                ? errorMessages.join(', ')
+                : (errorData.message || 'Shopify API error');
+            } else if (errorData.message) {
+              errorMessage = errorData.message;
+            } else if (statusCode) {
+              errorMessage = `Request failed with status code ${statusCode}`;
             }
+          } else if (statusCode) {
+            errorMessage = `Request failed with status code ${statusCode}`;
           }
-          errorMessage = errorMessages.length > 0 
-            ? errorMessages.join(', ') 
-            : (data.message || 'Shopify API error');
-        } else if (data.message) {
-          errorMessage = data.message;
+        } else if (errorWithResponse.statusCode) {
+          statusCode = errorWithResponse.statusCode;
         }
-      } else if (error?.errors) {
+      }
+
+      // Check for other error types
+      if (error && typeof error === 'object' && 'errors' in error) {
+        const errorWithErrors = error as { errors?: Record<string, string[]> };
         // Handle ShopifyApiError format
-        const errors = error.errors;
+        const errors = errorWithErrors.errors;
         if (typeof errors === 'object') {
           const errorMessages: string[] = [];
           for (const key in errors) {
@@ -159,20 +202,24 @@ export class ShopifyProductOperations implements ProductOperations {
               errorMessages.push(errors[key]);
             }
           }
-          errorMessage = errorMessages.length > 0 
-            ? errorMessages.join(', ') 
+          errorMessage = errorMessages.length > 0
+            ? errorMessages.join(', ')
             : 'Shopify API error';
         }
-        shopifyErrorDetails = error.errors;
-      } else if (error?.message) {
-        errorMessage = error.message;
+        shopifyErrorDetails = errors;
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        const errorWithMessage = error as { message?: string };
+        if (errorWithMessage.message) {
+          errorMessage = errorWithMessage.message;
+        }
       } else if (typeof error === 'string') {
         errorMessage = error;
       }
 
       // Get final status code
-      const finalStatusCode = statusCode || (error as any)?.response?.status || (error as any)?.statusCode;
-      
+      const errorWithStatus = error as ShopifyErrorResponse;
+      const finalStatusCode = statusCode || errorWithStatus.response?.status || errorWithStatus.statusCode || errorWithStatus.status;
+
       // Log detailed error information for 400 and 401 errors
       if (finalStatusCode === 400 || finalStatusCode === 401 || errorMessage.includes('400') || errorMessage.includes('401')) {
         console.error(`Shopify API ${finalStatusCode} error details:`, {
@@ -189,14 +236,14 @@ export class ShopifyProductOperations implements ProductOperations {
       }
 
       // Create a proper Error object if needed
-      const originalError = error instanceof Error 
-        ? error 
+      const originalError = error instanceof Error
+        ? error
         : new Error(errorMessage);
 
       // Enhance error message with Shopify error details if available
       if (shopifyErrorDetails && finalStatusCode === 400) {
-        const detailsStr = typeof shopifyErrorDetails === 'object' 
-          ? JSON.stringify(shopifyErrorDetails) 
+        const detailsStr = typeof shopifyErrorDetails === 'object'
+          ? JSON.stringify(shopifyErrorDetails)
           : String(shopifyErrorDetails);
         errorMessage = `${errorMessage}${detailsStr ? ` | Shopify details: ${detailsStr}` : ''}`;
       }
@@ -244,10 +291,10 @@ export class ShopifyProductOperations implements ProductOperations {
     try {
       // Search for products with the SKU using searchProducts
       const response = await this.connector.underlyingProducts!.searchProducts(sku);
-      
+
       // Find the product with matching SKU in variants
       for (const product of response.products) {
-        const variant = product.variants.find((v: any) => v.sku === sku);
+        const variant = product.variants.find((v: ShopifyVariant) => v.sku === sku);
         if (variant) {
           return this.normalizeProduct(product);
         }
@@ -266,7 +313,7 @@ export class ShopifyProductOperations implements ProductOperations {
 
   async sync(productId: string, externalId: string): Promise<ProductSyncResult> {
     try {
-      const product = await this.get(externalId);
+      await this.get(externalId);
 
       // In a real implementation, this would update the local database
       // For now, we'll just return a success result
@@ -297,11 +344,14 @@ export class ShopifyProductOperations implements ProductOperations {
 
     while (hasMore) {
       // Use cursor-based pagination with since_id
-      const listFilter = {
+      interface ListFilterWithSinceId extends ProductFilter {
+        sinceId?: string;
+      }
+      const listFilter: ListFilterWithSinceId = {
         ...filter,
         limit: filter?.limit || 50,
-      } as any;
-      
+      };
+
       if (sinceId) {
         listFilter.sinceId = sinceId;
       }
@@ -322,6 +372,7 @@ export class ShopifyProductOperations implements ProductOperations {
         sinceId = response.pagination.nextCursor;
       } else if (response.data.length > 0) {
         // Fallback: extract ID from last product if nextCursor not in pagination
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const lastProduct = response.data[response.data.length - 1];
         sinceId = lastProduct.externalId;
       } else {
@@ -332,7 +383,7 @@ export class ShopifyProductOperations implements ProductOperations {
     return results;
   }
 
-  async count(filter?: ProductFilter): Promise<number> {
+  async count(): Promise<number> {
     if (!this.connector['client']) {
       throw new PlatformError(
         'authentication',
@@ -353,7 +404,7 @@ export class ShopifyProductOperations implements ProductOperations {
     }
   }
 
-  private normalizeProduct(shopifyProduct: any): NormalizedProduct {
+  private normalizeProduct(shopifyProduct: ShopifyProduct): NormalizedProduct {
     return {
       externalId: shopifyProduct.id.toString(),
       platform: 'shopify',
@@ -362,9 +413,9 @@ export class ShopifyProductOperations implements ProductOperations {
       vendor: shopifyProduct.vendor || '',
       productType: shopifyProduct.productType || '',
       tags: shopifyProduct.tags || [],
-      status: this.normalizeStatus(shopifyProduct.status),
-      images: shopifyProduct.images?.map((img: any) => img.src) || [],
-      variants: shopifyProduct.variants?.map((variant: any) => this.normalizeVariant(variant)) || [],
+      status: this.normalizeStatus(shopifyProduct.status || 'draft'),
+      images: shopifyProduct.images?.map((img: { src: string }) => img.src) || [],
+      variants: shopifyProduct.variants?.map((variant: ShopifyVariant) => this.normalizeVariant(variant)) || [],
       createdAt: new Date(shopifyProduct.createdAt),
       updatedAt: new Date(shopifyProduct.updatedAt),
       publishedAt: shopifyProduct.publishedAt ? new Date(shopifyProduct.publishedAt) : undefined,
@@ -375,7 +426,7 @@ export class ShopifyProductOperations implements ProductOperations {
     };
   }
 
-  private normalizeVariant(shopifyVariant: any): NormalizedVariant {
+  private normalizeVariant(shopifyVariant: ShopifyVariant): NormalizedVariant {
     return {
       externalId: shopifyVariant.id.toString(),
       sku: shopifyVariant.sku || '',

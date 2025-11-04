@@ -102,7 +102,9 @@ export function calculateSaleDiscount(price: number, compareAtPrice: number): nu
  * Normalize tags (lowercase, deduplicate)
  */
 export function normalizeTags(tags: string[]): string[] {
-  return [...new Set(tags.map(tag => tag.toLowerCase().trim()))];
+  const lower = tags.map(tag => tag.toLowerCase().trim());
+  const unique = new Set(lower);
+  return Array.from(unique);
 }
 
 /**

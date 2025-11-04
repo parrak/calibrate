@@ -185,3 +185,4 @@ if ($allPassed) {
     Write-Host "`nPlease ensure all required environment variables are set." -ForegroundColor Yellow
     exit 1
 }
+

@@ -37,12 +37,13 @@ export const POST = withSecurity(async (request: NextRequest) => {
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
-    const integration = await prisma().platformIntegration.findUnique({
+    const integration = await prisma().amazonIntegration.findFirst({
       where: {
-        projectId_platform: { projectId: project.id, platform: 'amazon' },
+        projectId: project.id,
+        isActive: true,
       },
     })
-    if (!integration || integration.status !== 'CONNECTED') {
+    if (!integration) {
       return NextResponse.json(
         { error: 'Amazon integration is not connected for this project' },
         { status: 400 },
@@ -65,7 +66,8 @@ export const POST = withSecurity(async (request: NextRequest) => {
     }
 
     // If not submitting (document only), return early
-    const feedId = (result.channelResult as any)?.feedId as string | undefined
+    const channelResult = result.channelResult as { feedId?: string } | undefined
+    const feedId = channelResult?.feedId
     if (!submit || !poll || !feedId) {
       return NextResponse.json({ success: true, result })
     }
@@ -73,23 +75,23 @@ export const POST = withSecurity(async (request: NextRequest) => {
     // Poll status
     const status = await pollFeedUntilDone(feedId, { intervalMs: 1500, timeoutMs: 120000 })
 
-    let summary: any = undefined
+    let summary: unknown = undefined
     if (status.done && status.resultDocumentId) {
       summary = await downloadAndParseFeedResult(status.resultDocumentId)
     }
 
     return NextResponse.json({ success: true, result, status, summary })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Amazon pricing route error:', error)
     return NextResponse.json(
       {
         error: 'Amazon pricing update failed',
-        message: error?.message || String(error),
+        message: error instanceof Error ? error.message : String(error),
       },
       { status: 500 },
     )
   }
 })
 
-export const OPTIONS = withSecurity(async (req: NextRequest) => new NextResponse(null, { status: 204 }))
+export const OPTIONS = withSecurity(async () => new NextResponse(null, { status: 204 }))
 

@@ -69,13 +69,24 @@ export class ShopifyPricing {
         variables,
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { productVariantUpdate } = (response as any).data;
 
       if (productVariantUpdate.userErrors.length > 0) {
+        // Collect all error messages to preserve full validation feedback
+        interface ShopifyUserError {
+          message: string;
+          field?: string[];
+        }
+        const errorMessages = productVariantUpdate.userErrors.map((err: ShopifyUserError) => {
+          const field = err.field && err.field.length > 0 ? err.field.join('.') : null;
+          return field ? `${field}: ${err.message}` : err.message;
+        });
+
         return {
           success: false,
           variantId: update.variantId,
-          error: productVariantUpdate.userErrors.map((e: any) => e.message).join(', '),
+          error: errorMessages.join('; ') || 'Unknown error',
         };
       }
 
@@ -84,6 +95,7 @@ export class ShopifyPricing {
         variantId: update.variantId,
         updatedVariant: this.convertGraphQLVariant(productVariantUpdate.productVariant),
       };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       return {
         success: false,
@@ -104,7 +116,7 @@ export class ShopifyPricing {
     // Process updates in batches
     for (let i = 0; i < bulkUpdate.updates.length; i += batchSize) {
       const batch = bulkUpdate.updates.slice(i, i + batchSize);
-      
+
       // Process batch concurrently
       const batchPromises = batch.map(update => this.updateVariantPrice(update));
       const batchResults = await Promise.allSettled(batchPromises);
@@ -174,17 +186,28 @@ export class ShopifyPricing {
       });
 
       const pricingMap = new Map<string, ShopifyVariant>();
-      
-      (response as any).data.nodes.forEach((node: any) => {
+
+      interface GraphQLNode {
+        id: string;
+        product?: { id: string };
+        title?: string;
+        sku?: string;
+        price?: string;
+        compareAtPrice?: string;
+        inventoryQuantity?: number;
+      }
+      const responseData = (response as { data: { nodes: GraphQLNode[] } }).data;
+      responseData.nodes.forEach((node: GraphQLNode) => {
         if (node) {
           const variantId = node.id.split('/').pop();
-          pricingMap.set(variantId, this.convertGraphQLVariant(node));
+          pricingMap.set(variantId || '', this.convertGraphQLVariant(node));
         }
       });
 
       return pricingMap;
-    } catch (error: any) {
-      throw new Error(`Failed to get variant pricing: ${error?.message || 'Unknown error'}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to get variant pricing: ${errorMessage}`);
     }
   }
 
@@ -210,9 +233,9 @@ export class ShopifyPricing {
   calculatePriceChangePercentage(oldPrice: string, newPrice: string): number {
     const old = parseFloat(oldPrice);
     const newPriceNum = parseFloat(newPrice);
-    
+
     if (old === 0) return 0;
-    
+
     return ((newPriceNum - old) / old) * 100;
   }
 
@@ -227,13 +250,21 @@ export class ShopifyPricing {
   /**
    * Convert GraphQL variant response to ShopifyVariant type
    */
-  private convertGraphQLVariant(graphqlVariant: any): ShopifyVariant {
+  private convertGraphQLVariant(graphqlVariant: {
+    id: string;
+    product?: { id: string };
+    title?: string;
+    sku?: string;
+    price?: string;
+    compareAtPrice?: string;
+    inventoryQuantity?: number;
+  }): ShopifyVariant {
     return {
-      id: graphqlVariant.id.split('/').pop(),
+      id: graphqlVariant.id.split('/').pop() || '',
       productId: graphqlVariant.product?.id.split('/').pop() || '',
-      title: graphqlVariant.title,
+      title: graphqlVariant.title || '',
       sku: graphqlVariant.sku,
-      price: graphqlVariant.price,
+      price: graphqlVariant.price || '0',
       compareAtPrice: graphqlVariant.compareAtPrice,
       inventoryQuantity: graphqlVariant.inventoryQuantity,
       inventoryPolicy: 'deny', // Default value
@@ -248,7 +279,7 @@ export class ShopifyPricing {
    * Get pricing history for a variant (if available)
    * Note: Shopify doesn't provide pricing history, this is for future compatibility
    */
-  async getPricingHistory(variantId: string): Promise<any[]> {
+  async getPricingHistory(): Promise<unknown[]> {
     // Shopify doesn't provide pricing history
     // This method is here for interface compatibility
     return [];
@@ -268,38 +299,38 @@ export class ShopifyPricing {
   ): Promise<BulkPriceUpdateResult> {
     // Get current pricing
     const currentPricing = await this.getVariantPricing(variantIds);
-    
+
     // Apply rules to create updates
     const updates: ShopifyPriceUpdate[] = [];
-    
+
     currentPricing.forEach((variant, variantId) => {
       let newPrice = parseFloat(variant.price);
-      
+
       // Apply markup
       if (rules.markup) {
         newPrice = newPrice * (1 + rules.markup / 100);
       }
-      
+
       // Apply discount
       if (rules.discount) {
         newPrice = newPrice * (1 - rules.discount / 100);
       }
-      
+
       // Apply min/max constraints
       if (rules.minPrice) {
         newPrice = Math.max(newPrice, parseFloat(rules.minPrice));
       }
-      
+
       if (rules.maxPrice) {
         newPrice = Math.min(newPrice, parseFloat(rules.maxPrice));
       }
-      
+
       updates.push({
         variantId,
         price: this.formatPrice(newPrice),
       });
     });
-    
+
     return await this.updateVariantPricesBulk({ updates });
   }
 }

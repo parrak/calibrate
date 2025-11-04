@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
 
 /**
  * GET /api/platforms/shopify/sync/status
- * 
+ *
  * Get sync status and history
  */
 export const GET = withSecurity(async function GET(request: NextRequest) {
@@ -57,17 +57,31 @@ export const GET = withSecurity(async function GET(request: NextRequest) {
     }
 
     // Get recent sync logs - Try PlatformSyncLog model first, fallback to integration record
-    let syncLogs: any[] = [];
-    
+    const syncLogs: Array<{
+      id: string
+      syncType?: string
+      status: string
+      startedAt: Date | null
+      completedAt: Date | null
+      itemsProcessed: number
+      itemsSuccessful: number
+      itemsFailed: number
+      errors: string[] | null
+    }> = [];
+
     // Try to query sync logs if model exists
     try {
-      const logs = await (prisma() as any).platformSyncLog?.findMany({
+      const prismaClient = prisma() as unknown as Record<string, unknown>
+      const platformSyncLog = prismaClient.platformSyncLog as { findMany?: (args: { where: { integrationId: string }; orderBy: { startedAt: string }; take: number }) => Promise<unknown[]> } | undefined
+      const logs = await platformSyncLog?.findMany?.({
         where: { integrationId: integration.id },
         orderBy: { startedAt: 'desc' },
         take: 10,
       }) || [];
-      syncLogs.push(...logs);
-    } catch (err) {
+      if (Array.isArray(logs)) {
+        syncLogs.push(...(logs as typeof syncLogs));
+      }
+    } catch (_err) {
       // Model doesn't exist yet - create sync log from integration record
       if (integration.lastSyncAt) {
         // Parse summary from syncError if it contains summary info
@@ -75,7 +89,7 @@ export const GET = withSecurity(async function GET(request: NextRequest) {
         let itemsProcessed = 0;
         let itemsSuccessful = 0;
         let itemsFailed = 0;
-        
+
         if (integration.syncError) {
           // Try to extract from SUMMARY format first
           const summaryMatch = integration.syncError.match(/SUMMARY:\s*total=(\d+),\s*successful=(\d+),\s*failed=(\d+)/);
@@ -102,14 +116,14 @@ export const GET = withSecurity(async function GET(request: NextRequest) {
           itemsSuccessful = 1; // At least 1 item was synced
           itemsProcessed = 1;
         }
-        
+
         // Determine status
         const status = integration.syncStatus?.toUpperCase() || 'SUCCESS';
-        const finalStatus = status === 'SUCCESS' ? 'SUCCESS' 
-          : status === 'ERROR' ? 'ERROR' 
-          : status === 'PARTIAL' ? 'PARTIAL' 
+        const finalStatus = status === 'SUCCESS' ? 'SUCCESS'
+          : status === 'ERROR' ? 'ERROR'
+          : status === 'PARTIAL' ? 'PARTIAL'
           : 'SUCCESS';
-        
+
         syncLogs.push({
           id: `integration-${integration.id}`,
           syncType: 'full', // Default to full sync
@@ -161,8 +175,7 @@ export const GET = withSecurity(async function GET(request: NextRequest) {
 /**
  * OPTIONS handler for CORS preflight
  */
-export const OPTIONS = withSecurity(async function OPTIONS(request: NextRequest) {
+export const OPTIONS = withSecurity(async function OPTIONS(_request: NextRequest) {
   return new NextResponse(null, { status: 204 });
 });
-
 

@@ -88,16 +88,28 @@ async function generateSnapshot(
 ): Promise<DailySnapshot> {
   const { date, includeSales, includeCompetitorData } = options
 
-  // Get all SKUs for project
+  // Get all SKUs for project (through Product relation)
   const skus = await prisma().sku.findMany({
-    where: { projectId },
+    where: {
+      Product: {
+        projectId,
+      },
+    },
     select: {
       id: true,
-      sku: true,
+      code: true,
       name: true,
-      priceAmount: true,
-      currency: true,
-      cost: true,
+      Price: {
+        where: {
+          status: 'ACTIVE',
+        },
+        select: {
+          amount: true,
+          currency: true,
+        },
+        take: 1,
+      },
+      attributes: true,
     },
   })
 
@@ -132,7 +144,9 @@ async function generateSnapshot(
   }
 
   // Calculate pricing metrics
-  const prices = skus.map((s) => s.priceAmount).filter((p): p is number => p !== null)
+  const prices = skus
+    .map((s) => s.Price[0]?.amount)
+    .filter((p): p is number => p !== undefined && p !== null)
   const pricingMetrics = {
     averagePrice: prices.length > 0 ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0,
     minPrice: prices.length > 0 ? Math.min(...prices) : 0,
@@ -140,8 +154,19 @@ async function generateSnapshot(
     medianPrice: prices.length > 0 ? calculateMedian(prices) : 0,
   }
 
-  // Calculate margin metrics if cost data available
-  const skusWithCost = skus.filter((s) => s.cost && s.priceAmount)
+  // Calculate margin metrics if cost data available (cost might be in attributes JSON)
+  const skusWithCost = skus
+    .map((s) => {
+      const price = s.Price[0]?.amount
+      const cost = s.attributes && typeof s.attributes === 'object' && 'cost' in s.attributes
+        ? (s.attributes as any).cost
+        : null
+      return { price, cost }
+    })
+    .filter((s): s is { price: number; cost: number } => 
+      s.price !== undefined && s.price !== null && s.cost !== null && s.cost > 0
+    )
+  
   const marginMetrics = skusWithCost.length > 0 ? {
     averageMargin: calculateAverageMargin(skusWithCost),
     minMargin: calculateMinMargin(skusWithCost),
@@ -179,34 +204,25 @@ function calculateMedian(values: number[]): number {
 /**
  * Calculate average margin percentage
  */
-function calculateAverageMargin(skus: Array<{ cost: number | null; priceAmount: number | null }>): number {
+function calculateAverageMargin(skus: Array<{ price: number; cost: number }>): number {
   const margins = skus
-    .filter((s): s is { cost: number; priceAmount: number } =>
-      s.cost !== null && s.priceAmount !== null && s.cost > 0
-    )
-    .map((s) => ((s.priceAmount - s.cost) / s.cost) * 100)
+    .map((s) => ((s.price - s.cost) / s.cost) * 100)
 
   return margins.length > 0
     ? Math.round(margins.reduce((a, b) => a + b, 0) / margins.length)
     : 0
 }
 
-function calculateMinMargin(skus: Array<{ cost: number | null; priceAmount: number | null }>): number {
+function calculateMinMargin(skus: Array<{ price: number; cost: number }>): number {
   const margins = skus
-    .filter((s): s is { cost: number; priceAmount: number } =>
-      s.cost !== null && s.priceAmount !== null && s.cost > 0
-    )
-    .map((s) => ((s.priceAmount - s.cost) / s.cost) * 100)
+    .map((s) => ((s.price - s.cost) / s.cost) * 100)
 
   return margins.length > 0 ? Math.round(Math.min(...margins)) : 0
 }
 
-function calculateMaxMargin(skus: Array<{ cost: number | null; priceAmount: number | null }>): number {
+function calculateMaxMargin(skus: Array<{ price: number; cost: number }>): number {
   const margins = skus
-    .filter((s): s is { cost: number; priceAmount: number } =>
-      s.cost !== null && s.priceAmount !== null && s.cost > 0
-    )
-    .map((s) => ((s.priceAmount - s.cost) / s.cost) * 100)
+    .map((s) => ((s.price - s.cost) / s.cost) * 100)
 
   return margins.length > 0 ? Math.round(Math.max(...margins)) : 0
 }

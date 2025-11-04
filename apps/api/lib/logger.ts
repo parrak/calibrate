@@ -21,7 +21,7 @@ export interface LogEntry {
     message: string
     stack?: string
   }
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 class Logger {
@@ -111,8 +111,8 @@ class Logger {
   // Request-specific logging
   logRequest(req: NextRequest, message: string, level: LogLevel = LogLevel.INFO, context?: Partial<LogEntry>) {
     const requestId = req.headers.get('x-request-id') || generateRequestId()
-    const projectId = req.headers.get('x-calibr-project')
-    
+    const projectId = req.headers.get('x-calibr-project') || undefined
+
     this.log(level, message, {
       ...context,
       requestId,
@@ -128,13 +128,13 @@ class Logger {
 
   // API endpoint logging
   logApiCall(
-    req: NextRequest, 
+    req: NextRequest,
     response: { status: number; responseTime: number },
     context?: Partial<LogEntry>
   ) {
     const level = response.status >= 400 ? LogLevel.ERROR : LogLevel.INFO
     const message = `API ${req.method} ${req.nextUrl.pathname} - ${response.status} (${response.responseTime}ms)`
-    
+
     this.logRequest(req, message, level, {
       ...context,
       metadata: {
@@ -157,13 +157,13 @@ export const logger = new Logger()
 // Export utility functions
 export function createRequestLogger(req: NextRequest) {
   return {
-    error: (message: string, error?: Error, context?: Partial<LogEntry>) => 
+    error: (message: string, error?: Error, context?: Partial<LogEntry>) =>
       logger.logRequest(req, message, LogLevel.ERROR, { ...context, error: error ? { name: error.name, message: error.message, stack: error.stack } : undefined }),
-    warn: (message: string, context?: Partial<LogEntry>) => 
+    warn: (message: string, context?: Partial<LogEntry>) =>
       logger.logRequest(req, message, LogLevel.WARN, context),
-    info: (message: string, context?: Partial<LogEntry>) => 
+    info: (message: string, context?: Partial<LogEntry>) =>
       logger.logRequest(req, message, LogLevel.INFO, context),
-    debug: (message: string, context?: Partial<LogEntry>) => 
+    debug: (message: string, context?: Partial<LogEntry>) =>
       logger.logRequest(req, message, LogLevel.DEBUG, context)
   }
 }
