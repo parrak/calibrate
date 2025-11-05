@@ -40,6 +40,14 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Better error messages explaining CONSOLE_INTERNAL_TOKEN configuration requirements
   - Resolves "You reached the start of the range" error message
 
+- Console: Fixed UI contrast issues with black text on dark backgrounds
+  - Updated globals.css to use dark theme colors (#0B0B0C background, #E5E7EB text) matching the app design
+  - Added missing Tailwind color definitions (muted, muted-foreground, background, foreground, input, ring) for component compatibility
+  - Fixed all `bg-muted` references to use `bg-mute` throughout the codebase
+  - Added explicit `text-foreground` classes to Input and Textarea components for proper text visibility
+  - Fixed price-changes page hover states and ensured all interactive elements have proper contrast
+  - Resolves accessibility issues where text was invisible or hard to read on dark backgrounds
+
 - Amazon Connector (Agent B)
   - Initial SP-API pricing feed flow merged to master
   - Adds feed XML builder, AES-256-GCM encryption + upload, optional submission
