@@ -8,27 +8,50 @@ on:
   workflow_dispatch:  # Allows manual triggering from Actions tab
 
 jobs:
-  test:
+  # Shared setup for all test jobs
+  setup:
+    name: Setup
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20]
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Install pnpm
       uses: pnpm/action-setup@v4
       with:
         package_json_file: package.json
 
-    - name: Setup Node.js ${{ matrix.node-version }}
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '20'
         cache: 'pnpm'
+
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - name: Cache pnpm dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: pnpm-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-${{ runner.os }}-
+
+    - name: Cache Prisma generated client
+      uses: actions/cache@v4
+      with:
+        path: |
+          packages/db/node_modules/.prisma
+          packages/db/node_modules/@prisma
+        key: prisma-${{ runner.os }}-${{ hashFiles('packages/db/prisma/schema.prisma') }}
+        restore-keys: |
+          prisma-${{ runner.os }}-
 
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
@@ -39,13 +62,200 @@ jobs:
     - name: Build monitor package
       run: pnpm --filter @calibr/monitor build
 
+  # Run type-check, lint, and test in parallel
+  typecheck:
+    name: TypeScript Type Check
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        package_json_file: package.json
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - name: Cache pnpm dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: pnpm-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-${{ runner.os }}-
+
+    - name: Cache Prisma generated client
+      uses: actions/cache@v4
+      with:
+        path: |
+          packages/db/node_modules/.prisma
+          packages/db/node_modules/@prisma
+        key: prisma-${{ runner.os }}-${{ hashFiles('packages/db/prisma/schema.prisma') }}
+        restore-keys: |
+          prisma-${{ runner.os }}-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma client
+      run: pnpm db:generate
+
+    - name: Build monitor package
+      run: pnpm --filter @calibr/monitor build
+
+    - name: Cache Turborepo
+      uses: actions/cache@v4
+      with:
+        path: .turbo
+        key: turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('turbo.json') }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+          turbo-${{ runner.os }}-
+
     - name: Run TypeScript type checks
       run: pnpm type-check
       continue-on-error: false
 
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        package_json_file: package.json
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - name: Cache pnpm dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: pnpm-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-${{ runner.os }}-
+
+    - name: Cache Prisma generated client
+      uses: actions/cache@v4
+      with:
+        path: |
+          packages/db/node_modules/.prisma
+          packages/db/node_modules/@prisma
+        key: prisma-${{ runner.os }}-${{ hashFiles('packages/db/prisma/schema.prisma') }}
+        restore-keys: |
+          prisma-${{ runner.os }}-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma client
+      run: pnpm db:generate
+
+    - name: Build monitor package
+      run: pnpm --filter @calibr/monitor build
+
+    - name: Cache Turborepo
+      uses: actions/cache@v4
+      with:
+        path: .turbo
+        key: turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('turbo.json') }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+          turbo-${{ runner.os }}-
+
     - name: Run linter
       run: pnpm lint
       continue-on-error: false
+
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        package_json_file: package.json
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - name: Cache pnpm dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: pnpm-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-${{ runner.os }}-
+
+    - name: Cache Prisma generated client
+      uses: actions/cache@v4
+      with:
+        path: |
+          packages/db/node_modules/.prisma
+          packages/db/node_modules/@prisma
+        key: prisma-${{ runner.os }}-${{ hashFiles('packages/db/prisma/schema.prisma') }}
+        restore-keys: |
+          prisma-${{ runner.os }}-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma client
+      run: pnpm db:generate
+
+    - name: Build monitor package
+      run: pnpm --filter @calibr/monitor build
+
+    - name: Cache Turborepo
+      uses: actions/cache@v4
+      with:
+        path: .turbo
+        key: turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('turbo.json') }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+          turbo-${{ runner.os }}-
 
     - name: Run unit and integration tests
       run: pnpm test
