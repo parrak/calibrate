@@ -96,6 +96,13 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Fulfills AI Copilot feature from Growth Phase (v0.3-v0.6) agent workflow
 
 ### Fixed
+- **Console: Overlay Component Improvements**
+  - Fixed Drawer component blocking user interactions when closed by adding conditional `pointer-events: none`
+  - Enhanced GuidedTour with click-outside-to-dismiss functionality
+  - Added ESC key support to dismiss GuidedTour
+  - Improved z-index layering to prevent overlay conflicts
+  - Resolves blocking overlay issue on price-changes page
+
 - API: Fixed 410 error on POST /api/platforms/shopify/sync endpoint
   - Deprecated endpoint now forwards requests to /api/integrations/shopify/sync
   - Maps syncType parameter to action for backward compatibility
