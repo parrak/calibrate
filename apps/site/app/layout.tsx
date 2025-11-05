@@ -8,9 +8,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
     ],
-    apple: '/apple-touch-icon.png',
   },
   openGraph: {
     title: 'Calibr — Real-time Pricing Precision',
@@ -51,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/privacy">Privacy</a>
               <a href="/terms">Terms</a>
               <a href="/.well-known/security.txt">Security</a>
+              <a href="mailto:contact@calibr.lat">Contact</a>
             </div>
           </div>
         </footer>
