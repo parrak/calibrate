@@ -26,6 +26,9 @@ RUN pnpm install --frozen-lockfile
 # Generate Prisma client
 RUN cd packages/db && pnpm exec prisma generate
 
+# Build monitor package (required dependency for API)
+RUN pnpm --filter @calibr/monitor build
+
 # Build the API
 RUN cd apps/api && pnpm run build
 
