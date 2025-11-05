@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import clsx from 'clsx'
 import { Button, Drawer, DiffCard, EmptyState, JSONView, PolicyList, StatusPill, useToast } from '@/lib/components'
 import { SimpleTable as Table } from '@/lib/components/SimpleTable'
+import { AIExplanation } from './components/AIExplanation'
 
 type ConnectorState = 'QUEUED' | 'SYNCING' | 'SYNCED' | 'ERROR'
 type PriceChangeStatus = 'PENDING' | 'APPROVED' | 'APPLIED' | 'REJECTED' | 'FAILED' | 'ROLLED_BACK'
@@ -14,6 +15,9 @@ type ConnectorStatus = {
   target: string
   state: ConnectorState
   errorMessage?: string | null
+  variantId?: string | null
+  externalId?: string | null
+  updatedAt?: string | null
 }
 
 type PriceChangeDTO = {
@@ -261,10 +265,10 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
   )
 
   const connectorBadge = (status?: ConnectorStatus) => {
-    if (!status) return <span className="text-xs text-mute">—</span>
+    if (!status) return <span className="text-xs text-mute">-</span>
     return (
       <span className={clsx('px-2 py-0.5 rounded text-xs', CONNECTOR_COLOR[status.state])}>
-        {status.target} · {status.state}
+        {status.target} - {status.state}
       </span>
     )
   }
@@ -378,7 +382,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <input
             className="w-full sm:w-64 rounded-md border border-border bg-surface px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-            placeholder="Search by SKU or source…"
+            placeholder="Search by SKU or source..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -543,6 +547,16 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
             )}
 
             <PolicyList checks={active.policyResult?.checks ?? []} />
+
+            <AIExplanation
+              priceChangeId={active.id}
+              skuCode={(active.context?.skuCode as string | undefined) || undefined}
+              fromAmount={active.fromAmount}
+              toAmount={active.toAmount}
+              currency={active.currency}
+              projectSlug={slug}
+              token={token}
+            />
 
             <div>
               <div className="mb-2 text-sm font-medium">Context</div>

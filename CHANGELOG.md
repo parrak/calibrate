@@ -6,6 +6,25 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- API / Console: Shopify price change apply + rollback now call the live Shopify connector, recording variant metadata and surfacing connector errors with tests for the new flow.
+- **Console: AI Pricing Assistant (Copilot UI)**
+  - Completed AI Copilot console UI to complement existing GPT-4 backend API
+  - New AI Assistant page with full-featured chat interface for natural language pricing queries
+  - AIExplanation component for on-demand AI analysis of individual price changes
+  - Integrated with existing `/api/v1/assistant/query` endpoint
+  - Features:
+    - Message history display with user/assistant bubbles
+    - Suggested questions with one-click execution
+    - Data viewer for query results with AI/pattern method indicators
+    - SQL query inspection for transparency
+    - Follow-up suggestion system
+    - Loading states and error handling
+    - Authentication-aware with graceful fallback messaging
+  - Added "AI Assistant" navigation link to project sidebar
+  - Integrated AIExplanation component into price change detail drawer
+  - Fulfills AI Copilot feature from Growth Phase (v0.3-v0.6) agent workflow
+
 ### Fixed
 - API: Fixed 410 error on POST /api/platforms/shopify/sync endpoint
   - Deprecated endpoint now forwards requests to /api/integrations/shopify/sync
