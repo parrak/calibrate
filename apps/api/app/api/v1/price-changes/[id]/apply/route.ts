@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@calibr/db'
+import { prisma, Prisma } from '@calibr/db'
 import { evaluatePolicy } from '@calibr/pricing-engine'
 import { withSecurity } from '@/lib/security-headers'
 import { trackPerformance } from '@/lib/performance-middleware'
-import { errorJson, getPCForProject, inferConnectorTarget, requireProjectAccess, toPriceChangeDTO } from '../../utils'
+import {
+  errorJson,
+  getActiveShopifyIntegration,
+  getPCForProject,
+  inferConnectorTarget,
+  requireProjectAccess,
+  resolveShopifyVariantId,
+  toPriceChangeDTO,
+} from '../../utils'
 import { createId } from '@paralleldrive/cuid2'
+import { initializeShopifyConnector } from '@/lib/shopify-connector'
+import type { PriceUpdateResult } from '@calibr/platform-connector'
 
 type RulesShape = {
   maxPctDelta?: number
@@ -60,16 +70,16 @@ export const POST = withSecurity(
     }
 
     if (match.project.id !== access.project.id) {
-      return errorJson({
-        status: 403,
-        error: 'Forbidden',
-        message: 'Price change does not belong to this project.',
-      })
-    }
+    return errorJson({
+      status: 403,
+      error: 'Forbidden',
+      message: 'Price change does not belong to this project.',
+    })
+  }
 
-    const pc = match.pc
-    if (pc.status === 'APPLIED' || pc.status === 'ROLLED_BACK') {
-      return errorJson({ status: 409, error: 'AlreadyApplied', message: 'Price change already applied.' })
+  const pc = match.pc
+  if (pc.status === 'APPLIED' || pc.status === 'ROLLED_BACK') {
+    return errorJson({ status: 409, error: 'AlreadyApplied', message: 'Price change already applied.' })
     }
     if (pc.status === 'REJECTED') {
       return errorJson({
@@ -134,6 +144,108 @@ export const POST = withSecurity(
     const connectorTarget = inferConnectorTarget(pc)
     const now = new Date()
 
+    type ShopifyContext = {
+      target: 'shopify'
+      connector: Awaited<ReturnType<typeof initializeShopifyConnector>>
+      variantId: string
+      result: PriceUpdateResult
+    }
+
+    let shopifyContext: ShopifyContext | null = null
+
+    if (connectorTarget === 'shopify') {
+      const variantId = resolveShopifyVariantId(pc)
+      if (!variantId) {
+        return errorJson({
+          status: 422,
+          error: 'MissingVariant',
+          message: 'shopifyVariantId is required in the price change context to apply changes.',
+        })
+      }
+
+      const integration = await getActiveShopifyIntegration(pc.projectId)
+      if (!integration) {
+        return errorJson({
+          status: 409,
+          error: 'IntegrationMissing',
+          message: 'An active Shopify integration is required to apply this price change.',
+        })
+      }
+
+      let connector: Awaited<ReturnType<typeof initializeShopifyConnector>>
+      try {
+        connector = await initializeShopifyConnector(integration)
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to initialize Shopify connector for this project.'
+        return errorJson({
+          status: 502,
+          error: 'ConnectorUnavailable',
+          message,
+        })
+      }
+
+      let updateResult: PriceUpdateResult
+      try {
+        updateResult = await connector.pricing.updatePrice({
+          externalId: variantId,
+          price: pc.toAmount,
+          currency: pc.currency,
+          metadata: {
+            priceChangeId: pc.id,
+            projectId: pc.projectId,
+          },
+        })
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to update price in Shopify for this price change.'
+        return errorJson({
+          status: 502,
+          error: 'ConnectorError',
+          message,
+        })
+      }
+
+      if (!updateResult.success) {
+        return errorJson({
+          status: 502,
+          error: 'ConnectorError',
+          message: updateResult.error || 'Shopify rejected this price update.',
+          details: { retryable: updateResult.retryable ?? false },
+        })
+      }
+
+      shopifyContext = {
+        target: 'shopify',
+        connector,
+        variantId,
+        result: updateResult,
+      }
+    }
+
+    const connectorStatusPayload: Prisma.InputJsonValue =
+      shopifyContext !== null
+        ? {
+            target: shopifyContext.target,
+            state: 'SYNCED',
+            errorMessage: null,
+            variantId: shopifyContext.variantId,
+            externalId: shopifyContext.result.externalId,
+            updatedAt: shopifyContext.result.updatedAt.toISOString(),
+            metadata: {
+              priceChangeId: pc.id,
+              projectId: pc.projectId,
+              oldPrice: shopifyContext.result.oldPrice ?? pc.fromAmount,
+              newPrice: shopifyContext.result.newPrice ?? pc.toAmount,
+              currency: pc.currency,
+            },
+          }
+        : {
+            target: connectorTarget,
+            state: 'SYNCED',
+            errorMessage: null,
+          }
+
     try {
       const updated = await prisma().$transaction(async (tx) => {
         const currentPrice = await tx.price.findFirst({
@@ -182,17 +294,30 @@ export const POST = withSecurity(
             appliedAt: now,
             approvedBy,
             policyResult: evaluation,
-            connectorStatus: {
-              target: connectorTarget,
-              state: 'SYNCED',
-              errorMessage: null,
-            },
+            connectorStatus: connectorStatusPayload,
           },
         })
       })
 
       return NextResponse.json({ ok: true, item: toPriceChangeDTO(updated) })
     } catch (err: unknown) {
+      if (shopifyContext) {
+        try {
+          await shopifyContext.connector.pricing.updatePrice({
+            externalId: shopifyContext.variantId,
+            price: pc.fromAmount,
+            currency: pc.currency,
+            metadata: {
+              priceChangeId: pc.id,
+              projectId: pc.projectId,
+              reason: 'revert-after-db-failure',
+            },
+          })
+        } catch (revertError) {
+          console.error('Failed to revert Shopify price after database failure', revertError)
+        }
+      }
+
       if (err && typeof err === 'object' && 'code' in err && err.code === 'PRICE_NOT_FOUND') {
         return errorJson({
           status: 404,
