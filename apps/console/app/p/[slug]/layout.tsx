@@ -20,6 +20,7 @@ export default function ProjectLayout({
     { href: `/p/${params.slug}/price-changes`, label: 'Price Changes', key: 'price-changes' },
     { href: `/p/${params.slug}/catalog`, label: 'Catalog', key: 'catalog' },
     { href: `/p/${params.slug}/competitors`, label: 'Competitors', key: 'competitors' },
+    { href: `/p/${params.slug}/assistant`, label: 'AI Assistant', key: 'assistant' },
     { href: `/p/${params.slug}/integrations`, label: 'Integrations', key: 'integrations' },
   ]
 
