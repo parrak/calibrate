@@ -1,4 +1,3 @@
-import { CodeTabs } from '@/components/CodeTabs'
 import { Logos } from '@/components/Logos'
 import { Section } from '@/components/Section'
 import { CTA } from '@/components/CTA'
