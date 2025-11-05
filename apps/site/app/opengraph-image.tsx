@@ -30,8 +30,9 @@ export default function OpenGraphImage() {
             style={{
               width: 96,
               height: 96,
-              display: 'grid',
-              placeItems: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               borderRadius: 24,
               background: 'linear-gradient(135deg, #00E5A8 0%, #7C4DFF 100%)',
             }}
