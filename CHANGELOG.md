@@ -6,6 +6,9 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- API / Console: Shopify price change apply + rollback now call the live Shopify connector, recording variant metadata and surfacing connector errors with tests for the new flow.
+
 ### Fixed
 - API: Fixed 410 error on POST /api/platforms/shopify/sync endpoint
   - Deprecated endpoint now forwards requests to /api/integrations/shopify/sync

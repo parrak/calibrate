@@ -7,6 +7,16 @@ import { POST as rejectRoute } from '../app/api/v1/price-changes/[id]/reject/rou
 import { POST as rollbackRoute } from '../app/api/v1/price-changes/[id]/rollback/route'
 import { authSecurityManager } from '../lib/auth-security'
 
+const shopifyMocks = {
+  initializeShopifyConnector: vi.fn(),
+  updatePrice: vi.fn(),
+}
+
+vi.mock('@/lib/shopify-connector', () => ({
+  initializeShopifyConnector: (...args: any[]) =>
+    shopifyMocks.initializeShopifyConnector(...args),
+}))
+
 type PriceChangeStatus = 'PENDING' | 'APPROVED' | 'APPLIED' | 'REJECTED' | 'FAILED' | 'ROLLED_BACK'
 
 type PriceChangeRecord = {
@@ -35,6 +45,14 @@ type StoreState = {
   priceVersions: Array<{ id: string; priceId: string; amount: number; note?: string | null }>
   policies: Array<{ projectId: string; autoApply: boolean; rules: any }>
   events: any[]
+  shopifyIntegrations: Array<{
+    id: string
+    projectId: string
+    shopDomain: string
+    accessToken: string
+    scope: string
+    isActive: boolean
+  }>
 }
 
 const uid = () => Math.random().toString(36).slice(2)
@@ -56,7 +74,7 @@ const initialState = (): StoreState => ({
       fromAmount: 4990,
       toAmount: 5490,
       currency: 'USD',
-      context: { skuCode: 'SKU-1' },
+      context: { skuCode: 'SKU-1', shopifyVariantId: 'variant_pending' },
       status: 'PENDING',
       policyResult: { ok: true, checks: [{ name: 'maxPctDelta', ok: true }] },
       createdAt: new Date('2025-01-01T00:00:00Z'),
@@ -73,7 +91,7 @@ const initialState = (): StoreState => ({
       fromAmount: 4990,
       toAmount: 5290,
       currency: 'USD',
-      context: { skuCode: 'SKU-APPROVED' },
+      context: { skuCode: 'SKU-APPROVED', shopifyVariantId: 'variant_approved' },
       status: 'APPROVED',
       policyResult: { ok: true, checks: [{ name: 'maxPctDelta', ok: true }] },
       createdAt: new Date('2025-01-02T00:00:00Z'),
@@ -90,7 +108,7 @@ const initialState = (): StoreState => ({
       fromAmount: 4990,
       toAmount: 4590,
       currency: 'USD',
-      context: { skuCode: 'SKU-APPLIED' },
+      context: { skuCode: 'SKU-APPLIED', shopifyVariantId: 'variant_applied' },
       status: 'APPLIED',
       policyResult: { ok: true, checks: [{ name: 'maxPctDelta', ok: true }] },
       createdAt: new Date('2025-01-03T00:00:00Z'),
@@ -107,7 +125,7 @@ const initialState = (): StoreState => ({
       fromAmount: 4990,
       toAmount: 9990,
       currency: 'USD',
-      context: { skuCode: 'SKU-FAIL' },
+      context: { skuCode: 'SKU-FAIL', shopifyVariantId: 'variant_policy' },
       status: 'APPROVED',
       policyResult: { ok: false, checks: [{ name: 'maxPctDelta', ok: false }] },
       createdAt: new Date('2025-01-05T00:00:00Z'),
@@ -124,7 +142,11 @@ const initialState = (): StoreState => ({
       fromAmount: 4990,
       toAmount: 5290,
       currency: 'USD',
-      context: { skuCode: 'SKU-CONNECTOR', simulateConnectorError: 'connector down' },
+      context: {
+        skuCode: 'SKU-CONNECTOR',
+        simulateConnectorError: 'connector down',
+        shopifyVariantId: 'variant_error',
+      },
       status: 'APPROVED',
       policyResult: { ok: true, checks: [{ name: 'maxPctDelta', ok: true }] },
       createdAt: new Date('2025-01-06T00:00:00Z'),
@@ -139,6 +161,16 @@ const initialState = (): StoreState => ({
     { projectId: 'proj1', autoApply: true, rules: { maxPctDelta: 0.2, floors: { 'SKU-APPLIED': 3000 } } },
   ],
   events: [],
+  shopifyIntegrations: [
+    {
+      id: 'shopify1',
+      projectId: 'proj1',
+      shopDomain: 'demo.myshopify.com',
+      accessToken: 'test-token',
+      scope: 'read_products,write_products',
+      isActive: true,
+    },
+  ],
 })
 
 const store = (() => {
@@ -260,6 +292,20 @@ const store = (() => {
         return clone(state.policies.find((p) => p.projectId === where.projectId) ?? null)
       },
     },
+    shopifyIntegration: {
+      findFirst: async ({ where }: any) => {
+        const matches = state.shopifyIntegrations.find((integration) => {
+          if (where?.projectId && integration.projectId !== where.projectId) {
+            return false
+          }
+          if (typeof where?.isActive === 'boolean' && integration.isActive !== where.isActive) {
+            return false
+          }
+          return true
+        })
+        return clone(matches ?? null)
+      },
+    },
     $transaction: async (cb: any) => cb(client),
   }
 
@@ -308,6 +354,20 @@ const paramsFor = (id: string) => ({ params: Promise.resolve({ id }) })
 
 describe('price changes API', () => {
   beforeEach(() => {
+    shopifyMocks.updatePrice.mockReset()
+    shopifyMocks.updatePrice.mockImplementation(async (payload: any) => ({
+      externalId: payload.externalId,
+      platform: 'shopify',
+      success: true,
+      oldPrice: 4990,
+      newPrice: payload.price,
+      currency: payload.currency,
+      updatedAt: new Date(),
+    }))
+    shopifyMocks.initializeShopifyConnector.mockReset()
+    shopifyMocks.initializeShopifyConnector.mockImplementation(async () => ({
+      pricing: { updatePrice: shopifyMocks.updatePrice },
+    }))
     store.reset()
     clearSessions()
   })
@@ -346,7 +406,7 @@ describe('price changes API', () => {
         fromAmount: 4990,
         toAmount: 5090,
         currency: 'USD',
-        context: { skuCode: `SKU-${i}` },
+        context: { skuCode: `SKU-${i}`, shopifyVariantId: `variant_extra_${i}` },
         status: 'PENDING',
         policyResult: { ok: true, checks: [] },
         createdAt: new Date(Date.now() - i * 1000),
@@ -438,8 +498,19 @@ describe('price changes API', () => {
     const body = await res.json()
     expect(body.item.status).toBe('APPLIED')
     expect(body.item.connectorStatus.state).toBe('SYNCED')
+    expect(body.item.connectorStatus.variantId).toBe('variant_approved')
+    expect(shopifyMocks.initializeShopifyConnector).toHaveBeenCalledTimes(1)
+    expect(shopifyMocks.updatePrice).toHaveBeenCalledWith(
+      expect.objectContaining({
+        externalId: 'variant_approved',
+        price: 5290,
+        currency: 'USD',
+      })
+    )
     const updatedPc = store.state.priceChanges.find((pc) => pc.id === 'pc_approved')
     expect(updatedPc?.status).toBe('APPLIED')
+    expect(updatedPc?.connectorStatus?.variantId).toBe('variant_approved')
+    expect(updatedPc?.connectorStatus?.externalId).toBe('variant_approved')
     expect(store.state.prices.find((p) => p.id === 'price1')?.amount).toBe(5290)
     expect(store.state.priceVersions.length).toBeGreaterThan(0)
   })
@@ -457,6 +528,64 @@ describe('price changes API', () => {
     expect(res.status).toBe(422)
     const body = await res.json()
     expect(body.error).toBe('PolicyViolation')
+  })
+
+  it('returns 409 when no active Shopify integration exists', async () => {
+    store.state.shopifyIntegrations.length = 0
+    const token = makeToken('user-admin')
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/apply', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+      },
+    })
+    const res = await applyRoute(req, paramsFor('pc_approved') as any)
+    expect(res.status).toBe(409)
+    const body = await res.json()
+    expect(body.error).toBe('IntegrationMissing')
+  })
+
+  it('returns 422 when Shopify variant identifier is unavailable', async () => {
+    const target = store.state.priceChanges.find((pc) => pc.id === 'pc_approved')
+    if (target?.context) {
+      delete target.context.shopifyVariantId
+    }
+    const token = makeToken('user-admin')
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/apply', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+      },
+    })
+    const res = await applyRoute(req, paramsFor('pc_approved') as any)
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.error).toBe('MissingVariant')
+  })
+
+  it('surfaces Shopify connector API failures', async () => {
+    shopifyMocks.updatePrice.mockResolvedValueOnce({
+      externalId: 'variant_approved',
+      platform: 'shopify',
+      success: false,
+      error: 'API failure',
+      currency: 'USD',
+      updatedAt: new Date(),
+    })
+    const token = makeToken('user-admin')
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/apply', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+      },
+    })
+    const res = await applyRoute(req, paramsFor('pc_approved') as any)
+    expect(res.status).toBe(502)
+    const body = await res.json()
+    expect(body.error).toBe('ConnectorError')
   })
 
   it('surfaces connector errors', async () => {
@@ -495,8 +624,19 @@ describe('price changes API', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.item.status).toBe('ROLLED_BACK')
+    expect(body.item.connectorStatus.variantId).toBe('variant_applied')
+    expect(shopifyMocks.initializeShopifyConnector).toHaveBeenCalledTimes(1)
+    expect(shopifyMocks.updatePrice).toHaveBeenCalledWith(
+      expect.objectContaining({
+        externalId: 'variant_applied',
+        price: 4990,
+        currency: 'USD',
+      })
+    )
     const price = store.state.prices.find((p) => p.id === 'price1')
     expect(price?.amount).toBe(4990)
+    const rollbackPc = store.state.priceChanges.find((pc) => pc.id === 'pc_applied')
+    expect(rollbackPc?.connectorStatus?.variantId).toBe('variant_applied')
   })
 
   it('enforces admin role for apply', async () => {

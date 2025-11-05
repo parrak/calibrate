@@ -14,6 +14,9 @@ type ConnectorStatus = {
   target: string
   state: ConnectorState
   errorMessage?: string | null
+  variantId?: string | null
+  externalId?: string | null
+  updatedAt?: string | null
 }
 
 type PriceChangeDTO = {
@@ -261,10 +264,10 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
   )
 
   const connectorBadge = (status?: ConnectorStatus) => {
-    if (!status) return <span className="text-xs text-mute">—</span>
+    if (!status) return <span className="text-xs text-mute">-</span>
     return (
       <span className={clsx('px-2 py-0.5 rounded text-xs', CONNECTOR_COLOR[status.state])}>
-        {status.target} · {status.state}
+        {status.target} - {status.state}
       </span>
     )
   }
@@ -378,7 +381,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <input
             className="w-full sm:w-64 rounded-md border border-border bg-surface px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-            placeholder="Search by SKU or source…"
+            placeholder="Search by SKU or source..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
