@@ -82,10 +82,18 @@ export const authOptions: NextAuthOptions = {
             if (res.ok) {
               const data = await res.json() as { token: string }
               ;(token as { apiToken?: string }).apiToken = data.token
+            } else {
+              console.error('Failed to fetch API token:', res.status, await res.text().catch(() => ''))
             }
+          } else {
+            console.warn('Missing required env vars for API token:', {
+              hasApiBase: !!apiBase,
+              hasInternalToken: !!internal,
+              hasUserId: !!token.sub
+            })
           }
-        } catch {
-          // ignore; API token optional
+        } catch (err) {
+          console.error('Error fetching API token:', err)
         }
       }
       return token
