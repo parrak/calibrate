@@ -117,6 +117,9 @@ jobs:
     - name: Generate Prisma client
       run: pnpm db:generate
 
+    - name: Build monitor package
+      run: pnpm --filter @calibr/monitor build
+
     - name: Setup Turborepo
       uses: turborepo/cache-action@v1
       with:
@@ -232,6 +235,9 @@ jobs:
 
     - name: Generate Prisma client
       run: pnpm db:generate
+
+    - name: Build monitor package
+      run: pnpm --filter @calibr/monitor build
 
     - name: Setup Turborepo
       uses: turborepo/cache-action@v1

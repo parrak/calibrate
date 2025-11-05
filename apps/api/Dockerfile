@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
 
 WORKDIR /app
 
-# Copy root package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# Copy root package files and TypeScript config
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
 
 # Ensure Prisma fetches correct engines during install/generate (Debian OpenSSL 3)
 ENV PRISMA_DISABLE_POSTINSTALL_GENERATE=true
@@ -25,6 +25,9 @@ RUN pnpm install --frozen-lockfile
 
 # Generate Prisma client
 RUN cd packages/db && pnpm exec prisma generate
+
+# Build monitor package (required dependency for API)
+RUN pnpm --filter @calibr/monitor build
 
 # Build the API
 RUN cd apps/api && pnpm run build
