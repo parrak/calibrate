@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
+
+## Unreleased
+
+### Added
+- Marketing site dynamic assets generated via Next/OG:
+  - `apps/site/app/icon.tsx` (favicon)
+  - `apps/site/app/apple-icon.tsx` (Apple touch icon)
+  - `apps/site/app/opengraph-image.tsx` (Open Graph image)
+- Contact links to `contact@calibr.lat` on marketing hero and footer
+
+### Changed
+- Updated all site, docs, and standalone references from `app.calibr.lat` to `console.calibr.lat`
+- Kept static fallback `apps/site/public/favicon.svg`
+
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
 The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
