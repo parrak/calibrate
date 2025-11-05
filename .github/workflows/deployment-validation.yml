@@ -62,6 +62,9 @@ jobs:
     - name: Generate Prisma client
       run: pnpm db:generate
 
+    - name: Build monitor package
+      run: pnpm --filter @calibr/monitor build
+
     - name: TypeScript check
       run: pnpm type-check
 
@@ -117,6 +120,9 @@ jobs:
 
     - name: Generate Prisma client
       run: pnpm db:generate
+
+    - name: Build monitor package
+      run: pnpm --filter @calibr/monitor build
 
     - name: Run tests
       run: pnpm test

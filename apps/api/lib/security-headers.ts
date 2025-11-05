@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { withMonitoring, type MonitoringConfig } from './monitoring'
 
 export interface SecurityHeadersConfig {
   contentSecurityPolicy?: string
@@ -343,16 +344,22 @@ export function withCORS<TCtx = unknown>(
 }
 
 /**
- * Combined security middleware
+ * Combined security middleware with monitoring
  */
 export function withSecurity<TCtx = unknown>(
   handler: (req: NextRequest, ctx?: TCtx) => Promise<NextResponse>,
   options?: {
     securityHeaders?: SecurityHeadersConfig
     cors?: CORSConfig
+    monitoring?: MonitoringConfig | false
   }
 ) {
-  const securityHandler = withSecurityHeaders<TCtx>(handler, options?.securityHeaders)
+  // Apply monitoring first (wraps handler), then security headers, then CORS
+  const monitoredHandler = options?.monitoring !== false
+    ? withMonitoring<TCtx>(handler, options?.monitoring || undefined)
+    : handler
+
+  const securityHandler = withSecurityHeaders<TCtx>(monitoredHandler, options?.securityHeaders)
   return withCORS<TCtx>(securityHandler, options?.cors)
 }
 

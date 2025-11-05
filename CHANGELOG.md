@@ -7,6 +7,32 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **API: Request Monitoring & Performance Tracking**
+  - Integrated `@calibr/monitor` package for comprehensive request logging and observability
+  - Automatic request/response logging for all API routes using `withSecurity` middleware
+  - Performance metrics tracking per endpoint (response time, status codes)
+  - Error tracking with stack traces and context
+  - X-Request-ID header propagation for distributed tracing
+  - Request context extraction (project ID, user ID, IP address)
+  - Configurable logging levels and monitoring options
+  - Added 15 comprehensive tests covering all monitoring features
+  - No breaking changes - monitoring enabled by default, can be disabled per-route
+- **Marketing Site: Early Access Page**
+  - New early access page at `/early-access` with form embed placeholder for Tally.so integration
+  - Allows merchants to sign up for personalized onboarding
+  - Mobile-responsive design with dark theme styling
+
+- **Console: Guided Tour Component**
+  - New `GuidedTour` component for first-time user onboarding
+  - Shows welcome message with key feature highlights (Dashboard, Price Changes, Analytics)
+  - Uses localStorage to track if tour has been seen (shows once per browser)
+  - Ready to be integrated into project layout when needed
+
+- **Shared UI: Theme Tokens**
+  - New `packages/ui/theme.ts` module with centralized color and radius definitions
+  - Provides consistent styling tokens across marketing site and console
+  - Documents required CSS custom properties for theme implementation
+
 - API / Console: Shopify price change apply + rollback now call the live Shopify connector, recording variant metadata and surfacing connector errors with tests for the new flow.
 - **Console: AI Pricing Assistant (Copilot UI)**
   - Completed AI Copilot console UI to complement existing GPT-4 backend API
@@ -39,6 +65,14 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Color-coded status filter buttons for better UX (Pending=yellow, Applied=green, Failed=red, etc.)
   - Better error messages explaining CONSOLE_INTERNAL_TOKEN configuration requirements
   - Resolves "You reached the start of the range" error message
+
+- Console: Fixed UI contrast issues with black text on dark backgrounds
+  - Updated globals.css to use dark theme colors (#0B0B0C background, #E5E7EB text) matching the app design
+  - Added missing Tailwind color definitions (muted, muted-foreground, background, foreground, input, ring) for component compatibility
+  - Fixed all `bg-muted` references to use `bg-mute` throughout the codebase
+  - Added explicit `text-foreground` classes to Input and Textarea components for proper text visibility
+  - Fixed price-changes page hover states and ensured all interactive elements have proper contrast
+  - Resolves accessibility issues where text was invisible or hard to read on dark backgrounds
 
 - Amazon Connector (Agent B)
   - Initial SP-API pricing feed flow merged to master
