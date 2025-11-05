@@ -15,12 +15,18 @@ const config: Config = {
         border: '#1F2023',
         fg: '#E5E7EB',
         mute: '#9CA3AF',
+        muted: '#9CA3AF', // Alias for compatibility
         brand: '#00C2A8',
         'brand-700': '#00A693',
         accent: '#7A6FF0',
         danger: '#EF4444',
         warning: '#F59E0B',
-        success: '#10B981'
+        success: '#10B981',
+        'muted-foreground': '#9CA3AF', // For text-muted-foreground
+        background: '#0B0B0C',
+        foreground: '#E5E7EB',
+        input: '#1F2023',
+        ring: '#00C2A8',
       },
       borderRadius: {
         md: '12px',

@@ -393,7 +393,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         {!initialized && loading && (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-16 animate-pulse rounded-xl bg-muted/40" />
+              <div key={i} className="h-16 animate-pulse rounded-xl bg-mute/40" />
             ))}
           </div>
         )}
@@ -440,7 +440,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
               return (
                 <tr
                   key={item.id}
-                  className="cursor-pointer border-b border-border/60 text-sm transition hover:bg-muted/20"
+                  className="cursor-pointer border-b border-border/60 text-sm transition hover:bg-mute/20"
                   onClick={() => {
                     setActive(item)
                     setOpen(true)
