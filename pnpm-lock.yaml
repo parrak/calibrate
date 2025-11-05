@@ -75,6 +75,9 @@ importers:
       '@calibr/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@calibr/monitor':
+        specifier: workspace:*
+        version: link:../../packages/monitor
       '@calibr/platform-connector':
         specifier: workspace:*
         version: link:../../packages/platform-connector
