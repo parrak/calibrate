@@ -7,6 +7,16 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **API: Request Monitoring & Performance Tracking**
+  - Integrated `@calibr/monitor` package for comprehensive request logging and observability
+  - Automatic request/response logging for all API routes using `withSecurity` middleware
+  - Performance metrics tracking per endpoint (response time, status codes)
+  - Error tracking with stack traces and context
+  - X-Request-ID header propagation for distributed tracing
+  - Request context extraction (project ID, user ID, IP address)
+  - Configurable logging levels and monitoring options
+  - Added 15 comprehensive tests covering all monitoring features
+  - No breaking changes - monitoring enabled by default, can be disabled per-route
 - **Marketing Site: Early Access Page**
   - New early access page at `/early-access` with form embed placeholder for Tally.so integration
   - Allows merchants to sign up for personalized onboarding
