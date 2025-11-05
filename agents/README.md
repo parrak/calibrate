@@ -10,6 +10,8 @@ Folders
 - locks/: optional per-task lock files
 - plans/: short, human-readable plans per agent
 - context/: shared notes and summaries
+- learnings/: consolidated bug fixes, setup guides, troubleshooting, and deployment notes
+- history/: key completion summaries and milestones
 
 Files
 - tasks/inbox.jsonl: one JSON per line - unclaimed tasks
@@ -47,6 +49,13 @@ Conventions
 
 CLI helper
 - See bin/agents-cli.mjs for simple operations: list, claim, handoff, complete, log-event.
+
+Learnings & Documentation
+- Bug fixes: `learnings/bug-fixes/` - Critical bug fixes and resolutions
+- Setup guides: `learnings/setup-guides/` - Configuration and setup instructions
+- Deployment: `learnings/deployment/` - Deployment-related learnings
+- Troubleshooting: `learnings/troubleshooting/` - Common issues and solutions
+- History: `history/` - Key completion summaries and milestones
 
 Example: add a task
   node agents/bin/agents-cli.mjs new-task \
