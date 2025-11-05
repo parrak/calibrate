@@ -124,19 +124,6 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
     async ({ reset, cursor: cursorOverride }: { reset?: boolean; cursor?: string | undefined } = {}) => {
       if (loadingRef.current) return
 
-      // Check if session is loaded but token is missing
-      if (session && !token) {
-        setInitialized(true)
-        setError('Authentication failed. Please sign out and sign in again.')
-        setItems([])
-        return
-      }
-
-      // Wait for session to load
-      if (!session || !token) {
-        return
-      }
-
       loadingRef.current = true
       setLoading(true)
       if (reset) {
@@ -162,7 +149,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         const res = await fetch(`${API_BASE}/api/v1/price-changes?${params.toString()}`, {
           headers: {
             Accept: 'application/json',
-            Authorization: `Bearer ${token}`,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           cache: 'no-store',
         })
@@ -218,7 +205,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         setInitialized(true)
       }
     },
-    [slug, status, debouncedQ, token, session, fallbackRole, setMsg]
+    [slug, status, debouncedQ, token, fallbackRole, setMsg]
   )
 
   useEffect(() => {
