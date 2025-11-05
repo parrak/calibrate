@@ -26,7 +26,7 @@ export const POST = withSecurity(async (request: NextRequest) => {
     // Railway/internal deployments should set INTERNAL_API_BASE to avoid SSL issues
     const internalBase = process.env.INTERNAL_API_BASE;
     let integrationsUrl: string;
-    
+
     if (internalBase) {
       // Use provided internal base (e.g., http://localhost:PORT or internal service URL)
       integrationsUrl = `${internalBase}/api/integrations/shopify/sync`;
