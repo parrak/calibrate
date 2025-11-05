@@ -41,7 +41,8 @@ calibrate/
 |  |- connectors/
 |  |- security/
 |  |- ui/
-|  '- analytics/           # added by Claude Code
+|  |- analytics/          # added by Claude Code
+|  '- monitor/             # added by Agent A (Jan 3, 2025)
 '- apps/
    |- api/
    |- console/
@@ -71,14 +72,21 @@ Deliver and maintain the foundational developer environment, CI/CD, and deployme
    - Centralize secrets: `DATABASE_URL`, `WEBHOOK_SECRET`, `NEXT_PUBLIC_API_BASE`.
 4. Developer experience and observability
    - Create `pnpm dev:all` to run API plus Console plus Site concurrently.
-   - Add request logging (`@calibr/monitor`) and error tracing.
+   - ✅ **COMPLETE (Jan 3, 2025)** - Add request logging (`@calibr/monitor`) and error tracing.
+     - Created `@calibr/monitor` package with structured logging, performance monitoring, and error tracking
+     - Integrated into API via `withSecurity` middleware with automatic request/response logging
+     - Performance metrics tracking per endpoint (response time, status codes)
+     - X-Request-ID header propagation for distributed tracing
+     - Added 15 comprehensive tests covering all monitoring features
+     - CI updated to build monitor package before typecheck and tests
    - Generate OpenAPI or ts-rest types into `@calibr/types` for the frontend.
 
 ### Deliverables
-- One-step bootstrap (`pnpm setup`)
+- ✅ **COMPLETE (Jan 3, 2025)** - One-step bootstrap (`pnpm setup`) - Added pnpm setup script
 - Working preview deployments
 - Shared generated API types
 - CI pipeline validating migrations plus tests
+- ✅ **COMPLETE (Jan 3, 2025)** - Request monitoring and observability (`@calibr/monitor` package)
 
 ### Definition of Done
 - Development environment reproducible in under five minutes
@@ -109,10 +117,19 @@ Implement the full Price Changes MVP and core pricing workflow APIs while mainta
    - Supertest integration plus React Testing Library UI tests.
 
 ### Post-MVP Growth (v0.3 to v0.5)
-- Shopify connector write-back (REST Admin API).
+- ✅ **COMPLETE (Jan 3, 2025)** - Shopify connector write-back (REST Admin API).
+  - Integrated Shopify connector into price change apply flow (PR #19)
+  - Live Shopify connector now called when applying price changes
+  - Records variant metadata and surfaces connector errors with tests
+  - Fixed Shopify sync SSL error (PR #15)
 - Policy templates (max delta percent, floor or ceiling, daily limit).
 - Notifications (Slack plus email) on large deltas.
 - Connector retries plus idempotent event queue.
+- ✅ **COMPLETE (Jan 3, 2025)** - UX improvements (PR #23, #22)
+  - Early access page with guided tour component
+  - Shared theme tokens for consistent design system
+  - Fixed UI contrast issues with black text on dark backgrounds
+  - Enhanced monitoring middleware error handling
 
 ### Deliverables
 - End-to-end Price Changes flow functional.
@@ -163,14 +180,20 @@ Build Calibrate's intelligence layer including AI pricing suggestions, analytics
 - Inventory-aware pricing (merge stock signals).
 - Demand forecasting (Prophet or XGBoost).
 - Merchant Intelligence Suite (margin heatmaps, elasticity).
-- AI Copilot explaining price changes.
+- ✅ **COMPLETE (Jan 3, 2025)** - AI Copilot explaining price changes (PR #21, #17).
+  - Completed AI Copilot console UI with full-featured chat interface
+  - New AI Assistant page at `/p/[slug]/assistant` for natural language pricing queries
+  - AIExplanation component integrated into price change detail drawer
+  - Features: message history, suggested questions, data viewer, SQL inspection, follow-up suggestions
+  - Integrated with existing `/api/v1/assistant/query` endpoint
+  - Authentication-aware with graceful fallback messaging
 - CPQ extension for B2B self-serve quoting.
 
 ### Deliverables - All complete
 - AI engine plus analytics packages deployed with twenty-six passing tests.
 - Analytics dashboard live with key metrics.
 - Copilot query endpoint returning accurate insights.
-- Console UI integration complete.
+- ✅ **COMPLETE (Jan 3, 2025)** - Console UI integration complete - AI Copilot UI added with full chat interface.
 - Cron jobs scheduled for daily aggregation.
 
 ### Definition of Done - All criteria met
@@ -178,7 +201,31 @@ Build Calibrate's intelligence layer including AI pricing suggestions, analytics
 - Analytics jobs run nightly (Vercel cron configured).
 - Dashboard visualizations accurate within tolerance.
 
-### Recent Commits (January 2, 2025)
+### Recent Commits
+
+**January 3, 2025:**
+- `c9a3ee5` - PR #20: Infrastructure setup and monitor package (Agent A)
+  - Created `@calibr/monitor` package for request logging and performance tracking
+  - Integrated monitoring into API with `withSecurity` middleware
+  - Added pnpm setup script
+  - Fixed TypeScript build errors and CI issues
+- `e36587d` - PR #23: UX refresh features (Agent B)
+  - Added early access page, guided tour component, and shared theme tokens
+- `7f59b98` - PR #22: UI contrast fixes (Agent B)
+  - Fixed black text on dark backgrounds
+  - Enhanced monitoring middleware error handling
+- `b12ec15` - PR #21: AI Copilot UI completion (Agent C)
+  - Completed AI Assistant page with chat interface
+  - AIExplanation component integrated into price changes
+- `2aafafb` - PR #19: Shopify price apply integration (Agent B)
+  - Integrated Shopify connector into price change apply flow
+  - Live connector calls with variant metadata recording
+- `5d06413` - PR #18: Infrastructure setup monitor (part of #20)
+- `495626f` - PR #17: AI Copilot UI (part of #21)
+- `5c98a30` - PR #16: Documentation consolidation (Agent A)
+- `636981d` - PR #15: Shopify sync SSL error fix (Agent B)
+
+**January 2, 2025:**
 - `48b45e2` - AI Pricing Engine (nineteen tests).
 - `bf2f7fb` - Analytics Module (seven tests).
 - `d77ff61` - Policy Insight Copilot.
@@ -216,9 +263,9 @@ All agents commit to `develop`; Cursor manages preview deployments.
 
 | Phase | Lead Agent | Definition of Done | Status |
 |--------|-------------|--------------------|--------|
-| MVP (v0.2) | Codex | Price Changes workflow complete end-to-end | In progress |
-| Growth (v0.3 to v0.6) | Claude Code | AI Assist plus Analytics Dashboard live | Complete (Jan 2, 2025) |
-| Expansion (v0.7 to v1.0) | Shared | Inventory plus Forecasting plus Copilot complete | Ready to start |
+| MVP (v0.2) | Codex | Price Changes workflow complete end-to-end | ✅ **Near Complete** - Shopify connector write-back complete (Jan 3, 2025) |
+| Growth (v0.3 to v0.6) | Claude Code | AI Assist plus Analytics Dashboard live | ✅ **Complete** (Jan 2-3, 2025) - AI Copilot UI added (Jan 3) |
+| Expansion (v0.7 to v1.0) | Shared | Inventory plus Forecasting plus Copilot complete | 🔄 **In Progress** - AI Copilot UI complete (Jan 3, 2025) |
 
 ---
 
