@@ -19,6 +19,18 @@ export function GuidedTour({ projectSlug }: GuidedTourProps) {
     }
   }, [])
 
+  // Handle ESC key to dismiss
+  useEffect(() => {
+    if (!show) return
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleDismiss()
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [show])
+
   const handleDismiss = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('tourSeen', '1')
