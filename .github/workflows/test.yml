@@ -36,6 +36,9 @@ jobs:
     - name: Generate Prisma client
       run: pnpm db:generate
 
+    - name: Build monitor package
+      run: pnpm --filter @calibr/monitor build
+
     - name: Run TypeScript type checks
       run: pnpm type-check
       continue-on-error: false

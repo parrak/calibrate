@@ -7,6 +7,17 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **API: Request Monitoring & Performance Tracking**
+  - Integrated `@calibr/monitor` package for comprehensive request logging and observability
+  - Automatic request/response logging for all API routes using `withSecurity` middleware
+  - Performance metrics tracking per endpoint (response time, status codes)
+  - Error tracking with stack traces and context
+  - X-Request-ID header propagation for distributed tracing
+  - Request context extraction (project ID, user ID, IP address)
+  - Configurable logging levels and monitoring options
+  - Added 15 comprehensive tests covering all monitoring features
+  - No breaking changes - monitoring enabled by default, can be disabled per-route
+
 - API / Console: Shopify price change apply + rollback now call the live Shopify connector, recording variant metadata and surfacing connector errors with tests for the new flow.
 - **Console: AI Pricing Assistant (Copilot UI)**
   - Completed AI Copilot console UI to complement existing GPT-4 backend API
