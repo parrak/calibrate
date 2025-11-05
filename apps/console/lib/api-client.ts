@@ -104,26 +104,39 @@ export const catalogApi = {
 // Competitors API
 export const competitorsApi = {
   list: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
-    return fetchApi<Array<Record<string, unknown>>>(`/api/v1/competitors?projectSlug=${projectSlug}`)
+    const res = await fetchApi<{ competitors: Array<Record<string, unknown>> }>(`/api/v1/competitors?projectSlug=${projectSlug}`)
+    return res.competitors || []
   },
 
   get: async (id: string) => {
-    return fetchApi<Record<string, unknown>>(`/api/v1/competitors/${id}`)
+    const res = await fetchApi<{ competitor: Record<string, unknown> }>(`/api/v1/competitors/${id}`)
+    return res.competitor
   },
 
   getProducts: async (id: string) => {
-    return fetchApi<Array<Record<string, unknown>>>(`/api/v1/competitors/${id}/products`)
+    const res = await fetchApi<{ products: Array<Record<string, unknown>> }>(`/api/v1/competitors/${id}/products`)
+    return res.products || []
   },
 
-  monitor: async (id: string): Promise<Record<string, unknown>> => {
-    return fetchApi<Record<string, unknown>>(`/api/v1/competitors/monitor`, {
+  monitor: async (id: string, projectSlug?: string): Promise<Record<string, unknown>> => {
+    const body: Record<string, string> = {}
+    if (id) {
+      body.competitorId = id
+    }
+    if (projectSlug) {
+      body.projectSlug = projectSlug
+    }
+
+    const res = await fetchApi<{ results: Array<Record<string, unknown>> }>(`/api/v1/competitors/monitor`, {
       method: 'POST',
-      body: JSON.stringify({ competitorId: id }),
+      body: JSON.stringify(body),
     })
+    return { results: res.results || [] }
   },
 
   getRules: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
-    return fetchApi<Array<Record<string, unknown>>>(`/api/v1/competitors/rules?projectSlug=${projectSlug}`)
+    const res = await fetchApi<{ rules: Array<Record<string, unknown>> }>(`/api/v1/competitors/rules?projectSlug=${projectSlug}`)
+    return res.rules || []
   },
 }
 
