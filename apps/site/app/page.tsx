@@ -15,25 +15,25 @@ export default function Home() {
               Now in Production
             </div>
             <h1 className="text-5xl md:text-6xl font-bold tracking-tight leading-tight">
-              Real-time pricing precision
+              Dynamic pricing with guardrails
             </h1>
             <p className="mt-6 text-xl text-mute max-w-xl leading-relaxed">
-              Calibr is the intelligent pricing engine with guardrails, human review, and instant rollback.
-              Create a project, connect your catalog, and ship safe, explained price changes.
+              Stop editing spreadsheets. Calibrate automates safe price changes with AI guardrails,
+              human oversight, and instant rollback. From strategy to execution in minutes.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <a
                 href="https://console.calibr.lat/login"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-brand text-black font-semibold hover:bg-brand/90 transition-all shadow-lg shadow-brand/25 hover:shadow-xl hover:shadow-brand/30 hover:-translate-y-0.5"
               >
-                Get Started Free
+                Try the Console
                 <span className="ml-2">→</span>
               </a>
               <a
-                href="https://docs.calibr.lat"
+                href="/early-access"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-lg border-2 border-border text-fg font-semibold hover:bg-surface hover:border-fg/20 transition-all"
               >
-                View Documentation
+                Join Early Access
               </a>
             </div>
             <p className="mt-3 text-sm text-mute">
@@ -48,8 +48,19 @@ export default function Home() {
           </div>
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-brand/20 to-purple-500/20 rounded-2xl blur-3xl"></div>
-            <div className="relative bg-surface/80 backdrop-blur-sm border border-border rounded-2xl p-6 shadow-2xl">
-              <CodeTabs />
+            <div className="relative bg-surface/80 backdrop-blur-sm border border-border rounded-2xl overflow-hidden shadow-2xl">
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                poster="/demo-poster.png"
+                className="w-full h-auto"
+                aria-label="Calibrate console demo showing price changes and guardrails"
+              >
+                <source src="/demo.mp4" type="video/mp4" />
+                <img src="/demo.gif" alt="Calibrate demo showing price management workflow" />
+              </video>
             </div>
           </div>
         </div>
@@ -84,6 +95,26 @@ export default function Home() {
           />
         </div>
       </Section>
+
+      {/* Testimonials */}
+      <section className="mx-auto max-w-6xl px-6 py-8">
+        <div className="rounded-xl border border-border bg-surface/40 backdrop-blur-sm p-8">
+          <div className="grid md:grid-cols-3 gap-8">
+            <blockquote className="text-sm text-mute leading-relaxed">
+              <p className="mb-3">"Finally stopped editing CSVs for every sale."</p>
+              <cite className="text-fg font-medium not-italic">— Shopify Merchant</cite>
+            </blockquote>
+            <blockquote className="text-sm text-mute leading-relaxed">
+              <p className="mb-3">"Guardrails let us automate without fear."</p>
+              <cite className="text-fg font-medium not-italic">— Agency Owner</cite>
+            </blockquote>
+            <blockquote className="text-sm text-mute leading-relaxed">
+              <p className="mb-3">"Explainable AI made approvals a breeze."</p>
+              <cite className="text-fg font-medium not-italic">— DTC Brand</cite>
+            </blockquote>
+          </div>
+        </div>
+      </section>
 
       {/* How it works */}
       <Section id="how" title="How it works">
