@@ -122,7 +122,7 @@ export class Logger {
     // This can be extended with a plugin system
   }
 
-  error(message: string, error?: Error, context?: Partial<LogEntry) {
+  error(message: string, error?: Error, context?: Partial<LogEntry>) {
     this.log(LogLevel.ERROR, message, {
       ...context,
       error: error ? {
