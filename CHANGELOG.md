@@ -17,6 +17,21 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Configurable logging levels and monitoring options
   - Added 15 comprehensive tests covering all monitoring features
   - No breaking changes - monitoring enabled by default, can be disabled per-route
+- **Marketing Site: Early Access Page**
+  - New early access page at `/early-access` with form embed placeholder for Tally.so integration
+  - Allows merchants to sign up for personalized onboarding
+  - Mobile-responsive design with dark theme styling
+
+- **Console: Guided Tour Component**
+  - New `GuidedTour` component for first-time user onboarding
+  - Shows welcome message with key feature highlights (Dashboard, Price Changes, Analytics)
+  - Uses localStorage to track if tour has been seen (shows once per browser)
+  - Ready to be integrated into project layout when needed
+
+- **Shared UI: Theme Tokens**
+  - New `packages/ui/theme.ts` module with centralized color and radius definitions
+  - Provides consistent styling tokens across marketing site and console
+  - Documents required CSS custom properties for theme implementation
 
 - API / Console: Shopify price change apply + rollback now call the live Shopify connector, recording variant metadata and surfacing connector errors with tests for the new flow.
 - **Console: AI Pricing Assistant (Copilot UI)**
