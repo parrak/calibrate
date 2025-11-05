@@ -358,7 +358,7 @@ export function withSecurity<TCtx = unknown>(
   const monitoredHandler = options?.monitoring !== false
     ? withMonitoring<TCtx>(handler, options?.monitoring || undefined)
     : handler
-  
+
   const securityHandler = withSecurityHeaders<TCtx>(monitoredHandler, options?.securityHeaders)
   return withCORS<TCtx>(securityHandler, options?.cors)
 }

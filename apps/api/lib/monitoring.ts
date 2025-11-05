@@ -8,7 +8,7 @@ import {
   createLogger,
   createRequestLogger,
   type Logger,
-  type RequestLogger,
+  LogLevel,
   recordPerformanceMetric,
   recordErrorMetric,
   type PerformanceMetric,
@@ -41,12 +41,17 @@ let apiLogger: Logger | null = null
 
 function getLogger(config?: MonitoringConfig): Logger {
   if (!apiLogger) {
+    let logLevel: LogLevel | undefined
+    if (config?.logLevel) {
+      logLevel = config.logLevel === 'error' ? LogLevel.ERROR :
+        config.logLevel === 'warn' ? LogLevel.WARN :
+        config.logLevel === 'info' ? LogLevel.INFO :
+        config.logLevel === 'debug' ? LogLevel.DEBUG : undefined
+    }
     apiLogger = createLogger({
       service: config?.serviceName || defaultMonitoringConfig.serviceName,
       environment: process.env.NODE_ENV,
-      logLevel: config?.logLevel ? 
-        (config.logLevel as 'error' | 'warn' | 'info' | 'debug') : 
-        undefined
+      logLevel
     })
   }
   return apiLogger
@@ -65,7 +70,7 @@ function extractRequestContext(req: NextRequest): {
   userAgent?: string
   ip?: string
 } {
-  const requestId = req.headers.get('x-request-id') || 
+  const requestId = req.headers.get('x-request-id') ||
     `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
   const projectId = req.headers.get('x-calibr-project') || undefined
   const userId = req.headers.get('x-user-id') || undefined
@@ -164,9 +169,12 @@ export function withMonitoring<TCtx = unknown>(
     try {
       // Log request start
       if (monitoringConfig.enableLogging) {
+        const queryParams = req.nextUrl?.searchParams
+          ? Object.fromEntries(req.nextUrl.searchParams.entries())
+          : {}
         requestLogger.info(`Request started: ${context.method} ${context.pathname}`, {
           metadata: {
-            query: Object.fromEntries(req.nextUrl.searchParams.entries()),
+            query: queryParams,
             headers: {
               'content-type': req.headers.get('content-type'),
               'accept': req.headers.get('accept')
@@ -193,25 +201,28 @@ export function withMonitoring<TCtx = unknown>(
       // Log request completion
       if (monitoringConfig.enableLogging) {
         const responseTime = Date.now() - startTime
-        const logLevel = finalResponse.status >= 500 ? 'error' :
-          finalResponse.status >= 400 ? 'warn' : 'info'
-        
-        requestLogger[logLevel](
-          `Request completed: ${context.method} ${context.pathname} - ${finalResponse.status} (${responseTime}ms)`,
-          {
-            metadata: {
-              statusCode: finalResponse.status,
-              responseTime
-            }
+        const logMessage = `Request completed: ${context.method} ${context.pathname} - ${finalResponse.status} (${responseTime}ms)`
+        const logContext = {
+          metadata: {
+            statusCode: finalResponse.status,
+            responseTime
           }
-        )
+        }
+
+        if (finalResponse.status >= 500) {
+          requestLogger.error(logMessage, undefined, logContext)
+        } else if (finalResponse.status >= 400) {
+          requestLogger.warn(logMessage, logContext)
+        } else {
+          requestLogger.info(logMessage, logContext)
+        }
       }
 
       return finalResponse
     } catch (error) {
       const errorObj = error instanceof Error ? error : new Error(String(error))
-      const statusCode = errorObj instanceof Error && 'statusCode' in errorObj 
-        ? (errorObj as { statusCode?: number }).statusCode || 500 
+      const statusCode = errorObj instanceof Error && 'statusCode' in errorObj
+        ? (errorObj as { statusCode?: number }).statusCode || 500
         : 500
 
       // Record error metric
