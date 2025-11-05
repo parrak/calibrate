@@ -116,10 +116,14 @@ jobs:
     - name: Build monitor package
       run: pnpm --filter @calibr/monitor build
 
-    - name: Setup Turborepo
-      uses: turborepo/cache-action@v1
+    - name: Cache Turborepo
+      uses: actions/cache@v4
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        path: .turbo
+        key: turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('turbo.json') }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+          turbo-${{ runner.os }}-
 
     - name: Run TypeScript type checks
       run: pnpm type-check
@@ -178,10 +182,14 @@ jobs:
     - name: Build monitor package
       run: pnpm --filter @calibr/monitor build
 
-    - name: Setup Turborepo
-      uses: turborepo/cache-action@v1
+    - name: Cache Turborepo
+      uses: actions/cache@v4
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        path: .turbo
+        key: turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('turbo.json') }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+          turbo-${{ runner.os }}-
 
     - name: Run linter
       run: pnpm lint
@@ -240,10 +248,14 @@ jobs:
     - name: Build monitor package
       run: pnpm --filter @calibr/monitor build
 
-    - name: Setup Turborepo
-      uses: turborepo/cache-action@v1
+    - name: Cache Turborepo
+      uses: actions/cache@v4
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        path: .turbo
+        key: turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('turbo.json') }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+          turbo-${{ runner.os }}-
 
     - name: Run unit and integration tests
       run: pnpm test
