@@ -7,6 +7,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- API / Console: Shopify price change apply + rollback now call the live Shopify connector, recording variant metadata and surfacing connector errors with tests for the new flow.
 - **Console: AI Pricing Assistant (Copilot UI)**
   - Completed AI Copilot console UI to complement existing GPT-4 backend API
   - New AI Assistant page with full-featured chat interface for natural language pricing queries

@@ -10,6 +10,23 @@ Each agent works independently but adheres to shared contracts, schemas, and mil
 
 ---
 
+## 📚 Documentation Structure
+
+**Key Documentation Locations:**
+- **Learnings & Bug Fixes:** `agents/learnings/` - Consolidated learnings, bug fixes, setup guides
+- **Agent History:** `agents/history/` - Key completion summaries and milestones
+- **Agent Plans:** `agents/plans/` - Per-agent plans and tasks
+- **Context Notes:** `agents/context/notes.md` - Shared context and summaries
+- **Task Management:** `agents/tasks/` - Task inbox, in-progress, and done files
+
+**Quick Reference:**
+- Bug fixes: `agents/learnings/bug-fixes/`
+- Setup guides: `agents/learnings/setup-guides/`
+- Deployment: `agents/learnings/deployment/`
+- Troubleshooting: `agents/learnings/troubleshooting/`
+
+---
+
 ## Project Overview
 
 Calibrate is an AI-ready pricing automation platform for commerce systems. It synchronizes price data across marketplaces (Shopify, Amazon, and others), applies guardrail policies, and progressively evolves toward AI-driven pricing intelligence.

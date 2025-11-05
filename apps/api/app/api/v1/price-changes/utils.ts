@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma, ProjectRole, type PriceChange, type Project, type Membership } from '@calibr/db'
+import { prisma, Prisma, ProjectRole, type Membership, type PriceChange, type Project } from '@calibr/db'
 import { authSecurityManager, type AuthContext } from '@/lib/auth-security'
 
 export type ConnectorState = 'QUEUED' | 'SYNCING' | 'SYNCED' | 'ERROR'
@@ -28,6 +28,9 @@ export type PriceChangeDTO = {
     target: 'shopify' | 'amazon' | string
     state: ConnectorState
     errorMessage?: string | null
+    variantId?: string | null
+    externalId?: string | null
+    updatedAt?: string | null
   }
 }
 
@@ -144,6 +147,14 @@ export function toPriceChangeDTO(pc: PriceChange): PriceChangeDTO {
   }
 }
 
+function extractString(value: unknown): string | null {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length ? trimmed : null
+  }
+  return null
+}
+
 function normalizeConnectorStatus(raw: unknown) {
   if (!raw || typeof raw !== 'object') return undefined
 
@@ -160,10 +171,20 @@ function normalizeConnectorStatus(raw: unknown) {
       : typeof rawObj.message === 'string'
       ? rawObj.message
       : undefined
+
+  const metadata = rawObj.metadata && typeof rawObj.metadata === 'object' ? (rawObj.metadata as Record<string, unknown>) : undefined
+  const variantId =
+    extractString(rawObj.variantId) ?? extractString(metadata?.variantId) ?? extractString(metadata?.externalId)
+  const externalId = extractString(rawObj.externalId) ?? extractString(metadata?.externalId)
+  const updatedAt = extractString(rawObj.updatedAt)
+
   return {
     target,
     state,
     errorMessage: typeof errorMessage === 'undefined' ? null : errorMessage,
+    variantId: typeof variantId === 'undefined' ? null : variantId,
+    externalId: typeof externalId === 'undefined' ? null : externalId,
+    updatedAt: typeof updatedAt === 'undefined' ? null : updatedAt,
   }
 }
 
@@ -187,4 +208,53 @@ export async function getPCForProject(id: string, projectSlug: string) {
   const project = await prisma().project.findUnique({ where: { id: pc.projectId } })
   if (!project || project.slug !== projectSlug) return { error: 'Forbidden' as const }
   return { pc, project }
+}
+
+export function resolveShopifyVariantId(pc: PriceChange): string | null {
+  const tryValue = (value: unknown): string | null => extractString(value)
+
+  const ctx = (pc.context ?? undefined) as Record<string, unknown> | undefined
+  if (ctx) {
+    const directKeys = [
+      'shopifyVariantId',
+      'variantId',
+      'connectorVariantId',
+      'externalVariantId',
+      'shopify_variant_id',
+    ]
+    for (const key of directKeys) {
+      const value = ctx[key]
+      const resolved = tryValue(value)
+      if (resolved) return resolved
+    }
+
+    const nestedShopify = ctx.shopify
+    if (nestedShopify && typeof nestedShopify === 'object') {
+      const resolved = tryValue((nestedShopify as Record<string, unknown>).variantId)
+      if (resolved) return resolved
+    }
+  }
+
+  const connectorStatus = pc.connectorStatus as Prisma.JsonValue | null | undefined
+  if (connectorStatus && typeof connectorStatus === 'object' && connectorStatus !== null) {
+    const statusObj = connectorStatus as Record<string, unknown>
+    const direct = tryValue(statusObj.variantId)
+    if (direct) return direct
+
+    const metadata = statusObj.metadata
+    if (metadata && typeof metadata === 'object') {
+      const resolved =
+        tryValue((metadata as Record<string, unknown>).variantId) ??
+        tryValue((metadata as Record<string, unknown>).externalId)
+      if (resolved) return resolved
+    }
+  }
+
+  return null
+}
+
+export async function getActiveShopifyIntegration(projectId: string) {
+  return prisma().shopifyIntegration.findFirst({
+    where: { projectId, isActive: true },
+  })
 }
