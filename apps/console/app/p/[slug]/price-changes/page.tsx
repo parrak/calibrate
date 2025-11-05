@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import clsx from 'clsx'
 import { Button, Drawer, DiffCard, EmptyState, JSONView, PolicyList, StatusPill, useToast } from '@/lib/components'
 import { SimpleTable as Table } from '@/lib/components/SimpleTable'
+import { AIExplanation } from './components/AIExplanation'
 
 type ConnectorState = 'QUEUED' | 'SYNCING' | 'SYNCED' | 'ERROR'
 type PriceChangeStatus = 'PENDING' | 'APPROVED' | 'APPLIED' | 'REJECTED' | 'FAILED' | 'ROLLED_BACK'
@@ -543,6 +544,16 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
             )}
 
             <PolicyList checks={active.policyResult?.checks ?? []} />
+
+            <AIExplanation
+              priceChangeId={active.id}
+              skuCode={(active.context?.skuCode as string | undefined) || undefined}
+              fromAmount={active.fromAmount}
+              toAmount={active.toAmount}
+              currency={active.currency}
+              projectSlug={slug}
+              token={token}
+            />
 
             <div>
               <div className="mb-2 text-sm font-medium">Context</div>
