@@ -12,30 +12,84 @@ import { generateSQL } from '@/lib/openai'
 
 export const runtime = 'nodejs'
 
+/**
+ * Convert BigInt values to Number for JSON serialization
+ * PostgreSQL returns BigInt for COUNT, SUM, etc. which can't be JSON.stringify'd
+ */
+function convertBigIntToNumber(obj: unknown): unknown {
+  if (obj === null || obj === undefined) {
+    return obj
+  }
+
+  if (typeof obj === 'bigint') {
+    return Number(obj)
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigIntToNumber)
+  }
+
+  if (typeof obj === 'object') {
+    const converted: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(obj)) {
+      converted[key] = convertBigIntToNumber(value)
+    }
+    return converted
+  }
+
+  return obj
+}
+
 const DATABASE_SCHEMA = `
 Table: Sku
 - id: String (PK)
-- projectId: String (FK)
-- sku: String
+- productId: String (FK to Product)
 - name: String
-- priceAmount: Int (in cents)
+- code: String (SKU code)
+- attributes: JSON (may contain cost, etc.)
+- status: Enum (DRAFT, ACTIVE, ARCHIVED)
+
+Table: Price
+- id: String (PK)
+- skuId: String (FK to Sku)
 - currency: String
-- cost: Int (in cents)
+- amount: Int (in cents)
+- status: Enum (DRAFT, ACTIVE, ARCHIVED)
+- billingCycle: String
+- unit: String
+
+Table: Product
+- id: String (PK)
+- tenantId: String
+- projectId: String (FK to Project)
+- name: String
+- code: String (Product code)
+- status: Enum
 
 Table: PriceChange
 - id: String (PK)
-- projectId: String (FK)
-- skuId: String (FK)
+- tenantId: String
+- projectId: String (FK to Project)
+- skuId: String (FK to Sku)
 - fromAmount: Int (cents)
 - toAmount: Int (cents)
-- status: Enum(PENDING, APPROVED, REJECTED)
+- currency: String
+- status: Enum (PENDING, APPROVED, APPLIED, REJECTED, FAILED, ROLLED_BACK)
 - createdAt: Timestamp
 - policyResult: JSON
+- context: JSON
 
 Table: Project
 - id: String (PK)
+- tenantId: String
 - slug: String
 - name: String
+
+Important:
+- To query SKUs, JOIN with Product table to filter by projectId
+- Prices are in separate Price table, JOIN on Price.skuId = Sku.id
+- Cost is stored in Sku.attributes JSON field, access with: (attributes->>'cost')::int
+- Always filter by projectId through Product table for Sku queries
 `
 
 /**
@@ -120,7 +174,10 @@ async function handleAIQuery(
 
   try {
     // Execute query
-    const data = await prisma().$queryRawUnsafe(secureSQL)
+    const rawData = await prisma().$queryRawUnsafe(secureSQL)
+
+    // Convert BigInt to Number for JSON serialization
+    const data = convertBigIntToNumber(rawData)
 
     return {
       answer: explanation,
