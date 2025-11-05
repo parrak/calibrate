@@ -26,7 +26,8 @@
       "@calibr/connectors/*": ["packages/connectors/*"],
       "@calibr/amazon-connector/*": ["packages/amazon-connector/*"],
       "@calibr/platform-connector/*": ["packages/platform-connector/src/*"],
-      "@calibr/ui/*": ["packages/ui/*"]
+      "@calibr/ui/*": ["packages/ui/*"],
+      "@calibr/monitor/*": ["packages/monitor/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
