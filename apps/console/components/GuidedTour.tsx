@@ -19,6 +19,18 @@ export function GuidedTour({ projectSlug }: GuidedTourProps) {
     }
   }, [])
 
+  // Handle ESC key to dismiss
+  useEffect(() => {
+    if (!show) return
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleDismiss()
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [show])
+
   const handleDismiss = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('tourSeen', '1')
@@ -29,8 +41,8 @@ export function GuidedTour({ projectSlug }: GuidedTourProps) {
   if (!show) return null
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-2xl rounded-2xl border border-border bg-surface shadow-2xl">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" onClick={handleDismiss}>
+      <div className="w-full max-w-2xl rounded-2xl border border-border bg-surface shadow-2xl relative z-[10000]" onClick={(e) => e.stopPropagation()}>
         <div className="p-8">
           <div className="flex items-start justify-between mb-6">
             <div>
