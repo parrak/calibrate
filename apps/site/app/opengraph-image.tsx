@@ -22,7 +22,7 @@ export default function OpenGraphImage() {
             position: 'absolute',
             inset: 0,
             backgroundImage:
-              'radial-gradient(800px 500px at 15% 10%, rgba(124,77,255,0.25), transparent), radial-gradient(800px 500px at 85% 90%, rgba(0,229,168,0.25), transparent)',
+              'radial-gradient(circle at 15% 10%, rgba(124,77,255,0.25) 0%, transparent 60%), radial-gradient(circle at 85% 90%, rgba(0,229,168,0.25) 0%, transparent 60%)',
           }}
         />
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
