@@ -1,5 +1,9 @@
 name: Lockfile Check
 
+# NOTE: This workflow is now redundant - lockfile check is included in deployment-validation.yml
+# Keeping for backwards compatibility and manual triggering
+# Consider removing this workflow after verifying deployment-validation includes lockfile check
+
 on:
   push:
     branches: [ master ]
