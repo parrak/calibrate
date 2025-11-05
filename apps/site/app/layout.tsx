@@ -2,31 +2,60 @@ import './globals.css'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Calibr — Real-time Pricing Precision',
-  description: 'The intelligent pricing engine with guardrails, human review, and instant rollback.',
+  title: 'Calibrate — Dynamic Pricing with Guardrails',
+  description: 'Stop editing spreadsheets. Calibrate automates safe price changes with AI guardrails, human oversight, and instant rollback. From strategy to execution in minutes.',
   metadataBase: new URL('https://calibr.lat'),
+  keywords: ['dynamic pricing', 'price automation', 'AI pricing', 'pricing guardrails', 'e-commerce pricing', 'Shopify pricing'],
+  authors: [{ name: 'Porter Labs' }],
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
     ],
   },
   openGraph: {
-    title: 'Calibr — Real-time Pricing Precision',
-    description: 'Create a project, connect your catalog, ship guarded price changes.',
+    type: 'website',
+    locale: 'en_US',
+    title: 'Calibrate — Dynamic Pricing with Guardrails',
+    description: 'Automate safe price changes with AI guardrails, human oversight, and instant rollback.',
     url: 'https://calibr.lat',
-    images: '/og-image.png',
+    siteName: 'Calibrate',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Calibrate - Dynamic Pricing Platform',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Calibr',
-    description: 'Real-time pricing precision for modern commerce.',
-    images: '/og-image.png',
+    title: 'Calibrate — Dynamic Pricing with Guardrails',
+    description: 'Automate safe price changes with AI guardrails, human oversight, and instant rollback.',
+    images: ['/og-image.png'],
+    creator: '@porterlabs',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preload" as="video" href="/demo.mp4" type="video/mp4" />
+        <link rel="preconnect" href="https://console.calibr.lat" />
+        <link rel="preconnect" href="https://docs.calibr.lat" />
+      </head>
       <body className="bg-bg text-fg">
         <header className="border-b border-border">
           <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
