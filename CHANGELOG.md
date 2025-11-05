@@ -7,6 +7,18 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Marketing Site: Icons & Social Previews**
+  - Dynamic Next/OG assets for runtime generation:
+    - `apps/site/app/icon.tsx` (favicon)
+    - `apps/site/app/apple-icon.tsx` (Apple touch icon)
+    - `apps/site/app/opengraph-image.tsx` (Open Graph image)
+  - Added Contact links to `contact@calibr.lat` (hero + footer)
+
+### Changed
+- Marketing site, docs, and standalone app links updated from `https://app.calibr.lat` to `https://console.calibr.lat`
+- Kept static fallback `apps/site/public/favicon.svg`
+
+### Added
 - **API: Request Monitoring & Performance Tracking**
   - Integrated `@calibr/monitor` package for comprehensive request logging and observability
   - Automatic request/response logging for all API routes using `withSecurity` middleware
