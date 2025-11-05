@@ -50,6 +50,23 @@ See [PHASE3_ROADMAP.md](PHASE3_ROADMAP.md) for detailed roadmap and architecture
 
 ## Quick Start
 
+### Option 1: One-Step Setup (Recommended)
+
+```bash
+pnpm setup
+```
+
+This will automatically:
+- Check prerequisites (Node.js, pnpm, Docker)
+- Start the database (Docker Compose)
+- Create environment files
+- Install dependencies
+- Generate Prisma client
+- Run migrations
+- Optionally seed the database
+
+### Option 2: Manual Setup
+
 ### 1. Prerequisites
 
 - Node.js 20+
@@ -69,11 +86,8 @@ createdb calibr
 ### 3. Environment Setup
 
 ```bash
-# Copy environment files
-cp .env.example .env
-cp packages/db/.env.example packages/db/.env
-cp apps/api/.env.local.example apps/api/.env.local
-cp apps/console/.env.local.example apps/console/.env.local
+# Copy environment files (if they exist)
+# Or create them manually with the required variables
 
 # Update DATABASE_URL in all .env files
 
