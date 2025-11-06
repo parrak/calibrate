@@ -9,21 +9,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: '#0B0B0C',
-        surface: '#141416',
-        border: '#1F2023',
-        fg: '#E5E7EB',
-        mute: '#9CA3AF',
-        brand: '#00C2A8',
-        'brand-700': '#00A693',
-        accent: '#7A6FF0',
+        bg: 'var(--bg)',
+        surface: 'var(--surface)',
+        border: 'var(--border)',
+        fg: 'var(--fg)',
+        mute: 'var(--mute)',
+        brand: 'var(--brand)',
+        accent: 'var(--accent)',
         danger: '#EF4444',
         warning: '#F59E0B',
         success: '#10B981'
       },
+      borderColor: {
+        DEFAULT: 'var(--border)',
+      },
       borderRadius: {
         md: '12px',
-        xl: '20px'
+        xl: 'var(--radius-xl)',
+        '2xl': 'var(--radius-2xl)',
       },
       fontFamily: {
         sans: "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'",
