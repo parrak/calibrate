@@ -176,17 +176,17 @@ async function gatherWeekMetrics(projectId: string, start: Date, end: Date) {
   ])
 
   const totalPriceChanges = priceChanges.length
-  const approvedCount = priceChanges.filter((pc) => pc.status === 'APPROVED' || pc.status === 'APPLIED').length
+  const approvedCount = priceChanges.filter((pc: { status: string }) => pc.status === 'APPROVED' || pc.status === 'APPLIED').length
   const approvalRate = totalPriceChanges > 0 ? (approvedCount / totalPriceChanges) * 100 : 0
 
-  const priceDeltas = priceChanges.map((pc) => Math.abs(pc.toAmount - pc.fromAmount))
+  const priceDeltas = priceChanges.map((pc: { toAmount: number; fromAmount: number }) => Math.abs(pc.toAmount - pc.fromAmount))
   const averagePriceChange = priceDeltas.length > 0
-    ? priceDeltas.reduce((sum, delta) => sum + delta, 0) / priceDeltas.length
+    ? priceDeltas.reduce((sum: number, delta: number) => sum + delta, 0) / priceDeltas.length
     : 0
 
   // Calculate average margin
   const skusWithMargin = skus
-    .map((s) => {
+    .map((s: typeof skus[0]) => {
       const price = s.Price[0]?.amount
       const cost = s.attributes && typeof s.attributes === 'object' && 'cost' in s.attributes
         ? (s.attributes as any).cost
@@ -194,10 +194,10 @@ async function gatherWeekMetrics(projectId: string, start: Date, end: Date) {
       if (!price || !cost || cost <= 0) return null
       return ((price - cost) / cost) * 100
     })
-    .filter((m): m is number => m !== null)
+    .filter((m: number | null): m is number => m !== null)
 
   const averageMargin = skusWithMargin.length > 0
-    ? skusWithMargin.reduce((sum, m) => sum + m, 0) / skusWithMargin.length
+    ? skusWithMargin.reduce((sum: number, m: number) => sum + m, 0) / skusWithMargin.length
     : 0
 
   return {

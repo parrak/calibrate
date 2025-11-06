@@ -137,18 +137,18 @@ async function generateSnapshot(
   // Calculate price change metrics
   const priceChangeMetrics = {
     total: priceChanges.length,
-    approved: priceChanges.filter((pc) => pc.status === 'APPROVED').length,
-    rejected: priceChanges.filter((pc) => pc.status === 'REJECTED').length,
-    pending: priceChanges.filter((pc) => pc.status === 'PENDING').length,
-    applied: priceChanges.filter((pc) => pc.status === 'APPROVED').length, // Simplified
+    approved: priceChanges.filter((pc: { status: string }) => pc.status === 'APPROVED').length,
+    rejected: priceChanges.filter((pc: { status: string }) => pc.status === 'REJECTED').length,
+    pending: priceChanges.filter((pc: { status: string }) => pc.status === 'PENDING').length,
+    applied: priceChanges.filter((pc: { status: string }) => pc.status === 'APPROVED').length, // Simplified
   }
 
   // Calculate pricing metrics
   const prices = skus
-    .map((s) => s.Price[0]?.amount)
-    .filter((p): p is number => p !== undefined && p !== null)
+    .map((s: typeof skus[0]) => s.Price[0]?.amount)
+    .filter((p: number | undefined | null): p is number => p !== undefined && p !== null)
   const pricingMetrics = {
-    averagePrice: prices.length > 0 ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0,
+    averagePrice: prices.length > 0 ? Math.round(prices.reduce((a: number, b: number) => a + b, 0) / prices.length) : 0,
     minPrice: prices.length > 0 ? Math.min(...prices) : 0,
     maxPrice: prices.length > 0 ? Math.max(...prices) : 0,
     medianPrice: prices.length > 0 ? calculateMedian(prices) : 0,
@@ -156,14 +156,14 @@ async function generateSnapshot(
 
   // Calculate margin metrics if cost data available (cost might be in attributes JSON)
   const skusWithCost = skus
-    .map((s) => {
+    .map((s: typeof skus[0]) => {
       const price = s.Price[0]?.amount
       const cost = s.attributes && typeof s.attributes === 'object' && 'cost' in s.attributes
         ? (s.attributes as any).cost
         : null
       return { price, cost }
     })
-    .filter((s): s is { price: number; cost: number } => 
+    .filter((s: { price?: number | null; cost?: number | null }): s is { price: number; cost: number } =>
       s.price !== undefined && s.price !== null && s.cost !== null && s.cost > 0
     )
   
