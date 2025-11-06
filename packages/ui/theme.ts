@@ -11,22 +11,26 @@ export const theme = {
     fg: 'var(--fg)',
     mute: 'var(--mute)',
     brand: 'var(--brand)',
+    accent: 'var(--accent)',
   },
   radius: {
-    xl: '0.75rem',
-    '2xl': '1rem',
+    xl: 'var(--radius-xl)',
+    '2xl': 'var(--radius-2xl)',
   },
 }
 
 /**
  * CSS custom properties should be defined in globals.css:
  * :root {
- *   --bg: #0b0b0c;
- *   --surface: #151517;
- *   --border: #202124;
- *   --fg: #e5e7eb;
- *   --mute: #9ca3af;
- *   --brand: #00c2a8;
+ *   --bg: #f9f9fb;
+ *   --surface: #ffffff;
+ *   --border: #e5e7eb;
+ *   --fg: #1a1a1a;
+ *   --mute: #6b7280;
+ *   --brand: #00a3a3;
+ *   --accent: #2563eb;
+ *   --radius-xl: 0.75rem;
+ *   --radius-2xl: 1rem;
  * }
  */
 

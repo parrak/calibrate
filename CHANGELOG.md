@@ -6,6 +6,40 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- **Light Theme Transition Across All Applications**
+  - Migrated all apps from dark theme to Notion-style light theme with neutral surfaces, subtle borders, and teal accent
+  - **Global Theme Tokens:**
+    - Background: `#f9f9fb` (neutral light)
+    - Surface: `#ffffff` (white cards/panels)
+    - Border: `#e5e7eb` (subtle gray borders)
+    - Foreground: `#1a1a1a` (dark text)
+    - Muted: `#6b7280` (secondary text)
+    - Brand: `#00a3a3` (teal accent)
+    - Accent: `#2563eb` (blue accent for links)
+  - **Console (console.calibr.lat):**
+    - Updated layout, header, and all surfaces to light theme
+    - Cards now feature white backgrounds with soft shadows and hover elevation
+    - Primary buttons: teal brand with white text, proper hover states
+  - **Marketing Site (calibr.lat):**
+    - Hero, features, testimonials, and CTA sections updated to light theme
+    - White header/footer with subtle borders
+    - Enhanced readability with improved text contrast
+  - **Docs Site (docs.calibr.lat):**
+    - Body and prose styling updated for light theme
+    - Added typography variables for documentation content
+  - **Shared UI Components:**
+    - Card: Rounded corners (xl), subtle shadows with hover transitions
+    - Button: Brand buttons with 90% opacity → 100% on hover
+    - Updated all color references to use CSS custom properties
+  - **Tailwind Configuration:**
+    - All configs now reference CSS variables for theme colors
+    - Added `borderColor: { DEFAULT: 'var(--border)' }` for consistent borders
+    - Radius tokens updated to use CSS variables
+  - Dark theme preserved under `:root.dark` for future theme toggle feature
+  - All apps pass TypeScript checks with no breaking changes
+
 ### Added
 
 - **Comprehensive UX Refresh Across All Applications**

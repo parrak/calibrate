@@ -7,21 +7,21 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   padding?: 'none' | 'sm' | 'md' | 'lg'
 }
 
-export function Card({ 
-  children, 
-  className, 
-  variant = 'default', 
+export function Card({
+  children,
+  className,
+  variant = 'default',
   padding = 'md',
-  ...props 
+  ...props
 }: CardProps) {
   return (
     <div
       className={clsx(
-        'rounded-lg',
+        'rounded-xl transition-shadow',
         {
-          'bg-white border border-gray-200': variant === 'default',
-          'bg-white border-2 border-gray-300': variant === 'outlined',
-          'bg-white shadow-lg border border-gray-100': variant === 'elevated',
+          'bg-surface border border-[color:var(--border)] shadow-sm hover:shadow-md': variant === 'default',
+          'bg-surface border-2 border-[color:var(--border)]': variant === 'outlined',
+          'bg-surface shadow-lg border border-[color:var(--border)] hover:shadow-xl': variant === 'elevated',
         },
         {
           'p-0': padding === 'none',
@@ -75,7 +75,7 @@ export interface CardDescriptionProps extends React.HTMLAttributes<HTMLParagraph
 export function CardDescription({ children, className, ...props }: CardDescriptionProps) {
   return (
     <p
-      className={clsx('text-sm text-gray-600', className)}
+      className={clsx('text-sm text-[color:var(--mute)]', className)}
       {...props}
     >
       {children}
