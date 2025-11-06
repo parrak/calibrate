@@ -135,7 +135,15 @@ The fix should:
 
 ---
 
-**Assigned to**: Agent B (Codex)  
-**Created**: Based on persistent Vercel deployment failures  
+**Assigned to**: Agent B (Codex)
+**Created**: Based on persistent Vercel deployment failures
 **Related PR**: #2 (chore/update-docs-and-scripts branch)
+
+---
+
+## ✅ Resolution (January 2025)
+
+- Updated `apps/console/vercel.json` so the install command runs `pnpm --filter @calibr/db run generate` immediately after the workspace install. This ensures `@prisma/client` is linked before Next.js builds.
+- Simplified the Vercel build step to just `pnpm --filter @calibr/console build` now that Prisma generation happens during install.
+- Documented the new install command in `agents/learnings/deployment/production-guide.md` for future deploy debugging.
 
