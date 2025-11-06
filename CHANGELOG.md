@@ -7,6 +7,38 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+
+- **Comprehensive UX Refresh Across All Applications**
+  - **Marketing Site (calibr.lat):**
+    - Replaced hero code demo with autoplay video (MP4 with GIF fallback)
+    - Updated hero copy: "Dynamic pricing with guardrails"
+    - New `/early-access` page with form embed for early access signups
+    - Added testimonials section with customer social proof quotes
+    - Enhanced SEO with comprehensive meta tags, Open Graph images, Twitter cards
+    - Added video preload and DNS preconnect optimizations for performance
+    - Updated CTAs to "Try the Console" and "Join Early Access"
+
+  - **Console (console.calibr.lat):**
+    - Simplified navigation with emoji icons and improved visual hierarchy
+    - Reordered nav items for better UX: Dashboard, Catalog, Price Changes, AI Suggestions, Analytics, Competitors, Settings
+    - Added dashboard heartbeat cards showing: Pending Price Changes, AI Suggestions, Connector Health, Applied Today
+    - Integrated guided tour modal for new user onboarding (localStorage-based, dismissible)
+    - Added AI rationale tooltips in price changes table (hover "?" icon shows policy checks)
+    - Applied consistent dark theme across all console pages
+    - Loading skeleton states for async data
+
+  - **Docs Site (docs.calibr.lat):**
+    - Updated to dark theme matching marketing and console
+    - Improved API endpoint documentation layout with hover effects
+    - Added navigation links between docs, console, and marketing sites
+    - Enhanced visual hierarchy and readability
+
+  - **Design System:**
+    - Unified CSS theme tokens across all apps (--bg, --surface, --border, --fg, --mute, --brand)
+    - Consistent dark color palette with teal brand accent (#00c2a8)
+    - Improved accessibility with ARIA labels, keyboard navigation, WCAG AA color contrast
+    - Reduced motion support for animations
+
 - **Marketing Site: Icons & Social Previews**
   - Dynamic Next/OG assets for runtime generation:
     - `apps/site/app/icon.tsx` (favicon)
@@ -64,6 +96,13 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Fulfills AI Copilot feature from Growth Phase (v0.3-v0.6) agent workflow
 
 ### Fixed
+- **Console: Overlay Component Improvements**
+  - Fixed Drawer component blocking user interactions when closed by adding conditional `pointer-events: none`
+  - Enhanced GuidedTour with click-outside-to-dismiss functionality
+  - Added ESC key support to dismiss GuidedTour
+  - Improved z-index layering to prevent overlay conflicts
+  - Resolves blocking overlay issue on price-changes page
+
 - API: Fixed 410 error on POST /api/platforms/shopify/sync endpoint
   - Deprecated endpoint now forwards requests to /api/integrations/shopify/sync
   - Maps syncType parameter to action for backward compatibility

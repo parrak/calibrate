@@ -2,7 +2,17 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-type NavItem = { href: string; label: string; key: string }
+type NavItem = { href: string; label: string; key: string; icon?: string }
+
+const iconMap: Record<string, string> = {
+  dashboard: '📊',
+  'price-changes': '💰',
+  catalog: '📦',
+  competitors: '🎯',
+  assistant: '🤖',
+  analytics: '📈',
+  integrations: '🔌',
+}
 
 export function ProjectSidebar({
   projectName,
@@ -15,27 +25,29 @@ export function ProjectSidebar({
 
   return (
     <div className="sticky top-4 space-y-4">
-      <div className="bg-white border rounded-lg p-4">
-        <div className="text-xs uppercase tracking-wide text-gray-500">Project</div>
-        <div className="mt-1 text-sm font-medium text-gray-900" aria-label="Current project">
+      <div className="bg-surface border border-border rounded-xl p-4">
+        <div className="text-xs uppercase tracking-wide text-mute">Project</div>
+        <div className="mt-1 text-sm font-semibold text-fg" aria-label="Current project">
           {projectName}
         </div>
       </div>
-      <nav aria-label="Primary" role="navigation" className="bg-white border rounded-lg p-2">
+      <nav aria-label="Primary" role="navigation" className="bg-surface border border-border rounded-xl p-2">
         {nav.map((item) => {
           const isActive = pathname === item.href || (pathname?.startsWith(item.href + '/') ?? false)
+          const icon = iconMap[item.key] || '•'
           return (
             <Link
               key={item.key}
               href={item.href}
               aria-current={isActive ? 'page' : undefined}
-              className={`block rounded-md px-3 py-2 text-sm transition-colors ${
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all ${
                 isActive
-                  ? 'bg-blue-50 text-blue-700 font-medium'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  ? 'bg-brand/10 text-brand font-semibold shadow-sm'
+                  : 'text-fg hover:bg-bg hover:text-brand'
               }`}
             >
-              {item.label}
+              <span className="text-base" aria-hidden="true">{icon}</span>
+              <span>{item.label}</span>
             </Link>
           )
         })}

@@ -468,8 +468,21 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs uppercase tracking-wide text-mute">
-                    {item.source || '—'}
+                  <td className="px-4 py-3 text-xs uppercase tracking-wide">
+                    <div className="flex items-center gap-2">
+                      <span className="text-mute">{item.source || '—'}</span>
+                      {item.policyResult?.checks && (
+                        <span
+                          className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand/20 text-brand text-[10px] cursor-help"
+                          title={`AI Rationale: ${item.policyResult.checks
+                            .filter((c) => c.ok)
+                            .map((c) => c.name)
+                            .join(', ') || 'Click for details'}`}
+                        >
+                          ?
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <StatusPill status={item.status} />

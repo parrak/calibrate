@@ -2,7 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background: #0B0B0C;
-  color: #E5E7EB;
+@layer base {
+  :root {
+    --bg: #0b0b0c;
+    --surface: #141416;
+    --border: #1f2023;
+    --fg: #e5e7eb;
+    --mute: #9ca3af;
+    --brand: #00c2a8;
+  }
+
+  body {
+    @apply bg-bg text-fg;
+  }
 }
