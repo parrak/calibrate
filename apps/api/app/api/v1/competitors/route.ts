@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
-import { verifyHmac } from '@calibr/security'
 import { withSecurity } from '@/lib/security-headers'
 import { createId } from '@paralleldrive/cuid2'
 
@@ -8,24 +7,26 @@ const db = () => prisma()
 
 export const GET = withSecurity(async (request: NextRequest) => {
   try {
-    // Verify HMAC signature
-    const authResult = await verifyHmac(request)
-    if (!authResult.valid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { searchParams } = new URL(request.url)
+    const projectSlug = searchParams.get('projectSlug')
+
+    if (!projectSlug) {
+      return NextResponse.json({ error: 'Missing projectSlug parameter' }, { status: 400 })
     }
 
-    const { searchParams } = new URL(request.url)
-    const tenantId = searchParams.get('tenantId')
-    const projectId = searchParams.get('projectId')
+    // Resolve projectSlug to project
+    const project = await db().project.findUnique({
+      where: { slug: projectSlug }
+    })
 
-    if (!tenantId || !projectId) {
-      return NextResponse.json({ error: 'Missing tenantId or projectId' }, { status: 400 })
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
     const competitors = await db().competitor.findMany({
       where: {
-        tenantId,
-        projectId
+        tenantId: project.tenantId,
+        projectId: project.id
       },
       include: {
         CompetitorProduct: {
@@ -49,24 +50,27 @@ export const GET = withSecurity(async (request: NextRequest) => {
 
 export const POST = withSecurity(async (request: NextRequest) => {
   try {
-    // Verify HMAC signature
-    const authResult = await verifyHmac(request)
-    if (!authResult.valid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const body = await request.json()
+    const { projectSlug, name, domain, channel } = body
+
+    if (!projectSlug || !name || !domain || !channel) {
+      return NextResponse.json({ error: 'Missing required fields: projectSlug, name, domain, channel' }, { status: 400 })
     }
 
-    const body = await request.json()
-    const { tenantId, projectId, name, domain, channel } = body
+    // Resolve projectSlug to project
+    const project = await db().project.findUnique({
+      where: { slug: projectSlug }
+    })
 
-    if (!tenantId || !projectId || !name || !domain || !channel) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
     const competitor = await db().competitor.create({
       data: {
         id: createId(),
-        tenantId,
-        projectId,
+        tenantId: project.tenantId,
+        projectId: project.id,
         name,
         domain,
         channel,

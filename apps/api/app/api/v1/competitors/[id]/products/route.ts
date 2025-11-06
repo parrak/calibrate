@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
-import { verifyHmac } from '@calibr/security'
 import { createId } from '@paralleldrive/cuid2'
 
 const db = () => prisma()
@@ -10,11 +9,6 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Verify HMAC signature
-    const authResult = await verifyHmac(request)
-    if (!authResult.valid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
     const { id } = await context.params
     const { searchParams } = new URL(request.url)
     const skuId = searchParams.get('skuId')
@@ -46,11 +40,6 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Verify HMAC signature
-    const authResult = await verifyHmac(request)
-    if (!authResult.valid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
     const body = await request.json()
     const { skuId, name, skuCode, url, imageUrl } = body
     const { id } = await context.params

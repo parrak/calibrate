@@ -6,6 +6,92 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- **Light Theme Transition Across All Applications**
+  - Migrated all apps from dark theme to Notion-style light theme with neutral surfaces, subtle borders, and teal accent
+  - **Global Theme Tokens:**
+    - Background: `#f9f9fb` (neutral light)
+    - Surface: `#ffffff` (white cards/panels)
+    - Border: `#e5e7eb` (subtle gray borders)
+    - Foreground: `#1a1a1a` (dark text)
+    - Muted: `#6b7280` (secondary text)
+    - Brand: `#00a3a3` (teal accent)
+    - Accent: `#2563eb` (blue accent for links)
+  - **Console (console.calibr.lat):**
+    - Updated layout, header, and all surfaces to light theme
+    - Cards now feature white backgrounds with soft shadows and hover elevation
+    - Primary buttons: teal brand with white text, proper hover states
+  - **Marketing Site (calibr.lat):**
+    - Hero, features, testimonials, and CTA sections updated to light theme
+    - White header/footer with subtle borders
+    - Enhanced readability with improved text contrast
+  - **Docs Site (docs.calibr.lat):**
+    - Body and prose styling updated for light theme
+    - Added typography variables for documentation content
+  - **Shared UI Components:**
+    - Card: Rounded corners (xl), subtle shadows with hover transitions
+    - Button: Brand buttons with 90% opacity → 100% on hover
+    - Updated all color references to use CSS custom properties
+  - **Tailwind Configuration:**
+    - All configs now reference CSS variables for theme colors
+    - Added `borderColor: { DEFAULT: 'var(--border)' }` for consistent borders
+    - Radius tokens updated to use CSS variables
+  - Dark theme preserved under `:root.dark` for future theme toggle feature
+  - All apps pass TypeScript checks with no breaking changes
+
+### Added
+
+- **Documentation: January 2025 Roadmap**
+  - Added comprehensive roadmap section to `AGENT_WORKFLOW.md` with:
+    - Highest-leverage goals for next 14 days (production validation, monitoring, auth cleanup, docs refresh, CHANGELOG hygiene)
+    - Short sprint backlog (2-4 weeks) with Amazon retry/idempotency, rate limiting, OpenAPI generation, dashboard improvements
+    - Agent assignments and responsibilities
+    - Milestones and acceptance gates for v0.3.9-stable and v0.4.0-public-beta
+    - Post-v0.3.9 plans for inventory-aware pricing and experimentation mode
+
+- **Comprehensive UX Refresh Across All Applications**
+  - **Marketing Site (calibr.lat):**
+    - Replaced hero code demo with autoplay video (MP4 with GIF fallback)
+    - Updated hero copy: "Dynamic pricing with guardrails"
+    - New `/early-access` page with form embed for early access signups
+    - Added testimonials section with customer social proof quotes
+    - Enhanced SEO with comprehensive meta tags, Open Graph images, Twitter cards
+    - Added video preload and DNS preconnect optimizations for performance
+    - Updated CTAs to "Try the Console" and "Join Early Access"
+
+  - **Console (console.calibr.lat):**
+    - Simplified navigation with emoji icons and improved visual hierarchy
+    - Reordered nav items for better UX: Dashboard, Catalog, Price Changes, AI Suggestions, Analytics, Competitors, Settings
+    - Added dashboard heartbeat cards showing: Pending Price Changes, AI Suggestions, Connector Health, Applied Today
+    - Integrated guided tour modal for new user onboarding (localStorage-based, dismissible)
+    - Added AI rationale tooltips in price changes table (hover "?" icon shows policy checks)
+    - Applied consistent dark theme across all console pages
+    - Loading skeleton states for async data
+
+  - **Docs Site (docs.calibr.lat):**
+    - Updated to dark theme matching marketing and console
+    - Improved API endpoint documentation layout with hover effects
+    - Added navigation links between docs, console, and marketing sites
+    - Enhanced visual hierarchy and readability
+
+  - **Design System:**
+    - Unified CSS theme tokens across all apps (--bg, --surface, --border, --fg, --mute, --brand)
+    - Consistent dark color palette with teal brand accent (#00c2a8)
+    - Improved accessibility with ARIA labels, keyboard navigation, WCAG AA color contrast
+    - Reduced motion support for animations
+
+- **Marketing Site: Icons & Social Previews**
+  - Dynamic Next/OG assets for runtime generation:
+    - `apps/site/app/icon.tsx` (favicon)
+    - `apps/site/app/apple-icon.tsx` (Apple touch icon)
+    - `apps/site/app/opengraph-image.tsx` (Open Graph image)
+  - Added Contact links to `contact@calibr.lat` (hero + footer)
+
+### Changed
+- Marketing site, docs, and standalone app links updated from `https://app.calibr.lat` to `https://console.calibr.lat`
+- Kept static fallback `apps/site/public/favicon.svg`
+
 ### Added
 - **API: Request Monitoring & Performance Tracking**
   - Integrated `@calibr/monitor` package for comprehensive request logging and observability
@@ -17,6 +103,21 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Configurable logging levels and monitoring options
   - Added 15 comprehensive tests covering all monitoring features
   - No breaking changes - monitoring enabled by default, can be disabled per-route
+- **Marketing Site: Early Access Page**
+  - New early access page at `/early-access` with form embed placeholder for Tally.so integration
+  - Allows merchants to sign up for personalized onboarding
+  - Mobile-responsive design with dark theme styling
+
+- **Console: Guided Tour Component**
+  - New `GuidedTour` component for first-time user onboarding
+  - Shows welcome message with key feature highlights (Dashboard, Price Changes, Analytics)
+  - Uses localStorage to track if tour has been seen (shows once per browser)
+  - Ready to be integrated into project layout when needed
+
+- **Shared UI: Theme Tokens**
+  - New `packages/ui/theme.ts` module with centralized color and radius definitions
+  - Provides consistent styling tokens across marketing site and console
+  - Documents required CSS custom properties for theme implementation
 
 - API / Console: Shopify price change apply + rollback now call the live Shopify connector, recording variant metadata and surfacing connector errors with tests for the new flow.
 - **Console: AI Pricing Assistant (Copilot UI)**
@@ -37,6 +138,13 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Fulfills AI Copilot feature from Growth Phase (v0.3-v0.6) agent workflow
 
 ### Fixed
+- **Console: Overlay Component Improvements**
+  - Fixed Drawer component blocking user interactions when closed by adding conditional `pointer-events: none`
+  - Enhanced GuidedTour with click-outside-to-dismiss functionality
+  - Added ESC key support to dismiss GuidedTour
+  - Improved z-index layering to prevent overlay conflicts
+  - Resolves blocking overlay issue on price-changes page
+
 - API: Fixed 410 error on POST /api/platforms/shopify/sync endpoint
   - Deprecated endpoint now forwards requests to /api/integrations/shopify/sync
   - Maps syncType parameter to action for backward compatibility
@@ -50,6 +158,14 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Color-coded status filter buttons for better UX (Pending=yellow, Applied=green, Failed=red, etc.)
   - Better error messages explaining CONSOLE_INTERNAL_TOKEN configuration requirements
   - Resolves "You reached the start of the range" error message
+
+- Console: Fixed UI contrast issues with black text on dark backgrounds
+  - Updated globals.css to use dark theme colors (#0B0B0C background, #E5E7EB text) matching the app design
+  - Added missing Tailwind color definitions (muted, muted-foreground, background, foreground, input, ring) for component compatibility
+  - Fixed all `bg-muted` references to use `bg-mute` throughout the codebase
+  - Added explicit `text-foreground` classes to Input and Textarea components for proper text visibility
+  - Fixed price-changes page hover states and ensured all interactive elements have proper contrast
+  - Resolves accessibility issues where text was invisible or hard to read on dark backgrounds
 
 - Amazon Connector (Agent B)
   - Initial SP-API pricing feed flow merged to master

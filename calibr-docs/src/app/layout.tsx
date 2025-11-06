@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <nav className="text-sm text-mute space-x-4">
                 <Link href="/docs">Docs</Link>
                 <a href="https://calibr.lat" target="_blank">Website</a>
-                <a href="https://app.calibr.lat" target="_blank">Console</a>
+                <a href="https://console.calibr.lat" target="_blank">Console</a>
                 <a href="https://api.calibr.lat" target="_blank">API</a>
               </nav>
             </div>

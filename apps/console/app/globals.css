@@ -2,7 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background: #f9fafb;
-  color: #111827;
+@layer base {
+  :root {
+    --bg: #f9f9fb;
+    --surface: #ffffff;
+    --border: #e5e7eb;
+    --fg: #1a1a1a;
+    --mute: #6b7280;
+    --brand: #00a3a3;
+    --accent: #2563eb;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
+  }
+
+  :root.dark {
+    --bg: #0b0b0c;
+    --surface: #141416;
+    --border: #1f2023;
+    --fg: #e5e7eb;
+    --mute: #9ca3af;
+    --brand: #00c2a8;
+  }
+
+  body {
+    @apply bg-bg text-fg;
+  }
 }
