@@ -6,6 +6,54 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
 
+### Added
+
+- **Analytics: Anomaly Detection System** (Agent C - Claude Code)
+  - Intelligent detection of unusual pricing patterns and business metrics
+  - Four anomaly types:
+    - Price spikes/drops: Detects sudden price changes exceeding threshold (default 20%)
+    - Volume spikes: Identifies unusual increases in price change activity (default 200%)
+    - Margin compression: Alerts on declining profit margins (default 10% drop)
+    - Competitor divergence: Flags significant deviations from market pricing (default 15%)
+  - Severity classification: Critical, High, Medium, Low
+  - Automated recommendations for each detected anomaly
+  - Statistical outlier detection using Z-score method
+  - New API: `detectAnomalies(projectId, config)` in `@calibr/analytics`
+  - Configurable thresholds for all detection algorithms
+
+- **Analytics: Weekly Insights Digest** (Agent C - Claude Code)
+  - Automated weekly summary generation with actionable insights
+  - Executive summary with key metrics and top metric highlights
+  - Intelligent insight generation across 5 categories:
+    - Pricing insights: Price change patterns and trends
+    - Volume insights: Activity level analysis
+    - Margin insights: Profitability tracking and warnings
+    - Performance insights: Approval rates and execution efficiency
+    - Opportunity insights: Untapped optimization potential
+  - Performance comparison vs previous period with trend analysis
+  - Business recommendations based on detected patterns
+  - Integrated anomaly detection in digest reports
+  - New API: `generateWeeklyDigest(projectId, weekEndDate)` in `@calibr/analytics`
+  - Ready for email/Slack notification integration
+
+- **AI Engine: Enhanced Rationale Explainer** (Agent C - Claude Code)
+  - Dramatically improved AI pricing suggestion explanations
+  - Multi-layered explanation system:
+    - One-line summary for quick understanding
+    - Detailed explanation with full context
+    - Key factors breakdown with weights and influence
+    - Business impact analysis (revenue, demand, competitive position)
+    - Step-by-step reasoning chain showing decision process
+  - Visual indicators:
+    - Price direction: Increase, Decrease, Maintain
+    - Confidence level: Very High, High, Moderate, Low
+    - Urgency: Immediate, Recommended, Optional
+    - Risk level: Low, Medium, High
+  - Actionable next steps with implementation guidance
+  - Smart warnings for edge cases (large changes, low confidence, missing data)
+  - New API: `explainSuggestion(suggestion, input)` in `@calibr/ai-engine`
+  - Supports merchant-friendly language and clear formatting
+
 ### Changed
 
 - **Light Theme Transition Across All Applications**
