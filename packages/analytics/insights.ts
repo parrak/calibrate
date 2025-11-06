@@ -170,7 +170,7 @@ async function gatherWeekMetrics(projectId: string, start: Date, end: Date) {
       where: {
         projectId,
         status: 'APPLIED',
-        updatedAt: { gte: start, lte: end },
+        appliedAt: { gte: start, lte: end },
       },
     }),
   ])

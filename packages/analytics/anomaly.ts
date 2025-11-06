@@ -110,29 +110,30 @@ async function detectPriceAnomalies(
       createdAt: { gte: since },
       status: { in: ['PENDING', 'APPROVED', 'APPLIED'] },
     },
-    include: {
-      Sku: {
-        select: {
-          code: true,
-          name: true,
-        },
-      },
-    },
     orderBy: { createdAt: 'desc' },
   })
+
+  // Get SKU info for affected SKUs
+  const skuIds = Array.from(new Set(priceChanges.map(pc => pc.skuId)))
+  const skus = await prisma().sku.findMany({
+    where: { id: { in: skuIds } },
+    select: { id: true, code: true, name: true },
+  })
+  const skuMap = new Map(skus.map(s => [s.id, s]))
 
   for (const change of priceChanges) {
     const deltaPercent = Math.abs(((change.toAmount - change.fromAmount) / change.fromAmount) * 100)
 
     if (deltaPercent > config.priceChangeThreshold) {
       const isSpike = change.toAmount > change.fromAmount
+      const sku = skuMap.get(change.skuId)
 
       anomalies.push({
         type: isSpike ? 'price_spike' : 'price_drop',
         severity: deltaPercent > 50 ? 'critical' : deltaPercent > 30 ? 'high' : 'medium',
         detectedAt: new Date(),
         affectedId: change.skuId,
-        affectedName: change.Sku.name || change.Sku.code,
+        affectedName: sku?.name || sku?.code || change.skuId,
         details: {
           metric: 'Price Change',
           currentValue: change.toAmount,
@@ -141,8 +142,8 @@ async function detectPriceAnomalies(
           threshold: config.priceChangeThreshold,
         },
         recommendation: isSpike
-          ? `Review large price increase of ${deltaPercent.toFixed(1)}% for ${change.Sku.name || change.Sku.code}. Verify this aligns with market conditions.`
-          : `Investigate significant price drop of ${deltaPercent.toFixed(1)}% for ${change.Sku.name || change.Sku.code}. Ensure margins remain healthy.`,
+          ? `Review large price increase of ${deltaPercent.toFixed(1)}% for ${sku?.name || sku?.code || change.skuId}. Verify this aligns with market conditions.`
+          : `Investigate significant price drop of ${deltaPercent.toFixed(1)}% for ${sku?.name || sku?.code || change.skuId}. Ensure margins remain healthy.`,
       })
     }
   }
@@ -230,20 +231,32 @@ async function detectMarginAnomalies(
         select: { amount: true },
         take: 1,
       },
-      PriceChange: {
-        where: {
-          createdAt: { gte: since },
-          status: { in: ['APPROVED', 'APPLIED'] },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 1,
-        select: {
-          fromAmount: true,
-          toAmount: true,
-        },
-      },
     },
   })
+
+  // Get recent price changes for these SKUs
+  const skuIds = skus.map(s => s.id)
+  const recentPriceChanges = await prisma().priceChange.findMany({
+    where: {
+      skuId: { in: skuIds },
+      createdAt: { gte: since },
+      status: { in: ['APPROVED', 'APPLIED'] },
+    },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      skuId: true,
+      fromAmount: true,
+      toAmount: true,
+    },
+  })
+
+  // Map price changes by SKU ID (get most recent for each SKU)
+  const priceChangeMap = new Map<string, { fromAmount: number; toAmount: number }>()
+  for (const pc of recentPriceChanges) {
+    if (!priceChangeMap.has(pc.skuId)) {
+      priceChangeMap.set(pc.skuId, { fromAmount: pc.fromAmount, toAmount: pc.toAmount })
+    }
+  }
 
   for (const sku of skus) {
     // Extract cost from attributes
@@ -259,7 +272,7 @@ async function detectMarginAnomalies(
     const currentMarginPercent = ((currentPrice - cost) / cost) * 100
 
     // Check if recent price change compressed margin
-    const recentChange = sku.PriceChange[0]
+    const recentChange = priceChangeMap.get(sku.id)
     if (recentChange) {
       const previousMarginPercent = ((recentChange.fromAmount - cost) / cost) * 100
       const marginDrop = previousMarginPercent - currentMarginPercent

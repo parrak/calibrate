@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma, Prisma, ProjectRole, type Membership, type PriceChange, type Project } from '@calibr/db'
+import { prisma, Prisma } from '@calibr/db'
 import { authSecurityManager, type AuthContext } from '@/lib/auth-security'
+
+// Define types that should come from Prisma but aren't exported
+type ProjectRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER'
+type Membership = { id: string; userId: string; projectId: string; role: ProjectRole; [key: string]: any }
+type Project = { id: string; slug: string; [key: string]: any }
+type PriceChange = {
+  id: string
+  status: string
+  currency: string
+  fromAmount: number
+  toAmount: number
+  createdAt: Date
+  source: string | null
+  context: Prisma.JsonValue | null
+  policyResult: Prisma.JsonValue | null
+  approvedBy: string | null
+  appliedAt: Date | null
+  connectorStatus: Prisma.JsonValue | null
+  projectId: string
+  [key: string]: any
+}
 
 export type ConnectorState = 'QUEUED' | 'SYNCING' | 'SYNCED' | 'ERROR'
 export type PriceChangeStatus =
