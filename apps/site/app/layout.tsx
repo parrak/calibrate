@@ -56,29 +56,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://console.calibr.lat" />
         <link rel="preconnect" href="https://docs.calibr.lat" />
       </head>
-      <body className="bg-bg text-fg">
-        <header className="border-b border-border">
+      <body className="bg-[color:var(--bg)] text-[color:var(--fg)]">
+        <header className="border-b border-[color:var(--border)] bg-white">
           <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
-            <a href="/" className="font-semibold tracking-tight">Calibr<span className="text-brand">.lat</span></a>
-            <nav className="hidden md:flex items-center gap-6 text-sm text-mute">
-              <a href="#features" className="hover:text-fg">Features</a>
-              <a href="#how" className="hover:text-fg">How it works</a>
-              <a href="https://docs.calibr.lat" className="hover:text-fg">Docs</a>
-              <a href="https://console.calibr.lat/login" className="px-3 py-1.5 rounded-md bg-brand text-black font-medium">Sign in</a>
+            <a href="/" className="font-semibold tracking-tight">Calibr<span className="text-[color:var(--brand)]">.lat</span></a>
+            <nav className="hidden md:flex items-center gap-6 text-sm text-[color:var(--mute)]">
+              <a href="#features" className="hover:text-[color:var(--fg)] transition-colors">Features</a>
+              <a href="#how" className="hover:text-[color:var(--fg)] transition-colors">How it works</a>
+              <a href="https://docs.calibr.lat" className="hover:text-[color:var(--fg)] transition-colors">Docs</a>
+              <a href="https://console.calibr.lat/login" className="px-3 py-1.5 rounded-md bg-[color:var(--brand)]/90 hover:bg-[color:var(--brand)] text-white font-medium transition-colors">Sign in</a>
             </nav>
-            <a href="https://console.calibr.lat/login" className="md:hidden px-3 py-1.5 rounded-md bg-brand text-black font-medium">Sign in</a>
+            <a href="https://console.calibr.lat/login" className="md:hidden px-3 py-1.5 rounded-md bg-[color:var(--brand)]/90 hover:bg-[color:var(--brand)] text-white font-medium transition-colors">Sign in</a>
           </div>
         </header>
         <main>{children}</main>
-        <footer className="border-t border-border">
-          <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-mute flex flex-col md:flex-row gap-2 md:gap-6 items-center md:items-start justify-between">
+        <footer className="border-t border-[color:var(--border)] bg-white">
+          <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-[color:var(--mute)] flex flex-col md:flex-row gap-2 md:gap-6 items-center md:items-start justify-between">
             <div>© {new Date().getFullYear()} Porter Labs</div>
             <div className="flex gap-4">
-              <a href="https://docs.calibr.lat">Docs</a>
-              <a href="/privacy">Privacy</a>
-              <a href="/terms">Terms</a>
-              <a href="/.well-known/security.txt">Security</a>
-              <a href="mailto:contact@calibr.lat">Contact</a>
+              <a href="https://docs.calibr.lat" className="hover:text-[color:var(--fg)] transition-colors">Docs</a>
+              <a href="/privacy" className="hover:text-[color:var(--fg)] transition-colors">Privacy</a>
+              <a href="/terms" className="hover:text-[color:var(--fg)] transition-colors">Terms</a>
+              <a href="/.well-known/security.txt" className="hover:text-[color:var(--fg)] transition-colors">Security</a>
+              <a href="mailto:contact@calibr.lat" className="hover:text-[color:var(--fg)] transition-colors">Contact</a>
             </div>
           </div>
         </footer>

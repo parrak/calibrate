@@ -25,7 +25,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-bg text-fg">
+      <body className="min-h-screen bg-[color:var(--bg)] text-[color:var(--fg)]">
         {children}
       </body>
     </html>

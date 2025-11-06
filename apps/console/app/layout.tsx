@@ -27,15 +27,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gray-50 text-gray-900">
-        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 bg-white border rounded px-3 py-2 shadow">
+      <body className="min-h-screen bg-[color:var(--bg)] text-[color:var(--fg)]">
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 bg-white border border-[color:var(--border)] rounded px-3 py-2 shadow">
           Skip to content
         </a>
-        <header className="border-b bg-white">
+        <header className="border-b border-[color:var(--border)] bg-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-lg font-semibold">Calibrate Console</span>
-              <span className="text-xs text-gray-500">Enterprise pricing ops</span>
+              <span className="text-xs text-[color:var(--mute)]">Enterprise pricing ops</span>
             </div>
             <UserMenu />
           </div>
