@@ -5,6 +5,7 @@
  */
 
 export { suggestPrice } from './suggestPrice'
+export { explainSuggestion } from './explainer'
 export type {
   PriceSuggestionInput,
   PriceSuggestion,
@@ -14,3 +15,4 @@ export type {
   CompetitorPrice,
   SalesVelocity,
 } from './types'
+export type { EnhancedExplanation, ExplanationFactor } from './explainer'
