@@ -164,7 +164,7 @@ async function generateSnapshot(
       return { price, cost }
     })
     .filter((s: { price?: number | null; cost?: number | null }): s is { price: number; cost: number } =>
-      s.price !== undefined && s.price !== null && s.cost !== null && s.cost > 0
+      s.price !== undefined && s.price !== null && s.cost !== undefined && s.cost !== null && s.cost > 0
     )
   
   const marginMetrics = skusWithCost.length > 0 ? {
