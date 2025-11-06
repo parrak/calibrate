@@ -42,6 +42,14 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ### Added
 
+- **Documentation: January 2025 Roadmap**
+  - Added comprehensive roadmap section to `AGENT_WORKFLOW.md` with:
+    - Highest-leverage goals for next 14 days (production validation, monitoring, auth cleanup, docs refresh, CHANGELOG hygiene)
+    - Short sprint backlog (2-4 weeks) with Amazon retry/idempotency, rate limiting, OpenAPI generation, dashboard improvements
+    - Agent assignments and responsibilities
+    - Milestones and acceptance gates for v0.3.9-stable and v0.4.0-public-beta
+    - Post-v0.3.9 plans for inventory-aware pricing and experimentation mode
+
 - **Comprehensive UX Refresh Across All Applications**
   - **Marketing Site (calibr.lat):**
     - Replaced hero code demo with autoplay video (MP4 with GIF fallback)
