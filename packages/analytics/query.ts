@@ -119,7 +119,7 @@ export async function getAnalyticsOverview(
         return { sku: s.code, name: s.name, price, cost }
       })
       .filter((s: { sku: string; name: string; price?: number | null; cost?: number | null }): s is { sku: string; name: string; price: number; cost: number } =>
-        s.price !== undefined && s.price !== null && s.cost !== null && s.cost > 0
+        s.price !== undefined && s.price !== null && s.cost !== undefined && s.cost !== null && s.cost > 0
       )
       .map((s: { sku: string; name: string; price: number; cost: number }) => ({
         sku: s.sku,
