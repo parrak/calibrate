@@ -52,15 +52,28 @@ See: `../bug-fixes/nextjs-15-dynamic-params.md`
 **Problem:** Prisma client not initialized or middleware import errors
 
 **Solution:**
-1. Ensure Prisma client is generated before build. On Vercel, the `apps/console/vercel.json` install command now runs:
-```bash
-corepack prepare pnpm@9.0.0 --activate \
-  && cd ../.. \
-  && pnpm install --frozen-lockfile \
-  && pnpm --filter @calibr/db run generate
-```
+1. Ensure Prisma client is generated before build.
 
-   This executes the workspace `@calibr/db` `generate` script so `@prisma/client` is available before Next.js compiles.
+   - **Vercel install step:**
+
+     ```bash
+     corepack prepare pnpm@9.0.0 --activate \
+       && cd ../.. \
+       && pnpm install --frozen-lockfile --shamefully-hoist \
+       && pnpm --filter @calibr/db run generate
+     ```
+
+     Running the workspace `@calibr/db` `generate` script during install guarantees `@prisma/client` is linked before Next.js starts compiling.
+
+   - **Vercel build step safeguard:**
+
+     ```bash
+     cd ../.. && pnpm --filter @calibr/db run generate && pnpm --filter @calibr/console build
+     ```
+
+     Re-running `generate` at build time catches any skipped install hooks (for example when re-deploying from cache) and keeps the build idempotent.
+
+   - **Local builds:** run `pnpm --filter @calibr/db run generate` before `pnpm --filter @calibr/console build` or add it as a prebuild script if engineers encounter the same missing-client error locally.
 
 2. If encryption middleware causes issues, disable it:
 ```typescript
