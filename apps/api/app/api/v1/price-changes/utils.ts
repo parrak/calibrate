@@ -4,8 +4,8 @@ import { authSecurityManager, type AuthContext } from '@/lib/auth-security'
 
 // Define types that should come from Prisma but aren't exported
 type ProjectRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER'
-type Membership = { id: string; userId: string; projectId: string; role: ProjectRole; [key: string]: any }
-type Project = { id: string; slug: string; [key: string]: any }
+type Membership = { id: string; userId: string; projectId: string; role: ProjectRole }
+type Project = { id: string; slug: string }
 type PriceChange = {
   id: string
   status: string
@@ -20,7 +20,7 @@ type PriceChange = {
   appliedAt: Date | null
   connectorStatus: Prisma.JsonValue | null
   projectId: string
-  [key: string]: any
+  skuId: string
 }
 
 export type ConnectorState = 'QUEUED' | 'SYNCING' | 'SYNCED' | 'ERROR'
