@@ -7,6 +7,25 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Infrastructure: @calibr/types Package for API Type Generation**
+  - Created `@calibr/types` package that generates TypeScript types from OpenAPI specification
+  - Automatically generates type-safe API definitions for frontend consumption
+  - Integrated into build pipeline with turbo.json dependencies
+  - Added to CI workflow for automatic type generation before type checking
+  - Provides `paths`, `operations`, and `components` types from OpenAPI spec
+  - Usage: `import type { paths } from '@calibr/types/api'`
+
+- **CI/CD: Migration Validation in Test Workflow**
+  - Added migration check step to main test.yml CI workflow
+  - Validates Prisma schema and checks migration status
+  - Runs after Prisma client generation, before type checks
+  - Prevents migration drift and schema inconsistencies
+
+- **Documentation: Vercel Preview Deployment Guide**
+  - Created comprehensive guide for verifying preview deployments on PRs
+  - Includes troubleshooting steps and best practices
+  - Verification checklist for Console, Site, and Docs projects
+
 
 - **Analytics: Anomaly Detection System** (Agent C - Claude Code)
   - Intelligent detection of unusual pricing patterns and business metrics

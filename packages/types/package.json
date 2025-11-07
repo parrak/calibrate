@@ -1,0 +1,36 @@
+{
+  "name": "@calibr/types",
+  "version": "0.1.0",
+  "description": "Generated TypeScript types from Calibrate API OpenAPI specification",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./api": {
+      "types": "./api.d.ts",
+      "import": "./api.d.ts"
+    }
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../apps/docs/api/openapi.yaml -o ./api.d.ts",
+    "build": "pnpm generate && tsc",
+    "typecheck": "tsc --noEmit",
+    "prebuild": "pnpm generate"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "openapi-typescript": "^7.0.0",
+    "typescript": "^5.3.0"
+  },
+  "files": [
+    "dist",
+    "api.d.ts",
+    "README.md"
+  ]
+}
+

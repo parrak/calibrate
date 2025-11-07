@@ -113,9 +113,15 @@ jobs:
     - name: Generate Prisma client
       run: pnpm db:generate
 
+    - name: Check migrations
+      run: bash scripts/migrate-check.sh
+      continue-on-error: false
+
     - name: Build monitor package
       run: pnpm --filter @calibr/monitor build
 
+    - name: Generate API types
+      run: pnpm --filter @calibr/types generate
     - name: Cache Turborepo
       uses: actions/cache@v4
       with:
