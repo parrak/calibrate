@@ -18,7 +18,7 @@ export default function Home() {
               Create a project, connect your catalog, and ship safe, explained price changes.
             </p>
             <div className="mt-6 flex gap-3">
-              <a href="https://app.calibr.lat/login" className="px-4 py-2 rounded-md bg-brand text-black font-medium">
+              <a href="https://console.calibr.lat/login" className="px-4 py-2 rounded-md bg-brand text-black font-medium">
                 Sign in — create a Project
               </a>
               <a href="https://docs.calibr.lat" className="px-4 py-2 rounded-md border border-border text-fg hover:bg-surface">

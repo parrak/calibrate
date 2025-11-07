@@ -12,7 +12,7 @@ export function Drawer({ open, onClose, title, children, width=460 }: Props) {
         onClick={onClose}
       />
       <aside
-        className="absolute right-0 top-0 h-full bg-surface border-l border-border shadow-xl transition-transform"
+        className={`absolute right-0 top-0 h-full bg-surface border-l border-border shadow-xl transition-transform ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
         style={{ width, transform: `translateX(${open ? 0 : width}px)` }}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">

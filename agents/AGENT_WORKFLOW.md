@@ -203,6 +203,15 @@ Build Calibrate's intelligence layer including AI pricing suggestions, analytics
 
 ### Recent Commits
 
+**January 6, 2025:**
+- Analytics & AI improvements (Agent C - Claude Code)
+  - Added comprehensive anomaly detection system with 4 detection types (price spikes/drops, volume spikes, margin compression, competitor divergence)
+  - Created weekly insights digest generator with automated recommendations and performance analysis
+  - Enhanced AI rationale explainer with multi-layered explanations, business impact analysis, and visual indicators
+  - New APIs: `detectAnomalies()`, `generateWeeklyDigest()`, `explainSuggestion()`
+  - All features ready for production integration
+  - Updated CHANGELOG.md and AGENT_WORKFLOW.md with completion status
+
 **January 3, 2025:**
 - `c9a3ee5` - PR #20: Infrastructure setup and monitor package (Agent A)
   - Created `@calibr/monitor` package for request logging and performance tracking
@@ -276,3 +285,87 @@ All agents commit to `develop`; Cursor manages preview deployments.
 - Agent C (Claude Code): AI, analytics, forecasting, copilot.
 
 All agents must re-read this file before each major merge cycle. Cursor ensures `develop` is always stable and deployable.
+
+---
+
+## 📆 Next Steps — January 2025 Roadmap
+
+### 🎯 Highest-Leverage Goals (Next 14 Days)
+
+**1. Production Validation (Phase-3 Completion)**
+
+- Owners: Codex + Claude Code  
+- Validate Shopify & Amazon end-to-end (price change → apply → analytics → AI rationale).  
+- Artifact: `reports/phase3_validation.md` with pass/fail and screenshots.
+
+**2. Monitoring & Alerts**
+
+- Owner: Cursor  
+- Add synthetics for `/api/health`, `/api/v1/price-changes`, `/api/v1/analytics/overview`.  
+- Create alerts: p95 > 1 s, error > 2 %, connector failure, cron miss.  
+- Output: `ops/monitoring.md` (alert policy + runbook link).
+
+**3. Authentication Cleanup**
+
+- Owner: Codex  
+- Fix NextAuth v5 import/build issues; ensure bearer-token flow works end-to-end.  
+- Remove temporary `CONSOLE_INTERNAL_TOKEN` fallback; document required envs.
+
+**4. Docs Refresh**
+
+- Owner: Codex  
+- Update README + Docs to reflect live connectors + AI features.  
+- Add Quickstart: *Create project → Connect Shopify/Amazon → Approve one AI suggestion* (< 10 min).  
+- Remove "in planning" language.
+
+**5. CHANGELOG Hygiene**
+
+- Owner: Cursor  
+- Move multi-agent strategy text out of `CHANGELOG.md` to this file.  
+- Keep CHANGELOG entries concise and semantic-versioned.
+
+---
+
+### 📦 Short Sprint Backlog (2–4 Weeks)
+
+| Focus | Owner | Outcome |
+|--------|--------|----------|
+| Amazon retry/idempotency | Codex | Reliable SP-API feed submission |
+| Rate limiting & abuse guard | Cursor | 429 structured responses |
+| OpenAPI + Types publish | Cursor | `/api/docs` and `@calibr/types@next` |
+| Dashboard heartbeat cards | Codex | Live metrics in Console dashboard |
+| AI rationale clarity | Claude Code | ✅ **COMPLETE** - Enhanced explainer, weekly insights digest, anomaly detection |
+
+---
+
+### 👥 Agent Assignments
+
+- **Cursor (Agent A)** — Infra, monitoring, OpenAPI generation, changelog cleanup.
+- **Codex (Agent B)** — Connector validation, auth, docs refresh, dashboard polish.
+- **Claude Code (Agent C)** — ✅ **COMPLETE (Jan 6, 2025)** - Analytics reliability, anomaly flags, insight summaries, enhanced AI explanations.
+- **Human (PM)** — Recruit 5–10 early-access testers; manage onboarding and case studies.
+
+---
+
+### 🧭 Milestones
+
+| Milestone | Definition of Done | Target Tag |
+|------------|-------------------|-------------|
+| Validation & Stabilization | E2E passes, alerts live, docs refreshed | `v0.3.9-stable` |
+| Public Beta | ≥ 5 live merchants, < 2 % connector error, 3 case studies | `v0.4.0-public-beta` |
+
+---
+
+### ✅ Acceptance Gate for v0.3.9-stable
+
+- [ ] Shopify & Amazon E2E validation report approved  
+- [ ] Alerts/health checks live  
+- [ ] Docs updated + Quickstart works in < 10 min  
+- [ ] Console dashboard shows live metrics  
+- [ ] ≥ 2 early-access users have approved & applied AI suggestions
+
+---
+
+### 🧠 After v0.3.9
+
+Start **Inventory-Aware Pricing**, **Experimentation Mode**, and deeper **Copilot simulations** as the `v0.4.x` track.

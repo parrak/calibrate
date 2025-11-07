@@ -37,9 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="#features" className="hover:text-fg">Features</a>
               <a href="#how" className="hover:text-fg">How it works</a>
               <a href="https://docs.calibr.lat" className="hover:text-fg">Docs</a>
-              <a href="https://app.calibr.lat/login" className="px-3 py-1.5 rounded-md bg-brand text-black font-medium">Sign in</a>
+              <a href="https://console.calibr.lat/login" className="px-3 py-1.5 rounded-md bg-brand text-black font-medium">Sign in</a>
             </nav>
-            <a href="https://app.calibr.lat/login" className="md:hidden px-3 py-1.5 rounded-md bg-brand text-black font-medium">Sign in</a>
+            <a href="https://console.calibr.lat/login" className="md:hidden px-3 py-1.5 rounded-md bg-brand text-black font-medium">Sign in</a>
           </div>
         </header>
         <main>{children}</main>

@@ -51,11 +51,16 @@ See: `../bug-fixes/nextjs-15-dynamic-params.md`
 
 **Problem:** Prisma client not initialized or middleware import errors
 
-**Solution:** 
-1. Ensure Prisma client is generated before build:
-```json
-"build": "prisma generate --schema=../../packages/db/prisma/schema.prisma && next build"
+**Solution:**
+1. Ensure Prisma client is generated before build. On Vercel, the `apps/console/vercel.json` install command now runs:
+```bash
+corepack prepare pnpm@9.0.0 --activate \
+  && cd ../.. \
+  && pnpm install --frozen-lockfile=false --shamefully-hoist \
+  && pnpm --filter @calibr/db run generate
 ```
+
+   This executes the workspace `@calibr/db` `generate` script so `@prisma/client` is available before Next.js compiles.
 
 2. If encryption middleware causes issues, disable it:
 ```typescript

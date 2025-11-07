@@ -1,23 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { CompetitorMonitor } from '@calibrate/competitor-monitoring'
-import { verifyHmac } from '@calibr/security'
+import { withSecurity } from '@/lib/security-headers'
 
 const db = () => prisma()
 
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request: NextRequest) => {
   try {
-    // Verify HMAC signature
-    const authResult = await verifyHmac(request)
-    if (!authResult.valid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const body = await request.json()
-    const { tenantId, projectId, competitorId } = body
+    const { projectSlug, competitorId } = body
 
-    if (!tenantId || !projectId) {
-      return NextResponse.json({ error: 'Missing tenantId or projectId' }, { status: 400 })
+    if (!projectSlug && !competitorId) {
+      return NextResponse.json({ error: 'Missing projectSlug or competitorId' }, { status: 400 })
     }
 
     const monitor = new CompetitorMonitor(db())
@@ -42,8 +36,16 @@ export async function POST(request: NextRequest) {
       const result = await monitor.monitorCompetitor(competitor)
       results = [{ ...result, duration: 0 }]
     } else {
-      // Monitor all competitors in project
-      results = await monitor.monitorProject(tenantId, projectId)
+      // Monitor all competitors in project - resolve projectSlug first
+      const project = await db().project.findUnique({
+        where: { slug: projectSlug }
+      })
+
+      if (!project) {
+        return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+      }
+
+      results = await monitor.monitorProject(project.tenantId, project.id)
     }
 
     return NextResponse.json({ results })
@@ -51,4 +53,4 @@ export async function POST(request: NextRequest) {
     console.error('Error monitoring competitors:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

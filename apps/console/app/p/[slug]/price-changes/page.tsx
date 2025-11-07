@@ -394,7 +394,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         {!initialized && loading && (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-16 animate-pulse rounded-xl bg-muted/40" />
+              <div key={i} className="h-16 animate-pulse rounded-xl bg-mute/40" />
             ))}
           </div>
         )}
@@ -441,7 +441,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
               return (
                 <tr
                   key={item.id}
-                  className="cursor-pointer border-b border-border/60 text-sm transition hover:bg-muted/20"
+                  className="cursor-pointer border-b border-border/60 text-sm transition hover:bg-mute/20"
                   onClick={() => {
                     setActive(item)
                     setOpen(true)
@@ -468,8 +468,21 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs uppercase tracking-wide text-mute">
-                    {item.source || '—'}
+                  <td className="px-4 py-3 text-xs uppercase tracking-wide">
+                    <div className="flex items-center gap-2">
+                      <span className="text-mute">{item.source || '—'}</span>
+                      {item.policyResult?.checks && (
+                        <span
+                          className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand/20 text-brand text-[10px] cursor-help"
+                          title={`AI Rationale: ${item.policyResult.checks
+                            .filter((c) => c.ok)
+                            .map((c) => c.name)
+                            .join(', ') || 'Click for details'}`}
+                        >
+                          ?
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <StatusPill status={item.status} />
