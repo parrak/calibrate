@@ -143,12 +143,10 @@ Implement the full Price Changes MVP and core pricing workflow APIs while mainta
 
 ---
 
-## Agent C - Claude Code (AI and Analytics)
+## Agent C - Claude Code (AI and Analytics)  — **Status: Growth Phase complete (Jan 2–6, 2025)**
 
 ### Mission
 Build Calibrate's intelligence layer including AI pricing suggestions, analytics dashboards, forecasting, and merchant insights.
-
-### Status: Growth Phase (v0.3 to v0.6) complete on January 2, 2025
 
 ### Growth Phase (v0.3 to v0.6) - Complete
 1. AI Pricing Assist - complete
@@ -201,7 +199,7 @@ Build Calibrate's intelligence layer including AI pricing suggestions, analytics
 - Analytics jobs run nightly (Vercel cron configured).
 - Dashboard visualizations accurate within tolerance.
 
-### Recent Commits
+### Recent Highlights
 
 **January 6, 2025:**
 - Analytics & AI improvements (Agent C - Claude Code)
@@ -369,3 +367,109 @@ All agents must re-read this file before each major merge cycle. Cursor ensures 
 ### 🧠 After v0.3.9
 
 Start **Inventory-Aware Pricing**, **Experimentation Mode**, and deeper **Copilot simulations** as the `v0.4.x` track.
+
+---
+
+## 🧾 Definition of Ready (DoR) for any new work
+Before an agent starts coding, the task must include:
+- **Contract snippet** in `contracts/<issue>.md` (DTOs, request/response, errors).
+- **Env & secrets** listed (if any).
+- **Acceptance criteria** (bullet list, measurable).
+- **Owner** and **milestone tag** (e.g., `v0.3.9`).
+
+## 🧪 Operational SLAs
+- **API p95 latency:** ≤ 1.0s (read), ≤ 1.5s (mutations).
+- **Connector job success:** ≥ 98% daily.
+- **Cron reliability:** ≥ 99% run success with alert on miss.
+- **Error budget:** API 5xx < 2% per day.
+
+Cursor owns alerting; Codex/Claude own remediation within business hours.
+
+---
+
+## 🎨 UI Theming Rollout (Light Theme)
+**Goal:** Notion-style light theme for Site, Console, Docs with shared tokens.
+- **Owner:** Codex (build) + Cursor (tokens, release)
+- **Scope:** `apps/{site,console,docs}/app/globals.css` and `packages/ui`
+- **Acceptance:** WCAG AA contrast; screenshots for hero, console dashboard, docs prose; Lighthouse ≥ 90 desktop.
+
+---
+
+## 💳 Stripe Integration Plan (MVP → Growth)
+
+### Objectives
+1) **Connect Stripe** via OAuth (Connect Standard)  
+2) **Sync/Create Catalog** (Products & Prices)  
+3) **Ingest Transactions** (intents/charges + fees/net via BalanceTransactions)  
+4) **Pricing insights** from conversion data  
+5) **Unified UI** with Shopify/Amazon/Stripe in one view
+
+### Data Model Additions (Prisma)
+- `StripeAccount` (projectId, stripeAccountId, livemode, status, createdAt)
+- `ConnectorSyncState` (projectId, source: 'stripe'|'shopify'|'amazon', cursor JSON)
+- `StripeWebhookEvent` (id, type, payloadHash, processedAt, status)
+- `StripeProductMap` (projectId, stripeProductId → Product.id)
+- `StripePriceMap` (projectId, stripePriceId → Price.id)
+- `Transaction` (projectId, source, externalId, amount, currency, status, feeAmount, netAmount, productId?, skuId?, createdAt)
+
+> Reuse `Event` for audit logs: `stripe.sync.started`, `stripe.webhook.received`, `transaction.created`.
+
+### API Endpoints
+**OAuth**
+- `GET /api/integrations/stripe/oauth/start`
+- `GET /api/integrations/stripe/oauth/callback`
+- `POST /api/integrations/stripe/disconnect`
+
+**Webhooks**
+- `POST /api/integrations/stripe/webhook`  
+  Subscribe: `product.*`, `price.*`, `payment_intent.*`, `charge.*`, `balance.available`
+
+**Sync Jobs**
+- `POST /api/integrations/stripe/sync/catalog` → upsert Products/Prices + Maps
+- `POST /api/integrations/stripe/sync/transactions?since=…` → PaymentIntents/Charges + BalanceTransactions → `Transaction`
+
+**Catalog Write (optional MVP+):**
+- `POST /api/integrations/stripe/products`
+- `POST /api/integrations/stripe/prices`
+
+**Analytics**
+- `GET /api/v1/analytics/:projectId/conversion-overview`
+- `GET /api/v1/analytics/:projectId/sku/:id/conversion-curve`
+
+### Processing Rules
+- All Stripe calls include `Stripe-Account` header (per connected merchant).
+- Webhooks are verified (Stripe signing secret) and **idempotent** (use event id + payload hash).
+- Backfills use `ConnectorSyncState.cursor` for pagination checkpoints.
+- Map Stripe Product/Price to internal Product/Price, then attach `Transaction` rows to mapped SKUs when possible.
+
+### Console UI
+- **Settings → Connectors:** add Stripe row (connect/disconnect, last sync).
+- **Catalog:** show Stripe badges + mismatch hints.
+- **Transactions (new):** table of Stripe payments (gross, fees, net, SKU, status).
+- **Analytics Overview:** merge Shopify/Amazon/Stripe into unified cards with source filters.
+- **Price Change Drawer:** show recent Stripe conversion for the SKU (e.g., "2.4% @ $29").
+
+### Security & Compliance
+- PCI: **read-only**, never store card data.
+- Secrets: `STRIPE_CLIENT_ID`, `STRIPE_CLIENT_SECRET`, `STRIPE_WEBHOOK_SECRET` (env validation by Cursor).
+- Feature flag: `STRIPE_CONNECT_ENABLED`.
+
+### Work Split
+- **Agent A (Cursor):** OAuth app config, secrets, webhook signature verify util, job queue, observability (`stripe.*` events), alerts.
+- **Agent B (Codex):** OAuth routes, webhook handler, mappers + sync jobs, Console Connectors + Transactions UI, optional catalog write.
+- **Agent C (Claude Code):** Add Stripe `Transaction` to analytics pipeline, conversion curves per SKU, incorporate into AI rationale and weekly digest.
+- **Human:** Test with a Stripe demo account; recruit 2–3 early-access Stripe-only users.
+
+### Acceptance (Stripe MVP "Done")
+- Merchant can connect Stripe; catalog appears with badges.
+- Transactions page shows recent payments with fees & net.
+- Analytics overview includes Stripe totals; source filters work.
+- Webhooks verified & idempotent; backfill handles ≥10k records.
+- Docs include a **10-minute Stripe Quickstart**.
+
+### Milestones
+| Milestone | DoD | Owner | Tag |
+|---|---|---|---|
+| Connect + Read | OAuth, catalog sync, transactions ingest, webhooks OK, UI visible | A+B | `v0.3.10` |
+| Unified Analytics | Conversion overview + SKU curves, AI rationale cites Stripe | C+B | `v0.3.11` |
+| Catalog Write | Create/Update Product/Price in Stripe from Console | B | `v0.3.12` |
