@@ -51,11 +51,40 @@ See: `../bug-fixes/nextjs-15-dynamic-params.md`
 
 **Problem:** Prisma client not initialized or middleware import errors
 
-**Solution:** 
-1. Ensure Prisma client is generated before build:
-```json
-"build": "prisma generate --schema=../../packages/db/prisma/schema.prisma && next build"
-```
+**Solution:**
+1. Ensure Prisma client is generated before build.
+
+   - **Legacy build reference (local Next.js builds):**
+
+     ```json
+     "build": "prisma generate --schema=../../packages/db/prisma/schema.prisma && next build"
+     ```
+
+     Keep this snippet handy for engineers running the console build locally without Vercel so the expectation of generating the Prisma client before the Next.js build stays explicit.
+
+   - **Vercel install step:**
+
+     ```bash
+     corepack prepare pnpm@9.0.0 --activate \
+       && cd ../.. \
+       && pnpm install --frozen-lockfile=false --shamefully-hoist \
+       && pnpm --filter @calibr/db exec prisma generate
+     ```
+
+     Running Prisma directly via the workspace filter during install guarantees `@prisma/client` is linked before Next.js starts compiling while preserving the non-frozen install required for cached dependency reconciliation.
+
+   - **Vercel build step safeguard:**
+
+     ```bash
+     corepack prepare pnpm@9.0.0 --activate \
+       && cd ../.. \
+       && pnpm --filter @calibr/db exec prisma generate \
+       && pnpm --filter @calibr/console build
+     ```
+
+     Running `corepack prepare` during the build mirrors what happens inside the install step, ensuring the right pnpm version is always active before regenerating Prisma and kicking off the console build. Re-running `prisma generate` at build time catches any skipped install hooks (for example when re-deploying from cache) and keeps the build idempotent.
+
+   - **Local builds:** run `pnpm --filter @calibr/db exec prisma generate` before `pnpm --filter @calibr/console build` or add it as a prebuild script if engineers encounter the same missing-client error locally.
 
 2. If encryption middleware causes issues, disable it:
 ```typescript

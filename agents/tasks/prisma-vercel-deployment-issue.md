@@ -25,12 +25,22 @@ Please try to install it by hand with pnpm add @prisma/client and rerun pnpm dlx
 
 ## Current Configuration
 
-**apps/console/vercel.json**:
+**apps/console/vercel.json (prior to fix, failing build)**:
 ```json
 {
   "framework": "nextjs",
   "buildCommand": "cd ../.. && corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile=false && pnpm --filter @calibr/db exec prisma generate && pnpm --filter @calibr/console build",
   "installCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm install --frozen-lockfile=false --shamefully-hoist",
+  "outputDirectory": ".next"
+}
+```
+
+**apps/console/vercel.json (resolved configuration in master)**:
+```json
+{
+  "framework": "nextjs",
+  "buildCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm --filter @calibr/db exec prisma generate && pnpm --filter @calibr/console build",
+  "installCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm install --frozen-lockfile=false --shamefully-hoist && pnpm --filter @calibr/db exec prisma generate",
   "outputDirectory": ".next"
 }
 ```
@@ -135,7 +145,16 @@ The fix should:
 
 ---
 
-**Assigned to**: Agent B (Codex)  
-**Created**: Based on persistent Vercel deployment failures  
+**Assigned to**: Agent B (Codex)
+**Created**: Based on persistent Vercel deployment failures
 **Related PR**: #2 (chore/update-docs-and-scripts branch)
+
+---
+
+## ✅ Resolution (January 2025)
+
+- Updated `apps/console/vercel.json` so the install command performs a hoisted workspace install with `--frozen-lockfile=false` and immediately runs `pnpm --filter @calibr/db exec prisma generate`. This keeps Vercel's dependency expectations intact while ensuring `@prisma/client` is linked before Next.js builds.
+- Added a defensive build command that first activates pnpm via `corepack prepare pnpm@9.0.0 --activate`, regenerates Prisma with `pnpm --filter @calibr/db exec prisma generate`, and then runs `pnpm --filter @calibr/console build` so cached deployments cannot skip Prisma generation.
+- Documented the revised install and build flow in `agents/learnings/deployment/production-guide.md`, including local remediation steps for engineers who see the error outside of Vercel.
+- Verified the workflow locally with `pnpm --filter @calibr/console build` so the same commands developers run match the deployment pipeline.
 

@@ -28,7 +28,9 @@
       "@calibr/analytics/*": ["../../packages/analytics/*"],
       "@calibr/connectors/*": ["../../packages/connectors/*"],
       "@calibr/platform-connector/*": ["../../packages/platform-connector/src/*"],
-      "@calibr/amazon-connector/*": ["../../packages/amazon-connector/*"]
+      "@calibr/amazon-connector/*": ["../../packages/amazon-connector/*"],
+      "@calibr/monitor": ["../../packages/monitor/src/index.ts"],
+      "@calibr/monitor/*": ["../../packages/monitor/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
