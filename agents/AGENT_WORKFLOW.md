@@ -203,6 +203,15 @@ Build Calibrate's intelligence layer including AI pricing suggestions, analytics
 
 ### Recent Commits
 
+**January 6, 2025:**
+- Analytics & AI improvements (Agent C - Claude Code)
+  - Added comprehensive anomaly detection system with 4 detection types (price spikes/drops, volume spikes, margin compression, competitor divergence)
+  - Created weekly insights digest generator with automated recommendations and performance analysis
+  - Enhanced AI rationale explainer with multi-layered explanations, business impact analysis, and visual indicators
+  - New APIs: `detectAnomalies()`, `generateWeeklyDigest()`, `explainSuggestion()`
+  - All features ready for production integration
+  - Updated CHANGELOG.md and AGENT_WORKFLOW.md with completion status
+
 **January 3, 2025:**
 - `c9a3ee5` - PR #20: Infrastructure setup and monitor package (Agent A)
   - Created `@calibr/monitor` package for request logging and performance tracking
@@ -329,15 +338,15 @@ All agents must re-read this file before each major merge cycle. Cursor ensures 
 | Rate limiting & abuse guard | Cursor | 429 structured responses |
 | OpenAPI + Types publish | Cursor | `/api/docs` and `@calibr/types@next` |
 | Dashboard heartbeat cards | Codex | Live metrics in Console dashboard |
-| AI rationale clarity | Claude Code | Better explanations & weekly "insights digest" |
+| AI rationale clarity | Claude Code | ✅ **COMPLETE** - Enhanced explainer, weekly insights digest, anomaly detection |
 
 ---
 
 ### 👥 Agent Assignments
 
-- **Cursor (Agent A)** — Infra, monitoring, OpenAPI generation, changelog cleanup.  
-- **Codex (Agent B)** — Connector validation, auth, docs refresh, dashboard polish.  
-- **Claude Code (Agent C)** — Analytics reliability, anomaly flags, insight summaries.  
+- **Cursor (Agent A)** — Infra, monitoring, OpenAPI generation, changelog cleanup.
+- **Codex (Agent B)** — Connector validation, auth, docs refresh, dashboard polish.
+- **Claude Code (Agent C)** — ✅ **COMPLETE (Jan 6, 2025)** - Analytics reliability, anomaly flags, insight summaries, enhanced AI explanations.
 - **Human (PM)** — Recruit 5–10 early-access testers; manage onboarding and case studies.
 
 ---

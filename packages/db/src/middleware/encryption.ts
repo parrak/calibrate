@@ -7,8 +7,8 @@
 import { Prisma } from '@prisma/client'
 import { encryptCredentials, decryptCredentials } from '@calibr/security'
 
-export function encryptionMiddleware(): Prisma.Middleware {
-  return async (params, next) => {
+export function encryptionMiddleware(): any {
+  return async (params: any, next: any) => {
     // Encrypt before create/update
     if (
       params.model === 'PlatformIntegration' as any &&

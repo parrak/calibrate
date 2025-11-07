@@ -143,8 +143,7 @@ The fix should:
 
 ## ✅ Resolution (January 2025)
 
-- Updated `apps/console/vercel.json` so the install command performs a hoisted workspace install with `--frozen-lockfile=false` and immediately runs `pnpm --filter @calibr/db exec prisma generate`. This keeps Vercel's dependency expectations intact while ensuring `@prisma/client` is linked before Next.js builds.
-- Added a defensive `pnpm --filter @calibr/db exec prisma generate` invocation to the build command before `pnpm --filter @calibr/console build` to prevent cached deployments from skipping Prisma generation.
-- Documented the revised install and build flow in `agents/learnings/deployment/production-guide.md`, including local remediation steps for engineers who see the error outside of Vercel.
-- Verified the workflow locally with `pnpm --filter @calibr/console build` so the same commands developers run match the deployment pipeline.
+- Updated `apps/console/vercel.json` so the install command runs `pnpm --filter @calibr/db run generate` immediately after the workspace install. This ensures `@prisma/client` is linked before Next.js builds.
+- Simplified the Vercel build step to just `pnpm --filter @calibr/console build` now that Prisma generation happens during install.
+- Documented the new install command in `agents/learnings/deployment/production-guide.md` for future deploy debugging.
 

@@ -184,7 +184,7 @@ export class CompetitorMonitor {
       orderBy: { createdAt: 'asc' }
     })
 
-    return prices.map(price => ({
+    return prices.map((price: typeof prices[0]) => ({
       id: price.id,
       productId: price.productId,
       amount: price.amount,

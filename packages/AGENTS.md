@@ -28,3 +28,49 @@ Scope: `calibrate/packages` — shared libraries, connectors, db, config, and UI
 - Lint and build/check types for the changed package only.
 - If API surface changes, update `index.ts` exports and add/revise tests.
 
+## Pull Request Workflow to Master
+
+### **Mandatory PR Requirements**
+
+When creating a Pull Request to sync changes to `master`, **ALL PRs MUST include**:
+
+1. **CHANGELOG.md Update**
+   - Add a new entry under `[Unreleased]` section describing the package changes
+   - Include new features, API changes, bug fixes, or breaking changes
+   - Specify which package(s) were affected (e.g., `@calibr/db`, `@calibr/ui`)
+   - Reference PR number (e.g., `(PR #123)`)
+
+2. **AGENT_WORKFLOW.md Update**
+   - Update the relevant agent section in `agents/AGENT_WORKFLOW.md` to reflect progress
+   - Mark completed deliverables with ✅ and date
+   - Update status indicators and milestone table if applicable
+   - Note which agent (A, B, or C) completed the work
+
+3. **PR Description**
+   - Clear title (e.g., `feat(packages): add new utility` or `fix(db): resolve migration issue`)
+   - Summary of package changes
+   - Breaking changes clearly documented
+   - Testing performed (include test results)
+   - Migration notes if database schema changes
+
+### **PR Creation Steps**
+
+```bash
+# 1. Create feature branch
+git checkout -b feature/packages-your-feature
+
+# 2. Make changes and commit
+git add .
+git commit -m "feat(packages): your feature description"
+
+# 3. Update CHANGELOG.md (add entry under [Unreleased])
+# 4. Update agents/AGENT_WORKFLOW.md (update relevant agent section)
+
+# 5. Commit documentation
+git add CHANGELOG.md agents/AGENT_WORKFLOW.md
+git commit -m "docs: update changelog and agent workflow"
+
+# 6. Push and create PR targeting master
+git push origin feature/packages-your-feature
+```
+

@@ -7,6 +7,88 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+
+- **Analytics: Anomaly Detection System** (Agent C - Claude Code)
+  - Intelligent detection of unusual pricing patterns and business metrics
+  - Four anomaly types:
+    - Price spikes/drops: Detects sudden price changes exceeding threshold (default 20%)
+    - Volume spikes: Identifies unusual increases in price change activity (default 200%)
+    - Margin compression: Alerts on declining profit margins (default 10% drop)
+    - Competitor divergence: Flags significant deviations from market pricing (default 15%)
+  - Severity classification: Critical, High, Medium, Low
+  - Automated recommendations for each detected anomaly
+  - Statistical outlier detection using Z-score method
+  - New API: `detectAnomalies(projectId, config)` in `@calibr/analytics`
+  - Configurable thresholds for all detection algorithms
+
+- **Analytics: Weekly Insights Digest** (Agent C - Claude Code)
+  - Automated weekly summary generation with actionable insights
+  - Executive summary with key metrics and top metric highlights
+  - Intelligent insight generation across 5 categories:
+    - Pricing insights: Price change patterns and trends
+    - Volume insights: Activity level analysis
+    - Margin insights: Profitability tracking and warnings
+    - Performance insights: Approval rates and execution efficiency
+    - Opportunity insights: Untapped optimization potential
+  - Performance comparison vs previous period with trend analysis
+  - Business recommendations based on detected patterns
+  - Integrated anomaly detection in digest reports
+  - New API: `generateWeeklyDigest(projectId, weekEndDate)` in `@calibr/analytics`
+  - Ready for email/Slack notification integration
+
+- **AI Engine: Enhanced Rationale Explainer** (Agent C - Claude Code)
+  - Dramatically improved AI pricing suggestion explanations
+  - Multi-layered explanation system:
+    - One-line summary for quick understanding
+    - Detailed explanation with full context
+    - Key factors breakdown with weights and influence
+    - Business impact analysis (revenue, demand, competitive position)
+    - Step-by-step reasoning chain showing decision process
+  - Visual indicators:
+    - Price direction: Increase, Decrease, Maintain
+    - Confidence level: Very High, High, Moderate, Low
+    - Urgency: Immediate, Recommended, Optional
+    - Risk level: Low, Medium, High
+  - Actionable next steps with implementation guidance
+  - Smart warnings for edge cases (large changes, low confidence, missing data)
+  - New API: `explainSuggestion(suggestion, input)` in `@calibr/ai-engine`
+  - Supports merchant-friendly language and clear formatting
+
+### Changed
+
+- **Light Theme Transition Across All Applications**
+  - Migrated all apps from dark theme to Notion-style light theme with neutral surfaces, subtle borders, and teal accent
+  - **Global Theme Tokens:**
+    - Background: `#f9f9fb` (neutral light)
+    - Surface: `#ffffff` (white cards/panels)
+    - Border: `#e5e7eb` (subtle gray borders)
+    - Foreground: `#1a1a1a` (dark text)
+    - Muted: `#6b7280` (secondary text)
+    - Brand: `#00a3a3` (teal accent)
+    - Accent: `#2563eb` (blue accent for links)
+  - **Console (console.calibr.lat):**
+    - Updated layout, header, and all surfaces to light theme
+    - Cards now feature white backgrounds with soft shadows and hover elevation
+    - Primary buttons: teal brand with white text, proper hover states
+  - **Marketing Site (calibr.lat):**
+    - Hero, features, testimonials, and CTA sections updated to light theme
+    - White header/footer with subtle borders
+    - Enhanced readability with improved text contrast
+  - **Docs Site (docs.calibr.lat):**
+    - Body and prose styling updated for light theme
+    - Added typography variables for documentation content
+  - **Shared UI Components:**
+    - Card: Rounded corners (xl), subtle shadows with hover transitions
+    - Button: Brand buttons with 90% opacity → 100% on hover
+    - Updated all color references to use CSS custom properties
+  - **Tailwind Configuration:**
+    - All configs now reference CSS variables for theme colors
+    - Added `borderColor: { DEFAULT: 'var(--border)' }` for consistent borders
+    - Radius tokens updated to use CSS variables
+  - Dark theme preserved under `:root.dark` for future theme toggle feature
+  - All apps pass TypeScript checks with no breaking changes
+
+### Added
 - Integrated request monitoring and performance tracking in the API via `@calibr/monitor`, including structured logging, response timing, and X-Request-ID propagation.
 - Launched the console AI Pricing Assistant experience with chat history, AI explanations, and follow-up suggestions.
 - Introduced a guided tour component to onboard first-time console users.
