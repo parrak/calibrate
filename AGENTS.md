@@ -228,8 +228,9 @@ When creating a Pull Request to sync changes to `master`, **ALL PRs MUST include
    - Include specific details about what was changed, which components/features were affected, and any breaking changes
    - Reference PR number if applicable (e.g., `(PR #123)`)
 
-2. **AGENT_WORKFLOW.md Update**
-   - Update the relevant agent section in `agents/AGENT_WORKFLOW.md` to reflect progress
+2. **Execution Packet Update**
+   - Update the relevant sections in `/agents/docs/_EXECUTION_PACKET_V2/` files to reflect progress
+   - See `/agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md` for guidance
    - Mark completed deliverables with ✅ and date
    - Update status indicators (🔄 In Progress, ✅ Complete, ⏳ Ready to Start)
    - Add commit references with PR numbers
@@ -255,11 +256,11 @@ git commit -m "feat: your feature description"
 # 3. Update CHANGELOG.md
 # Add entry under [Unreleased] section
 
-# 4. Update agents/AGENT_WORKFLOW.md
+# 4. Update execution packet files in agents/docs/_EXECUTION_PACKET_V2/
 # Update relevant agent section with progress
 
 # 5. Commit documentation updates
-git add CHANGELOG.md agents/AGENT_WORKFLOW.md
+git add CHANGELOG.md agents/docs/_EXECUTION_PACKET_V2/
 git commit -m "docs: update changelog and agent workflow"
 
 # 6. Push and create PR
@@ -274,6 +275,6 @@ Before requesting review, ensure:
 - [ ] Linting passes (`pnpm lint`)
 - [ ] Build succeeds (`pnpm build`)
 - [ ] CHANGELOG.md updated with clear description
-- [ ] AGENT_WORKFLOW.md updated with progress
+- [ ] Execution packet files updated with progress
 - [ ] PR description includes all relevant context
 - [ ] No breaking changes (or clearly documented if present)

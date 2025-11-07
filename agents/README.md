@@ -1,3 +1,15 @@
+## Source of Truth
+
+**Whenever direction is unclear, READ:**
+
+- `/agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md`
+- `/agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md`
+- `/agents/docs/_EXECUTION_PACKET_V2/02_TEAM_ASSIGNMENTS.md`
+
+These supersede older strategy/execution docs (e.g., legacy `AGENT_WORKFLOW.md`).
+
+---
+
 Agents Collaboration Protocol
 
 This folder provides a lightweight, file-backed protocol for coordinating multiple AI coding agents (e.g., Codex CLI, Claude, Cursor) working in this repo.
