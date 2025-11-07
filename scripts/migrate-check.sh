@@ -64,7 +64,9 @@ fi
 # Check for schema drift (validate schema file)
 echo ""
 echo "3. Validating schema file..."
-if npx prisma validate; then
+# prisma validate requires DATABASE_URL, so we use format --check instead
+# This validates the schema syntax without requiring a database connection
+if npx prisma format --check; then
   echo "✓ Schema file is valid"
 else
   echo "Error: Schema validation failed" >&2
