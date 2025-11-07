@@ -1,4 +1,4 @@
-# Calibrate - Multi-Agent Execution Plan
+This document has moved. See:
 
 This document defines how the Calibrate project is collaboratively developed across three autonomous agents:
 

@@ -10,6 +10,16 @@ Each agent works independently but adheres to shared contracts, schemas, and mil
 
 ---
 
+## 📖 Source of Truth
+
+**Whenever direction is unclear, READ:**
+
+- [/agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md](/agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md)
+- [/agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md](/agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md)
+- [/agents/docs/_EXECUTION_PACKET_V2/02_TEAM_ASSIGNMENTS.md](/agents/docs/_EXECUTION_PACKET_V2/02_TEAM_ASSIGNMENTS.md)
+
+---
+
 ## 🧭  Project Overview
 
 **Calibrate** is an AI-ready pricing automation platform for commerce systems.  

@@ -116,7 +116,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ### Added
 
 - **Documentation: January 2025 Roadmap**
-  - Added comprehensive roadmap section to `AGENT_WORKFLOW.md` with:
+  - Added comprehensive roadmap section (now in `/agents/docs/_EXECUTION_PACKET_V2/`) with:
     - Highest-leverage goals for next 14 days (production validation, monitoring, auth cleanup, docs refresh, CHANGELOG hygiene)
     - Short sprint backlog (2-4 weeks) with Amazon retry/idempotency, rate limiting, OpenAPI generation, dashboard improvements
     - Agent assignments and responsibilities
