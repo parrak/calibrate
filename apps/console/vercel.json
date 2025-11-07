@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm --filter @calibr/db exec prisma generate && pnpm --filter @calibr/console build",
+  "buildCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm --filter @calibr/db exec prisma generate && pnpm exec prisma generate --schema=./packages/db/prisma/schema.prisma && pnpm --filter @calibr/console build",
   "installCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm install --frozen-lockfile=false --shamefully-hoist && pnpm --filter @calibr/db exec prisma generate",
   "outputDirectory": ".next"
 }

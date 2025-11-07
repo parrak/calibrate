@@ -25,7 +25,7 @@ Please try to install it by hand with pnpm add @prisma/client and rerun pnpm dlx
 
 ## Current Configuration
 
-**apps/console/vercel.json (prior to fix, failing build)**:
+**apps/console/vercel.json** (failing configuration):
 ```json
 {
   "framework": "nextjs",
@@ -35,11 +35,11 @@ Please try to install it by hand with pnpm add @prisma/client and rerun pnpm dlx
 }
 ```
 
-**apps/console/vercel.json (resolved configuration in master)**:
+**apps/console/vercel.json** (resolved configuration on master):
 ```json
 {
   "framework": "nextjs",
-  "buildCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm --filter @calibr/db exec prisma generate && pnpm --filter @calibr/console build",
+  "buildCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm --filter @calibr/db exec prisma generate && pnpm exec prisma generate --schema=./packages/db/prisma/schema.prisma && pnpm --filter @calibr/console build",
   "installCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm install --frozen-lockfile=false --shamefully-hoist && pnpm --filter @calibr/db exec prisma generate",
   "outputDirectory": ".next"
 }
@@ -153,8 +153,7 @@ The fix should:
 
 ## ✅ Resolution (January 2025)
 
-- Updated `apps/console/vercel.json` so the install command performs a hoisted workspace install with `--frozen-lockfile=false` and immediately runs `pnpm --filter @calibr/db exec prisma generate`. This keeps Vercel's dependency expectations intact while ensuring `@prisma/client` is linked before Next.js builds.
-- Added a defensive build command that first activates pnpm via `corepack prepare pnpm@9.0.0 --activate`, regenerates Prisma with `pnpm --filter @calibr/db exec prisma generate`, and then runs `pnpm --filter @calibr/console build` so cached deployments cannot skip Prisma generation.
-- Documented the revised install and build flow in `agents/learnings/deployment/production-guide.md`, including local remediation steps for engineers who see the error outside of Vercel.
+- Updated `apps/console/vercel.json` so the install command performs a hoisted workspace install and immediately regenerates Prisma while the build command re-activates pnpm with Corepack before running both `pnpm --filter @calibr/db exec prisma generate` and `pnpm exec prisma generate --schema=./packages/db/prisma/schema.prisma` ahead of `pnpm --filter @calibr/console build`.
+- Documented the revised install/build flow in `agents/learnings/deployment/production-guide.md`, including local remediation steps for engineers who see the error outside of Vercel.
 - Verified the workflow locally with `pnpm --filter @calibr/console build` so the same commands developers run match the deployment pipeline.
 

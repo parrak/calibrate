@@ -6,17 +6,46 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- **Light Theme Transition Across All Applications**
+  - Migrated all apps from dark theme to Notion-style light theme with neutral surfaces, subtle borders, and teal accent
+  - **Global Theme Tokens:**
+    - Background: `#f9f9fb` (neutral light)
+    - Surface: `#ffffff` (white cards/panels)
+    - Border: `#e5e7eb` (subtle gray borders)
+    - Foreground: `#1a1a1a` (dark text)
+    - Muted: `#6b7280` (secondary text)
+    - Brand: `#00a3a3` (teal accent)
+    - Accent: `#2563eb` (blue accent for links)
+  - **Console (console.calibr.lat):**
+    - Updated layout, header, and all surfaces to light theme
+    - Cards now feature white backgrounds with soft shadows and hover elevation
+    - Primary buttons: teal brand with white text, proper hover states
+  - **Marketing Site (calibr.lat):**
+    - Hero, features, testimonials, and CTA sections updated to light theme
+    - White header/footer with subtle borders
+    - Enhanced readability with improved text contrast
+  - **Docs Site (docs.calibr.lat):**
+    - Body and prose styling updated for light theme
+    - Added typography variables for documentation content
+  - **Shared UI Components:**
+    - Card: Rounded corners (xl), subtle shadows with hover transitions
+    - Button: Brand buttons with 90% opacity → 100% on hover
+    - Updated all color references to use CSS custom properties
+  - **Tailwind Configuration:**
+    - All configs now reference CSS variables for theme colors
+    - Added `borderColor: { DEFAULT: 'var(--border)' }` for consistent borders
+    - Radius tokens updated to use CSS variables
+  - Dark theme preserved under `:root.dark` for future theme toggle feature
+  - All apps pass TypeScript checks with no breaking changes
+- **Console Deployments:** Updated the Vercel install and build workflow to activate pnpm with Corepack, regenerate the Prisma
+  client during both steps, and keep the hoisted install required by Vercel so cached builds cannot skip client generation.
+- **Docs:** Expanded the production deployment guide with explicit Vercel install/build snippets and local recovery guidance so
+  engineers can reproduce the Prisma safeguards outside of Vercel.
+
 ### Added
 
-#### Highlights
-- Integrated request monitoring and performance tracking in the API via `@calibr/monitor`, including structured logging, response timing, and X-Request-ID propagation.
-- Launched the console AI Pricing Assistant experience with chat history, AI explanations, and follow-up suggestions.
-- Introduced a guided tour component to onboard first-time console users.
-- Added marketing site growth features, including the `/early-access` page plus dynamic icons and Open Graph assets.
-- Published shared UI theme tokens so apps consume a single set of color and radius definitions.
-- Delivered the Amazon SP-API pricing feed flow with encrypted feed submission endpoints and supporting console UI.
-
-#### Detailed additions
 - **Documentation: January 2025 Roadmap**
   - Added comprehensive roadmap section to `AGENT_WORKFLOW.md` with:
     - Highest-leverage goals for next 14 days (production validation, monitoring, auth cleanup, docs refresh, CHANGELOG hygiene)
@@ -24,6 +53,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
     - Agent assignments and responsibilities
     - Milestones and acceptance gates for v0.3.9-stable and v0.4.0-public-beta
     - Post-v0.3.9 plans for inventory-aware pricing and experimentation mode
+
 - **Comprehensive UX Refresh Across All Applications**
   - **Marketing Site (calibr.lat):**
     - Replaced hero code demo with autoplay video (MP4 with GIF fallback)
@@ -33,6 +63,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
     - Enhanced SEO with comprehensive meta tags, Open Graph images, Twitter cards
     - Added video preload and DNS preconnect optimizations for performance
     - Updated CTAs to "Try the Console" and "Join Early Access"
+
   - **Console (console.calibr.lat):**
     - Simplified navigation with emoji icons and improved visual hierarchy
     - Reordered nav items for better UX: Dashboard, Catalog, Price Changes, AI Suggestions, Analytics, Competitors, Settings
@@ -41,22 +72,31 @@ The format is based on Keep a Changelog and follows semantic versioning.
     - Added AI rationale tooltips in price changes table (hover "?" icon shows policy checks)
     - Applied consistent dark theme across all console pages
     - Loading skeleton states for async data
+
   - **Docs Site (docs.calibr.lat):**
     - Updated to dark theme matching marketing and console
     - Improved API endpoint documentation layout with hover effects
     - Added navigation links between docs, console, and marketing sites
     - Enhanced visual hierarchy and readability
+
   - **Design System:**
     - Unified CSS theme tokens across all apps (--bg, --surface, --border, --fg, --mute, --brand)
     - Consistent dark color palette with teal brand accent (#00c2a8)
     - Improved accessibility with ARIA labels, keyboard navigation, WCAG AA color contrast
     - Reduced motion support for animations
+
 - **Marketing Site: Icons & Social Previews**
   - Dynamic Next/OG assets for runtime generation:
     - `apps/site/app/icon.tsx` (favicon)
     - `apps/site/app/apple-icon.tsx` (Apple touch icon)
     - `apps/site/app/opengraph-image.tsx` (Open Graph image)
   - Added Contact links to `contact@calibr.lat` (hero + footer)
+
+### Changed
+- Marketing site, docs, and standalone app links updated from `https://app.calibr.lat` to `https://console.calibr.lat`
+- Kept static fallback `apps/site/public/favicon.svg`
+
+### Added
 - **API: Request Monitoring & Performance Tracking**
   - Integrated `@calibr/monitor` package for comprehensive request logging and observability
   - Automatic request/response logging for all API routes using `withSecurity` middleware
@@ -71,15 +111,18 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - New early access page at `/early-access` with form embed placeholder for Tally.so integration
   - Allows merchants to sign up for personalized onboarding
   - Mobile-responsive design with dark theme styling
+
 - **Console: Guided Tour Component**
   - New `GuidedTour` component for first-time user onboarding
   - Shows welcome message with key feature highlights (Dashboard, Price Changes, Analytics)
   - Uses localStorage to track if tour has been seen (shows once per browser)
   - Ready to be integrated into project layout when needed
+
 - **Shared UI: Theme Tokens**
   - New `packages/ui/theme.ts` module with centralized color and radius definitions
   - Provides consistent styling tokens across marketing site and console
   - Documents required CSS custom properties for theme implementation
+
 - API / Console: Shopify price change apply + rollback now call the live Shopify connector, recording variant metadata and surfacing connector errors with tests for the new flow.
 - **Console: AI Pricing Assistant (Copilot UI)**
   - Completed AI Copilot console UI to complement existing GPT-4 backend API
@@ -98,38 +141,19 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Integrated AIExplanation component into price change detail drawer
   - Fulfills AI Copilot feature from Growth Phase (v0.3-v0.6) agent workflow
 
-### Changed
-
-#### Highlights
-- Adopted a unified light-theme palette across the console, marketing site, and docs with shared CSS variables and Tailwind configuration updates.
-- Refreshed the console navigation and dashboard cards to highlight key heartbeat metrics and AI insights.
-- Updated public links to reference `https://console.calibr.lat` instead of the legacy `app.calibr.lat` hostname.
-
-#### Detailed changes
-- Marketing site, docs, and standalone app links updated from `https://app.calibr.lat` to `https://console.calibr.lat`.
-- Kept static fallback `apps/site/public/favicon.svg`.
-
 ### Fixed
-
-#### Highlights
-- Hardened `POST /api/auth/session` to normalize provided roles (including case-insensitive duplicates) and fall back to the least-privileged `viewer` role when none are supplied.
-- Ensured console deployments on Vercel generate the Prisma client during the install step to eliminate `@prisma/client` resolution errors.
-- Resolved overlay focus issues in the console so drawers dismiss cleanly and no longer block background interactions.
-- Forwarded `POST /api/platforms/shopify/sync` to `/api/integrations/shopify/sync` to keep deprecated clients working during the transition.
-- Hardened the price changes page with clearer auth messaging, color-coded status filters, and graceful pagination recovery.
-- Corrected console dark theme color tokens to restore text contrast across inputs, hover states, and shared components.
-
-#### Detailed fixes
 - **Console: Overlay Component Improvements**
   - Fixed Drawer component blocking user interactions when closed by adding conditional `pointer-events: none`
   - Enhanced GuidedTour with click-outside-to-dismiss functionality
   - Added ESC key support to dismiss GuidedTour
   - Improved z-index layering to prevent overlay conflicts
   - Resolves blocking overlay issue on price-changes page
+
 - API: Fixed 410 error on POST /api/platforms/shopify/sync endpoint
   - Deprecated endpoint now forwards requests to /api/integrations/shopify/sync
   - Maps syncType parameter to action for backward compatibility
   - Maintains compatibility with existing console code using platformsApi.triggerSync
+
 - Console: Price Changes page improvements
   - Fixed Drawer component black overlay persisting when closed
   - Enhanced authentication error handling with helpful user messages
@@ -138,6 +162,10 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Color-coded status filter buttons for better UX (Pending=yellow, Applied=green, Failed=red, etc.)
   - Better error messages explaining CONSOLE_INTERNAL_TOKEN configuration requirements
   - Resolves "You reached the start of the range" error message
+- **API:** Hardened `POST /api/auth/session` by normalizing provided roles (case-insensitive), defaulting to the least-privileged
+  `viewer` role, and returning targeted validation errors for missing headers or malformed JSON payloads, backed by expanded
+  Vitest coverage for the new paths.
+
 - Console: Fixed UI contrast issues with black text on dark backgrounds
   - Updated globals.css to use dark theme colors (#0B0B0C background, #E5E7EB text) matching the app design
   - Added missing Tailwind color definitions (muted, muted-foreground, background, foreground, input, ring) for component compatibility
@@ -145,6 +173,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Added explicit `text-foreground` classes to Input and Textarea components for proper text visibility
   - Fixed price-changes page hover states and ensured all interactive elements have proper contrast
   - Resolves accessibility issues where text was invisible or hard to read on dark backgrounds
+
 - Amazon Connector (Agent B)
   - Initial SP-API pricing feed flow merged to master
   - Adds feed XML builder, AES-256-GCM encryption + upload, optional submission
@@ -154,7 +183,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
  - Auth integration groundwork (WIP)
    - API: POST /api/auth/session issues bearer tokens for Console→API calls (guarded by CONSOLE_INTERNAL_TOKEN)
    - Console: NextAuth wiring to request/store API token; added UI auth check
-   - Known issue: NextAuth v5 import paths causing build errors; to resolve next session
+   - Known issue: NextAuth v5 dev import paths causing build errors; to resolve next session
 
 ### Planning
 - **Phase 3: Platform Integrations** - Roadmap and architecture planning complete

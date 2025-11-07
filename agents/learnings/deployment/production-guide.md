@@ -51,10 +51,10 @@ See: `../bug-fixes/nextjs-15-dynamic-params.md`
 
 **Problem:** Prisma client not initialized or middleware import errors
 
-**Solution:**
-1. Ensure Prisma client is generated before build.
+**Solution:** 
+1. Ensure Prisma client is generated before build:
 
-   - **Legacy build reference (local Next.js builds):**
+   - **Legacy local Next.js builds:**
 
      ```json
      "build": "prisma generate --schema=../../packages/db/prisma/schema.prisma && next build"
@@ -79,10 +79,11 @@ See: `../bug-fixes/nextjs-15-dynamic-params.md`
      corepack prepare pnpm@9.0.0 --activate \
        && cd ../.. \
        && pnpm --filter @calibr/db exec prisma generate \
+       && pnpm exec prisma generate --schema=./packages/db/prisma/schema.prisma \
        && pnpm --filter @calibr/console build
      ```
 
-     Running `corepack prepare` during the build mirrors what happens inside the install step, ensuring the right pnpm version is always active before regenerating Prisma and kicking off the console build. Re-running `prisma generate` at build time catches any skipped install hooks (for example when re-deploying from cache) and keeps the build idempotent.
+     Re-running `prisma generate` with both the workspace filter and the explicit schema path catches skipped install hooks (for example when re-deploying from cache) and keeps the build idempotent.
 
    - **Local builds:** run `pnpm --filter @calibr/db exec prisma generate` before `pnpm --filter @calibr/console build` or add it as a prebuild script if engineers encounter the same missing-client error locally.
 
