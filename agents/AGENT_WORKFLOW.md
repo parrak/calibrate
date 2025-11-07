@@ -1,13 +1,4 @@
-# Deprecated — superseded by /agents/docs/_EXECUTION_PACKET_V2/*
-
-When direction is unclear, start with:
-- `/agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md`
-- `/agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md`
-- `/agents/docs/_EXECUTION_PACKET_V2/02_TEAM_ASSIGNMENTS.md`
-
----
-
-# Calibrate - Multi-Agent Execution Plan (DEPRECATED)
+This document has moved. See:
 
 This document defines how the Calibrate project is collaboratively developed across three autonomous agents:
 

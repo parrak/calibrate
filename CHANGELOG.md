@@ -6,6 +6,12 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+- **Console: Drawer Component Blocking Interactions**
+  - Fixed Drawer component rendering invisible elements when closed that could block page interactions
+  - Drawer now returns null when closed, completely removing from DOM instead of just hiding with CSS
+  - Eliminates pointer-events-none elements interfering with click targets on pages like price-changes
+
 ### Added
 - **Infrastructure: @calibr/types Package for API Type Generation**
   - Created `@calibr/types` package that generates TypeScript types from OpenAPI specification
@@ -110,7 +116,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ### Added
 
 - **Documentation: January 2025 Roadmap**
-  - Added comprehensive roadmap section to `AGENT_WORKFLOW.md` with:
+  - Added comprehensive roadmap section (now in `/agents/docs/_EXECUTION_PACKET_V2/`) with:
     - Highest-leverage goals for next 14 days (production validation, monitoring, auth cleanup, docs refresh, CHANGELOG hygiene)
     - Short sprint backlog (2-4 weeks) with Amazon retry/idempotency, rate limiting, OpenAPI generation, dashboard improvements
     - Agent assignments and responsibilities
