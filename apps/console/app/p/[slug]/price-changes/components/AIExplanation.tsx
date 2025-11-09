@@ -13,7 +13,7 @@ type Props = {
   token?: string
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ''
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
 
 export function AIExplanation({
   skuCode,

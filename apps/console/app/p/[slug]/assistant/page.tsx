@@ -21,7 +21,7 @@ type Message = {
   timestamp: Date
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ''
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
 
 const SUGGESTED_QUERIES = [
   "Why was this price changed?",

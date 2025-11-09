@@ -78,7 +78,7 @@ export default function AmazonIntegrationPage({ params }: AmazonIntegrationPageP
   const handleConnect = async () => {
     try {
       setConnecting(true)
-      const base = process.env.NEXT_PUBLIC_API_BASE || ''
+      const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
       const res = await fetch(`${base}/api/platforms/amazon/oauth/install?project=${encodeURIComponent(params.slug)}`)
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
