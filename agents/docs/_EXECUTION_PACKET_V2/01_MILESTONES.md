@@ -61,6 +61,7 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 **Success**
 - End-to-end UX from rule creation to apply/rollback; reflects live state.
+- ✅ Complete Console MVP delivered with 46+ tests (PR #53).
 
 ---
 
@@ -80,6 +81,7 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 **Success**
 - Queries like "List products with price > $100" and "Show changes scheduled next week" succeed; query + sources logged.
+- ✅ Complete copilot with AI-powered NL→SQL, RBAC, anomaly detection, and 42+ tests (PR #57).
 
 ---
 
