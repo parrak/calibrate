@@ -36,20 +36,20 @@
 
 ### Monitoring & Observability
 
-- [ ] Extend `@calibr/monitor` with request IDs, p95 latency, and connector health
-- [ ] Set up alert policies:
-  - [ ] p95 > 1.5s → Slack alert
-  - [ ] 5xx > 2% daily → Ops email
-  - [ ] Cron miss → PagerDuty alert
-- [ ] Expose `/api/health` and `/api/metrics`
-- [ ] Add synthetic probes for price-changes, analytics/overview, copilot/query
+- [x] Extend `@calibr/monitor` with request IDs, p95 latency, and connector health
+- [x] Set up alert policies:
+  - [x] p95 > 1.5s → Slack alert
+  - [x] 5xx > 2% daily → Ops email
+  - [x] Cron miss → PagerDuty alert
+- [x] Expose `/api/health` and `/api/metrics`
+- [x] Add synthetic probes for price-changes, analytics/overview, copilot/query
 
 ### Operational SLAs
 
-- [ ] Maintain API p95 ≤ 1.0s read / ≤ 1.5s write
-- [ ] Connector job success ≥ 98% daily
-- [ ] Cron reliability ≥ 99% (alert on miss)
-- [ ] Document error budget + escalation process
+- [x] Maintain API p95 ≤ 1.0s read / ≤ 1.5s write
+- [x] Connector job success ≥ 98% daily
+- [x] Cron reliability ≥ 99% (alert on miss)
+- [x] Document error budget + escalation process
 
 ---
 
@@ -210,7 +210,7 @@
 ## Eventing & Observability
 
 - [x] `event_log` + outbox created; replay and DLQ verified.
-- [ ] `@calibr/monitor` hooked into API and connectors; request id propagation.
+- [x] `@calibr/monitor` hooked into API and connectors; request id propagation.
 
 ## Shopify Connector (Launch Scope)
 

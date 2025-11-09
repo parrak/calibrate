@@ -224,6 +224,60 @@ export const DEFAULT_ALERT_POLICIES: AlertPolicy[] = [
     },
     cooldownMs: 10 * 60 * 1000, // 10 minutes
     enabled: true
+  },
+
+  // Cron Job Alerts
+  {
+    id: 'cron_job_missing',
+    name: 'Cron Job Missing',
+    description: 'Cron job has not executed within expected interval',
+    severity: 'critical',
+    channels: ['slack', 'pagerduty'],
+    condition: (metrics) =>
+      metrics.cronJobs?.missing && metrics.cronJobs.missing.length > 0,
+    message: (metrics) => {
+      const missing = metrics.cronJobs.missing
+      const jobNames = missing.map((j: any) => j.config.name).join(', ')
+      return `🚨 CRITICAL: Cron jobs missing execution: ${jobNames}`
+    },
+    cooldownMs: 5 * 60 * 1000, // 5 minutes
+    enabled: true
+  },
+  {
+    id: 'cron_job_failed',
+    name: 'Cron Job Consecutive Failures',
+    description: 'Cron job has 3+ consecutive failures',
+    severity: 'warning',
+    channels: ['slack', 'email'],
+    condition: (metrics) =>
+      metrics.cronJobs?.failed && metrics.cronJobs.failed.length > 0,
+    message: (metrics) => {
+      const failed = metrics.cronJobs.failed
+      const jobInfo = failed
+        .map((j: any) => `${j.config.name} (${j.consecutiveFailures} failures)`)
+        .join(', ')
+      return `Cron jobs with consecutive failures: ${jobInfo}`
+    },
+    cooldownMs: 15 * 60 * 1000, // 15 minutes
+    enabled: true
+  },
+  {
+    id: 'cron_job_unreliable',
+    name: 'Cron Job Reliability Low',
+    description: 'Cron job reliability below 99%',
+    severity: 'warning',
+    channels: ['slack'],
+    condition: (metrics) =>
+      metrics.cronJobs?.unreliable && metrics.cronJobs.unreliable.length > 0,
+    message: (metrics) => {
+      const unreliable = metrics.cronJobs.unreliable
+      const jobInfo = unreliable
+        .map((j: any) => `${j.config.name} (${j.reliability.toFixed(1)}% reliability)`)
+        .join(', ')
+      return `Cron jobs with low reliability: ${jobInfo}`
+    },
+    cooldownMs: 30 * 60 * 1000, // 30 minutes
+    enabled: true
   }
 ]
 
