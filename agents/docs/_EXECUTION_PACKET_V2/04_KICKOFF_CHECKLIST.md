@@ -1,24 +1,38 @@
 # Kickoff Checklist — First 30 Days (Milestone-Oriented)
 
+> **⚠️ IMPORTANT FOR AGENTS AND EXECUTORS**
+>
+> **This file is the SINGLE SOURCE OF TRUTH for tracking milestone progress.**
+>
+> When completing tasks:
+> 1. **UPDATE THIS FILE DIRECTLY** by marking tasks as `[x]` when completed
+> 2. **DO NOT create separate tracking documents** (completion summaries are for documentation only, not tracking)
+> 3. **COMMIT AND PUSH** your updates immediately after completing each milestone
+> 4. **REFERENCE** completion summary documents (like `M0.X_COMPLETION_SUMMARY.md`) when updating, but track progress HERE
+>
+> This ensures all team members and agents have a single, up-to-date view of project progress.
+
+---
+
 ## 🧱 Platform Team (Infra, Schema, RLS, Eventing, CI/CD)
 
 ### Milestone M0.1 — Core Schema
 
-- [ ] Define Prisma models: Product, PriceVersion, DiscountPolicy, PriceChange, Event, Audit
-- [ ] Generate JSON Schemas + semver registry (`/packages/db/schemas/`)
-- [ ] Implement deterministic migrations and `pnpm migrate:check` CI step
-- [ ] Add RLS policies and test fixtures for each tenant table
-- [ ] Publish DTOs to `@calibr/types` via CI
-- [ ] Create `pnpm test:db` pipeline validating migrations and RLS
+- [x] Define Prisma models: Product, PriceVersion, DiscountPolicy, PriceChange, Event, Audit
+- [x] Generate JSON Schemas + semver registry (`/packages/db/schemas/`)
+- [x] Implement deterministic migrations and `pnpm migrate:check` CI step
+- [x] Add RLS policies and test fixtures for each tenant table
+- [x] Publish DTOs to `@calibr/types` via CI
+- [x] Create `pnpm test:db` pipeline validating migrations and RLS
 
 ### Milestone M0.2 — Event Bus / Outbox
 
-- [ ] Add `event_log` and `outbox` tables
-- [ ] Build append-only event writer with idempotent dedupe (event key + tenant)
-- [ ] Implement retry/backoff worker
-- [ ] Add dead-letter queue (`dlq_event_log`)
-- [ ] Verify replay logic and connector subscriber consumption
-- [ ] Integrate into `@calibr/monitor` for event latency metrics
+- [x] Add `event_log` and `outbox` tables
+- [x] Build append-only event writer with idempotent dedupe (event key + tenant)
+- [x] Implement retry/backoff worker
+- [x] Add dead-letter queue (`dlq_event_log`)
+- [x] Verify replay logic and connector subscriber consumption
+- [x] Integrate into `@calibr/monitor` for event latency metrics
 
 ### Monitoring & Observability
 
@@ -189,13 +203,13 @@
 
 ## Schema & Security
 
-- [ ] JSON Schemas authored with semver; Prisma migrations reproducible.
-- [ ] RLS enabled; row‑level tests present.
+- [x] JSON Schemas authored with semver; Prisma migrations reproducible.
+- [x] RLS enabled; row‑level tests present.
 - [ ] Service tokens + per‑connector secrets stored in vault.
 
 ## Eventing & Observability
 
-- [ ] `event_log` + outbox created; replay and DLQ verified.
+- [x] `event_log` + outbox created; replay and DLQ verified.
 - [ ] `@calibr/monitor` hooked into API and connectors; request id propagation.
 
 ## Shopify Connector (Launch Scope)
