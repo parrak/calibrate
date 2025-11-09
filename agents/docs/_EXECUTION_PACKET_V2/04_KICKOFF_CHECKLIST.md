@@ -13,12 +13,12 @@
 
 ### Milestone M0.2 — Event Bus / Outbox
 
-- [ ] Add `event_log` and `outbox` tables
-- [ ] Build append-only event writer with idempotent dedupe (event key + tenant)
-- [ ] Implement retry/backoff worker
-- [ ] Add dead-letter queue (`dlq_event_log`)
-- [ ] Verify replay logic and connector subscriber consumption
-- [ ] Integrate into `@calibr/monitor` for event latency metrics
+- [x] Add `event_log` and `outbox` tables
+- [x] Build append-only event writer with idempotent dedupe (event key + tenant)
+- [x] Implement retry/backoff worker
+- [x] Add dead-letter queue (`dlq_event_log`)
+- [x] Verify replay logic and connector subscriber consumption
+- [x] Integrate into `@calibr/monitor` for event latency metrics
 
 ### Monitoring & Observability
 
