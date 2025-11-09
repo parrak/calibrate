@@ -69,7 +69,10 @@ export const stagingConfig = {
     enableSecurityScanning: true,
     enableWebhookRetry: true,
     enableCaching: true,
-    enableRateLimiting: true
+    enableRateLimiting: true,
+    // Connector Feature Flags
+    amazonConnectorEnabled: process.env.AMAZON_CONNECTOR_ENABLED === 'true',
+    shopifyConnectorEnabled: process.env.SHOPIFY_CONNECTOR_ENABLED === 'true'
   },
 
   // External Services
