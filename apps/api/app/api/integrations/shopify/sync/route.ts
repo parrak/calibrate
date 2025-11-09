@@ -316,6 +316,11 @@ async function setupWebhooks(connector: ShopifyConnector, integration: ShopifyIn
     throw new Error('NEXT_PUBLIC_API_BASE is not configured');
   }
 
+  // Webhook secret is required for setting up webhooks
+  if (!process.env.SHOPIFY_WEBHOOK_SECRET) {
+    throw new Error('SHOPIFY_WEBHOOK_SECRET is required for setting up webhooks');
+  }
+
   const webhooksClient = getWebhooksClient(connector);
   const webhooks = await webhooksClient.subscribeToCommonWebhooks(baseUrl);
 
