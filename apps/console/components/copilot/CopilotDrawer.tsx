@@ -231,7 +231,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                 {/* Method badge */}
                 {message.method ? (
                   <div className="mt-2 pt-2 border-t border-border/30">
-                    <span className="text-xs px-2 py-1 rounded bg-black/20">
+                    <span className="text-xs px-2 py-1 rounded bg-black/5 dark:bg-white/5">
                       {message.method === 'ai' ? '✨ AI-powered' : '🔍 Pattern-based'}
                     </span>
                   </div>
@@ -244,7 +244,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                       <summary className="cursor-pointer font-medium mb-2">
                         View Data
                       </summary>
-                      <pre className="bg-black/20 p-3 rounded overflow-x-auto text-xs font-mono">
+                      <pre className="bg-black/5 dark:bg-white/5 p-3 rounded overflow-x-auto text-xs font-mono text-fg">
                         {JSON.stringify(message.data, null, 2)}
                       </pre>
                     </details>
@@ -258,7 +258,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                       <summary className="cursor-pointer font-medium mb-2">
                         View SQL Query
                       </summary>
-                      <pre className="bg-black/20 p-3 rounded overflow-x-auto font-mono text-xs">
+                      <pre className="bg-black/5 dark:bg-white/5 p-3 rounded overflow-x-auto font-mono text-xs text-fg">
                         {message.sql}
                       </pre>
                     </details>
@@ -274,7 +274,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                         <button
                           key={idx}
                           onClick={() => handleSuggestionClick(suggestion)}
-                          className="block text-xs text-left w-full px-2 py-1.5 rounded hover:bg-black/20 transition"
+                          className="block text-xs text-left w-full px-2 py-1.5 rounded hover:bg-muted/20 transition"
                         >
                           • {suggestion}
                         </button>
