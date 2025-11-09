@@ -19,16 +19,20 @@ interface ShopifyAppBridgeConfig {
   forceRedirect?: boolean;
 }
 
-type ShopifyAppBridgeApp = Record<string, unknown>;
+interface ShopifyAppBridgeApp {
+  dispatch(action: { type: string; payload?: unknown }): unknown;
+}
+
+type ShopifyRedirectAction = 'REMOTE';
 
 interface ShopifyAppBridgeRedirect {
-  dispatch(action: string, destination: string): void;
+  dispatch(action: ShopifyRedirectAction, destination: string): void;
 }
 
 interface ShopifyAppBridgeActions {
   Redirect: {
     Action: {
-      REMOTE: string;
+      REMOTE: ShopifyRedirectAction;
     };
     create(app: ShopifyAppBridgeApp): ShopifyAppBridgeRedirect;
   };
@@ -39,10 +43,35 @@ interface ShopifyAppBridgeModule {
   actions: ShopifyAppBridgeActions;
 }
 
+interface ShopifyAppBridgeWindow extends Window {
+  appBridge?: ShopifyAppBridgeModule;
+  ['app-bridge']?: ShopifyAppBridgeModule;
+}
+
 declare global {
   interface Window {
     appBridge?: ShopifyAppBridgeModule;
+    ['app-bridge']?: ShopifyAppBridgeModule;
   }
+}
+
+function resolveAppBridge(): ShopifyAppBridgeModule | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const globalWindow = window as ShopifyAppBridgeWindow;
+
+  if (globalWindow.appBridge) {
+    return globalWindow.appBridge;
+  }
+
+  if (globalWindow['app-bridge']) {
+    globalWindow.appBridge = globalWindow['app-bridge'];
+    return globalWindow.appBridge;
+  }
+
+  return null;
 }
 
 async function loadAppBridge(): Promise<ShopifyAppBridgeModule | null> {
@@ -50,8 +79,9 @@ async function loadAppBridge(): Promise<ShopifyAppBridgeModule | null> {
     return null;
   }
 
-  if (window.appBridge) {
-    return window.appBridge;
+  const existingModule = resolveAppBridge();
+  if (existingModule) {
+    return existingModule;
   }
 
   const existingScript = document.querySelector<HTMLScriptElement>('script[data-shopify-app-bridge]');
@@ -64,7 +94,7 @@ async function loadAppBridge(): Promise<ShopifyAppBridgeModule | null> {
       existingScript.addEventListener('load', () => resolve(), { once: true });
       existingScript.addEventListener('error', () => reject(new Error('Failed to load App Bridge script')), { once: true });
     });
-    return window.appBridge ?? null;
+    return resolveAppBridge();
   }
 
   await new Promise<void>((resolve, reject) => {
@@ -80,7 +110,7 @@ async function loadAppBridge(): Promise<ShopifyAppBridgeModule | null> {
     document.head.appendChild(script);
   });
 
-  return window.appBridge ?? null;
+  return resolveAppBridge();
 }
 
 async function redirectToShopifyInstall(installUrl: string, host: string | null) {
