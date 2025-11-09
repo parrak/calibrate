@@ -27,20 +27,12 @@ if (!existsSync(SCHEMA_FILE)) {
 }
 console.log('✓ Schema file exists');
 
-// 2. Verify schema formatting
+// 2. Verify schema formatting (non-modifying check)
 try {
-  const before = readFileSync(SCHEMA_FILE, 'utf-8');
-  execSync('pnpm prisma format', { cwd: join(__dirname, '..'), stdio: 'pipe' });
-  const after = readFileSync(SCHEMA_FILE, 'utf-8');
-
-  if (before !== after) {
-    console.error('❌ Schema not formatted. Run: pnpm prisma format');
-    exitCode = 1;
-  } else {
-    console.log('✓ Schema formatted correctly');
-  }
+  execSync('npx prisma format --check', { cwd: join(__dirname, '..'), stdio: 'pipe' });
+  console.log('✓ Schema formatted correctly');
 } catch (error) {
-  console.error('❌ Schema format check failed:', (error as Error).message);
+  console.error('❌ Schema not formatted. Run: pnpm prisma format');
   exitCode = 1;
 }
 
