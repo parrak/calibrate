@@ -173,14 +173,14 @@ model Event {
   tenantId  String?
   projectId String?
   kind      String // Legacy field - kept for backward compat
-  type      String? // M0.1: renamed from 'kind'
+  // type      String? // M0.1: renamed from 'kind' - TODO: Add migration to create this column
   payload   Json
   createdAt DateTime @default(now())
   Project   Project? @relation(fields: [projectId], references: [id])
   Tenant    Tenant?  @relation(fields: [tenantId], references: [id])
 
   @@index([kind])
-  @@index([type])
+  // @@index([type]) // TODO: Add after migration creates the column
   @@index([createdAt])
 }
 
