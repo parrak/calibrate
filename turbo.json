@@ -2,15 +2,18 @@
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
     "build": {
-      "dependsOn": ["^build", "@calibr/db#generate"],
-      "outputs": ["dist/**", ".next/**", "**/*.html", "**/*.yaml"]
+      "dependsOn": ["^build", "@calibr/db#generate", "@calibr/types#generate"],
+      "outputs": ["dist/**", ".next/**", "**/*.html", "**/*.yaml", "api.d.ts"]
     },
     "dev": { "cache": false },
     "lint": {},
     "test": {},
-    "typecheck": {},
+    "typecheck": {
+      "dependsOn": ["@calibr/types#generate"]
+    },
     "generate": {
-      "cache": false
+      "cache": false,
+      "outputs": ["api.d.ts"]
     }
   }
 }

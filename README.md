@@ -1,52 +1,52 @@
-# Calibrate - Smart Pricing Platform
+# Calibrate — Composable Pricing Data OS (E-Comm Wedge)
 
-A comprehensive pricing automation platform built with Next.js, Prisma, and TypeScript in a monorepo structure.
+Calibr is a **composable pricing data platform** with an **e-commerce wedge**:
+we ship a **reliable bulk & rule-based pricing control plane** for Shopify first,
+with explainability, governance, and multi-tenant safety — built on a schema-
+and event-driven core that later extends to Amazon (read-only) and Stripe (conditional).
 
-Note for AI agents: See `AGENTS.md` for repository-wide rules and per-app guides.
+**Read this first (source of truth):**
+
+`/agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md` •
+`/agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md` •
+`/agents/docs/_EXECUTION_PACKET_V2/02_TEAM_ASSIGNMENTS.md`
+
+> Note for AI/agent contributors: when direction is unclear, consult the files above.
 
 ## Architecture
 
 ```
 calibrate/
 ├── packages/
-│   ├── db/              # Prisma schema, migrations, seed
-│   ├── pricing-engine/  # Policy evaluation + apply logic
-│   ├── security/        # HMAC + idempotency
-│   └── connectors/      # Shopify/Amazon stubs
+│   ├── db/ # Prisma + JSON schema registry, RLS, migrations, seeds
+│   ├── pricing-engine/ # Rules DSL, preview -> approve/apply -> rollback
+│   ├── connectors/ # Shopify (read/write), Amazon (read-only stub, feature-flagged)
+│   ├── security/ # HMAC, idempotency, auth helpers
+│   ├── monitor/ # @calibr/monitor (req IDs, p95, error %, health)
+│   └── types/ # @calibr/types (generated DTOs via CI)
 └── apps/
-    ├── api/             # Next.js API routes
-    ├── console/         # Admin UI
-    ├── site/            # Landing page
-    └── docs/            # Documentation
+    ├── api/ # Next.js API (OpenAPI, event outbox)
+    ├── console/ # Merchant console (catalog, rules, diff preview, audit)
+    ├── site/ # Marketing + SaaS collector (passive validation)
+    └── docs/ # Documentation
 ```
 
 ## Features
 
-### Core Pricing Platform
-- **Webhook API**: Secure price suggestion submission with HMAC verification
-- **Policy Engine**: Configurable pricing rules (max delta, floors, ceilings, daily budgets)
-- **Admin Console**: Review and approve price changes
-- **Price Versioning**: Full audit trail of price changes
-- **Idempotency**: Prevent duplicate processing
-- **Multi-tenant**: Support for multiple organizations
+### Core Pricing Platform (V2 E-Comm Wedge)
+- **Rules Engine**: Selector + transform (%/absolute, floors/ceilings), schedule, dry-run
+- **Governance Flow**: `preview → approve/apply → rollback` (human-in-the-loop)
+- **Explainability & Audit**: Every change emits `explain_trace` + `audit_event`
+- **Evented Core**: Append-only `event_log` + outbox; idempotent, retry/backoff
+- **Multi-tenant Safety**: RLS on core tables; scoped tokens; per-tenant secrets
+- **Copilot (Read-Only)**: NL→SQL/GraphQL queries over pricing data with logging
 
-### Competitor Monitoring (Phase 2 - ✅ Complete)
-- **Web Scraping**: Automated competitor price tracking across Shopify, Amazon, Google Shopping
-- **Market Analytics**: Real-time market positioning and price comparison insights
-- **Competitor Rules**: Automated pricing strategies based on competitor data
-- **Price History**: Track competitor price changes over time
-- **Multi-channel Support**: Monitor competitors across different sales channels
+### Integrations (aligned with V2 plan)
+- **Shopify (Launch)**: OAuth + product/variant ingest; **price update write-back**
+- **Amazon (Read-Only Stub)**: SP-API OAuth + catalog ingest **only** (feature-flagged); no write in MVP
+- **Stripe (Conditional)**: Activates **after SaaS validation gate** (see `/agents/docs/_EXECUTION_PACKET_V2/05_STRIPE_INTEGRATION_PLAN.md`)
 
-See [COMPETITOR_MONITORING.md](COMPETITOR_MONITORING.md) for detailed documentation.
-
-### Platform Integrations (Phase 3 - 🚧 In Planning)
-- **Shopify Integration**: OAuth authentication, product sync, and automated price updates
-- **Amazon Integration**: SP-API connection, catalog sync, and price feed submission
-- **Platform Abstraction**: Unified interface for connecting to any e-commerce platform
-- **Automated Sync**: Two-way synchronization between Calibrate and external platforms
-- **Multi-platform Management**: Manage pricing across multiple sales channels from one dashboard
-
-See [PHASE3_ROADMAP.md](PHASE3_ROADMAP.md) for detailed roadmap and architecture.
+> Older competitive scraping or broad "Phase 3" plans are **deprecated** for MVP and moved to backlog.
 
 ## Quick Start
 
@@ -56,14 +56,13 @@ See [PHASE3_ROADMAP.md](PHASE3_ROADMAP.md) for detailed roadmap and architecture
 pnpm setup
 ```
 
-This will automatically:
-- Check prerequisites (Node.js, pnpm, Docker)
-- Start the database (Docker Compose)
-- Create environment files
-- Install dependencies
-- Generate Prisma client
-- Run migrations
-- Optionally seed the database
+This runs:
+- Preflight checks (Node.js, pnpm, Docker)
+- DB up via Docker Compose
+- Env files scaffold + validation
+- Install deps; generate Prisma client; run migrations
+- Optional seed
+- Publish `@calibr/types` locally and enable RLS
 
 ### Option 2: Manual Setup
 
@@ -83,7 +82,7 @@ docker-compose up -d
 createdb calibr
 ```
 
-### 3. Environment Setup
+### 3. Environment Setup (core + connectors)
 
 ```bash
 # Copy environment files (if they exist)
@@ -91,7 +90,7 @@ createdb calibr
 
 # Update DATABASE_URL in all .env files
 
-## OAuth & Platform Integration Env Vars
+## OAuth & Platform Integration Env Vars (Shopify launch; Amazon stub)
 
 Add these to `apps/api/.env.local` (and Railway for production):
 
@@ -101,24 +100,27 @@ Shopify
 - `SHOPIFY_SCOPES=read_products,write_products,read_orders,write_orders` (adjust as needed)
 - `SHOPIFY_WEBHOOK_SECRET=...`
 
-Amazon SP-API (LWA)
+Amazon SP-API (LWA) — **read-only stub; feature-flagged**
 - `AMAZON_SP_APP_ID=amzn1.sp.solution.xxxxx` (Seller Central App ID)
 - `AMAZON_LWA_CLIENT_ID=amzn1.application-oa2-client.xxxxx`
 - `AMAZON_LWA_CLIENT_SECRET=amzn1.oa2-cs.xxxxx`
+- `AMAZON_CONNECTOR_ENABLED=false`  # toggle true only in dev/staging during schema tests
 
 Console/URLs
 - `NEXT_PUBLIC_API_BASE=https://api.calibr.lat` (or local API URL)
 - `NEXT_PUBLIC_CONSOLE_URL=https://console.calibr.lat` (for redirects)
 
-## OAuth Flows
+## OAuth Flows (Shopify live; Amazon stubbed)
 
 Shopify
 - Install URL: `GET /api/integrations/shopify/oauth/install?project_id=<slug>&shop=<shopDomain>`
 - Callback: `GET /api/integrations/shopify/oauth/callback?...` — exchanges code, upserts integration, redirects back to Console.
 
-Amazon (LWA)
+Amazon (LWA) — **stubbed**
 - Install URL: `GET /api/platforms/amazon/oauth/install?project=<slug>` — returns Seller Central consent URL.
 - Callback: `GET /api/platforms/amazon/oauth/callback?...` — exchanges code via LWA, upserts integration, redirects back to Console.
+
+> No write/sync in MVP; used to stress test schema + ingest.
 ```
 
 ### 4. Install Dependencies
@@ -160,13 +162,13 @@ The complete API documentation includes:
 
 **Base URL:** `https://api.calibr.lat`
 
-**Key Endpoints:**
-- `POST /api/v1/webhooks/price-suggestion` - Submit price suggestions
-- `GET /api/v1/price-changes` - List price changes
-- `GET /api/v1/catalog` - Product catalog
-- `GET /api/health` - System health check
-- `GET /api/metrics` - System metrics
-- `GET /api/admin/dashboard` - Admin dashboard data
+**Key Endpoints (wedge)**
+- `GET /api/v1/catalog` — Product catalog
+- `GET /api/v1/price-changes` — Price change proposals (filters, pagination)
+- `POST /api/v1/price-changes/:id/(approve|apply|reject|rollback)` — Governance actions
+- `GET /api/health` — System health
+- `GET /api/metrics` — System metrics
+- `POST /copilot/query` — NL→SQL/GraphQL (read-only)
 
 ## Testing
 
@@ -192,8 +194,7 @@ pnpm --filter @calibr/pricing-engine test
 | Docs | Vercel | https://docs.calibr.lat | ✅ Live |
 | Database | Railway PostgreSQL | (internal) | ✅ Migrated |
 
-**Latest Deployment:** Oct 24, 2025
-**Commit:** `1a0532c` - Prisma binary targets fix for Debian
+> Ensure Prisma OpenSSL target and RLS remain intact. See deployment docs below.
 
 ### Railway API Deployment
 
@@ -239,7 +240,7 @@ railway run -- npx prisma migrate deploy --schema=./packages/db/prisma/schema.pr
 Before making changes to deployment configuration, read [apps/api/DEPLOYMENT.md](apps/api/DEPLOYMENT.md) and [.github/copilot-instructions.md](.github/copilot-instructions.md#-critical-railway-deployment-constraints) to avoid breaking production. Key constraints:
 - **MUST** use `HOSTNAME=0.0.0.0` (not `HOST`) in Dockerfile for Next.js binding
 - **MUST** use `debian-openssl-3.0.x` Prisma binary target (not Alpine/musl)
-- **DO NOT** add global unique constraints on `Product.code` or `Sku.code`
+- **DO NOT** add global unique constraints on `Product.code` or `Sku.code` (breaks multi-channel ingest)
 - See full constraint list in deployment docs
 
 ### Vercel Frontend Deployments
@@ -345,6 +346,14 @@ Monorepo tip: if the Vercel project mis-detects the Next.js app or expects a sta
 1. Add routes in `apps/api/app/api/`
 2. Update Zod schemas in `apps/api/zod/`
 3. Add tests in `apps/api/tests/`
+
+## Source of Truth for Direction
+
+When in doubt, read:
+
+- `/agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md`
+- `/agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md`
+- `/agents/docs/_EXECUTION_PACKET_V2/02_TEAM_ASSIGNMENTS.md`
 
 ## License
 

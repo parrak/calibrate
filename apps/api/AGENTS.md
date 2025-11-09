@@ -56,3 +56,46 @@ export const OPTIONS = withSecurity(async (req: NextRequest) => {
 - If DB changes are implied: `pnpm migrate` and `pnpm db:generate`
 - **Test CORS**: `curl -X OPTIONS -H "Origin: https://console.calibr.lat" -i "https://api.calibr.lat/api/your-endpoint"`
 
+## Pull Request Workflow to Master
+
+### **Mandatory PR Requirements**
+
+When creating a Pull Request to sync changes to `master`, **ALL PRs MUST include**:
+
+1. **CHANGELOG.md Update**
+   - Add a new entry under `[Unreleased]` section describing the API changes
+   - Include endpoint changes, new features, bug fixes, or breaking changes
+   - Reference PR number (e.g., `(PR #123)`)
+
+2. **AGENT_WORKFLOW.md Update**
+   - Update the relevant agent section in `agents/AGENT_WORKFLOW.md` to reflect progress
+   - Mark completed deliverables with ✅ and date
+   - Update status indicators and milestone table if applicable
+
+3. **PR Description**
+   - Clear title (e.g., `feat(api): add new endpoint` or `fix(api): resolve CORS issue`)
+   - Summary of API changes
+   - Testing performed (include test results)
+   - Migration notes if database changes were made
+
+### **PR Creation Steps**
+
+```bash
+# 1. Create feature branch
+git checkout -b feature/api-your-feature
+
+# 2. Make changes and commit
+git add .
+git commit -m "feat(api): your feature description"
+
+# 3. Update CHANGELOG.md (add entry under [Unreleased])
+# 4. Update agents/AGENT_WORKFLOW.md (update Agent B section)
+
+# 5. Commit documentation
+git add CHANGELOG.md agents/AGENT_WORKFLOW.md
+git commit -m "docs: update changelog and agent workflow"
+
+# 6. Push and create PR targeting master
+git push origin feature/api-your-feature
+```
+

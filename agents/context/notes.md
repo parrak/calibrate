@@ -53,4 +53,4 @@ See `agents/history/agent-completions.md` for recent completion summaries.
 - **Agent B (Codex):** Core product, pricing engine, connectors, API, Price Changes MVP
 - **Agent C (Claude Code):** AI, analytics, forecasting, intelligent automation
 
-See `AGENT_WORKFLOW.md` for full details.
+See `/agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md` and `/agents/docs/_EXECUTION_PACKET_V2/02_TEAM_ASSIGNMENTS.md` for full details.

@@ -10,6 +10,16 @@ Each agent works independently but adheres to shared contracts, schemas, and mil
 
 ---
 
+## 📖 Source of Truth
+
+**Whenever direction is unclear, READ:**
+
+- [/agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md](/agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md)
+- [/agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md](/agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md)
+- [/agents/docs/_EXECUTION_PACKET_V2/02_TEAM_ASSIGNMENTS.md](/agents/docs/_EXECUTION_PACKET_V2/02_TEAM_ASSIGNMENTS.md)
+
+---
+
 ## 🧭  Project Overview
 
 **Calibrate** is an AI-ready pricing automation platform for commerce systems.  
@@ -213,3 +223,68 @@ All agents commit to `develop`; Cursor manages preview deployments.
 
 All agents must re-read this file before each major merge cycle.  
 Cursor ensures `develop` is always stable and deployable.
+
+---
+
+## 🔄 Pull Request Workflow to Master
+
+### **Mandatory PR Requirements**
+
+When creating a Pull Request to sync changes to `master`, **ALL PRs MUST include**:
+
+1. **CHANGELOG.md Update**
+   - Add a new entry under `[Unreleased]` section describing the changes
+   - Follow the format: `### Added`, `### Changed`, `### Fixed`, `### Deprecated`, `### Removed`, or `### Security`
+   - Include specific details about what was changed, which components/features were affected, and any breaking changes
+   - Reference PR number if applicable (e.g., `(PR #123)`)
+
+2. **Execution Packet Update**
+   - Update the relevant sections in `/agents/docs/_EXECUTION_PACKET_V2/` files to reflect progress
+   - See `/agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md` for guidance
+   - Mark completed deliverables with ✅ and date
+   - Update status indicators (🔄 In Progress, ✅ Complete, ⏳ Ready to Start)
+   - Add commit references with PR numbers
+   - Update milestone status table if applicable
+
+3. **PR Description**
+   - Clear title describing the change
+   - Link to related issues/tasks
+   - Summary of changes
+   - Testing performed
+   - Any migration or deployment notes
+
+### **PR Creation Steps**
+
+```bash
+# 1. Ensure you're on a feature branch (not master)
+git checkout -b feature/your-feature-name
+
+# 2. Make your changes and commit
+git add .
+git commit -m "feat: your feature description"
+
+# 3. Update CHANGELOG.md
+# Add entry under [Unreleased] section
+
+# 4. Update execution packet files in agents/docs/_EXECUTION_PACKET_V2/
+# Update relevant agent section with progress
+
+# 5. Commit documentation updates
+git add CHANGELOG.md agents/docs/_EXECUTION_PACKET_V2/
+git commit -m "docs: update changelog and agent workflow"
+
+# 6. Push and create PR
+git push origin feature/your-feature-name
+# Create PR via GitHub UI or CLI targeting master branch
+```
+
+### **PR Review Checklist**
+
+Before requesting review, ensure:
+- [ ] All tests pass (`pnpm test`)
+- [ ] Linting passes (`pnpm lint`)
+- [ ] Build succeeds (`pnpm build`)
+- [ ] CHANGELOG.md updated with clear description
+- [ ] Execution packet files updated with progress
+- [ ] PR description includes all relevant context
+- [ ] No breaking changes (or clearly documented if present)
