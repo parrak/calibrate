@@ -43,21 +43,58 @@ export function buildShopifyConnectorConfig(isActive: boolean): ConnectorConfig 
 }
 
 export async function initializeShopifyConnector(integration: IntegrationCredentials): Promise<ShopifyConnector> {
-  const connector = new ShopifyConnector(buildShopifyConnectorConfig(integration.isActive));
-
-  await connector.initialize({
-    platform: 'shopify',
-    shopDomain: integration.shopDomain,
-    accessToken: integration.accessToken,
-    scope: integration.scope,
-  });
-
-  const isConnected = await connector.testConnection();
-  if (!isConnected) {
-    throw new Error('Failed to connect to Shopify');
+  // Validate required credentials
+  if (!integration.shopDomain) {
+    throw new Error('Shop domain is missing. Please reconnect your Shopify integration.');
+  }
+  if (!integration.accessToken) {
+    throw new Error('Access token is missing. Please reconnect your Shopify integration.');
   }
 
-  return connector;
+  // Validate shop domain format
+  const shopDomainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/;
+  if (!shopDomainRegex.test(integration.shopDomain)) {
+    throw new Error(`Invalid shop domain format: ${integration.shopDomain}. Expected format: yourstore.myshopify.com`);
+  }
+
+  const connector = new ShopifyConnector(buildShopifyConnectorConfig(integration.isActive));
+
+  try {
+    await connector.initialize({
+      platform: 'shopify',
+      shopDomain: integration.shopDomain,
+      accessToken: integration.accessToken,
+      scope: integration.scope,
+    });
+
+    // Use healthCheck instead of testConnection to get detailed error information
+    const health = await connector.healthCheck();
+    if (!health.isHealthy) {
+      const errorMessage = health.message || 'Unknown connection error';
+      console.error('Shopify connection health check failed:', {
+        status: health.status,
+        message: errorMessage,
+        shopDomain: integration.shopDomain,
+        latency: health.latency,
+      });
+      throw new Error(`Failed to connect to Shopify: ${errorMessage}`);
+    }
+
+    return connector;
+  } catch (error) {
+    // Enhance error message with helpful context
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Failed to initialize Shopify connector:', {
+      shopDomain: integration.shopDomain,
+      error: errorMessage,
+    });
+
+    // Re-throw with enhanced message if not already a descriptive error
+    if (errorMessage.includes('Failed to connect to Shopify')) {
+      throw error;
+    }
+    throw new Error(`Failed to initialize Shopify connection: ${errorMessage}`);
+  }
 }
 
 export function getProductsClient(connector: ShopifyConnector): ShopifyProducts {
