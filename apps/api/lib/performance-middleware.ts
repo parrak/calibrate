@@ -5,7 +5,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { recordPerformanceMetric, recordErrorMetric, PerformanceMetric, ErrorMetric } from './performance-monitor'
-import { getCorrelationId } from './correlation-middleware'
 
 type RouteHandler = (req: NextRequest, ...args: unknown[]) => Promise<NextResponse>
 

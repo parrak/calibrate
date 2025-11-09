@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@calibr/db'
+import { prisma, Prisma } from '@calibr/db'
 import { trackPerformance } from '@/lib/performance-middleware'
 import { withSecurity } from '@/lib/security-headers'
 
@@ -18,9 +18,13 @@ function errorJson(error: ErrorResponse) {
   )
 }
 
-async function requireProjectAccess(req: NextRequest, projectSlug: string, requiredRole: 'VIEWER' | 'EDITOR' | 'ADMIN'): Promise<
+type ProjectWithTenant = Prisma.ProjectGetPayload<{
+  include: { Tenant: true }
+}>
+
+async function requireProjectAccess(req: NextRequest, projectSlug: string, _requiredRole: 'VIEWER' | 'EDITOR' | 'ADMIN'): Promise<
   | { error: ErrorResponse }
-  | { project: any; membership: { role: 'ADMIN' } }
+  | { project: ProjectWithTenant; membership: { role: 'ADMIN' } }
 > {
   // TODO: Implement proper auth - for now, we'll use a simplified version
   // This should be extracted to a shared auth utility

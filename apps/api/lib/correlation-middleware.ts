@@ -97,7 +97,7 @@ export function getCurrentCorrelationId(req: NextRequest): string {
 /**
  * Attach correlation ID to an object (e.g., audit record, log entry)
  */
-export function attachCorrelationId<T extends Record<string, any>>(
+export function attachCorrelationId<T extends Record<string, unknown>>(
   req: NextRequest,
   obj: T
 ): T & { correlationId: string } {
