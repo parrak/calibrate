@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://calibr.lat/schemas/event/v0.1.0",
+  "title": "Event",
+  "description": "M0.1 Event - append-only event log",
+  "type": "object",
+  "required": [
+    "id",
+    "tenantId",
+    "type",
+    "payload",
+    "createdAt"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "tenantId": {
+      "type": "string",
+      "description": "Tenant ID (RLS scope)"
+    },
+    "projectId": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "description": "Event type (e.g., shopify.sync.complete, pricechange.applied)"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Event payload (connector-specific)",
+      "additionalProperties": true
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

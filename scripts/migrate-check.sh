@@ -73,6 +73,16 @@ else
   exit 1
 fi
 
+# M0.1: Check core schema requirements
+echo ""
+echo "4. Checking M0.1 core schema requirements..."
+if pnpm migrate:check; then
+  echo "✓ M0.1 schema requirements met"
+else
+  echo "Error: M0.1 schema check failed" >&2
+  exit 1
+fi
+
 echo ""
 echo "✅ Migration check complete!"
 exit 0
