@@ -1,0 +1,48 @@
+{
+  "version": "0.1.0",
+  "generated": "2025-11-09T00:24:46.445Z",
+  "schemas": {
+    "Product": {
+      "current": "0.1.0",
+      "versions": [
+        "0.1.0"
+      ],
+      "path": "product.v0.1.0.json"
+    },
+    "PriceVersion": {
+      "current": "0.1.0",
+      "versions": [
+        "0.1.0"
+      ],
+      "path": "priceversion.v0.1.0.json"
+    },
+    "DiscountPolicy": {
+      "current": "0.1.0",
+      "versions": [
+        "0.1.0"
+      ],
+      "path": "discountpolicy.v0.1.0.json"
+    },
+    "PriceChange": {
+      "current": "0.1.0",
+      "versions": [
+        "0.1.0"
+      ],
+      "path": "pricechange.v0.1.0.json"
+    },
+    "Event": {
+      "current": "0.1.0",
+      "versions": [
+        "0.1.0"
+      ],
+      "path": "event.v0.1.0.json"
+    },
+    "Audit": {
+      "current": "0.1.0",
+      "versions": [
+        "0.1.0"
+      ],
+      "path": "audit.v0.1.0.json"
+    }
+  }
+}

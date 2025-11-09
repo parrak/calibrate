@@ -135,15 +135,53 @@ model Customer {
   Quote     Quote[]
 }
 
+model DiscountPolicy {
+  id        String   @id @default(cuid())
+  tenantId  String
+  projectId String
+  type      String // M0.1: policy type (percentage, absolute, tiered, etc.)
+  ruleJson  Json // M0.1: rule definition
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  Project   Project  @relation(fields: [projectId], references: [id])
+
+  @@index([tenantId, projectId, enabled])
+}
+
+model Audit {
+  id        String   @id @default(cuid())
+  tenantId  String
+  projectId String?
+  entity    String // M0.1: entity type (Product, PriceChange, etc.)
+  entityId  String // M0.1: entity ID
+  action    String // M0.1: action (create, update, apply, rollback, etc.)
+  actor     String // M0.1: user/system actor
+  explain   Json? // M0.1: explainability trace
+  createdAt DateTime @default(now())
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  Project   Project? @relation(fields: [projectId], references: [id])
+
+  @@index([tenantId, entity, entityId])
+  @@index([createdAt])
+  @@index([actor])
+}
+
 model Event {
   id        String   @id @default(cuid())
   tenantId  String?
   projectId String?
-  kind      String
+  kind      String // Legacy field - kept for backward compat
+  type      String? // M0.1: renamed from 'kind'
   payload   Json
   createdAt DateTime @default(now())
   Project   Project? @relation(fields: [projectId], references: [id])
   Tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+
+  @@index([kind])
+  @@index([type])
+  @@index([createdAt])
 }
 
 /// Event Log — Append-only event store for audit and replay
@@ -252,7 +290,7 @@ model Price {
 }
 
 model PriceChange {
-  id              String            @id @default(cuid())
+  id              String             @id @default(cuid())
   tenantId        String
   projectId       String
   skuId           String
@@ -261,38 +299,69 @@ model PriceChange {
   toAmount        Int
   currency        String
   context         Json?
-  status          PriceChangeStatus @default(PENDING)
+  status          PriceChangeStatus  @default(PENDING) // Legacy field - kept for backward compat
   policyResult    Json?
   approvedBy      String?
   appliedAt       DateTime?
   connectorStatus Json?
-  createdAt       DateTime          @default(now())
+  createdAt       DateTime           @default(now())
+  // M0.1 fields (optional for now to maintain compatibility)
+  selectorJson    Json? // M0.1: rule selector predicate
+  transformJson   Json? // M0.1: transform (%, absolute, floor/ceiling)
+  scheduleAt      DateTime? // M0.1: optional scheduling
+  state           PriceChangeStatus? // M0.1: renamed from status
+  createdBy       String? // M0.1: actor tracking
+  Project         Project            @relation(fields: [projectId], references: [id])
+  Tenant          Tenant             @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, projectId, status])
+  @@index([scheduleAt])
 }
 
 model PriceVersion {
-  id        String   @id @default(cuid())
-  priceId   String
-  amount    Int
-  note      String?
-  createdAt DateTime @default(now())
-  Price     Price    @relation(fields: [priceId], references: [id])
+  id         String    @id @default(cuid())
+  priceId    String
+  amount     Int
+  note       String?
+  createdAt  DateTime  @default(now())
+  Price      Price     @relation(fields: [priceId], references: [id])
+  // M0.1 fields (optional for now)
+  productId  String? // M0.1: direct product link
+  currency   String? // M0.1: currency code
+  unitAmount Int? // M0.1: price in smallest currency unit
+  compareAt  Int? // M0.1: optional compare-at price
+  validFrom  DateTime? // M0.1: version validity start
+  validTo    DateTime? // M0.1: optional validity end
+  Product    Product?  @relation(fields: [productId], references: [id])
+
+  @@index([priceId])
+  @@index([productId, validFrom, validTo])
+  @@index([currency])
 }
 
 model Product {
-  id        String   @id @default(cuid())
-  tenantId  String
-  projectId String
-  name      String
-  code      String
-  status    Status   @default(DRAFT)
-  createdAt DateTime @default(now())
-  Project   Project  @relation(fields: [projectId], references: [id])
-  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  Sku       Sku[]
+  id           String         @id @default(cuid())
+  tenantId     String
+  projectId    String
+  name         String
+  code         String
+  status       Status         @default(DRAFT)
+  createdAt    DateTime       @default(now())
+  // M0.1 fields (optional for backward compat)
+  sku          String? // M0.1: canonical SKU
+  title        String? // M0.1: product title
+  tags         String[]       @default([]) // M0.1: array of tags
+  channelRefs  Json? // M0.1: connector-specific refs
+  active       Boolean?       @default(true) // M0.1: active status
+  Project      Project        @relation(fields: [projectId], references: [id])
+  Tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  Sku          Sku[]
+  PriceVersion PriceVersion[]
 
   @@unique([tenantId, projectId, code], map: "tenantId_projectId_code")
+  @@unique([tenantId, projectId, sku], map: "tenantId_projectId_sku")
+  @@index([tenantId, active])
+  @@index([tags])
 }
 
 model Project {
@@ -312,6 +381,9 @@ model Project {
   Product            Product[]
   Tenant             Tenant               @relation(fields: [tenantId], references: [id])
   ShopifyIntegration ShopifyIntegration[]
+  Audit              Audit[] // M0.1
+  DiscountPolicy     DiscountPolicy[] // M0.1
+  PriceChange        PriceChange[] // M0.1
 }
 
 model Quote {
@@ -398,6 +470,9 @@ model Tenant {
   Product        Product[]
   Project        Project[]
   User           User[]
+  Audit          Audit[] // M0.1
+  DiscountPolicy DiscountPolicy[] // M0.1
+  PriceChange    PriceChange[] // M0.1
 }
 
 model User {

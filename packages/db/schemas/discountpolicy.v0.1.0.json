@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://calibr.lat/schemas/discount-policy/v0.1.0",
+  "title": "DiscountPolicy",
+  "description": "M0.1 Discount policy - reusable pricing rules",
+  "type": "object",
+  "required": [
+    "id",
+    "tenantId",
+    "projectId",
+    "type",
+    "ruleJson",
+    "enabled"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "tenantId": {
+      "type": "string",
+      "description": "Tenant ID (RLS scope)"
+    },
+    "projectId": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "percentage",
+        "absolute",
+        "tiered",
+        "floor",
+        "ceiling"
+      ],
+      "description": "Policy type"
+    },
+    "ruleJson": {
+      "type": "object",
+      "description": "Rule definition (selector + transform)",
+      "properties": {
+        "selector": {
+          "type": "object",
+          "description": "Product selector predicate"
+        },
+        "transform": {
+          "type": "object",
+          "description": "Price transformation"
+        }
+      },
+      "required": [
+        "selector",
+        "transform"
+      ]
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}
