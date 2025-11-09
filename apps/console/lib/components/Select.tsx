@@ -13,7 +13,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         value={value}
         onChange={(e) => onValueChange?.(e.target.value)}
         className={cn(
-          'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          'flex h-10 w-full rounded-md border-2 border-border bg-surface text-foreground px-3 py-2 text-sm transition-colors focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm hover:border-mute',
           className
         )}
         {...props}
