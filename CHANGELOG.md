@@ -27,6 +27,12 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Fixed Drawer component rendering invisible elements when closed that could block page interactions
   - Drawer now returns null when closed, completely removing from DOM instead of just hiding with CSS
   - Eliminates pointer-events-none elements interfering with click targets on pages like price-changes
+- **Console: API Error Fixes** (PR #51)
+  - Fixed price-changes API 400 errors by setting proper API_BASE defaults (`'https://api.calibr.lat'`) in console components
+  - Fixed catalog API 500 errors by adding proper error handling with try-catch blocks
+  - Fixed analytics API 404 errors by supporting both projectId and project slug parameters
+  - Made SHOPIFY_WEBHOOK_SECRET optional in Shopify connector config to prevent sync failures
+  - Added regression test suite to prevent reintroduction of these errors
 
 ### Added
 - **Connectors: Shopify health telemetry** (Agent B — Codex)
