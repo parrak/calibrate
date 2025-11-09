@@ -69,7 +69,7 @@ describe('ProjectCatalog', () => {
 
   it('should render loading state initially', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    catalogApi.listProducts.mockImplementation(() => new Promise(() => {}))
+    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockImplementation(() => new Promise(() => {}))
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
     const skeletons = screen.getAllByTestId('skeleton')
@@ -78,7 +78,7 @@ describe('ProjectCatalog', () => {
 
   it('should render products after loading', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    catalogApi.listProducts.mockResolvedValue(mockProducts)
+    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -93,7 +93,7 @@ describe('ProjectCatalog', () => {
 
   it('should filter products by search query', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    catalogApi.listProducts.mockResolvedValue(mockProducts)
+    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -112,7 +112,7 @@ describe('ProjectCatalog', () => {
 
   it('should filter products by currency', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    catalogApi.listProducts.mockResolvedValue(mockProducts)
+    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -131,7 +131,7 @@ describe('ProjectCatalog', () => {
 
   it('should expand/collapse product details', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    catalogApi.listProducts.mockResolvedValue(mockProducts)
+    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -175,7 +175,7 @@ describe('ProjectCatalog', () => {
     }))
 
     const { catalogApi } = await import('@/lib/api-client')
-    catalogApi.listProducts.mockResolvedValue(manyProducts)
+    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(manyProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -201,7 +201,7 @@ describe('ProjectCatalog', () => {
 
   it('should clear filters', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    catalogApi.listProducts.mockResolvedValue(mockProducts)
+    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -234,7 +234,7 @@ describe('ProjectCatalog', () => {
     }
 
     const { catalogApi } = await import('@/lib/api-client')
-    catalogApi.listProducts.mockRejectedValue(
+    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockRejectedValue(
       new ApiError('Failed to load catalog', 500)
     )
 
@@ -247,7 +247,7 @@ describe('ProjectCatalog', () => {
 
   it('should display empty state when no products', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    catalogApi.listProducts.mockResolvedValue([])
+    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue([])
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
