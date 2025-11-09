@@ -346,13 +346,7 @@ export function startPeriodicProbing(
 
   // Execute immediately
   executeAllProbes(baseUrl, probes).catch(error => {
-    logger.error('Initial probe execution failed', {
-      error: error instanceof Error ? {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      } : undefined
-    })
+    logger.error('Initial probe execution failed', error instanceof Error ? error : undefined)
   })
 
   // Then execute periodically
@@ -360,13 +354,7 @@ export function startPeriodicProbing(
     try {
       await executeAllProbes(baseUrl, probes)
     } catch (error) {
-      logger.error('Periodic probe execution failed', {
-        error: error instanceof Error ? {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        } : undefined
-      })
+      logger.error('Periodic probe execution failed', error instanceof Error ? error : undefined)
     }
   }, intervalMs)
 

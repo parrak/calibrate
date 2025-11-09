@@ -72,7 +72,7 @@ export async function checkAndDeliverAlerts(
         // Log any failed deliveries
         const failedDeliveries = results.filter(r => !r.success)
         if (failedDeliveries.length > 0) {
-          logger.error('Alert delivery failures', {
+          logger.error('Alert delivery failures', undefined, {
             metadata: {
               policyId: alert.policyId,
               failures: failedDeliveries.map(f => ({
@@ -85,13 +85,7 @@ export async function checkAndDeliverAlerts(
       } catch (error) {
         const errorMsg = `Failed to deliver alert ${alert.policyId}: ${error instanceof Error ? error.message : String(error)}`
         errors.push(errorMsg)
-        logger.error(errorMsg, {
-          error: error instanceof Error ? {
-            name: error.name,
-            message: error.message,
-            stack: error.stack
-          } : undefined
-        })
+        logger.error(errorMsg, error instanceof Error ? error : undefined)
       }
     }
 
@@ -104,13 +98,7 @@ export async function checkAndDeliverAlerts(
   } catch (error) {
     const errorMsg = `Alert check failed: ${error instanceof Error ? error.message : String(error)}`
     errors.push(errorMsg)
-    logger.error(errorMsg, {
-      error: error instanceof Error ? {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      } : undefined
-    })
+    logger.error(errorMsg, error instanceof Error ? error : undefined)
 
     return {
       timestamp,
@@ -163,13 +151,7 @@ async function gatherMetrics(): Promise<any> {
       cronJobs
     }
   } catch (error) {
-    logger.error('Failed to gather metrics for alert checking', {
-      error: error instanceof Error ? {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      } : undefined
-    })
+    logger.error('Failed to gather metrics for alert checking', error instanceof Error ? error : undefined)
     throw error
   }
 }
@@ -194,13 +176,7 @@ export function startPeriodicAlertChecking(
     try {
       await checkAndDeliverAlerts(config, policies)
     } catch (error) {
-      logger.error('Periodic alert check failed', {
-        error: error instanceof Error ? {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        } : undefined
-      })
+      logger.error('Periodic alert check failed', error instanceof Error ? error : undefined)
     }
   }, intervalMs)
 
