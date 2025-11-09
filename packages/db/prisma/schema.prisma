@@ -410,6 +410,7 @@ model Project {
   DiscountPolicy     DiscountPolicy[] // M0.1
   PriceChange        PriceChange[] // M0.1
   ExplainTrace       ExplainTrace[] // M1.1
+  CopilotQueryLog    CopilotQueryLog[] // M1.4
 }
 
 model Quote {
@@ -485,21 +486,22 @@ model Sku {
 }
 
 model Tenant {
-  id             String           @id @default(cuid())
-  name           String
-  createdAt      DateTime         @default(now())
-  Competitor     Competitor[]
-  CompetitorRule CompetitorRule[]
-  Customer       Customer[]
-  Event          Event[]
-  Policy         Policy[]
-  Product        Product[]
-  Project        Project[]
-  User           User[]
-  Audit          Audit[] // M0.1
-  DiscountPolicy DiscountPolicy[] // M0.1
-  PriceChange    PriceChange[] // M0.1
-  ExplainTrace   ExplainTrace[] // M1.1
+  id              String            @id @default(cuid())
+  name            String
+  createdAt       DateTime          @default(now())
+  Competitor      Competitor[]
+  CompetitorRule  CompetitorRule[]
+  Customer        Customer[]
+  Event           Event[]
+  Policy          Policy[]
+  Product         Product[]
+  Project         Project[]
+  User            User[]
+  Audit           Audit[] // M0.1
+  DiscountPolicy  DiscountPolicy[] // M0.1
+  PriceChange     PriceChange[] // M0.1
+  ExplainTrace    ExplainTrace[] // M1.1
+  CopilotQueryLog CopilotQueryLog[] // M1.4
 }
 
 model User {
@@ -547,4 +549,52 @@ enum Status {
   DRAFT
   ACTIVE
   ARCHIVED
+}
+
+/// CopilotQueryLog — M1.4: Audit trail for copilot queries
+/// Logs all natural language queries with resolved schemas and tenant scope
+model CopilotQueryLog {
+  id             String   @id @default(cuid())
+  tenantId       String
+  projectId      String
+  userId         String? // User who made the query
+  userRole       String? // Role at time of query (VIEWER, EDITOR, ADMIN, OWNER)
+  query          String // Natural language query
+  generatedSQL   String? // Generated SQL query
+  queryType      String // Type: 'read', 'aggregate', 'explain'
+  resultCount    Int? // Number of results returned
+  executionTime  Int? // Execution time in ms
+  schemaVersion  String? // Schema version used for query generation
+  method         String? // 'ai' or 'pattern'
+  success        Boolean @default(true)
+  error          String? // Error message if failed
+  metadata       Json? // Additional context (filters, params, etc.)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  Tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  Project        Project  @relation(fields: [projectId], references: [id])
+
+  @@index([tenantId, projectId, createdAt])
+  @@index([userId, createdAt])
+  @@index([success])
+  @@index([createdAt])
+}
+
+/// AnalyticsDigest — M1.4: Daily analytics snapshots with anomaly detection
+/// Stores aggregated metrics and detected anomalies for pricing intelligence
+model AnalyticsDigest {
+  id                    String   @id @default(cuid())
+  tenantId              String
+  projectId             String
+  digestDate            DateTime @db.Date // Date of the digest
+  totalPriceChanges     Int      @default(0)
+  totalRevenue          Int? // Projected revenue impact in cents
+  avgMargin             Float? // Average margin percentage
+  anomalies             Json? // Detected anomalies: price spikes, margin compression
+  topPerformers         Json? // Top performing SKUs
+  metrics               Json // Additional metrics
+  createdAt             DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([projectId, digestDate])
+  @@index([tenantId, projectId, digestDate])
+  @@index([digestDate])
 }

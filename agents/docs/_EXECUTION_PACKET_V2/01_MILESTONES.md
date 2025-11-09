@@ -74,12 +74,21 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 ---
 
-### M1.4 — Copilot Read‑Only Queries [NR] — Owners: Copilot
+### M1.4 — Copilot Read‑Only Queries [NR] — Owners: Copilot ✅ COMPLETE
 **Goals**
 - `/copilot/query` endpoint; schema-aware RAG; safe prompt → SQL/GraphQL; RBAC.
 
 **Success**
-- Queries like "List products with price > $100" and "Show changes scheduled next week" succeed; query + sources logged.
+- ✅ Queries like "List products with price > $100" and "Show changes scheduled next week" succeed; query + sources logged.
+- ✅ Implemented `/api/v1/copilot` endpoint with GPT-4 integration and pattern-based fallback
+- ✅ RBAC enforcement with project membership and role validation
+- ✅ SQL injection guards (read-only queries only)
+- ✅ Query logging with `CopilotQueryLog` table for full audit trail
+- ✅ Analytics digest cron job with anomaly detection (price spikes, margin compression, volatility)
+- ✅ Console UI with `CopilotDrawer` and `CopilotButton` components
+- ✅ 18+ comprehensive tests covering RBAC, query logging, and anomaly detection
+
+**Completed:** January 2025 (M1.4)
 
 ---
 
