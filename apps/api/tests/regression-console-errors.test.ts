@@ -14,20 +14,28 @@ import { GET as catalogRoute } from '../app/api/v1/catalog/route'
 import { GET as analyticsRoute } from '../app/api/v1/analytics/[projectId]/route'
 import { POST as shopifySyncRoute } from '../app/api/platforms/shopify/sync/route'
 import { buildShopifyConnectorConfig } from '../lib/shopify-connector'
-import { prisma } from '@calibr/db'
 
-// Mock Prisma
+// Mock Prisma - create a shared mock client
+const createMockPrismaClient = () => {
+  const mockProject = {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+  }
+  const mockProduct = {
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+  }
+
+  return {
+    project: mockProject,
+    product: mockProduct,
+  }
+}
+
+const mockPrismaClient = createMockPrismaClient()
+
 vi.mock('@calibr/db', () => ({
-  prisma: vi.fn(() => ({
-    project: {
-      findUnique: vi.fn(),
-      findFirst: vi.fn(),
-    },
-    product: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-    },
-  })),
+  prisma: vi.fn(() => mockPrismaClient),
 }))
 
 // Mock analytics package
@@ -69,6 +77,11 @@ describe('Console Errors Regression Tests', () => {
     delete process.env.SHOPIFY_WEBHOOK_SECRET
     process.env.SHOPIFY_API_KEY = 'test-key'
     process.env.SHOPIFY_API_SECRET = 'test-secret'
+    // Reset Prisma mocks
+    mockPrismaClient.project.findUnique.mockReset()
+    mockPrismaClient.project.findFirst.mockReset()
+    mockPrismaClient.product.findFirst.mockReset()
+    mockPrismaClient.product.findMany.mockReset()
   })
 
   describe('Catalog API - Error Handling', () => {
@@ -82,8 +95,7 @@ describe('Console Errors Regression Tests', () => {
     })
 
     it('should handle project not found', async () => {
-      const mockPrisma = prisma() as any
-      mockPrisma.project.findUnique.mockResolvedValue(null)
+      mockPrismaClient.project.findUnique.mockResolvedValue(null)
 
       const req = new NextRequest('http://localhost/api/v1/catalog?project=nonexistent')
       const response = await catalogRoute(req)
@@ -94,8 +106,7 @@ describe('Console Errors Regression Tests', () => {
     })
 
     it('should handle database errors gracefully', async () => {
-      const mockPrisma = prisma() as any
-      mockPrisma.project.findUnique.mockRejectedValue(new Error('Database connection failed'))
+      mockPrismaClient.project.findUnique.mockRejectedValue(new Error('Database connection failed'))
 
       const req = new NextRequest('http://localhost/api/v1/catalog?project=demo')
       const response = await catalogRoute(req)
@@ -107,7 +118,6 @@ describe('Console Errors Regression Tests', () => {
     })
 
     it('should return products successfully', async () => {
-      const mockPrisma = prisma() as any
       const mockProject = { id: 'project-1', slug: 'demo' }
       const mockProducts = [
         {
@@ -124,8 +134,8 @@ describe('Console Errors Regression Tests', () => {
         },
       ]
 
-      mockPrisma.project.findUnique.mockResolvedValue(mockProject)
-      mockPrisma.product.findMany.mockResolvedValue(mockProducts)
+      mockPrismaClient.project.findUnique.mockResolvedValue(mockProject)
+      mockPrismaClient.product.findMany.mockResolvedValue(mockProducts)
 
       const req = new NextRequest('http://localhost/api/v1/catalog?project=demo')
       const response = await catalogRoute(req)
@@ -139,9 +149,8 @@ describe('Console Errors Regression Tests', () => {
 
   describe('Analytics API - Slug Support', () => {
     it('should accept project slug and resolve to projectId', async () => {
-      const mockPrisma = prisma() as any
       const mockProject = { id: 'project-123', slug: 'demo' }
-      mockPrisma.project.findFirst.mockResolvedValue(mockProject)
+      mockPrismaClient.project.findFirst.mockResolvedValue(mockProject)
 
       const req = new NextRequest('http://localhost/api/v1/analytics/demo?days=30')
       const response = await analyticsRoute(req, {
@@ -151,7 +160,7 @@ describe('Console Errors Regression Tests', () => {
 
       expect(response.status).toBe(200)
       expect(data.summary).toBeDefined()
-      expect(mockPrisma.project.findFirst).toHaveBeenCalledWith({
+      expect(mockPrismaClient.project.findFirst).toHaveBeenCalledWith({
         where: {
           OR: [{ id: 'demo' }, { slug: 'demo' }],
         },
@@ -159,9 +168,8 @@ describe('Console Errors Regression Tests', () => {
     })
 
     it('should accept projectId directly', async () => {
-      const mockPrisma = prisma() as any
       const mockProject = { id: 'project-123', slug: 'demo' }
-      mockPrisma.project.findFirst.mockResolvedValue(mockProject)
+      mockPrismaClient.project.findFirst.mockResolvedValue(mockProject)
 
       const req = new NextRequest('http://localhost/api/v1/analytics/project-123?days=30')
       const response = await analyticsRoute(req, {
@@ -174,8 +182,7 @@ describe('Console Errors Regression Tests', () => {
     })
 
     it('should return 404 for non-existent project', async () => {
-      const mockPrisma = prisma() as any
-      mockPrisma.project.findFirst.mockResolvedValue(null)
+      mockPrismaClient.project.findFirst.mockResolvedValue(null)
 
       const req = new NextRequest('http://localhost/api/v1/analytics/nonexistent?days=30')
       const response = await analyticsRoute(req, {
@@ -188,9 +195,8 @@ describe('Console Errors Regression Tests', () => {
     })
 
     it('should validate days parameter', async () => {
-      const mockPrisma = prisma() as any
       const mockProject = { id: 'project-123', slug: 'demo' }
-      mockPrisma.project.findFirst.mockResolvedValue(mockProject)
+      mockPrismaClient.project.findFirst.mockResolvedValue(mockProject)
 
       const req = new NextRequest('http://localhost/api/v1/analytics/demo?days=500')
       const response = await analyticsRoute(req, {
@@ -245,9 +251,8 @@ describe('Console Errors Regression Tests', () => {
     })
 
     it('should require authentication token', async () => {
-      const mockPrisma = prisma() as any
       const mockProject = { id: 'project-1', slug: 'demo' }
-      mockPrisma.project.findUnique.mockResolvedValue(mockProject)
+      mockPrismaClient.project.findUnique.mockResolvedValue(mockProject)
 
       const { GET } = await import('../app/api/v1/price-changes/route')
       const req = new NextRequest('http://localhost/api/v1/price-changes?project=demo')

@@ -10,7 +10,7 @@ export const GET = withSecurity(async (req: NextRequest) => {
     if (!projectSlug) {
       return NextResponse.json({ error: 'project required' }, { status: 400 })
     }
-    
+
     const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
     if (!project) {
       return NextResponse.json({ error: 'project not found' }, { status: 404 })
@@ -86,7 +86,7 @@ export const GET = withSecurity(async (req: NextRequest) => {
   } catch (error) {
     console.error('[Catalog API] Error:', error)
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch catalog',
         message: error instanceof Error ? error.message : 'Unknown error'
       },

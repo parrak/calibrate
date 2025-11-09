@@ -14,7 +14,7 @@ export const runtime = 'nodejs'
 
 /**
  * GET /api/v1/analytics/:projectId
- * 
+ *
  * Accepts either projectId or project slug
  *
  * Query params:
@@ -67,7 +67,7 @@ export const GET = withSecurity(async function GET(
   } catch (error) {
     console.error('[Analytics API] Error:', error)
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch analytics',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
