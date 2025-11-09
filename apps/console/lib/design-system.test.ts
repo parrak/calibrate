@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { globSync } from 'glob'
 
 describe('Design System - Stripe-like UX', () => {
   describe('Color Tokens', () => {
@@ -29,7 +30,8 @@ describe('Design System - Stripe-like UX', () => {
       const globalsCSS = readFileSync(join(__dirname, '../app/globals.css'), 'utf-8')
 
       // Ensure no dark mode color definitions in :root
-      const rootSection = globalsCSS.match(/:root\s*\{[^}]+\}/s)?.[0] || ''
+      const rootMatch = globalsCSS.match(/:root\s*\{[^}]+\}/)
+      const rootSection = rootMatch ? rootMatch[0] : ''
 
       // Light background color (should start with #F or be light)
       expect(rootSection).toMatch(/--bg:\s*#[FfEeDd]/)
@@ -80,17 +82,16 @@ describe('Design System - Stripe-like UX', () => {
     ]
 
     it('should not contain dark: variant classes in component files', () => {
-      const glob = require('glob')
       const allTsxFiles: string[] = []
 
       componentDirs.forEach(dir => {
         try {
-          const files = glob.sync(`${dir}/**/*.{tsx,jsx}`, {
+          const files = globSync(`${dir}/**/*.{tsx,jsx}`, {
             absolute: true,
             ignore: ['**/*.test.*', '**/*.spec.*'] // Exclude test files
           })
           allTsxFiles.push(...files)
-        } catch (e) {
+        } catch (_e) {
           // Directory might not exist, skip
         }
       })
@@ -103,7 +104,7 @@ describe('Design System - Stripe-like UX', () => {
           if (/dark:/g.test(content)) {
             filesWithDarkMode.push(file)
           }
-        } catch (e) {
+        } catch (_e) {
           // Skip files that can't be read
         }
       })
@@ -116,17 +117,16 @@ describe('Design System - Stripe-like UX', () => {
     })
 
     it('should not use hardcoded dark background colors in components', () => {
-      const glob = require('glob')
       const allTsxFiles: string[] = []
 
       componentDirs.forEach(dir => {
         try {
-          const files = glob.sync(`${dir}/**/*.{tsx,jsx}`, {
+          const files = globSync(`${dir}/**/*.{tsx,jsx}`, {
             absolute: true,
             ignore: ['**/*.test.*', '**/*.spec.*'] // Exclude test files
           })
           allTsxFiles.push(...files)
-        } catch (e) {
+        } catch (_e) {
           // Directory might not exist, skip
         }
       })
@@ -149,7 +149,7 @@ describe('Design System - Stripe-like UX', () => {
               filesWithDarkBgs.push({ file, pattern: pattern.toString() })
             }
           })
-        } catch (e) {
+        } catch (_e) {
           // Skip files that can't be read
         }
       })
