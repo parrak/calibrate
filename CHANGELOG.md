@@ -7,6 +7,12 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Competitor Monitoring: API Testing & UI Integration**
+  - Fixed CompetitorMonitor component to use projectSlug for monitoring
+  - Added createRule API method to competitorsApi client
+  - Added security headers (withSecurity wrapper) to all competitor endpoints
+  - Created manual API test script (`scripts/test-competitor-api.ps1`) for endpoint verification
+  - Updated 04_kickoff_checklist.md with competitor monitoring testing progress
 - **Pricing Engine: Rules DSL and MVP Implementation** (M1.1 — Engine Team)
   - Implemented complete rules DSL with selector, transform, and schedule definitions
   - Selector predicates: match by SKU, tags, price range, or custom fields with AND/OR operators
