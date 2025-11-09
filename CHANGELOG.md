@@ -23,6 +23,11 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - See `agents/docs/_EXECUTION_PACKET_V2/M1.1_COMPLETION_SUMMARY.md` for complete documentation
 
 ### Fixed
+- **Competitor Monitoring: Component & API Fixes**
+  - Fixed CompetitorMonitor component to pass projectSlug to monitor API endpoint
+  - Fixed CompetitorRules component to properly create rules via API
+  - Added missing security headers to competitor [id] and [id]/products] routes
+  - Fixed API client to include createRule method for competitor rules
 - **Console: Drawer Component Blocking Interactions**
   - Fixed Drawer component rendering invisible elements when closed that could block page interactions
   - Drawer now returns null when closed, completely removing from DOM instead of just hiding with CSS

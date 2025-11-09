@@ -66,13 +66,10 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
     setIsMonitoring(true)
     setError(null)
     try {
-      // Note: API needs to be updated to support project-based monitoring
-      // For now, this will fail gracefully
-      const results = await Promise.all(
-        competitors.map(c => competitorsApi.monitor(c.id).catch(() => null))
-      )
-      const validResults = results.filter((r): r is Record<string, unknown> => r !== null) as unknown as MonitoringResult[]
-      setMonitoringResults(validResults)
+      // Monitor all competitors in the project using projectSlug
+      const result = await competitorsApi.monitor('', projectSlug)
+      const results = (result.results || []) as unknown as MonitoringResult[]
+      setMonitoringResults(results)
       await fetchCompetitors() // Refresh data
     } catch (error) {
       console.error('Error monitoring competitors:', error)
