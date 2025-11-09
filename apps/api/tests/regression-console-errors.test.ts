@@ -308,8 +308,10 @@ describe('Console Errors Regression Tests', () => {
     it('should validate status parameter format', () => {
       // Regression test: Ensure status=PENDING doesn't cause 400 errors
       // The API should accept valid status values: PENDING, APPROVED, APPLIED, REJECTED, FAILED, ROLLED_BACK, ALL
+      // Note: The API converts status to uppercase, so 'pending' becomes 'PENDING' which is valid
       const validStatuses = ['PENDING', 'APPROVED', 'APPLIED', 'REJECTED', 'FAILED', 'ROLLED_BACK', 'ALL']
-      const invalidStatuses = ['INVALID_STATUS', 'pending', 'Pending', 'PEND', '']
+      // Only include truly invalid statuses (not valid even after uppercasing)
+      const invalidStatuses = ['INVALID_STATUS', 'PEND', 'INVALID', '']
 
       validStatuses.forEach((status) => {
         // Status should be valid (uppercase)
@@ -319,10 +321,14 @@ describe('Console Errors Regression Tests', () => {
 
       invalidStatuses.forEach((status) => {
         // These should be rejected
+        // Note: The API converts status to uppercase before validation,
+        // so 'pending' becomes 'PENDING' which is valid
         const isValid = ['PENDING', 'APPROVED', 'APPLIED', 'REJECTED', 'FAILED', 'ROLLED_BACK', 'ALL'].includes(status.toUpperCase())
-        if (status && status !== 'ALL') {
-          expect(isValid || status === '').toBe(false)
-        }
+        // For truly invalid statuses (not in the valid list even after uppercasing), isValid should be false
+        // Empty string is invalid
+        // 'pending' and 'Pending' are actually valid (they become 'PENDING'), so they shouldn't be in invalidStatuses
+        // But for the test, we check that invalid ones are indeed invalid
+        expect(isValid).toBe(false)
       })
     })
 
@@ -404,12 +410,15 @@ describe('Console Errors Regression Tests', () => {
       excludedPaths.forEach((path) => {
         // The matcher uses negative lookahead, so paths starting with excluded patterns won't match
         const pathname = path.split('?')[0] // Get pathname without query
+        // For RSC routes, check the full path (including query) for _rsc
+        const hasRscInQuery = path.includes('_rsc')
         const shouldMatch = !(
           pathname.startsWith('/api') ||
           pathname.startsWith('/_next/static') ||
           pathname.startsWith('/_next/image') ||
           pathname === '/favicon.ico' ||
           pathname.includes('_rsc') ||
+          hasRscInQuery || // RSC routes should be excluded even if _rsc is in query
           /\.\w+$/.test(pathname) // Has file extension
         )
         

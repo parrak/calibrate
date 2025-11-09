@@ -39,24 +39,24 @@ vi.mock('@calibr/db', () => ({
   prisma: vi.fn(() => mockPrismaClient),
 }))
 
-// Mock auth security manager
-const mockValidateSessionToken = vi.fn()
-vi.mock('../lib/auth-security', () => ({
+// Mock auth security manager - use path alias to match the import in utils.ts
+vi.mock('@/lib/auth-security', () => ({
   authSecurityManager: {
-    validateSessionToken: mockValidateSessionToken,
+    validateSessionToken: vi.fn(),
   },
 }))
 
 describe('Schema Mismatch Regression Tests', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
-    // Reset mocks to return valid data
-    mockValidateSessionToken.mockReturnValue({
+    // Get the mocked module and reset its return value
+    const { authSecurityManager } = await import('@/lib/auth-security')
+    vi.mocked(authSecurityManager.validateSessionToken).mockReturnValue({
       userId: 'user-1',
       tenantId: 'tenant-1',
       projectId: 'project-1',
       roles: ['admin'],
-    })
+    } as any)
   })
 
   describe('PriceChange Model - M0.1 Fields', () => {
@@ -132,13 +132,7 @@ describe('Schema Mismatch Regression Tests', () => {
         createdAt: new Date(),
       }
 
-      // Add M0.1 fields
-      requiredM0_1Fields.forEach((field) => {
-        // Verify the field can be accessed (simulating Prisma query result)
-        expect(mockPriceChange).toHaveProperty(field)
-      })
-
-      // Verify the mock includes all fields
+      // Add M0.1 fields to simulate Prisma query result
       const priceChangeWithM0_1 = {
         ...mockPriceChange,
         selectorJson: null,
@@ -148,11 +142,10 @@ describe('Schema Mismatch Regression Tests', () => {
         createdBy: null,
       }
 
-      expect(priceChangeWithM0_1).toHaveProperty('selectorJson')
-      expect(priceChangeWithM0_1).toHaveProperty('transformJson')
-      expect(priceChangeWithM0_1).toHaveProperty('scheduleAt')
-      expect(priceChangeWithM0_1).toHaveProperty('state')
-      expect(priceChangeWithM0_1).toHaveProperty('createdBy')
+      // Verify all M0.1 fields are present (simulating Prisma query result)
+      requiredM0_1Fields.forEach((field) => {
+        expect(priceChangeWithM0_1).toHaveProperty(field)
+      })
     })
   })
 
