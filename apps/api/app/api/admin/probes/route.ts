@@ -9,8 +9,7 @@ import {
   executeProbe,
   getAllProbeStats,
   getProbeStats,
-  DEFAULT_PROBES,
-  type ProbeConfig
+  DEFAULT_PROBES
 } from '@calibr/monitor'
 
 /**

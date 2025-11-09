@@ -11,9 +11,9 @@ import {
   getCronJobStatus,
   getAllCronJobStatuses,
   checkCronJobHealth,
-  getAllRegisteredCronJobs,
   type CronJobConfig,
-  type CronHeartbeat
+  type CronHeartbeat,
+  type CronJobStatus
 } from '@calibr/monitor'
 
 /**
@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
 /**
  * Helper to format job status for API response
  */
-function formatJobStatus(status: any) {
+function formatJobStatus(status: CronJobStatus) {
   return {
     jobId: status.jobId,
     name: status.config.name,
