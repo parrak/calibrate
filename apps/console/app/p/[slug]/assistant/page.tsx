@@ -150,7 +150,7 @@ export default function AssistantPage() {
                     <summary className="cursor-pointer font-medium mb-2">
                       View Data ({message.response.method === 'ai' ? 'AI-powered' : 'Pattern-based'})
                     </summary>
-                    <pre className="bg-black/5 dark:bg-white/5 p-2 rounded overflow-x-auto text-fg">
+                    <pre className="bg-bg border border-border p-2 rounded overflow-x-auto text-fg">
                       {JSON.stringify(message.response.data, null, 2)}
                     </pre>
                   </details>
@@ -164,7 +164,7 @@ export default function AssistantPage() {
                     <summary className="cursor-pointer font-medium mb-2">
                       View SQL Query
                     </summary>
-                    <pre className="bg-black/5 dark:bg-white/5 p-2 rounded overflow-x-auto font-mono text-xs text-fg">
+                    <pre className="bg-bg border border-border p-2 rounded overflow-x-auto font-mono text-xs text-fg">
                       {message.response.sql}
                     </pre>
                   </details>
