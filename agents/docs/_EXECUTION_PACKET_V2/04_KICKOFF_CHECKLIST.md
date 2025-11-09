@@ -68,11 +68,11 @@
 
 ### Milestone M0.4 — Amazon Connector (Read-Only Stub)
 
-- [ ] Implement SP-API OAuth scaffolding + LWA client
-- [ ] Pull sample catalog (few SKUs) → stress test schema
-- [ ] Add `AMAZON_CONNECTOR_ENABLED` feature flag
-- [ ] Add ingest cron (manual run only in staging)
-- [ ] Validate schema generality for future write paths
+- [x] Implement SP-API OAuth scaffolding + LWA client
+- [x] Pull sample catalog (few SKUs) → stress test schema
+- [x] Add `AMAZON_CONNECTOR_ENABLED` feature flag
+- [x] Add ingest cron (manual run only in staging)
+- [x] Validate schema generality for future write paths
 
 ### Milestone M1.5 (Conditional) — Stripe Connector
 
@@ -220,8 +220,8 @@
 
 ## Amazon (Read‑Only Stub)
 
-- [ ] SP‑API OAuth scaffolding; basic catalog ingest (few SKUs).
-- [ ] Feature flag OFF in production; used only for schema stress test.
+- [x] SP‑API OAuth scaffolding; basic catalog ingest (few SKUs).
+- [x] Feature flag OFF in production; used only for schema stress test.
 
 ## Engine & Console
 
