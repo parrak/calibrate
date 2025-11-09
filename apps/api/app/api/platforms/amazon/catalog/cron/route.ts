@@ -135,13 +135,17 @@ export const POST = withSecurity(async (req: NextRequest) => {
       ok: true,
       ingested: ingestedProducts.length,
       total: products.length,
-      products: ingestedProducts.map(p => ({
-        id: p.id,
-        externalId: (p.channelRefs as any)?.amazon?.asin,
-        title: p.title,
-        sku: p.sku,
-        status: p.status
-      })),
+      products: ingestedProducts.map(p => {
+        const channelRefs = p.channelRefs as Record<string, unknown> | null
+        const amazonRefs = channelRefs?.amazon as { asin?: string } | undefined
+        return {
+          id: p.id,
+          externalId: amazonRefs?.asin,
+          title: p.title,
+          sku: p.sku,
+          status: p.status
+        }
+      }),
       projectSlug,
       timestamp: new Date().toISOString(),
       schemaValidation: {
