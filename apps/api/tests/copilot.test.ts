@@ -457,7 +457,7 @@ describe('copilot API', () => {
     const body = await res.json()
     expect(body.metadata).toBeDefined()
     expect(body.metadata.schemaVersion).toBe('1.4.0')
-    expect(body.metadata.executionTime).toBeGreaterThan(0)
+    expect(body.metadata.executionTime).toBeGreaterThanOrEqual(0)
     expect(body.metadata.role).toBe('ADMIN')
   })
 

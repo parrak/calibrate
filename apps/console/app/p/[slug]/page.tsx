@@ -113,7 +113,7 @@ export default function ProjectDashboard({ params }: { params: { slug: string } 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Link
             href={`/p/${params.slug}/price-changes`}
-            className="flex items-center justify-between bg-brand text-black px-4 py-3 rounded-lg hover:bg-brand/90 transition-all shadow-sm hover:shadow-md group font-semibold"
+            className="flex items-center justify-between bg-brand text-white px-4 py-3 rounded-lg hover:bg-brand/90 transition-all shadow-sm hover:shadow-md group font-semibold"
           >
             <span>Review Price Changes</span>
             <span aria-hidden className="group-hover:translate-x-1 transition-transform">→</span>

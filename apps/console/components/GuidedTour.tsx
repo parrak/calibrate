@@ -102,7 +102,7 @@ export function GuidedTour({ projectSlug }: GuidedTourProps) {
               </p>
               <button
                 onClick={handleDismiss}
-                className="w-full px-6 py-3 rounded-lg bg-brand text-black font-semibold hover:bg-brand/90 transition-all shadow-lg shadow-brand/25"
+                className="w-full px-6 py-3 rounded-lg bg-brand text-white font-semibold hover:bg-brand/90 transition-all shadow-lg shadow-brand/25"
               >
                 Got it, let's start
               </button>
