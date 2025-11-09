@@ -144,7 +144,7 @@ export default function AmazonCompetitivePage() {
               className="border px-2 py-1 text-sm"
             />
             <button
-              className={`text-sm px-2 py-1 rounded border ${cardView ? 'bg-gray-900 text-white' : ''}`}
+              className={`text-sm px-2 py-1 rounded border ${cardView ? 'bg-brand text-white' : ''}`}
               onClick={() => setCardView(!cardView)}
             >{cardView ? 'Table' : 'Cards'}</button>
           </div>
@@ -336,7 +336,7 @@ export default function AmazonCompetitivePage() {
               })
               await loadRecent(); await loadWatchlist()
             }}
-            className="bg-gray-900 text-white px-3 py-1 rounded"
+            className="bg-brand text-white px-3 py-1 rounded"
           >Run Now</button>
         </div>
         <div className="overflow-auto border rounded">
