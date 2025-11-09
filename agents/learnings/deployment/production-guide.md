@@ -51,16 +51,41 @@ See: `../bug-fixes/nextjs-15-dynamic-params.md`
 
 **Problem:** Prisma client not initialized or middleware import errors
 
-**Solution:**
-1. Ensure Prisma client is generated before build. On Vercel, the `apps/console/vercel.json` install command now runs:
-```bash
-corepack prepare pnpm@9.0.0 --activate \
-  && cd ../.. \
-  && pnpm install --frozen-lockfile=false --shamefully-hoist \
-  && pnpm --filter @calibr/db run generate
-```
+**Solution:** 
+1. Ensure Prisma client is generated before build:
 
-   This executes the workspace `@calibr/db` `generate` script so `@prisma/client` is available before Next.js compiles.
+   - **Legacy local Next.js builds:**
+
+     ```json
+     "build": "prisma generate --schema=../../packages/db/prisma/schema.prisma && next build"
+     ```
+
+     Keep this snippet handy for engineers running the console build locally without Vercel so the expectation of generating the Prisma client before the Next.js build stays explicit.
+
+   - **Vercel install step:**
+
+     ```bash
+     corepack prepare pnpm@9.0.0 --activate \
+       && cd ../.. \
+       && pnpm install --frozen-lockfile=false --shamefully-hoist \
+       && pnpm --filter @calibr/db exec prisma generate
+     ```
+
+     Running Prisma directly via the workspace filter during install guarantees `@prisma/client` is linked before Next.js starts compiling while preserving the non-frozen install required for cached dependency reconciliation.
+
+   - **Vercel build step safeguard:**
+
+     ```bash
+     corepack prepare pnpm@9.0.0 --activate \
+       && cd ../.. \
+       && pnpm --filter @calibr/db exec prisma generate \
+       && pnpm exec prisma generate --schema=./packages/db/prisma/schema.prisma \
+       && pnpm --filter @calibr/console build
+     ```
+
+     Re-running `prisma generate` with both the workspace filter and the explicit schema path catches skipped install hooks (for example when re-deploying from cache) and keeps the build idempotent.
+
+   - **Local builds:** run `pnpm --filter @calibr/db exec prisma generate` before `pnpm --filter @calibr/console build` or add it as a prebuild script if engineers encounter the same missing-client error locally.
 
 2. If encryption middleware causes issues, disable it:
 ```typescript
