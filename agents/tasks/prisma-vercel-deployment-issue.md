@@ -25,12 +25,22 @@ Please try to install it by hand with pnpm add @prisma/client and rerun pnpm dlx
 
 ## Current Configuration
 
-**apps/console/vercel.json**:
+**apps/console/vercel.json** (failing configuration):
 ```json
 {
   "framework": "nextjs",
   "buildCommand": "cd ../.. && corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile=false && pnpm --filter @calibr/db exec prisma generate && pnpm --filter @calibr/console build",
   "installCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm install --frozen-lockfile=false --shamefully-hoist",
+  "outputDirectory": ".next"
+}
+```
+
+**apps/console/vercel.json** (resolved configuration on master):
+```json
+{
+  "framework": "nextjs",
+  "buildCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm --filter @calibr/db exec prisma generate && pnpm exec prisma generate --schema=./packages/db/prisma/schema.prisma && pnpm --filter @calibr/console build",
+  "installCommand": "corepack prepare pnpm@9.0.0 --activate && cd ../.. && pnpm install --frozen-lockfile=false --shamefully-hoist && pnpm --filter @calibr/db exec prisma generate",
   "outputDirectory": ".next"
 }
 ```
@@ -143,7 +153,7 @@ The fix should:
 
 ## ✅ Resolution (January 2025)
 
-- Updated `apps/console/vercel.json` so the install command runs `pnpm --filter @calibr/db run generate` immediately after the workspace install. This ensures `@prisma/client` is linked before Next.js builds.
-- Simplified the Vercel build step to just `pnpm --filter @calibr/console build` now that Prisma generation happens during install.
-- Documented the new install command in `agents/learnings/deployment/production-guide.md` for future deploy debugging.
+- Updated `apps/console/vercel.json` so the install command performs a hoisted workspace install and immediately regenerates Prisma while the build command re-activates pnpm with Corepack before running both `pnpm --filter @calibr/db exec prisma generate` and `pnpm exec prisma generate --schema=./packages/db/prisma/schema.prisma` ahead of `pnpm --filter @calibr/console build`.
+- Documented the revised install/build flow in `agents/learnings/deployment/production-guide.md`, including local remediation steps for engineers who see the error outside of Vercel.
+- Verified the workflow locally with `pnpm --filter @calibr/console build` so the same commands developers run match the deployment pipeline.
 

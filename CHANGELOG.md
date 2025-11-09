@@ -112,6 +112,10 @@ The format is based on Keep a Changelog and follows semantic versioning.
     - Radius tokens updated to use CSS variables
   - Dark theme preserved under `:root.dark` for future theme toggle feature
   - All apps pass TypeScript checks with no breaking changes
+- **Console Deployments:** Updated the Vercel install and build workflow to activate pnpm with Corepack, regenerate the Prisma
+  client during both steps, and keep the hoisted install required by Vercel so cached builds cannot skip client generation.
+- **Docs:** Expanded the production deployment guide with explicit Vercel install/build snippets and local recovery guidance so
+  engineers can reproduce the Prisma safeguards outside of Vercel.
 
 ### Added
 
@@ -231,6 +235,9 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Color-coded status filter buttons for better UX (Pending=yellow, Applied=green, Failed=red, etc.)
   - Better error messages explaining CONSOLE_INTERNAL_TOKEN configuration requirements
   - Resolves "You reached the start of the range" error message
+- **API:** Hardened `POST /api/auth/session` by normalizing provided roles (case-insensitive), defaulting to the least-privileged
+  `viewer` role, and returning targeted validation errors for missing headers or malformed JSON payloads, backed by expanded
+  Vitest coverage for the new paths.
 
 - Console: Fixed UI contrast issues with black text on dark backgrounds
   - Updated globals.css to use dark theme colors (#0B0B0C background, #E5E7EB text) matching the app design
