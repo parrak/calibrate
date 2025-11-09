@@ -198,7 +198,44 @@ async function getOutboxMetrics() {
   }
 }
 
-function formatPrometheus(metrics: any): string {
+interface PrometheusMetrics {
+  eventBus: {
+    totalEvents: number
+    successRate: number
+    p95Latency: number
+    throughput: number
+  }
+  connectors: Array<{
+    type: string
+    totalOperations: number
+    successRate: number
+    p95Latency: number
+  }>
+  performance: {
+    totalRequests: number
+    p95ResponseTime: number
+    errorRate: number
+    sla: {
+      p95Met: boolean
+      errorRateMet: boolean
+    }
+  }
+  outbox: {
+    pending: number
+    failed: number
+    dlq: number
+    backlogAge: number
+  }
+  resources: {
+    memory: {
+      heapUsedMB: number
+      heapTotalMB: number
+    }
+    uptime: number
+  }
+}
+
+function formatPrometheus(metrics: PrometheusMetrics): string {
   const lines: string[] = []
 
   // Event Bus Metrics
