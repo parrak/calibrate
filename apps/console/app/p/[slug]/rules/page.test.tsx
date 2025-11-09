@@ -2,21 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import RulesPage from './page'
 
-// Create mock functions
-const mockUseSession = vi.fn()
-
 // Mock next-auth
 vi.mock('next-auth/react', () => ({
-  useSession: mockUseSession,
+  useSession: vi.fn(),
 }))
-
-// Mock lib components
-vi.mock('@/lib/components', async () => {
-  const actual = await vi.importActual('@/lib/components')
-  return {
-    ...actual,
-  }
-})
 
 const mockSession = {
   user: { email: 'test@example.com', name: 'Test User', role: 'ADMIN' },
@@ -25,9 +14,10 @@ const mockSession = {
 }
 
 describe('RulesPage', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
-    mockUseSession.mockReturnValue({ data: mockSession })
+    const { useSession } = await import('next-auth/react')
+    ;(useSession as ReturnType<typeof vi.fn>).mockReturnValue({ data: mockSession })
   })
 
   it('should render pricing rules header', () => {

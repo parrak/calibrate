@@ -2,19 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import ProjectCatalog from './page'
 
-// Create mock functions
-const mockUseSession = vi.fn()
-const mockListProducts = vi.fn()
-
 // Mock next-auth
 vi.mock('next-auth/react', () => ({
-  useSession: mockUseSession,
+  useSession: vi.fn(),
 }))
 
 // Mock API client
 vi.mock('@/lib/api-client', () => ({
   catalogApi: {
-    listProducts: mockListProducts,
+    listProducts: vi.fn(),
   },
   ApiError: class ApiError extends Error {
     constructor(message: string, public status: number) {
@@ -65,13 +61,15 @@ const mockProducts = [
 ]
 
 describe('ProjectCatalog', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
-    mockUseSession.mockReturnValue({ data: mockSession })
+    const { useSession } = await import('next-auth/react')
+    ;(useSession as ReturnType<typeof vi.fn>).mockReturnValue({ data: mockSession })
   })
 
-  it('should render loading state initially', () => {
-    mockListProducts.mockImplementation(() => new Promise(() => {}))
+  it('should render loading state initially', async () => {
+    const { catalogApi } = await import('@/lib/api-client')
+    catalogApi.listProducts.mockImplementation(() => new Promise(() => {}))
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
     const skeletons = screen.getAllByTestId('skeleton')
@@ -79,7 +77,8 @@ describe('ProjectCatalog', () => {
   })
 
   it('should render products after loading', async () => {
-    mockListProducts.mockResolvedValue(mockProducts)
+    const { catalogApi } = await import('@/lib/api-client')
+    catalogApi.listProducts.mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -93,7 +92,8 @@ describe('ProjectCatalog', () => {
   })
 
   it('should filter products by search query', async () => {
-    mockListProducts.mockResolvedValue(mockProducts)
+    const { catalogApi } = await import('@/lib/api-client')
+    catalogApi.listProducts.mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -111,7 +111,8 @@ describe('ProjectCatalog', () => {
   })
 
   it('should filter products by currency', async () => {
-    mockListProducts.mockResolvedValue(mockProducts)
+    const { catalogApi } = await import('@/lib/api-client')
+    catalogApi.listProducts.mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -129,7 +130,8 @@ describe('ProjectCatalog', () => {
   })
 
   it('should expand/collapse product details', async () => {
-    mockListProducts.mockResolvedValue(mockProducts)
+    const { catalogApi } = await import('@/lib/api-client')
+    catalogApi.listProducts.mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -171,7 +173,9 @@ describe('ProjectCatalog', () => {
         },
       ],
     }))
-    mockListProducts.mockResolvedValue(manyProducts)
+
+    const { catalogApi } = await import('@/lib/api-client')
+    catalogApi.listProducts.mockResolvedValue(manyProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -196,7 +200,8 @@ describe('ProjectCatalog', () => {
   })
 
   it('should clear filters', async () => {
-    mockListProducts.mockResolvedValue(mockProducts)
+    const { catalogApi } = await import('@/lib/api-client')
+    catalogApi.listProducts.mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -227,7 +232,9 @@ describe('ProjectCatalog', () => {
         super(message)
       }
     }
-    mockListProducts.mockRejectedValue(
+
+    const { catalogApi } = await import('@/lib/api-client')
+    catalogApi.listProducts.mockRejectedValue(
       new ApiError('Failed to load catalog', 500)
     )
 
@@ -239,7 +246,8 @@ describe('ProjectCatalog', () => {
   })
 
   it('should display empty state when no products', async () => {
-    mockListProducts.mockResolvedValue([])
+    const { catalogApi } = await import('@/lib/api-client')
+    catalogApi.listProducts.mockResolvedValue([])
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
