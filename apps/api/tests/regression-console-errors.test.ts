@@ -25,10 +25,19 @@ const createMockPrismaClient = () => {
     findFirst: vi.fn(),
     findMany: vi.fn(),
   }
+  const mockSku = {
+    findMany: vi.fn().mockResolvedValue([]),
+  }
+  const mockPriceChange = {
+    findMany: vi.fn().mockResolvedValue([]),
+    count: vi.fn().mockResolvedValue(0),
+  }
 
   return {
     project: mockProject,
     product: mockProduct,
+    sku: mockSku,
+    priceChange: mockPriceChange,
   }
 }
 
@@ -38,7 +47,7 @@ vi.mock('@calibr/db', () => ({
   prisma: vi.fn(() => mockPrismaClient),
 }))
 
-// Mock analytics package - try both the relative path and package alias
+// Mock analytics package - use vi.doMock to ensure it's called at runtime
 const mockGetAnalyticsOverview = vi.fn().mockResolvedValue({
   summary: {
     totalSkus: 10,
@@ -56,12 +65,12 @@ const mockGetAnalyticsOverview = vi.fn().mockResolvedValue({
   },
 })
 
-// Mock using both possible paths - Vitest might resolve differently
+// Mock using the exact relative path the route uses
 vi.mock('../../../../../../../packages/analytics/index', () => ({
   getAnalyticsOverview: mockGetAnalyticsOverview,
 }))
 
-// Also mock the query module directly in case it's imported
+// Also mock the query module to prevent the real implementation from running
 vi.mock('../../../../../../../packages/analytics/query', () => ({
   getAnalyticsOverview: mockGetAnalyticsOverview,
 }))
@@ -90,8 +99,11 @@ describe('Console Errors Regression Tests', () => {
     mockPrismaClient.project.findFirst.mockReset()
     mockPrismaClient.product.findFirst.mockReset()
     mockPrismaClient.product.findMany.mockReset()
+    mockPrismaClient.sku.findMany.mockReset().mockResolvedValue([])
+    mockPrismaClient.priceChange.findMany.mockReset().mockResolvedValue([])
+    mockPrismaClient.priceChange.count.mockReset().mockResolvedValue(0)
     // Reset analytics mock
-    mockGetAnalyticsOverview.mockResolvedValue({
+    mockGetAnalyticsOverview.mockReset().mockResolvedValue({
       summary: {
         totalSkus: 10,
         totalPriceChanges: 5,
