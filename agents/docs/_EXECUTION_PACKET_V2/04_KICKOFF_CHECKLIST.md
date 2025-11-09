@@ -101,11 +101,11 @@
 
 ### Milestone M1.3 — Explainability & Audit
 
-- [ ] Ensure all actions write Audit + ExplainTrace
-- [ ] Add `/api/audit` endpoint for Console
-- [ ] Integrate correlation IDs with `@calibr/monitor`
-- [ ] Verify replay can fully reconstruct historical price change
-- [ ] Generate sample audit reports for QA (2 tenants)
+- [x] Ensure all actions write Audit + ExplainTrace
+- [x] Add `/api/audit` endpoint for Console
+- [x] Integrate correlation IDs with `@calibr/monitor`
+- [x] Verify replay can fully reconstruct historical price change
+- [x] Generate sample audit reports for QA (2 tenants)
 
 ---
 
