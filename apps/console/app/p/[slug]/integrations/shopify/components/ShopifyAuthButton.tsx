@@ -13,13 +13,39 @@ interface ShopifyAuthButtonProps {
   projectSlug: string;
 }
 
+interface ShopifyAppBridgeConfig {
+  apiKey: string;
+  host: string;
+  forceRedirect?: boolean;
+}
+
+type ShopifyAppBridgeApp = Record<string, unknown>;
+
+interface ShopifyAppBridgeRedirect {
+  dispatch(action: string, destination: string): void;
+}
+
+interface ShopifyAppBridgeActions {
+  Redirect: {
+    Action: {
+      REMOTE: string;
+    };
+    create(app: ShopifyAppBridgeApp): ShopifyAppBridgeRedirect;
+  };
+}
+
+interface ShopifyAppBridgeModule {
+  default(config: ShopifyAppBridgeConfig): ShopifyAppBridgeApp;
+  actions: ShopifyAppBridgeActions;
+}
+
 declare global {
   interface Window {
-    appBridge?: any;
+    appBridge?: ShopifyAppBridgeModule;
   }
 }
 
-async function loadAppBridge(): Promise<any | null> {
+async function loadAppBridge(): Promise<ShopifyAppBridgeModule | null> {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return null;
   }
