@@ -229,16 +229,16 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                 <div className="text-sm whitespace-pre-wrap">{message.content}</div>
 
                 {/* Method badge */}
-                {message.method && (
+                {message.method ? (
                   <div className="mt-2 pt-2 border-t border-border/30">
                     <span className="text-xs px-2 py-1 rounded bg-black/20">
                       {message.method === 'ai' ? '✨ AI-powered' : '🔍 Pattern-based'}
                     </span>
                   </div>
-                )}
+                ) : null}
 
                 {/* Show data if available */}
-                {message.data && (
+                {message.data ? (
                   <div className="mt-3 pt-3 border-t border-border/30">
                     <details className="text-xs">
                       <summary className="cursor-pointer font-medium mb-2">
@@ -249,10 +249,10 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                       </pre>
                     </details>
                   </div>
-                )}
+                ) : null}
 
                 {/* Show SQL if available */}
-                {message.sql && (
+                {message.sql ? (
                   <div className="mt-2 pt-2 border-t border-border/30">
                     <details className="text-xs">
                       <summary className="cursor-pointer font-medium mb-2">
@@ -263,10 +263,10 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                       </pre>
                     </details>
                   </div>
-                )}
+                ) : null}
 
                 {/* Show suggestions */}
-                {message.suggestions && message.suggestions.length > 0 && (
+                {message.suggestions && message.suggestions.length > 0 ? (
                   <div className="mt-3 pt-3 border-t border-border/30">
                     <div className="text-xs font-medium mb-2">Try asking:</div>
                     <div className="space-y-1">
@@ -281,7 +281,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                       ))}
                     </div>
                   </div>
-                )}
+                ) : null}
 
                 <div className="text-xs opacity-60 mt-2">
                   {message.timestamp.toLocaleTimeString()}
