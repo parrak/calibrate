@@ -77,13 +77,13 @@
 
 ### Milestone M1.1 — Pricing Engine MVP
 
-- [ ] Build rules DSL (selector, transform, schedule)
-- [ ] Support transforms: percentage, absolute, floors/ceilings
-- [ ] Add dry-run → approve/apply → rollback lifecycle
-- [ ] Store explain traces in `explain_trace` table
-- [ ] Emit `pricechange.applied` + `audit_event` to `event_log`
-- [ ] Write integration tests with deterministic diff fixtures
-- [ ] Add rule simulation mode (preview without apply)
+- [x] Build rules DSL (selector, transform, schedule)
+- [x] Support transforms: percentage, absolute, floors/ceilings
+- [x] Add dry-run → approve/apply → rollback lifecycle
+- [x] Store explain traces in `explain_trace` table
+- [x] Emit `pricechange.applied` + `audit_event` to `event_log`
+- [x] Write integration tests with deterministic diff fixtures
+- [x] Add rule simulation mode (preview without apply)
 
 ### Milestone M1.3 — Explainability & Audit
 

@@ -6,6 +6,22 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Pricing Engine: Rules DSL and MVP Implementation** (M1.1 — Engine Team)
+  - Implemented complete rules DSL with selector, transform, and schedule definitions
+  - Selector predicates: match by SKU, tags, price range, or custom fields with AND/OR operators
+  - Transform operations: percentage, absolute, set, and multiply with constraint support (floor, ceiling, maxPctDelta)
+  - Preview/dry-run functionality: `previewRule()` to see rule effects without applying changes
+  - Rule simulation mode: `simulateRule()` for "what-if" analysis without creating records
+  - Rule application engine: `applyRule()` creates price changes with explain traces and event emission
+  - Enhanced apply/rollback: `applyPriceChangeEnhanced()` and `rollbackPriceChangeEnhanced()` with full traceability
+  - Explain trace storage: New `ExplainTrace` table stores detailed reasoning for all price change actions
+  - Event emission: All actions emit to `EventLog` with types `pricechange.applied`, `pricechange.rolled_back`, `pricechange.rule.applied`
+  - Comprehensive test coverage: 20+ unit tests for DSL, 8+ integration tests for complete flow
+  - New files: `rules-dsl.ts`, `preview.ts`, `apply-rule.ts`, `apply-price-change-enhanced.ts`, test files
+  - Database schema: Added `ExplainTrace` model with relationships to `PriceChange`, `Project`, and `Tenant`
+  - See `agents/docs/_EXECUTION_PACKET_V2/M1.1_COMPLETION_SUMMARY.md` for complete documentation
+
 ### Fixed
 - **Console: Drawer Component Blocking Interactions**
   - Fixed Drawer component rendering invisible elements when closed that could block page interactions
