@@ -475,6 +475,9 @@ importers:
       '@calibrate/competitor-monitoring':
         specifier: workspace:*
         version: link:../competitor-monitoring
+      '@paralleldrive/cuid2':
+        specifier: ^3.0.4
+        version: 3.0.4
     devDependencies:
       vitest:
         specifier: ^1.0.0
