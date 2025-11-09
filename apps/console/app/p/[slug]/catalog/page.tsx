@@ -136,8 +136,8 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Product Catalog</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-2xl font-bold text-fg">Product Catalog</h1>
+          <p className="text-sm text-mute mt-1">
             {filteredProducts.length} of {products.length} products
           </p>
         </div>
@@ -149,7 +149,7 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
           {/* Search */}
           <div className="flex-1 min-w-[300px]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-mute" />
               <Input
                 type="text"
                 placeholder="Search by product name, code, or SKU..."
@@ -162,7 +162,7 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
 
           {/* Currency Filter */}
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-400" />
+            <Filter className="w-4 h-4 text-mute" />
             <select
               value={currencyFilter}
               onChange={(e) => setCurrencyFilter(e.target.value)}
@@ -219,13 +219,13 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
                   >
                     <div className="flex items-center gap-3">
                       {isExpanded ? (
-                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                        <ChevronDown className="w-5 h-5 text-mute" />
                       ) : (
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                        <ChevronRight className="w-5 h-5 text-mute" />
                       )}
                       <div className="text-left">
                         <h3 className="font-semibold">{product.name}</h3>
-                        <p className="text-sm text-gray-500">{product.code}</p>
+                        <p className="text-sm text-mute">{product.code}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -243,7 +243,7 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
                     <div className="border-t border-border">
                       <Table
                         head={
-                          <tr className="text-left bg-gray-50">
+                          <tr className="text-left bg-surface">
                             <th className="px-4 py-3 font-medium">SKU Code</th>
                             <th className="px-4 py-3 font-medium">Currency</th>
                             <th className="px-4 py-3 font-medium">Price</th>
@@ -287,7 +287,7 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-mute">
                 Page {page} of {totalPages}
               </p>
               <div className="flex gap-2">
