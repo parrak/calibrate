@@ -322,7 +322,7 @@ model PriceChange {
 /// Explain Trace — M1.1: Explainability traces for price changes
 /// Stores detailed reasoning for previews, applies, and rollbacks
 model ExplainTrace {
-  id            String         @id @default(cuid())
+  id            String       @id @default(cuid())
   tenantId      String
   projectId     String?
   priceChangeId String? // Optional: link to specific price change
@@ -332,10 +332,10 @@ model ExplainTrace {
   actor         String // User or system actor
   trace         Json // M1.1: explainability trace (why/how)
   metadata      Json? // Additional context
-  createdAt     DateTime       @default(now())
-  Tenant        Tenant        @relation(fields: [tenantId], references: [id])
-  Project       Project?      @relation(fields: [projectId], references: [id])
-  PriceChange   PriceChange?  @relation(fields: [priceChangeId], references: [id])
+  createdAt     DateTime     @default(now())
+  Tenant        Tenant       @relation(fields: [tenantId], references: [id])
+  Project       Project?     @relation(fields: [projectId], references: [id])
+  PriceChange   PriceChange? @relation(fields: [priceChangeId], references: [id])
 
   @@index([tenantId, entity, entityId])
   @@index([priceChangeId])
