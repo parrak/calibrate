@@ -9,7 +9,8 @@
     "start": "next start -p 3001",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@calibr/ai-engine": "workspace:*",

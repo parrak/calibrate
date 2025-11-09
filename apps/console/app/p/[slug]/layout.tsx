@@ -21,6 +21,7 @@ export default async function ProjectLayout({
     { href: `/p/${slug}`, label: 'Dashboard', key: 'dashboard' },
     { href: `/p/${slug}/catalog`, label: 'Catalog', key: 'catalog' },
     { href: `/p/${slug}/price-changes`, label: 'Price Changes', key: 'price-changes' },
+    { href: `/p/${slug}/rules`, label: 'Pricing Rules', key: 'rules' },
     { href: `/p/${slug}/assistant`, label: 'AI Suggestions', key: 'assistant' },
     { href: `/p/${slug}/analytics`, label: 'Analytics', key: 'analytics' },
     { href: `/p/${slug}/competitors`, label: 'Competitors', key: 'competitors' },

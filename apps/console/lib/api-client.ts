@@ -82,6 +82,13 @@ export const priceChangesApi = {
       token,
     })
   },
+
+  rollback: async (id: string, token?: string) => {
+    return fetchApi(`/api/v1/price-changes/${id}/rollback`, {
+      method: 'POST',
+      token,
+    })
+  },
 }
 
 // Catalog API
