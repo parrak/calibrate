@@ -61,6 +61,7 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 **Success**
 - End-to-end UX from rule creation to apply/rollback; reflects live state.
+- ✅ Complete Console MVP delivered with 46+ tests (PR #53).
 
 ---
 
@@ -79,6 +80,8 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 - `/copilot/query` endpoint; schema-aware RAG; safe prompt → SQL/GraphQL; RBAC.
 
 **Success**
+- Queries like "List products with price > $100" and "Show changes scheduled next week" succeed; query + sources logged.
+- ✅ Complete copilot with AI-powered NL→SQL, RBAC, anomaly detection, and 42+ tests (PR #57).
 - ✅ Queries like "List products with price > $100" and "Show changes scheduled next week" succeed; query + sources logged.
 - ✅ Implemented `/api/v1/copilot` endpoint with GPT-4 integration and pattern-based fallback
 - ✅ RBAC enforcement with project membership and role validation

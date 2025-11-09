@@ -113,13 +113,13 @@
 
 ### Milestone M1.2 — Console MVP
 
-- [ ] Create Catalog Table (filters, pagination, variant grouping)
-- [ ] Build Rule Builder (selector + transform UI)
-- [ ] Add Diff Preview Drawer (before/after + audit trail)
-- [ ] Implement action buttons (Approve, Apply, Reject, Rollback)
-- [ ] Add optimistic UI updates + status badges
-- [ ] Integrate with `/api/v1/price-changes` + `/audit`
-- [ ] Test via React Testing Library; snapshot diff coverage ≥ 80%
+- [x] Create Catalog Table (filters, pagination, variant grouping)
+- [x] Build Rule Builder (selector + transform UI)
+- [x] Add Diff Preview Drawer (before/after + audit trail)
+- [x] Implement action buttons (Approve, Apply, Reject, Rollback)
+- [x] Add optimistic UI updates + status badges
+- [x] Integrate with `/api/v1/price-changes` + `/audit`
+- [x] Test via React Testing Library; snapshot diff coverage ≥ 80%
 
 ### UI Theming & Usability
 
@@ -143,13 +143,13 @@
 
 ### Milestone M1.4 — Copilot (Read-Only)
 
-- [ ] Build `/copilot/query` endpoint
-- [ ] Add schema-aware NL→SQL/GraphQL generation
-- [ ] Implement RBAC enforcement & SQL injection guard
-- [ ] Log queries + resolved schemas + tenant scope
-- [ ] Integrate with Console → "Ask Copilot" drawer
-- [ ] Add analytics digest cron job → daily summary
-- [ ] Add anomaly detection (price spike/drop, margin compression, etc.)
+- [x] Build `/copilot/query` endpoint
+- [x] Add schema-aware NL→SQL/GraphQL generation
+- [x] Implement RBAC enforcement & SQL injection guard
+- [x] Log queries + resolved schemas + tenant scope
+- [x] Integrate with Console → "Ask Copilot" drawer
+- [x] Add analytics digest cron job → daily summary
+- [x] Add anomaly detection (price spike/drop, margin compression, etc.)
 
 ### Analytics Pipeline
 
