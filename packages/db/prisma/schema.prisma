@@ -313,9 +313,34 @@ model PriceChange {
   createdBy       String? // M0.1: actor tracking
   Project         Project            @relation(fields: [projectId], references: [id])
   Tenant          Tenant             @relation(fields: [tenantId], references: [id])
+  ExplainTrace    ExplainTrace[] // M1.1: explainability traces
 
   @@index([tenantId, projectId, status])
   @@index([scheduleAt])
+}
+
+/// Explain Trace — M1.1: Explainability traces for price changes
+/// Stores detailed reasoning for previews, applies, and rollbacks
+model ExplainTrace {
+  id            String       @id @default(cuid())
+  tenantId      String
+  projectId     String?
+  priceChangeId String? // Optional: link to specific price change
+  entity        String // Entity type (PriceChange, Rule, etc.)
+  entityId      String // Entity ID
+  action        String // Action (preview, apply, rollback, simulate)
+  actor         String // User or system actor
+  trace         Json // M1.1: explainability trace (why/how)
+  metadata      Json? // Additional context
+  createdAt     DateTime     @default(now())
+  Tenant        Tenant       @relation(fields: [tenantId], references: [id])
+  Project       Project?     @relation(fields: [projectId], references: [id])
+  PriceChange   PriceChange? @relation(fields: [priceChangeId], references: [id])
+
+  @@index([tenantId, entity, entityId])
+  @@index([priceChangeId])
+  @@index([createdAt])
+  @@index([actor])
 }
 
 model PriceVersion {
@@ -384,6 +409,7 @@ model Project {
   Audit              Audit[] // M0.1
   DiscountPolicy     DiscountPolicy[] // M0.1
   PriceChange        PriceChange[] // M0.1
+  ExplainTrace       ExplainTrace[] // M1.1
 }
 
 model Quote {
@@ -473,6 +499,7 @@ model Tenant {
   Audit          Audit[] // M0.1
   DiscountPolicy DiscountPolicy[] // M0.1
   PriceChange    PriceChange[] // M0.1
+  ExplainTrace   ExplainTrace[] // M1.1
 }
 
 model User {
