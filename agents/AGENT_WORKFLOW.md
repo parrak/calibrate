@@ -290,6 +290,8 @@ All agents must re-read this file before each major merge cycle. Cursor ensures 
 
 ### 🎯 Highest-Leverage Goals (Next 14 Days)
 
+> **Note:** Multi-agent roadmap updates now live here instead of `CHANGELOG.md` so release notes stay focused on shipped product changes.
+
 **1. Production Validation (Phase-3 Completion)**
 
 - Owners: Codex + Claude Code  
@@ -305,9 +307,11 @@ All agents must re-read this file before each major merge cycle. Cursor ensures 
 
 **3. Authentication Cleanup**
 
-- Owner: Codex  
-- Fix NextAuth v5 import/build issues; ensure bearer-token flow works end-to-end.  
+- Owner: Codex
+- Fix NextAuth v5 import/build issues; ensure bearer-token flow works end-to-end.
 - Remove temporary `CONSOLE_INTERNAL_TOKEN` fallback; document required envs.
+  - ✅ `POST /api/auth/session` now wraps with `withSecurity`, enforces the `x-console-auth` header, and surfaces misconfigured environments with a 500 error instead of silently issuing tokens.
+  - ✅ Session tokens now normalize provided roles and default to the least-privileged `viewer` role so missing metadata no longer escalates users to admin.
 
 **4. Docs Refresh**
 

@@ -184,6 +184,73 @@ model Event {
   @@index([createdAt])
 }
 
+/// Event Log — Append-only event store for audit and replay
+/// Supports idempotent dedupe via eventKey + tenantId
+model EventLog {
+  id            String   @id @default(cuid())
+  eventKey      String // Idempotency key (tenant scoped)
+  tenantId      String
+  projectId     String?
+  eventType     String // e.g., "shopify.sync.product", "pricechange.applied"
+  payload       Json
+  metadata      Json? // Additional context (correlationId, userId, etc.)
+  correlationId String? // For tracing across services
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  version       Int      @default(1)
+
+  @@unique([eventKey, tenantId], name: "EventLog_eventKey_tenantId_unique")
+  @@index([tenantId, eventType, createdAt])
+  @@index([correlationId])
+  @@index([createdAt])
+}
+
+/// Outbox — Transactional outbox pattern for reliable event delivery
+/// Events are inserted here in the same transaction as domain changes
+model Outbox {
+  id          String       @id @default(cuid())
+  eventLogId  String // Reference to EventLog
+  tenantId    String
+  eventType   String
+  payload     Json
+  status      OutboxStatus @default(PENDING)
+  retryCount  Int          @default(0)
+  maxRetries  Int          @default(5)
+  nextRetryAt DateTime?    @db.Timestamptz(6)
+  lastError   String?
+  processedAt DateTime?    @db.Timestamptz(6)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@index([status, nextRetryAt])
+  @@index([tenantId, status])
+  @@index([createdAt])
+}
+
+/// Dead Letter Queue — Failed events after max retries exceeded
+model DlqEventLog {
+  id            String   @id @default(cuid())
+  originalId    String // Original outbox or event ID
+  eventKey      String
+  tenantId      String
+  projectId     String?
+  eventType     String
+  payload       Json
+  metadata      Json?
+  failureReason String
+  retryCount    Int
+  failedAt      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([tenantId, eventType])
+  @@index([failedAt])
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model Membership {
   id        String      @id @default(cuid())
   userId    String

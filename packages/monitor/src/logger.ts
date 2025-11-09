@@ -16,9 +16,12 @@ export interface LogEntry {
   message: string
   service: string
   requestId?: string
+  correlationId?: string
   userId?: string
   projectId?: string
   tenantId?: string
+  traceId?: string
+  spanId?: string
   error?: {
     name: string
     message: string
@@ -78,9 +81,12 @@ export class Logger {
     const withContext = {
       ...base,
       ...(entry.requestId && { requestId: entry.requestId }),
+      ...(entry.correlationId && { correlationId: entry.correlationId }),
       ...(entry.userId && { userId: entry.userId }),
       ...(entry.projectId && { projectId: entry.projectId }),
       ...(entry.tenantId && { tenantId: entry.tenantId }),
+      ...(entry.traceId && { traceId: entry.traceId }),
+      ...(entry.spanId && { spanId: entry.spanId }),
       ...(entry.error && { error: entry.error }),
       ...(entry.metadata && { metadata: entry.metadata })
     }
@@ -150,7 +156,14 @@ export class Logger {
  * Generate unique request ID
  */
 function generateRequestId(): string {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+  return 'req_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+}
+
+/**
+ * Generate unique correlation ID for distributed tracing
+ */
+export function generateCorrelationId(): string {
+  return 'corr_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 }
 
 /**
@@ -181,64 +194,63 @@ export function createRequestLogger(
   request: { headers?: Headers; url?: string; method?: string; ip?: string }
 ): RequestLogger {
   const requestId = request.headers?.get('x-request-id') || generateRequestId()
+  const correlationId = request.headers?.get('x-correlation-id') || generateCorrelationId()
   const projectId = request.headers?.get('x-calibr-project') || undefined
   const userId = request.headers?.get('x-user-id') || undefined
+  const traceId = request.headers?.get('x-trace-id') || undefined
+  const spanId = request.headers?.get('x-span-id') || undefined
+
+  const baseContext = {
+    requestId,
+    correlationId,
+    projectId,
+    userId,
+    traceId,
+    spanId
+  }
+
+  const baseMetadata = {
+    method: request.method,
+    url: request.url,
+    userAgent: request.headers?.get('user-agent'),
+    ip: request.ip || request.headers?.get('x-forwarded-for')
+  }
 
   return {
     error: (message: string, error?: Error, context?: Partial<LogEntry>) =>
       logger.error(message, error, {
+        ...baseContext,
         ...context,
-        requestId,
-        projectId,
-        userId,
         metadata: {
-          ...context?.metadata,
-          method: request.method,
-          url: request.url,
-          userAgent: request.headers?.get('user-agent'),
-          ip: request.ip || request.headers?.get('x-forwarded-for')
+          ...baseMetadata,
+          ...context?.metadata
         }
       }),
     warn: (message: string, context?: Partial<LogEntry>) =>
       logger.warn(message, {
+        ...baseContext,
         ...context,
-        requestId,
-        projectId,
-        userId,
         metadata: {
-          ...context?.metadata,
-          method: request.method,
-          url: request.url,
-          userAgent: request.headers?.get('user-agent'),
-          ip: request.ip || request.headers?.get('x-forwarded-for')
+          ...baseMetadata,
+          ...context?.metadata
         }
       }),
     info: (message: string, context?: Partial<LogEntry>) =>
       logger.info(message, {
+        ...baseContext,
         ...context,
-        requestId,
-        projectId,
-        userId,
         metadata: {
-          ...context?.metadata,
-          method: request.method,
-          url: request.url,
-          userAgent: request.headers?.get('user-agent'),
-          ip: request.ip || request.headers?.get('x-forwarded-for')
+          ...baseMetadata,
+          ...context?.metadata
         }
       }),
     debug: (message: string, context?: Partial<LogEntry>) =>
       logger.debug(message, {
+        ...baseContext,
         ...context,
-        requestId,
-        projectId,
-        userId,
         metadata: {
-          ...context?.metadata,
-          method: request.method,
-          url: request.url,
-          userAgent: request.headers?.get('user-agent'),
-          ip: request.ip || request.headers?.get('x-forwarded-for')
+          ...baseMetadata,
+          ...context?.metadata
         }
       })
   }
