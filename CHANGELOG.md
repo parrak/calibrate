@@ -54,6 +54,12 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - See `agents/docs/_EXECUTION_PACKET_V2/M1.1_COMPLETION_SUMMARY.md` for complete documentation
 
 ### Fixed
+- **Console & API: Test Failures and Schema Mismatches** (PR #58)
+  - Fixed mock hoisting issue in regression-schema-mismatch.test.ts by using path alias `@/lib/auth-security`
+  - Fixed status parameter validation test to account for case-insensitive API behavior
+  - Fixed RSC route handling test to check query string for `_rsc` parameter
+  - Fixed M0.1 fields test to check fields after adding them to mock object
+  - All 26 regression tests now passing (8 in regression-schema-mismatch, 18 in regression-console-errors)
 - **Competitor Monitoring: Component & API Fixes**
   - Fixed CompetitorMonitor component to pass projectSlug to monitor API endpoint
   - Fixed CompetitorRules component to properly create rules via API
