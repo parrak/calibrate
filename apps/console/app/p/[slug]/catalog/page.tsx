@@ -271,7 +271,7 @@ export default function ProjectCatalog({ params }: { params: { slug: string } })
                                   {fmt(price.currency, price.amount)}
                                 </td>
                                 <td className="px-4 py-3">
-                                  <Badge variant="success">Active</Badge>
+                                  <Badge variant="secondary">Active</Badge>
                                 </td>
                               </tr>
                             ))

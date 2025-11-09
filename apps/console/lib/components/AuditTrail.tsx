@@ -73,10 +73,10 @@ export function AuditTrail({ events, showDetails = false }: AuditTrailProps) {
                     <Badge
                       variant={
                         event.status === 'success'
-                          ? 'success'
+                          ? 'secondary'
                           : event.status === 'error'
-                          ? 'danger'
-                          : 'warning'
+                          ? 'destructive'
+                          : 'outline'
                       }
                     >
                       {event.status}

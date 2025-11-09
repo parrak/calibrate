@@ -2,15 +2,54 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Button, Card, Input, Badge, EmptyState, useToast } from '@/lib/components'
+import { Button, Card, Input, Badge, EmptyState } from '@/lib/components'
 import { Plus, Trash2, Play, Save } from 'lucide-react'
-import type {
-  PricingRule,
-  SelectorPredicate,
-  Transform,
-  TransformConstraints,
-  Schedule,
-} from '@calibr/pricing-engine'
+
+type SelectorPredicate =
+  | { type: 'all' }
+  | { type: 'sku'; skuCodes: string[] }
+  | { type: 'tag'; tags: string[] }
+  | { type: 'priceRange'; min?: number; max?: number; currency?: string }
+  | { type: 'custom'; field: string; operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'contains'; value: unknown }
+
+type Selector = {
+  predicates: SelectorPredicate[]
+  operator?: 'AND' | 'OR'
+}
+
+type Transform =
+  | { type: 'percentage'; value: number }
+  | { type: 'absolute'; value: number }
+  | { type: 'set'; value: number }
+  | { type: 'multiply'; factor: number }
+
+type TransformConstraints = {
+  floor?: number
+  ceiling?: number
+  maxPctDelta?: number
+}
+
+type TransformDefinition = {
+  transform: Transform
+  constraints?: TransformConstraints
+}
+
+type Schedule = {
+  type: 'immediate' | 'scheduled' | 'recurring'
+  scheduledAt?: Date
+  cron?: string
+  timezone?: string
+}
+
+type PricingRule = {
+  id?: string
+  name: string
+  description?: string
+  selector: Selector
+  transform: TransformDefinition
+  schedule?: Schedule
+  enabled?: boolean
+}
 
 type RuleFormData = {
   name: string
@@ -54,13 +93,13 @@ const DEFAULT_RULE: RuleFormData = {
 
 export default function RulesPage({ params }: { params: { slug: string } }) {
   const { data: session } = useSession()
-  const { Toast, setMsg } = useToast()
   const token = (session as { apiToken?: string })?.apiToken
 
   const [rules, setRules] = useState<PricingRule[]>([])
   const [editingRule, setEditingRule] = useState<RuleFormData | null>(null)
   const [previewResults, setPreviewResults] = useState<any>(null)
   const [isPreviewMode, setIsPreviewMode] = useState(false)
+  const [toastMessage, setToastMessage] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null)
 
   const startNewRule = () => {
     setEditingRule({ ...DEFAULT_RULE })
@@ -119,7 +158,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
       selector: {
         ...editingRule.selector,
         predicates: editingRule.selector.predicates.map((pred, i) =>
-          i === index ? { ...pred, ...updates } : pred
+          i === index ? ({ ...pred, ...updates } as SelectorPredicate) : pred
         ),
       },
     })
@@ -130,7 +169,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
 
     try {
       // Mock preview for now - will integrate with API
-      setMsg({ msg: 'Preview functionality coming soon!', type: 'info' })
+      setToastMessage({ msg: 'Preview functionality coming soon!', type: 'info' })
       setIsPreviewMode(true)
       setPreviewResults({
         matchedProducts: 5,
@@ -138,7 +177,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
         averageChange: 8.5,
       })
     } catch (err) {
-      setMsg({ msg: 'Failed to preview rule', type: 'error' })
+      setToastMessage({ msg: 'Failed to preview rule', type: 'error' })
     }
   }
 
@@ -146,23 +185,35 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
     if (!editingRule) return
 
     if (!editingRule.name.trim()) {
-      setMsg({ msg: 'Please enter a rule name', type: 'error' })
+      setToastMessage({ msg: 'Please enter a rule name', type: 'error' })
       return
     }
 
     try {
       // TODO: Save to API
-      setMsg({ msg: 'Rule saved successfully!', type: 'success' })
+      setToastMessage({ msg: 'Rule saved successfully!', type: 'success' })
       setEditingRule(null)
       setIsPreviewMode(false)
     } catch (err) {
-      setMsg({ msg: 'Failed to save rule', type: 'error' })
+      setToastMessage({ msg: 'Failed to save rule', type: 'error' })
     }
   }
 
   return (
     <main className="p-6 space-y-6">
-      <Toast />
+      {toastMessage && (
+        <div
+          className={`fixed top-4 right-4 px-4 py-2 rounded-md shadow-lg ${
+            toastMessage.type === 'success'
+              ? 'bg-green-600 text-white'
+              : toastMessage.type === 'error'
+              ? 'bg-red-600 text-white'
+              : 'bg-blue-600 text-white'
+          }`}
+        >
+          {toastMessage.msg}
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -703,7 +754,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
                   <h3 className="font-semibold">{rule.name}</h3>
                   <p className="text-sm text-gray-500">{rule.description}</p>
                 </div>
-                <Badge variant={rule.enabled ? 'success' : 'secondary'}>
+                <Badge variant={rule.enabled ? 'secondary' : 'outline'}>
                   {rule.enabled ? 'Active' : 'Disabled'}
                 </Badge>
               </div>
