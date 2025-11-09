@@ -7,10 +7,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { ShopifyProduct, ShopifyVariant } from '@calibr/shopify-connector';
 import { prisma } from '@calibr/db';
 import { initializeShopifyConnector, getProductsClient } from '@/lib/shopify-connector';
+import { withSecurity } from '@/lib/security-headers';
 
 const DEFAULT_LIMIT = 50;
 
-export async function GET(request: NextRequest) {
+export const GET = withSecurity(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get('project_id');
   const limitParam = Number.parseInt(searchParams.get('limit') ?? `${DEFAULT_LIMIT}`, 10);
@@ -109,9 +110,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request: NextRequest) => {
   try {
     const body = (await request.json()) as { projectId?: string; productId?: string };
     const { projectId, productId } = body;
@@ -171,4 +172,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
+
+export const OPTIONS = withSecurity(async () => new NextResponse(null, { status: 204 }));

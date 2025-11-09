@@ -15,6 +15,16 @@ const shopifyMocks = {
 vi.mock('@/lib/shopify-connector', () => ({
   initializeShopifyConnector: (...args: any[]) =>
     shopifyMocks.initializeShopifyConnector(...args),
+  serializeShopifyRateLimit: (rateLimit: any) => {
+    if (!rateLimit) return null
+    return {
+      limit: rateLimit.limit,
+      remaining: rateLimit.remaining,
+      resetTime: rateLimit.resetTime instanceof Date 
+        ? rateLimit.resetTime.toISOString() 
+        : new Date(rateLimit.resetTime).toISOString(),
+    }
+  },
 }))
 
 type PriceChangeStatus = 'PENDING' | 'APPROVED' | 'APPLIED' | 'REJECTED' | 'FAILED' | 'ROLLED_BACK'
@@ -367,6 +377,15 @@ describe('price changes API', () => {
     shopifyMocks.initializeShopifyConnector.mockReset()
     shopifyMocks.initializeShopifyConnector.mockImplementation(async () => ({
       pricing: { updatePrice: shopifyMocks.updatePrice },
+      getConnectionStatus: async () => ({
+        connected: true,
+        rateLimit: {
+          limit: 40,
+          remaining: 30,
+          resetTime: new Date(),
+        },
+        shopInfo: null,
+      }),
     }))
     store.reset()
     clearSessions()

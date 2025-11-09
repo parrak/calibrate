@@ -13,6 +13,11 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Eliminates pointer-events-none elements interfering with click targets on pages like price-changes
 
 ### Added
+- **Connectors: Shopify health telemetry** (Agent B — Codex)
+  - Introduced `/api/integrations/shopify/health` endpoint to surface connection status, rate-limit posture, and sync metadata for each project.
+  - Validates query parameters with Zod, reusing shared rate-limit serialization helpers.
+  - Returns a minimized shop summary (name, domains, plan, locale) to avoid exposing sensitive Shopify profile data while still powering Console health views.
+  - Standardized Shopify integration routes to apply security headers and CORS preflight responses.
 - **Infrastructure: @calibr/types Package for API Type Generation**
   - Created `@calibr/types` package that generates TypeScript types from OpenAPI specification
   - Automatically generates type-safe API definitions for frontend consumption
@@ -78,6 +83,14 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Smart warnings for edge cases (large changes, low confidence, missing data)
   - New API: `explainSuggestion(suggestion, input)` in `@calibr/ai-engine`
   - Supports merchant-friendly language and clear formatting
+
+### Changed
+
+- **Connectors: Shopify price apply resilience** (Agent B — Codex)
+  - Added idempotent retry/backoff loop with rate-limit guarding when applying Shopify price changes, recording attempt details in events and connector status metadata.
+  - Centralized rate-limit serialization for reuse across apply and health endpoints.
+  - Persisted structured attempt summaries (delay, retryable state, serialized rate limit) for Console surfaces and analytics.
+  - Surfaced connector failures back to price change records and event log to power Console notifications with actionable context.
 
 ### Changed
 
