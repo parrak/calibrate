@@ -3,9 +3,7 @@
  * Polls for QUEUED RuleRuns and applies price changes to Shopify
  */
 
-import { PrismaClient } from '@prisma/client';
-
-const db = prisma();
+import { prisma } from '@calibr/db';
 
 interface RuleTarget {
   id: string;

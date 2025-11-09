@@ -20,7 +20,7 @@ function errorJson(error: ErrorResponse) {
   );
 }
 
-async function requireProjectAccess(req: NextRequest, projectSlug: string, minRole: string) {
+async function requireProjectAccess(req: NextRequest, projectSlug: string, _minRole: string) {
   // TODO: Implement proper auth check
   // For now, just find the project
   const project = await prisma().project.findUnique({
@@ -67,8 +67,15 @@ export const GET = withSecurity(
     const cursor = url.searchParams.get('cursor')?.trim();
 
     const access = await requireProjectAccess(req, projectSlug, 'VIEWER');
-    if ('error' in access) {
+    if ('error' in access && access.error) {
       return errorJson(access.error);
+    }
+    if (!('project' in access)) {
+      return errorJson({
+        status: 500,
+        error: 'InternalServerError',
+        message: 'Failed to validate project access',
+      });
     }
 
     const where: {
@@ -148,8 +155,15 @@ export const POST = withSecurity(
     }
 
     const access = await requireProjectAccess(req, projectSlug, 'EDITOR');
-    if ('error' in access) {
+    if ('error' in access && access.error) {
       return errorJson(access.error);
+    }
+    if (!('project' in access)) {
+      return errorJson({
+        status: 500,
+        error: 'InternalServerError',
+        message: 'Failed to validate project access',
+      });
     }
 
     let body;

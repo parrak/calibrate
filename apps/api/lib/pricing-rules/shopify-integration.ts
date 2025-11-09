@@ -3,10 +3,8 @@
  * Handles idempotent price updates to Shopify
  */
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@calibr/db';
 import { initializeShopifyConnector, getPricingClient } from '@/lib/shopify-connector';
-
-const db = prisma();
 
 export interface PriceUpdate {
   variantId: string;
@@ -58,7 +56,7 @@ export async function applyPriceToShopify(
     const result = await pricingClient.updateVariantPrice({
       variantId: update.variantId,
       price: update.price,
-      compareAtPrice: update.compareAtPrice,
+      compareAtPrice: update.compareAtPrice ?? undefined,
     });
 
     if (!result.success) {

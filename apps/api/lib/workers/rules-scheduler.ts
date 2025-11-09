@@ -3,11 +3,9 @@
  * Polls for rules with scheduleAt <= now() and creates RuleRuns
  */
 
-import { PrismaClient } from '@prisma/client';
+import { prisma, Prisma } from '@calibr/db';
 import { evaluateSelector, type SelectorCondition } from '@/lib/pricing-rules/selector';
 import { applyTransform, createPriceSnapshot, type Transform } from '@/lib/pricing-rules/transform';
-
-const db = prisma();
 
 /**
  * Check for scheduled rules and queue them
@@ -57,11 +55,11 @@ export async function checkScheduledRules(): Promise<void> {
         console.log(`Queueing scheduled rule ${rule.id}: ${rule.name}`);
 
         // Evaluate selector to get matching products
-        const selector = rule.selectorJson as SelectorCondition;
-        const transform = rule.transformJson as Transform;
+        const selector = rule.selectorJson as unknown as SelectorCondition;
+        const transform = rule.transformJson as unknown as Transform;
 
         const matchedProducts = await evaluateSelector(
-          prisma,
+          prisma(),
           selector,
           rule.tenantId,
           rule.projectId
@@ -136,8 +134,8 @@ export async function checkScheduledRules(): Promise<void> {
             ruleRunId: run.id,
             productId: target.productId,
             variantId: target.variantId,
-            beforeJson: target.before,
-            afterJson: target.after,
+            beforeJson: target.before as unknown as Prisma.InputJsonValue,
+            afterJson: target.after as unknown as Prisma.InputJsonValue,
             status: 'QUEUED' as const,
           }));
 

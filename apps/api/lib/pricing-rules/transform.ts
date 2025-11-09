@@ -61,7 +61,7 @@ export function applyTransform(
   };
 
   // Step 1: Apply transform operation
-  let intermediatePrice = applyOperation(inputPrice, transform);
+  const intermediatePrice = applyOperation(inputPrice, transform);
   trace.intermediatePrice = intermediatePrice;
 
   // Step 2: Apply constraints (floor/ceiling)

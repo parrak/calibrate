@@ -24,7 +24,7 @@ export interface ProductWithPricing extends Product {
  * Evaluate a selector condition against products in the database
  */
 export async function evaluateSelector(
-  prisma: PrismaClient,
+  prismaClient: PrismaClient,
   selector: SelectorCondition,
   tenantId: string,
   projectId: string
@@ -33,7 +33,7 @@ export async function evaluateSelector(
   const whereClause = buildWhereClause(selector, tenantId, projectId);
 
   // Execute query with pricing data
-  const products = await prisma().product.findMany({
+  const products = await prismaClient.product.findMany({
     where: whereClause,
     include: {
       PriceVersion: {
@@ -51,7 +51,7 @@ export async function evaluateSelector(
   // Transform to ProductWithPricing
   return products.map(product => ({
     ...product,
-    currentPrice: product.PriceVersion[0]?.unitAmount,
+    currentPrice: product.PriceVersion[0]?.unitAmount ?? undefined,
     currency: product.PriceVersion[0]?.currency || 'USD',
     variantId: extractVariantId(product.channelRefs),
   }));
@@ -266,14 +266,14 @@ export function validateSelector(selector: unknown): SelectorCondition {
  * Count products matching selector (for preview)
  */
 export async function countMatchingProducts(
-  prisma: PrismaClient,
+  prismaClient: PrismaClient,
   selector: SelectorCondition,
   tenantId: string,
   projectId: string
 ): Promise<number> {
   const whereClause = buildWhereClause(selector, tenantId, projectId);
 
-  return await prisma().product.count({
+  return await prismaClient.product.count({
     where: whereClause,
   });
 }

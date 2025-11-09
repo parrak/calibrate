@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@calibr/db';
+import { prisma, Prisma } from '@calibr/db';
 import { trackPerformance } from '@/lib/performance-middleware';
 import { withSecurity } from '@/lib/security-headers';
 import { evaluateSelector, type SelectorCondition } from '@/lib/pricing-rules/selector';
@@ -18,7 +18,7 @@ function errorJson(error: ErrorResponse) {
   );
 }
 
-async function requireProjectAccess(req: NextRequest, projectSlug: string, minRole: string) {
+async function requireProjectAccess(req: NextRequest, projectSlug: string, _minRole: string) {
   const project = await prisma().project.findUnique({
     where: { slug: projectSlug },
   });
@@ -45,34 +45,43 @@ async function requireProjectAccess(req: NextRequest, projectSlug: string, minRo
 /**
  * POST /api/v1/rules/:id/preview - Preview rule execution
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  return withSecurity(
-    trackPerformance(async () => {
-      const url = new URL(req.url);
-      const projectSlug = url.searchParams.get('project')?.trim();
-      if (!projectSlug) {
-        return errorJson({
-          status: 400,
-          error: 'BadRequest',
-          message: 'The `project` query parameter is required.',
-        });
-      }
+export const POST = withSecurity(
+  trackPerformance(async (req: NextRequest, ...args: unknown[]) => {
+    const context = args[0] as { params: Promise<{ id: string }> };
+    const { id } = await context.params;
 
-      const access = await requireProjectAccess(req, projectSlug, 'VIEWER');
-      if ('error' in access) {
-        return errorJson(access.error);
-      }
+    const url = new URL(req.url);
+    const projectSlug = url.searchParams.get('project')?.trim();
+    if (!projectSlug) {
+      return errorJson({
+        status: 400,
+        error: 'BadRequest',
+        message: 'The `project` query parameter is required.',
+      });
+    }
 
-      try {
-        // Fetch the rule
-        const rule = await prisma().pricingRule.findFirst({
-          where: {
-            id: params.id,
-            projectId: access.project.id,
-            tenantId: access.tenantId,
-            deletedAt: null,
-          },
-        });
+    const access = await requireProjectAccess(req, projectSlug, 'VIEWER');
+    if ('error' in access && access.error) {
+      return errorJson(access.error);
+    }
+    if (!('project' in access)) {
+      return errorJson({
+        status: 500,
+        error: 'InternalServerError',
+        message: 'Failed to validate project access',
+      });
+    }
+
+    try {
+      // Fetch the rule
+      const rule = await prisma().pricingRule.findFirst({
+        where: {
+          id,
+          projectId: access.project.id,
+          tenantId: access.tenantId,
+          deletedAt: null,
+        },
+      });
 
         if (!rule) {
           return errorJson({
@@ -83,11 +92,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         }
 
         // Evaluate selector to get matching products
-        const selector = rule.selectorJson as SelectorCondition;
-        const transform = rule.transformJson as Transform;
+        const selector = rule.selectorJson as unknown as SelectorCondition;
+        const transform = rule.transformJson as unknown as Transform;
 
         const matchedProducts = await evaluateSelector(
-          prisma,
+          prisma(),
           selector,
           access.tenantId,
           access.project.id
@@ -140,8 +149,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             ruleRunId: run.id,
             productId: target.productId,
             variantId: target.variantId,
-            beforeJson: target.before,
-            afterJson: target.after,
+            beforeJson: target.before as unknown as Prisma.InputJsonValue,
+            afterJson: target.after as unknown as Prisma.InputJsonValue,
             status: 'PREVIEW' as const,
           }));
 
@@ -184,12 +193,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         });
       } catch (err) {
         console.error('Error previewing pricing rule:', err);
-        return errorJson({
-          status: 500,
-          error: 'InternalServerError',
-          message: 'Failed to preview pricing rule',
-        });
-      }
-    })()
-  );
-}
+      return errorJson({
+        status: 500,
+        error: 'InternalServerError',
+        message: 'Failed to preview pricing rule',
+      });
+    }
+  })
+);
