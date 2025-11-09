@@ -25,7 +25,7 @@ function requireEnv(name: string): string {
 export function buildShopifyConnectorConfig(isActive: boolean): ConnectorConfig {
   const apiKey = requireEnv('SHOPIFY_API_KEY');
   const apiSecret = requireEnv('SHOPIFY_API_SECRET');
-  // webhookSecret is optional - only needed for webhook verification
+  // webhookSecret is optional - only needed for webhook verification, not for sync operations
   // Provide empty string as default to satisfy type requirements
   const webhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET || '';
   const apiVersion = process.env.SHOPIFY_API_VERSION;
