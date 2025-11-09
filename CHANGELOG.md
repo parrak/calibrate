@@ -7,6 +7,12 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Competitor Monitoring: API Testing & UI Integration**
+  - Fixed CompetitorMonitor component to use projectSlug for monitoring
+  - Added createRule API method to competitorsApi client
+  - Added security headers (withSecurity wrapper) to all competitor endpoints
+  - Created manual API test script (`scripts/test-competitor-api.ps1`) for endpoint verification
+  - Updated 04_kickoff_checklist.md with competitor monitoring testing progress
 - **Pricing Engine: Rules DSL and MVP Implementation** (M1.1 — Engine Team)
   - Implemented complete rules DSL with selector, transform, and schedule definitions
   - Selector predicates: match by SKU, tags, price range, or custom fields with AND/OR operators
@@ -23,6 +29,11 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - See `agents/docs/_EXECUTION_PACKET_V2/M1.1_COMPLETION_SUMMARY.md` for complete documentation
 
 ### Fixed
+- **Competitor Monitoring: Component & API Fixes**
+  - Fixed CompetitorMonitor component to pass projectSlug to monitor API endpoint
+  - Fixed CompetitorRules component to properly create rules via API
+  - Added missing security headers to competitor [id] and [id]/products] routes
+  - Fixed API client to include createRule method for competitor rules
 - **Console: Drawer Component Blocking Interactions**
   - Fixed Drawer component rendering invisible elements when closed that could block page interactions
   - Drawer now returns null when closed, completely removing from DOM instead of just hiding with CSS

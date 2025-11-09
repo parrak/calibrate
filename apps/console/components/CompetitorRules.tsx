@@ -70,8 +70,19 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
 
   const createRule = async () => {
     try {
-      // TODO: Implement create rule API endpoint
-      console.warn('Create rule not yet implemented in API client')
+      const ruleData = {
+        name: newRule.name,
+        description: newRule.description || undefined,
+        rules: {
+          type: newRule.type,
+          value: newRule.value,
+          minMargin: newRule.minMargin,
+          maxPrice: newRule.maxPrice || undefined,
+          minPrice: newRule.minPrice || undefined,
+        },
+        isActive: newRule.isActive
+      }
+      await competitorsApi.createRule(projectSlug, ruleData)
       setIsCreating(false)
       setNewRule({
         name: '',
@@ -83,6 +94,7 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
         minPrice: 0,
         isActive: true
       })
+      await fetchRules() // Refresh rules list
     } catch (error) {
       console.error('Error creating rule:', error)
     }
