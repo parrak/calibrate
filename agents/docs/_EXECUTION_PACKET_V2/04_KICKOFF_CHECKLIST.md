@@ -4,12 +4,12 @@
 
 ### Milestone M0.1 — Core Schema
 
-- [ ] Define Prisma models: Product, PriceVersion, DiscountPolicy, PriceChange, Event, Audit
-- [ ] Generate JSON Schemas + semver registry (`/packages/db/schemas/`)
-- [ ] Implement deterministic migrations and `pnpm migrate:check` CI step
-- [ ] Add RLS policies and test fixtures for each tenant table
-- [ ] Publish DTOs to `@calibr/types` via CI
-- [ ] Create `pnpm test:db` pipeline validating migrations and RLS
+- [x] Define Prisma models: Product, PriceVersion, DiscountPolicy, PriceChange, Event, Audit
+- [x] Generate JSON Schemas + semver registry (`/packages/db/schemas/`)
+- [x] Implement deterministic migrations and `pnpm migrate:check` CI step
+- [x] Add RLS policies and test fixtures for each tenant table
+- [x] Publish DTOs to `@calibr/types` via CI
+- [x] Create `pnpm test:db` pipeline validating migrations and RLS
 
 ### Milestone M0.2 — Event Bus / Outbox
 
@@ -189,13 +189,13 @@
 
 ## Schema & Security
 
-- [ ] JSON Schemas authored with semver; Prisma migrations reproducible.
-- [ ] RLS enabled; row‑level tests present.
+- [x] JSON Schemas authored with semver; Prisma migrations reproducible.
+- [x] RLS enabled; row‑level tests present.
 - [ ] Service tokens + per‑connector secrets stored in vault.
 
 ## Eventing & Observability
 
-- [ ] `event_log` + outbox created; replay and DLQ verified.
+- [x] `event_log` + outbox created; replay and DLQ verified.
 - [ ] `@calibr/monitor` hooked into API and connectors; request id propagation.
 
 ## Shopify Connector (Launch Scope)
