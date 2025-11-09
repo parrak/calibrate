@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { withSecurity } from '@/lib/security-headers';
+import { encodeOAuthState, type ShopifyOAuthState } from '@/lib/shopify-oauth-state';
 
 export const runtime = 'nodejs';
 
@@ -19,6 +20,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const projectSlug = searchParams.get('project');
   const shop = searchParams.get('shop');
+  const host = searchParams.get('host');
 
   if (!projectSlug || !shop) {
     return NextResponse.json(
@@ -69,13 +71,21 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
   authUrl.searchParams.set('client_id', apiKey);
   authUrl.searchParams.set('scope', scopes);
   authUrl.searchParams.set('redirect_uri', redirectUri);
-  authUrl.searchParams.set('state', projectSlug); // Use state to track project
+  const state: ShopifyOAuthState = {
+    projectSlug,
+    host: host || null,
+  };
+  const encodedState = encodeOAuthState(state);
+
+  authUrl.searchParams.set('state', encodedState); // Use state to track project and embedded host
   authUrl.searchParams.set('grant_options[]', 'per-user');
 
   return NextResponse.json({
     installUrl: authUrl.toString(),
     shop: finalShop,
     scopes: scopes.split(','),
+    state: encodedState,
+    host: host || null,
   });
 });
 

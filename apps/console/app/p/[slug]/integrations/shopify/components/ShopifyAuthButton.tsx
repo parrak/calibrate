@@ -13,6 +13,139 @@ interface ShopifyAuthButtonProps {
   projectSlug: string;
 }
 
+interface ShopifyAppBridgeConfig {
+  apiKey: string;
+  host: string;
+  forceRedirect?: boolean;
+}
+
+interface ShopifyAppBridgeApp {
+  dispatch(action: { type: string; payload?: unknown }): unknown;
+}
+
+type ShopifyRedirectAction = 'REMOTE';
+
+interface ShopifyAppBridgeRedirect {
+  dispatch(action: ShopifyRedirectAction, destination: string): void;
+}
+
+interface ShopifyAppBridgeActions {
+  Redirect: {
+    Action: {
+      REMOTE: ShopifyRedirectAction;
+    };
+    create(app: ShopifyAppBridgeApp): ShopifyAppBridgeRedirect;
+  };
+}
+
+interface ShopifyAppBridgeModule {
+  default(config: ShopifyAppBridgeConfig): ShopifyAppBridgeApp;
+  actions: ShopifyAppBridgeActions;
+}
+
+interface ShopifyAppBridgeWindow extends Window {
+  appBridge?: ShopifyAppBridgeModule;
+  ['app-bridge']?: ShopifyAppBridgeModule;
+}
+
+declare global {
+  interface Window {
+    appBridge?: ShopifyAppBridgeModule;
+    ['app-bridge']?: ShopifyAppBridgeModule;
+  }
+}
+
+function resolveAppBridge(): ShopifyAppBridgeModule | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const globalWindow = window as ShopifyAppBridgeWindow;
+
+  if (globalWindow.appBridge) {
+    return globalWindow.appBridge;
+  }
+
+  if (globalWindow['app-bridge']) {
+    globalWindow.appBridge = globalWindow['app-bridge'];
+    return globalWindow.appBridge;
+  }
+
+  return null;
+}
+
+async function loadAppBridge(): Promise<ShopifyAppBridgeModule | null> {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return null;
+  }
+
+  const existingModule = resolveAppBridge();
+  if (existingModule) {
+    return existingModule;
+  }
+
+  const existingScript = document.querySelector<HTMLScriptElement>('script[data-shopify-app-bridge]');
+  if (existingScript) {
+    await new Promise<void>((resolve, reject) => {
+      if (existingScript.dataset.loaded === 'true') {
+        resolve();
+        return;
+      }
+      existingScript.addEventListener('load', () => resolve(), { once: true });
+      existingScript.addEventListener('error', () => reject(new Error('Failed to load App Bridge script')), { once: true });
+    });
+    return resolveAppBridge();
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/@shopify/app-bridge@3/dist/app-bridge.min.js';
+    script.async = true;
+    script.dataset.shopifyAppBridge = 'true';
+    script.addEventListener('load', () => {
+      script.dataset.loaded = 'true';
+      resolve();
+    });
+    script.addEventListener('error', () => reject(new Error('Failed to load App Bridge script')));
+    document.head.appendChild(script);
+  });
+
+  return resolveAppBridge();
+}
+
+async function redirectToShopifyInstall(installUrl: string, host: string | null) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const apiKey = process.env.NEXT_PUBLIC_SHOPIFY_API_KEY;
+
+  if (host && apiKey) {
+    try {
+      const appBridge = await loadAppBridge();
+      if (appBridge?.default && appBridge?.actions?.Redirect) {
+        const app = appBridge.default({
+          apiKey,
+          host,
+          forceRedirect: true,
+        });
+        const redirect = appBridge.actions.Redirect.create(app);
+        redirect.dispatch(appBridge.actions.Redirect.Action.REMOTE, installUrl);
+        return;
+      }
+    } catch (error) {
+      console.error('Shopify App Bridge redirect failed, falling back to window redirect', error);
+    }
+
+    if (window.top) {
+      window.top.location.href = installUrl;
+      return;
+    }
+  }
+
+  window.location.href = installUrl;
+}
+
 export function ShopifyAuthButton({ projectSlug }: ShopifyAuthButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,8 +176,21 @@ export function ShopifyAuthButton({ projectSlug }: ShopifyAuthButtonProps) {
     try {
       // Call install endpoint to get OAuth URL
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
+      const params = new URLSearchParams({
+        project: projectSlug,
+        shop: shopDomain,
+      });
+
+      const hostParam = typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('host')
+        : null;
+
+      if (hostParam) {
+        params.set('host', hostParam);
+      }
+
       const response = await fetch(
-        `${apiUrl}/api/platforms/shopify/oauth/install?project=${projectSlug}&shop=${encodeURIComponent(shopDomain)}`
+        `${apiUrl}/api/platforms/shopify/oauth/install?${params.toString()}`
       );
 
       if (!response.ok) {
@@ -53,8 +199,7 @@ export function ShopifyAuthButton({ projectSlug }: ShopifyAuthButtonProps) {
       }
 
       const { installUrl } = await response.json();
-      // Redirect to Shopify OAuth consent screen
-      window.location.href = installUrl;
+      await redirectToShopifyInstall(installUrl, hostParam);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to connect');
       setLoading(false);
