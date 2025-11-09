@@ -4,9 +4,9 @@
  * Enhanced version that stores explain traces and emits to event_log
  */
 
-import { prisma } from '@calibr/db'
-import { EventWriter } from '@calibr/db/eventing'
+import { prisma, EventWriter } from '@calibr/db'
 import { createId } from '@paralleldrive/cuid2'
+import type { Prisma } from '@calibr/db'
 
 export type ApplyPriceChangeOptions = {
   priceChangeId: string
@@ -102,12 +102,12 @@ export async function applyPriceChangeEnhanced(
           },
           policyResult: pc.policyResult,
           appliedAt: new Date().toISOString()
-        },
+        } as Prisma.InputJsonValue,
         metadata: {
           correlationId,
           previousPrice: price.amount,
           newPrice: pc.toAmount
-        }
+        } as Prisma.InputJsonValue
       }
     })
 
@@ -132,7 +132,7 @@ export async function applyPriceChangeEnhanced(
             selector: pc.selectorJson,
             transform: pc.transformJson
           }
-        }
+        } as Prisma.InputJsonValue
       }
     })
 
@@ -268,12 +268,12 @@ export async function rollbackPriceChangeEnhanced(
           },
           reason: 'User-initiated rollback',
           rolledBackAt: new Date().toISOString()
-        },
+        } as Prisma.InputJsonValue,
         metadata: {
           correlationId,
           previousPrice: price.amount,
           restoredPrice: pc.fromAmount
-        }
+        } as Prisma.InputJsonValue
       }
     })
 
@@ -294,7 +294,7 @@ export async function rollbackPriceChangeEnhanced(
             to: pc.fromAmount,
             restored: true
           }
-        }
+        } as Prisma.InputJsonValue
       }
     })
 

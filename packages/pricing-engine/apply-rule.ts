@@ -5,11 +5,11 @@
  * with explain traces and event emission
  */
 
-import { prisma } from '@calibr/db'
-import { EventWriter } from '@calibr/db/eventing'
+import { prisma, EventWriter } from '@calibr/db'
 import type { PricingRule } from './rules-dsl'
 import { previewRule } from './preview'
 import { createId } from '@paralleldrive/cuid2'
+import type { Prisma } from '@calibr/db'
 
 export type ApplyRuleOptions = {
   tenantId: string
@@ -126,11 +126,11 @@ export async function applyRule(options: ApplyRuleOptions): Promise<ApplyRuleRes
           count: failed
         },
         policyRules
-      },
+      } as Prisma.InputJsonValue,
       metadata: {
         correlationId,
         timestamp: new Date().toISOString()
-      }
+      } as Prisma.InputJsonValue
     }
   })
 
