@@ -18,7 +18,10 @@ function errorJson(error: ErrorResponse) {
   )
 }
 
-async function requireProjectAccess(req: NextRequest, projectSlug: string, requiredRole: 'VIEWER' | 'EDITOR' | 'ADMIN') {
+async function requireProjectAccess(req: NextRequest, projectSlug: string, requiredRole: 'VIEWER' | 'EDITOR' | 'ADMIN'): Promise<
+  | { error: ErrorResponse }
+  | { project: any; membership: { role: 'ADMIN' } }
+> {
   // TODO: Implement proper auth - for now, we'll use a simplified version
   // This should be extracted to a shared auth utility
   const project = await prisma().project.findUnique({
