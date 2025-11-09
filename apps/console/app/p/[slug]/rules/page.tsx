@@ -91,13 +91,18 @@ const DEFAULT_RULE: RuleFormData = {
   },
 }
 
-export default function RulesPage({ params }: { params: { slug: string } }) {
-  const { data: session } = useSession()
-  const token = (session as { apiToken?: string })?.apiToken
+type PreviewResults = {
+  matchedProducts: number
+  totalPriceChanges: number
+  averageChange: number
+}
 
-  const [rules, setRules] = useState<PricingRule[]>([])
+export default function RulesPage({ params: _params }: { params: { slug: string } }) {
+  const { data: _session } = useSession()
+
+  const [rules] = useState<PricingRule[]>([])
   const [editingRule, setEditingRule] = useState<RuleFormData | null>(null)
-  const [previewResults, setPreviewResults] = useState<any>(null)
+  const [previewResults, setPreviewResults] = useState<PreviewResults | null>(null)
   const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [toastMessage, setToastMessage] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null)
 
@@ -176,7 +181,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
         totalPriceChanges: 12,
         averageChange: 8.5,
       })
-    } catch (err) {
+    } catch (_err) {
       setToastMessage({ msg: 'Failed to preview rule', type: 'error' })
     }
   }
@@ -194,7 +199,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
       setToastMessage({ msg: 'Rule saved successfully!', type: 'success' })
       setEditingRule(null)
       setIsPreviewMode(false)
-    } catch (err) {
+    } catch (_err) {
       setToastMessage({ msg: 'Failed to save rule', type: 'error' })
     }
   }
@@ -414,7 +419,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
                               value={pred.operator}
                               onChange={(e) =>
                                 updatePredicate(idx, {
-                                  operator: e.target.value as any,
+                                  operator: e.target.value as 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'contains',
                                 })
                               }
                               className="px-3 py-2 border border-border rounded-md text-sm"
@@ -505,7 +510,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
                     setEditingRule({
                       ...editingRule,
                       transform: {
-                        type: e.target.value as any,
+                        type: e.target.value as 'percentage' | 'absolute' | 'set' | 'multiply',
                         value: 0,
                       },
                     })
@@ -634,7 +639,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
                   setEditingRule({
                     ...editingRule,
                     schedule: {
-                      type: e.target.value as any,
+                      type: e.target.value as 'immediate' | 'scheduled' | 'recurring',
                     },
                   })
                 }
