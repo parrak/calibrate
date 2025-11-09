@@ -51,8 +51,10 @@ export async function checkAndDeliverAlerts(
     const triggeredAlerts = checkAlertPolicies(metrics, policies)
 
     logger.info('Alert check completed', {
-      triggeredAlertsCount: triggeredAlerts.length,
-      activeAlertsCount: getActiveAlerts().length
+      metadata: {
+        triggeredAlertsCount: triggeredAlerts.length,
+        activeAlertsCount: getActiveAlerts().length
+      }
     })
 
     // Deliver triggered alerts
@@ -71,17 +73,25 @@ export async function checkAndDeliverAlerts(
         const failedDeliveries = results.filter(r => !r.success)
         if (failedDeliveries.length > 0) {
           logger.error('Alert delivery failures', {
-            policyId: alert.policyId,
-            failures: failedDeliveries.map(f => ({
-              channel: f.channel,
-              error: f.error
-            }))
+            metadata: {
+              policyId: alert.policyId,
+              failures: failedDeliveries.map(f => ({
+                channel: f.channel,
+                error: f.error
+              }))
+            }
           })
         }
       } catch (error) {
         const errorMsg = `Failed to deliver alert ${alert.policyId}: ${error instanceof Error ? error.message : String(error)}`
         errors.push(errorMsg)
-        logger.error(errorMsg, { error })
+        logger.error(errorMsg, {
+          error: error instanceof Error ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+          } : undefined
+        })
       }
     }
 
@@ -94,7 +104,13 @@ export async function checkAndDeliverAlerts(
   } catch (error) {
     const errorMsg = `Alert check failed: ${error instanceof Error ? error.message : String(error)}`
     errors.push(errorMsg)
-    logger.error(errorMsg, { error })
+    logger.error(errorMsg, {
+      error: error instanceof Error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      } : undefined
+    })
 
     return {
       timestamp,
@@ -147,7 +163,13 @@ async function gatherMetrics(): Promise<any> {
       cronJobs
     }
   } catch (error) {
-    logger.error('Failed to gather metrics for alert checking', { error })
+    logger.error('Failed to gather metrics for alert checking', {
+      error: error instanceof Error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      } : undefined
+    })
     throw error
   }
 }
@@ -164,13 +186,21 @@ export function startPeriodicAlertChecking(
   config?: AlertDeliveryConfig,
   policies?: AlertPolicy[]
 ): () => void {
-  logger.info('Starting periodic alert checking', { intervalMs })
+  logger.info('Starting periodic alert checking', {
+    metadata: { intervalMs }
+  })
 
   const interval = setInterval(async () => {
     try {
       await checkAndDeliverAlerts(config, policies)
     } catch (error) {
-      logger.error('Periodic alert check failed', { error })
+      logger.error('Periodic alert check failed', {
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        } : undefined
+      })
     }
   }, intervalMs)
 
@@ -215,16 +245,20 @@ export async function testAlertDelivery(
     enabled: true
   }
 
-  logger.info('Sending test alert', { channels: testPolicy.channels })
+  logger.info('Sending test alert', {
+    metadata: { channels: testPolicy.channels }
+  })
 
   const results = await deliverAlert(testAlert, testPolicy, deliveryConfig)
 
   logger.info('Test alert delivery completed', {
-    results: results.map(r => ({
-      channel: r.channel,
-      success: r.success,
-      error: r.error
-    }))
+    metadata: {
+      results: results.map(r => ({
+        channel: r.channel,
+        success: r.success,
+        error: r.error
+      }))
+    }
   })
 
   return results

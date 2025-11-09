@@ -205,10 +205,12 @@ export async function executeProbe(
 
   // Log result
   logger.info('Synthetic probe executed', {
-    probeId: config.id,
-    status: result.status,
-    responseTime: result.responseTime,
-    healthy: result.healthy
+    metadata: {
+      probeId: config.id,
+      status: result.status,
+      responseTime: result.responseTime,
+      healthy: result.healthy
+    }
   })
 
   return result
@@ -226,10 +228,12 @@ export async function executeAllProbes(
   )
 
   logger.info('All synthetic probes executed', {
-    total: results.length,
-    healthy: results.filter(r => r.status === 'healthy').length,
-    degraded: results.filter(r => r.status === 'degraded').length,
-    unhealthy: results.filter(r => r.status === 'unhealthy').length
+    metadata: {
+      total: results.length,
+      healthy: results.filter(r => r.status === 'healthy').length,
+      degraded: results.filter(r => r.status === 'degraded').length,
+      unhealthy: results.filter(r => r.status === 'unhealthy').length
+    }
   })
 
   return results
@@ -336,11 +340,19 @@ export function startPeriodicProbing(
   baseUrl?: string,
   probes?: ProbeConfig[]
 ): () => void {
-  logger.info('Starting periodic synthetic probing', { intervalMs })
+  logger.info('Starting periodic synthetic probing', {
+    metadata: { intervalMs }
+  })
 
   // Execute immediately
   executeAllProbes(baseUrl, probes).catch(error => {
-    logger.error('Initial probe execution failed', { error })
+    logger.error('Initial probe execution failed', {
+      error: error instanceof Error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      } : undefined
+    })
   })
 
   // Then execute periodically
@@ -348,7 +360,13 @@ export function startPeriodicProbing(
     try {
       await executeAllProbes(baseUrl, probes)
     } catch (error) {
-      logger.error('Periodic probe execution failed', { error })
+      logger.error('Periodic probe execution failed', {
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        } : undefined
+      })
     }
   }, intervalMs)
 

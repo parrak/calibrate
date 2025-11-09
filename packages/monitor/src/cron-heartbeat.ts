@@ -58,9 +58,11 @@ export function registerCronJob(config: CronJobConfig): void {
   })
 
   logger.info('Cron job registered for monitoring', {
-    jobId: config.id,
-    name: config.name,
-    expectedIntervalMs: config.expectedIntervalMs
+    metadata: {
+      jobId: config.id,
+      name: config.name,
+      expectedIntervalMs: config.expectedIntervalMs
+    }
   })
 }
 
@@ -71,7 +73,9 @@ export function unregisterCronJob(jobId: string): void {
   cronJobs.delete(jobId)
   cronHeartbeats.delete(jobId)
 
-  logger.info('Cron job unregistered', { jobId })
+  logger.info('Cron job unregistered', {
+    metadata: { jobId }
+  })
 }
 
 /**
@@ -81,7 +85,9 @@ export function recordCronHeartbeat(heartbeat: CronHeartbeat): void {
   const config = cronJobs.get(heartbeat.jobId)
   if (!config) {
     logger.warn('Heartbeat received for unregistered cron job', {
-      jobId: heartbeat.jobId
+      metadata: {
+        jobId: heartbeat.jobId
+      }
     })
     return
   }
@@ -104,9 +110,11 @@ export function recordCronHeartbeat(heartbeat: CronHeartbeat): void {
   cronHeartbeats.set(heartbeat.jobId, filtered)
 
   logger.info('Cron heartbeat recorded', {
-    jobId: heartbeat.jobId,
-    status: heartbeat.status,
-    duration: heartbeat.duration
+    metadata: {
+      jobId: heartbeat.jobId,
+      status: heartbeat.status,
+      duration: heartbeat.duration
+    }
   })
 }
 
@@ -340,11 +348,13 @@ export function checkCronJobHealth(): {
   const healthy = allStatusesArray.filter(s => !problematicJobIds.has(s.jobId))
 
   logger.info('Cron job health check completed', {
-    total: allStatusesArray.length,
-    missing: missing.length,
-    failed: failed.length,
-    unreliable: unreliable.length,
-    healthy: healthy.length
+    metadata: {
+      total: allStatusesArray.length,
+      missing: missing.length,
+      failed: failed.length,
+      unreliable: unreliable.length,
+      healthy: healthy.length
+    }
   })
 
   return { missing, failed, unreliable, healthy }
