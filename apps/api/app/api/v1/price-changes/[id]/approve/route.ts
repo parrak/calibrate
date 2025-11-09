@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma, Prisma } from '@calibr/db'
 import { withSecurity } from '@/lib/security-headers'
 import { trackPerformance } from '@/lib/performance-middleware'
+import { getCorrelationId } from '@/lib/correlation-middleware'
 import { errorJson, getPCForProject, requireProjectAccess, toPriceChangeDTO } from '../../utils'
 
 export const POST = withSecurity(
@@ -65,6 +66,28 @@ export const POST = withSecurity(
         status: 'APPROVED',
         approvedBy: access.session.userId ?? pc.approvedBy ?? null,
         policyResult: pc.policyResult as Prisma.InputJsonValue,
+      },
+    })
+
+    // Create audit record with correlation ID
+    const correlationId = getCorrelationId(req)
+    await prisma().audit.create({
+      data: {
+        tenantId: pc.tenantId,
+        projectId: pc.projectId,
+        entity: 'PriceChange',
+        entityId: pc.id,
+        action: 'approved',
+        actor: access.session.userId ?? 'unknown',
+        explain: {
+          status: 'APPROVED',
+          approvedBy: access.session.userId ?? pc.approvedBy ?? null,
+          timestamp: new Date().toISOString(),
+          fromAmount: pc.fromAmount,
+          toAmount: pc.toAmount,
+          currency: pc.currency,
+          correlationId,
+        } as Prisma.InputJsonValue,
       },
     })
 
