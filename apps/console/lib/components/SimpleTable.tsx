@@ -1,9 +1,9 @@
 export function SimpleTable({ head, children }: { head: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+    <div className="border border-border rounded-lg overflow-hidden bg-surface shadow-sm">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 border-b border-gray-200">{head}</thead>
-        <tbody className="bg-white divide-y divide-gray-100">{children}</tbody>
+        <thead className="bg-surface border-b border-border">{head}</thead>
+        <tbody className="bg-surface divide-y divide-border">{children}</tbody>
       </table>
     </div>
   )
