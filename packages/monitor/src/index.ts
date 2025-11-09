@@ -82,3 +82,59 @@ export {
   clearAllAlerts
 } from './alerts'
 
+// Alert delivery exports
+export {
+  type AlertDeliveryConfig,
+  type AlertDeliveryResult,
+  deliverToSlack,
+  deliverToEmail,
+  deliverToPagerDuty,
+  deliverToWebhook,
+  deliverAlert,
+  loadAlertDeliveryConfig
+} from './alert-delivery'
+
+// Alert checker exports
+export {
+  type AlertCheckResult,
+  checkAndDeliverAlerts,
+  startPeriodicAlertChecking,
+  testAlertDelivery
+} from './alert-checker'
+
+// Synthetic probes exports
+export {
+  type ProbeStatus,
+  type ProbeConfig,
+  type ProbeResult,
+  type ProbeStats,
+  DEFAULT_PROBES,
+  executeProbe,
+  executeAllProbes,
+  recordProbeResult,
+  getProbeStats,
+  getAllProbeStats,
+  getAllProbeResults,
+  clearProbeResults,
+  startPeriodicProbing
+} from './synthetic-probes'
+
+// Cron heartbeat exports
+export {
+  type CronJobConfig,
+  type CronHeartbeat,
+  type CronJobStatus,
+  registerCronJob,
+  unregisterCronJob,
+  recordCronHeartbeat,
+  getCronJobStatus,
+  getAllCronJobStatuses,
+  getMissingCronJobs,
+  getFailedCronJobs,
+  getUnreliableCronJobs,
+  clearCronHeartbeats,
+  getAllRegisteredCronJobs,
+  createHeartbeatRecorder,
+  checkCronJobHealth
+} from './cron-heartbeat'
+
