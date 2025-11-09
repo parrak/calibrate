@@ -15,6 +15,16 @@ const shopifyMocks = {
 vi.mock('@/lib/shopify-connector', () => ({
   initializeShopifyConnector: (...args: any[]) =>
     shopifyMocks.initializeShopifyConnector(...args),
+  serializeShopifyRateLimit: (rateLimit: any) => {
+    if (!rateLimit) return null
+    return {
+      limit: rateLimit.limit,
+      remaining: rateLimit.remaining,
+      resetTime: rateLimit.resetTime instanceof Date 
+        ? rateLimit.resetTime.toISOString() 
+        : new Date(rateLimit.resetTime).toISOString(),
+    }
+  },
 }))
 
 type PriceChangeStatus = 'PENDING' | 'APPROVED' | 'APPLIED' | 'REJECTED' | 'FAILED' | 'ROLLED_BACK'
