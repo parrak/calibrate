@@ -1,5 +1,19 @@
 # Kickoff Checklist — First 30 Days (Milestone-Oriented)
 
+> **⚠️ IMPORTANT FOR AGENTS AND EXECUTORS**
+>
+> **This file is the SINGLE SOURCE OF TRUTH for tracking milestone progress.**
+>
+> When completing tasks:
+> 1. **UPDATE THIS FILE DIRECTLY** by marking tasks as `[x]` when completed
+> 2. **DO NOT create separate tracking documents** (completion summaries are for documentation only, not tracking)
+> 3. **COMMIT AND PUSH** your updates immediately after completing each milestone
+> 4. **REFERENCE** completion summary documents (like `M0.X_COMPLETION_SUMMARY.md`) when updating, but track progress HERE
+>
+> This ensures all team members and agents have a single, up-to-date view of project progress.
+
+---
+
 ## 🧱 Platform Team (Infra, Schema, RLS, Eventing, CI/CD)
 
 ### Milestone M0.1 — Core Schema
