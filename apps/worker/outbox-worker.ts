@@ -7,7 +7,7 @@
  */
 
 import { PrismaClient } from '@prisma/client'
-import { OutboxWorker } from '@calibr/db/eventing'
+import { OutboxWorker, type EventPayload } from '@calibr/db'
 import { logger, recordEventMetric } from '@calibr/monitor'
 
 // Configuration
@@ -38,12 +38,14 @@ const worker = new OutboxWorker(prisma, {
 
 worker.subscribe({
   eventTypes: ['shopify.sync.product', 'shopify.sync.variant'],
-  handler: async (event) => {
+  handler: async (event: EventPayload) => {
     const startTime = Date.now()
     logger.info('Processing Shopify sync event', {
-      eventType: event.eventType,
       tenantId: event.tenantId,
-      correlationId: event.correlationId
+      correlationId: event.correlationId,
+      metadata: {
+        eventType: event.eventType
+      }
     })
 
     try {
@@ -65,8 +67,10 @@ worker.subscribe({
       })
     } catch (error) {
       logger.error('Failed to process Shopify sync event', error as Error, {
-        eventType: event.eventType,
-        tenantId: event.tenantId
+        tenantId: event.tenantId,
+        metadata: {
+          eventType: event.eventType
+        }
       })
 
       // Record failure metric
@@ -89,12 +93,14 @@ worker.subscribe({
 
 worker.subscribe({
   eventTypes: ['pricechange.applied', 'pricechange.approved'],
-  handler: async (event) => {
+  handler: async (event: EventPayload) => {
     const startTime = Date.now()
     logger.info('Processing price change event', {
-      eventType: event.eventType,
       tenantId: event.tenantId,
-      correlationId: event.correlationId
+      correlationId: event.correlationId,
+      metadata: {
+        eventType: event.eventType
+      }
     })
 
     try {
@@ -115,8 +121,10 @@ worker.subscribe({
       })
     } catch (error) {
       logger.error('Failed to process price change event', error as Error, {
-        eventType: event.eventType,
-        tenantId: event.tenantId
+        tenantId: event.tenantId,
+        metadata: {
+          eventType: event.eventType
+        }
       })
 
       recordEventMetric({
@@ -138,11 +146,13 @@ worker.subscribe({
 
 worker.subscribe({
   eventTypes: ['audit.event', 'audit.recorded'],
-  handler: async (event) => {
+  handler: async (event: EventPayload) => {
     logger.info('Processing audit event', {
-      eventType: event.eventType,
       tenantId: event.tenantId,
-      correlationId: event.correlationId
+      correlationId: event.correlationId,
+      metadata: {
+        eventType: event.eventType
+      }
     })
 
     // Audit events are typically just logged/archived
@@ -158,7 +168,7 @@ async function healthCheck(): Promise<boolean> {
 
     // Unhealthy if DLQ is growing too large
     if (metrics.dlqCount > 100) {
-      logger.error('Health check failed: DLQ count too high', null, {
+      logger.error('Health check failed: DLQ count too high', undefined, {
         metadata: { dlqCount: metrics.dlqCount }
       })
       return false

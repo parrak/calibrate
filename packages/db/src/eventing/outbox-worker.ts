@@ -221,10 +221,10 @@ export class OutboxWorker {
             originalId: outboxEvent.id,
             eventKey: eventLog.eventKey,
             tenantId: eventLog.tenantId,
-            projectId: eventLog.projectId,
+            projectId: eventLog.projectId || undefined,
             eventType: eventLog.eventType,
-            payload: eventLog.payload,
-            metadata: eventLog.metadata,
+            payload: eventLog.payload as any,
+            metadata: eventLog.metadata as any,
             failureReason: errorMessage,
             retryCount
           }
@@ -281,7 +281,7 @@ export class OutboxWorker {
         eventLogId: dlqEvent.originalId,
         tenantId: dlqEvent.tenantId,
         eventType: dlqEvent.eventType,
-        payload: dlqEvent.payload,
+        payload: dlqEvent.payload as any,
         status: 'PENDING',
         retryCount: 0,
         maxRetries: this.retryConfig.maxRetries,

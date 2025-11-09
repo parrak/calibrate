@@ -3,8 +3,10 @@
  * Implements the transactional outbox pattern
  */
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 import type { EventPayload, RetryConfig } from './types'
+
+type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>
 
 const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {
   maxRetries: 5,
@@ -66,7 +68,7 @@ export class EventWriter {
    */
   async writeEventWithOutbox(
     event: EventPayload,
-    options?: { tx?: PrismaClient }
+    options?: { tx?: TransactionClient }
   ): Promise<{ eventLogId: string; outboxId: string }> {
     const prisma = options?.tx || this.prisma
 
