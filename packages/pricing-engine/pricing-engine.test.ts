@@ -133,24 +133,17 @@ async function cleanupTestData() {
   })
 }
 
-describe('Pricing Engine Integration', () => {
+describe.skipIf(!hasDatabase)('Pricing Engine Integration', () => {
   beforeAll(async () => {
-    if (!hasDatabase) {
-      console.log('⚠️  DATABASE_URL not set - skipping integration tests')
-      return
-    }
     await setupTestData()
   })
 
   afterAll(async () => {
-    if (!hasDatabase) {
-      return
-    }
     await cleanupTestData()
   })
 
   describe('Preview Rule', () => {
-    it.skipIf(!hasDatabase)('should preview a percentage transform rule', async () => {
+    it('should preview a percentage transform rule', async () => {
       const rule: PricingRule = {
         id: createId(),
         name: 'Test Rule: +10% Sale',
@@ -181,7 +174,7 @@ describe('Pricing Engine Integration', () => {
       }
     })
 
-    it.skipIf(!hasDatabase)('should preview with policy evaluation', async () => {
+    it('should preview with policy evaluation', async () => {
       const rule: PricingRule = {
         id: createId(),
         name: 'Test Rule: Policy Check',
@@ -213,7 +206,7 @@ describe('Pricing Engine Integration', () => {
   })
 
   describe('Simulate Rule', () => {
-    it.skipIf(!hasDatabase)('should simulate a rule without creating records', async () => {
+    it('should simulate a rule without creating records', async () => {
       const rule: PricingRule = {
         id: createId(),
         name: 'Test Rule: Simulation',
@@ -248,7 +241,7 @@ describe('Pricing Engine Integration', () => {
   })
 
   describe('Apply Rule', () => {
-    it.skipIf(!hasDatabase)('should apply a rule and create price changes', async () => {
+    it('should apply a rule and create price changes', async () => {
       const rule: PricingRule = {
         id: createId(),
         name: 'Test Rule: Apply +5%',
@@ -291,7 +284,7 @@ describe('Pricing Engine Integration', () => {
   })
 
   describe('Apply Price Change Enhanced', () => {
-    it.skipIf(!hasDatabase)('should apply a price change with explain trace and event', async () => {
+    it('should apply a price change with explain trace and event', async () => {
       // Create a price change
       const sku = await prisma().sku.findFirst({
         where: { product: { tenantId: TEST_TENANT_ID } }
@@ -354,7 +347,7 @@ describe('Pricing Engine Integration', () => {
   })
 
   describe('Rollback Price Change Enhanced', () => {
-    it.skipIf(!hasDatabase)('should rollback a price change with explain trace and event', async () => {
+    it('should rollback a price change with explain trace and event', async () => {
       // Create and apply a price change first
       const sku = await prisma().sku.findFirst({
         where: { product: { tenantId: TEST_TENANT_ID } }
