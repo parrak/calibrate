@@ -38,9 +38,7 @@ vi.mock('@calibr/db', () => ({
   prisma: vi.fn(() => mockPrismaClient),
 }))
 
-// Mock analytics package - use the same relative path as the route imports
-// Route imports from: '../../../../../../../packages/analytics/index'
-// From test file, we need to match the module resolution
+// Mock analytics package - try both the relative path and package alias
 const mockGetAnalyticsOverview = vi.fn().mockResolvedValue({
   summary: {
     totalSkus: 10,
@@ -58,8 +56,13 @@ const mockGetAnalyticsOverview = vi.fn().mockResolvedValue({
   },
 })
 
-// Mock using the exact relative path the route uses
+// Mock using both possible paths - Vitest might resolve differently
 vi.mock('../../../../../../../packages/analytics/index', () => ({
+  getAnalyticsOverview: mockGetAnalyticsOverview,
+}))
+
+// Also mock the query module directly in case it's imported
+vi.mock('../../../../../../../packages/analytics/query', () => ({
   getAnalyticsOverview: mockGetAnalyticsOverview,
 }))
 
