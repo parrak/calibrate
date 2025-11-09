@@ -43,13 +43,17 @@ if (existsSync(MIGRATIONS_DIR)) {
   console.warn('⚠ No migrations directory (expected for fresh setup)');
 }
 
-// 4. Validate schema syntax
-try {
-  execSync('pnpm prisma validate', { cwd: join(__dirname, '..'), stdio: 'pipe' });
-  console.log('✓ Schema validation passed');
-} catch (error) {
-  console.error('❌ Schema validation failed');
-  exitCode = 1;
+// 4. Validate schema syntax (skip if no DATABASE_URL)
+if (process.env.DATABASE_URL) {
+  try {
+    execSync('pnpm prisma validate', { cwd: join(__dirname, '..'), stdio: 'pipe' });
+    console.log('✓ Schema validation passed');
+  } catch (error) {
+    console.error('❌ Schema validation failed');
+    exitCode = 1;
+  }
+} else {
+  console.log('⚠ Skipping schema validation (DATABASE_URL not set)');
 }
 
 // 5. Check for M0.1 required models
