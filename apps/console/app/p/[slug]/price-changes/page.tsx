@@ -61,7 +61,7 @@ const CONNECTOR_COLOR: Record<ConnectorState, string> = {
   ERROR: 'bg-red-900/60 text-red-200',
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ''
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
 
 const formatCurrency = (currency: string, amount: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount / 100)

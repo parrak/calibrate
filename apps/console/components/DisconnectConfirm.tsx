@@ -52,7 +52,7 @@ export function DisconnectConfirm({
         onConfirm={async () => {
           try {
             setOpen(false)
-            const base = process.env.NEXT_PUBLIC_API_BASE || ''
+            const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
             const res = await fetch(`${base}/api/platforms/${encodeURIComponent(resolvedPlatform)}?project=${encodeURIComponent(projectSlug)}`, { method: 'DELETE' })
             if (!res.ok) throw new Error('Failed to disconnect')
             toast.success(`${resolvedPlatform} integration disconnected.`)
