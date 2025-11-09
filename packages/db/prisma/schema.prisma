@@ -274,6 +274,82 @@ model Policy {
   Tenant    Tenant   @relation(fields: [tenantId], references: [id])
 }
 
+/// PricingRule — Automated pricing rules engine
+/// Stores selector criteria and transform logic for automated price changes
+model PricingRule {
+  id            String    @id @default(cuid())
+  tenantId      String
+  projectId     String
+  name          String
+  description   String?   @db.Text
+  selectorJson  Json // Selector criteria (e.g., {"and":[{"tag":"Summer"},{"price":{"gt":100}}]})
+  transformJson Json // Transform definition (e.g., {"op":"percent","value":-10,"floor":9.99})
+  scheduleAt    DateTime? @db.Timestamptz(6) // Optional one-shot schedule
+  enabled       Boolean   @default(true)
+  createdBy     String
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
+  deletedAt     DateTime? @db.Timestamptz(6) // Soft delete
+  Tenant        Tenant    @relation(fields: [tenantId], references: [id])
+  Project       Project   @relation(fields: [projectId], references: [id])
+  RuleRun       RuleRun[]
+
+  @@index([tenantId, projectId, enabled])
+  @@index([scheduleAt])
+  @@index([deletedAt])
+}
+
+/// RuleRun — Execution record for pricing rules
+/// Tracks preview and apply operations with status and results
+model RuleRun {
+  id           String        @id @default(cuid())
+  tenantId     String
+  projectId    String
+  ruleId       String
+  status       RuleRunStatus @default(PREVIEW)
+  scheduledFor DateTime?     @db.Timestamptz(6)
+  startedAt    DateTime?     @db.Timestamptz(6)
+  finishedAt   DateTime?     @db.Timestamptz(6)
+  explainJson  Json? // Aggregate rationale and scope
+  errorMessage String?       @db.Text
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(6)
+  Tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  Project      Project       @relation(fields: [projectId], references: [id])
+  PricingRule  PricingRule   @relation(fields: [ruleId], references: [id])
+  RuleTarget   RuleTarget[]
+
+  @@index([tenantId, projectId, status])
+  @@index([ruleId, status])
+  @@index([scheduledFor])
+  @@index([createdAt])
+}
+
+/// RuleTarget — Individual product/variant targeted by a rule run
+/// Stores before/after snapshots for determinism and auditability
+model RuleTarget {
+  id           String           @id @default(cuid())
+  tenantId     String
+  projectId    String
+  ruleRunId    String
+  productId    String
+  variantId    String? // Shopify variant ID if applicable
+  beforeJson   Json // Snapshot before transform (e.g., {"currency":"USD","unit_amount":1299})
+  afterJson    Json // Snapshot after transform
+  status       RuleTargetStatus @default(PREVIEW)
+  errorMessage String?          @db.Text
+  createdAt    DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @db.Timestamptz(6)
+  Tenant       Tenant           @relation(fields: [tenantId], references: [id])
+  Project      Project          @relation(fields: [projectId], references: [id])
+  RuleRun      RuleRun          @relation(fields: [ruleRunId], references: [id])
+
+  @@index([tenantId, projectId, status])
+  @@index([ruleRunId, status])
+  @@index([productId])
+  @@index([variantId])
+}
+
 model Price {
   id           String         @id @default(cuid())
   skuId        String
@@ -311,12 +387,21 @@ model PriceChange {
   scheduleAt      DateTime? // M0.1: optional scheduling
   state           PriceChangeStatus? // M0.1: renamed from status
   createdBy       String? // M0.1: actor tracking
+  // Pricing Rules integration
+  productId       String? // Product ID for rule-based changes
+  variantId       String? // Variant ID (e.g., Shopify variant)
+  ruleRunId       String? // Link to RuleRun if source is rule-based
+  compareAtOld    Int? // Previous compare-at price
+  compareAtNew    Int? // New compare-at price
   Project         Project            @relation(fields: [projectId], references: [id])
   Tenant          Tenant             @relation(fields: [tenantId], references: [id])
   ExplainTrace    ExplainTrace[] // M1.1: explainability traces
 
   @@index([tenantId, projectId, status])
   @@index([scheduleAt])
+  @@index([ruleRunId])
+  @@index([productId])
+  @@index([variantId])
 }
 
 /// Explain Trace — M1.1: Explainability traces for price changes
@@ -411,6 +496,9 @@ model Project {
   PriceChange        PriceChange[] // M0.1
   ExplainTrace       ExplainTrace[] // M1.1
   CopilotQueryLog    CopilotQueryLog[] // M1.4
+  PricingRule        PricingRule[] // Pricing rules
+  RuleRun            RuleRun[] // Rule executions
+  RuleTarget         RuleTarget[] // Rule targets
 }
 
 model Quote {
@@ -502,6 +590,9 @@ model Tenant {
   PriceChange     PriceChange[] // M0.1
   ExplainTrace    ExplainTrace[] // M1.1
   CopilotQueryLog CopilotQueryLog[] // M1.4
+  PricingRule     PricingRule[] // Pricing rules
+  RuleRun         RuleRun[] // Rule executions
+  RuleTarget      RuleTarget[] // Rule targets
 }
 
 model User {
@@ -520,6 +611,23 @@ enum PriceChangeStatus {
   PENDING
   APPROVED
   REJECTED
+  APPLIED
+  FAILED
+  ROLLED_BACK
+}
+
+enum RuleRunStatus {
+  PREVIEW
+  QUEUED
+  APPLYING
+  APPLIED
+  FAILED
+  ROLLED_BACK
+}
+
+enum RuleTargetStatus {
+  PREVIEW
+  QUEUED
   APPLIED
   FAILED
   ROLLED_BACK
