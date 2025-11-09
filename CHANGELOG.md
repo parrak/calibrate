@@ -18,6 +18,10 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Validates query parameters with Zod, reusing shared rate-limit serialization helpers.
   - Returns a minimized shop summary (name, domains, plan, locale) to avoid exposing sensitive Shopify profile data while still powering Console health views.
   - Standardized Shopify integration routes to apply security headers and CORS preflight responses.
+- **Connectors: Shopify OAuth + catalog ingestion** (Agent B — Codex)
+  - Added App Bridge-aware OAuth flow with encoded state metadata, HMAC verification, and persistence via `/api/platforms/shopify`.
+  - Console install experience now loads Shopify App Bridge when available and falls back to top-level redirects when embedded.
+  - `/api/integrations/shopify/products` persists Shopify products and variants into `Product`, `Sku`, `Price`, and `PriceVersion` tables with price history tracking.
 - **Infrastructure: @calibr/types Package for API Type Generation**
   - Created `@calibr/types` package that generates TypeScript types from OpenAPI specification
   - Automatically generates type-safe API definitions for frontend consumption

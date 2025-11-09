@@ -57,8 +57,8 @@
 
 ### Milestone M0.3 — Shopify Connector (Live)
 
-- [ ] Implement Shopify OAuth (App Bridge + REST Admin)
-- [ ] Fetch Products/Variants → map to Product + PriceVersion
+- [x] Implement Shopify OAuth (App Bridge + REST Admin)
+- [x] Fetch Products/Variants → map to Product + PriceVersion
 - [x] Implement `applyPriceChange()` with write-back to Shopify
 - [x] Add health endpoint (`/api/integrations/shopify/health`) with rate-limit telemetry, Zod validation, and sanitized shop summary response
 - [x] Add idempotent retry/backoff logic for price update jobs with structured attempt logging
