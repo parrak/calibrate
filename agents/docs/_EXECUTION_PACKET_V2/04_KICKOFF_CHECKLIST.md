@@ -59,12 +59,12 @@
 
 - [ ] Implement Shopify OAuth (App Bridge + REST Admin)
 - [ ] Fetch Products/Variants → map to Product + PriceVersion
-- [ ] Implement `applyPriceChange()` with write-back to Shopify
-- [ ] Add health endpoint (`/api/integrations/shopify/health`)
-- [ ] Add idempotent retry/backoff logic for price update jobs
-- [ ] Record connector events to `event_log` (`shopify.sync.*`, `shopify.apply.*`)
-- [ ] Add rate-limit guard (Shopify API limits)
-- [ ] Add error surfacing → Console notifications
+- [x] Implement `applyPriceChange()` with write-back to Shopify
+- [x] Add health endpoint (`/api/integrations/shopify/health`) with rate-limit telemetry, Zod validation, and sanitized shop summary response
+- [x] Add idempotent retry/backoff logic for price update jobs with structured attempt logging
+- [x] Record connector events to `event_log` (`shopify.sync.*`, `shopify.apply.*`)
+- [x] Add rate-limit guard (Shopify API limits)
+- [x] Add error surfacing → Console notifications
 
 ### Milestone M0.4 — Amazon Connector (Read-Only Stub)
 

@@ -13,8 +13,10 @@ import {
   toPriceChangeDTO,
 } from '../../utils'
 import { createId } from '@paralleldrive/cuid2'
-import { initializeShopifyConnector } from '@/lib/shopify-connector'
+import { initializeShopifyConnector, serializeShopifyRateLimit } from '@/lib/shopify-connector'
 import type { PriceUpdateResult } from '@calibr/platform-connector'
+import { PlatformError } from '@calibr/platform-connector'
+import type { ShopifyRateLimit } from '@calibr/shopify-connector'
 
 type RulesShape = {
   maxPctDelta?: number
@@ -24,6 +26,61 @@ type RulesShape = {
   dailyChangeBudgetUsedPct?: number
   floors?: Record<string, number>
   ceilings?: Record<string, number>
+}
+
+const MAX_SHOPIFY_APPLY_ATTEMPTS = 3
+const BASE_RETRY_DELAY_MS = 750
+
+type ShopifyConnectorInstance = Awaited<ReturnType<typeof initializeShopifyConnector>>
+type SerializedRateLimit = ReturnType<typeof serializeShopifyRateLimit>
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function guardShopifyRateLimit(
+  connector: ShopifyConnectorInstance
+): Promise<ShopifyRateLimit | null> {
+  try {
+    const status = await connector.getConnectionStatus()
+    const rateLimit = status.rateLimit ?? null
+
+    if (rateLimit && typeof rateLimit.remaining === 'number' && rateLimit.remaining < 2) {
+      await sleep(1000)
+    }
+
+    return rateLimit
+  } catch (error) {
+    console.warn('Failed to read Shopify rate limits before apply', error)
+    return null
+  }
+}
+
+function extractRetryMetadata(error: unknown): {
+  retryable: boolean
+  message: string
+  type?: string
+} {
+  if (error instanceof PlatformError) {
+    return {
+      retryable: error.retryable || error.type === 'rate_limit' || error.type === 'network',
+      message: error.message,
+      type: error.type,
+    }
+  }
+
+  if (error && typeof error === 'object' && 'retryable' in error) {
+    const retryableValue = (error as { retryable?: unknown }).retryable
+    return {
+      retryable: Boolean(retryableValue),
+      message: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+
+  return {
+    retryable: false,
+    message: error instanceof Error ? error.message : 'Unknown error',
+  }
 }
 
 function extractRuleValue(rules: RulesShape | undefined, key: string, skuCode?: string) {
@@ -70,16 +127,20 @@ export const POST = withSecurity(
     }
 
     if (match.project.id !== access.project.id) {
-    return errorJson({
-      status: 403,
-      error: 'Forbidden',
-      message: 'Price change does not belong to this project.',
-    })
-  }
+      return errorJson({
+        status: 403,
+        error: 'Forbidden',
+        message: 'Price change does not belong to this project.',
+      })
+    }
 
-  const pc = match.pc
-  if (pc.status === 'APPLIED' || pc.status === 'ROLLED_BACK') {
-    return errorJson({ status: 409, error: 'AlreadyApplied', message: 'Price change already applied.' })
+    const pc = match.pc
+    if (pc.status === 'APPLIED' || pc.status === 'ROLLED_BACK') {
+      return errorJson({
+        status: 409,
+        error: 'AlreadyApplied',
+        message: 'Price change already applied.',
+      })
     }
     if (pc.status === 'REJECTED') {
       return errorJson({
@@ -185,33 +246,188 @@ export const POST = withSecurity(
         })
       }
 
-      let updateResult: PriceUpdateResult
-      try {
-        updateResult = await connector.pricing.updatePrice({
-          externalId: variantId,
-          price: pc.toAmount,
-          currency: pc.currency,
-          metadata: {
-            priceChangeId: pc.id,
+      const attemptSummaries: Array<{
+        attempt: number
+        success: boolean
+        retryable: boolean
+        error?: string
+        delayMs?: number
+        rateLimit?: SerializedRateLimit
+        errorType?: string
+        completedAt: string
+      }> = []
+
+      let updateResult: PriceUpdateResult | null = null
+      let failure: { message: string; retryable: boolean } | null = null
+
+      for (let attempt = 1; attempt <= MAX_SHOPIFY_APPLY_ATTEMPTS; attempt += 1) {
+        const rateLimit = await guardShopifyRateLimit(connector)
+        const serializedRateLimit = serializeShopifyRateLimit(rateLimit)
+        await prisma().event.create({
+          data: {
+            id: createId(),
+            tenantId: pc.tenantId,
             projectId: pc.projectId,
+            kind: 'shopify.apply.attempt',
+            payload: {
+              priceChangeId: pc.id,
+              variantId,
+              attempt,
+              rateLimit: serializedRateLimit,
+            } satisfies Prisma.InputJsonValue,
           },
         })
-      } catch (err: unknown) {
-        const message =
-          err instanceof Error ? err.message : 'Failed to update price in Shopify for this price change.'
-        return errorJson({
-          status: 502,
-          error: 'ConnectorError',
-          message,
-        })
+
+        try {
+          const result = await connector.pricing.updatePrice({
+            externalId: variantId,
+            price: pc.toAmount,
+            currency: pc.currency,
+            metadata: {
+              priceChangeId: pc.id,
+              projectId: pc.projectId,
+            },
+          })
+
+          if (result.success) {
+            updateResult = result
+            const completedAt = new Date().toISOString()
+            attemptSummaries.push({
+              attempt,
+              success: true,
+              retryable: false,
+              rateLimit: serializedRateLimit,
+              completedAt,
+            })
+
+            await prisma().event.create({
+              data: {
+                id: createId(),
+                tenantId: pc.tenantId,
+                projectId: pc.projectId,
+                kind: 'shopify.apply.success',
+                payload: {
+                  priceChangeId: pc.id,
+                  variantId,
+                  attempt,
+                  appliedAt: completedAt,
+                  newPrice: result.newPrice ?? pc.toAmount,
+                  oldPrice: result.oldPrice ?? pc.fromAmount,
+                  currency: result.currency,
+                  rateLimit: serializedRateLimit,
+                } satisfies Prisma.InputJsonValue,
+              },
+            })
+
+            break
+          }
+
+          const errorMessage = result.error || 'Shopify rejected this price update.'
+          const retryable = Boolean(result.retryable)
+          const willRetry = retryable && attempt < MAX_SHOPIFY_APPLY_ATTEMPTS
+          const completedAt = new Date().toISOString()
+
+          attemptSummaries.push({
+            attempt,
+            success: false,
+            retryable,
+            error: errorMessage,
+            rateLimit: serializedRateLimit,
+            completedAt,
+          })
+
+          await prisma().event.create({
+            data: {
+              id: createId(),
+              tenantId: pc.tenantId,
+              projectId: pc.projectId,
+              kind: willRetry ? 'shopify.apply.retry' : 'shopify.apply.failed',
+              payload: {
+                priceChangeId: pc.id,
+                variantId,
+                attempt,
+                retryable,
+                error: errorMessage,
+                rateLimit: serializedRateLimit,
+              } satisfies Prisma.InputJsonValue,
+            },
+          })
+
+          if (!willRetry) {
+            failure = { message: errorMessage, retryable }
+            break
+          }
+
+          const delayMs = BASE_RETRY_DELAY_MS * 2 ** (attempt - 1)
+          attemptSummaries[attemptSummaries.length - 1].delayMs = delayMs
+          await sleep(delayMs)
+        } catch (err: unknown) {
+          const retryMetadata = extractRetryMetadata(err)
+          const willRetry = retryMetadata.retryable && attempt < MAX_SHOPIFY_APPLY_ATTEMPTS
+          const completedAt = new Date().toISOString()
+
+          attemptSummaries.push({
+            attempt,
+            success: false,
+            retryable: retryMetadata.retryable,
+            error: retryMetadata.message,
+            errorType: retryMetadata.type,
+            rateLimit: serializedRateLimit,
+            completedAt,
+          })
+
+          await prisma().event.create({
+            data: {
+              id: createId(),
+              tenantId: pc.tenantId,
+              projectId: pc.projectId,
+              kind: willRetry ? 'shopify.apply.retry' : 'shopify.apply.failed',
+              payload: {
+                priceChangeId: pc.id,
+                variantId,
+                attempt,
+                retryable: retryMetadata.retryable,
+                error: retryMetadata.message,
+                rateLimit: serializedRateLimit,
+                errorType: retryMetadata.type,
+              } satisfies Prisma.InputJsonValue,
+            },
+          })
+
+          if (!willRetry) {
+            failure = { message: retryMetadata.message, retryable: retryMetadata.retryable }
+            break
+          }
+
+          const delayMs = BASE_RETRY_DELAY_MS * 2 ** (attempt - 1)
+          attemptSummaries[attemptSummaries.length - 1].delayMs = delayMs
+          await sleep(delayMs)
+        }
       }
 
-      if (!updateResult.success) {
+      if (!updateResult || !updateResult.success) {
+        const failureMessage = failure?.message ?? 'Shopify rejected this price update.'
+        try {
+          await prisma().priceChange.update({
+            where: { id: pc.id },
+            data: {
+              connectorStatus: {
+                target: 'shopify',
+                state: 'ERROR',
+                errorMessage: failureMessage,
+                attempts: attemptSummaries,
+              } satisfies Prisma.InputJsonValue,
+            },
+          })
+        } catch (updateError) {
+          console.error('Failed to persist Shopify connector failure status', updateError)
+        }
+
         return errorJson({
           status: 502,
           error: 'ConnectorError',
-          message: updateResult.error || 'Shopify rejected this price update.',
-          details: { retryable: updateResult.retryable ?? false },
+          message: failureMessage,
+          details: { retryable: failure?.retryable ?? false },
         })
       }
 
@@ -220,6 +436,11 @@ export const POST = withSecurity(
         connector,
         variantId,
         result: updateResult,
+      }
+
+      shopifyContext.result.metadata = {
+        ...(shopifyContext.result.metadata ?? {}),
+        attempts: attemptSummaries,
       }
     }
 
@@ -231,13 +452,17 @@ export const POST = withSecurity(
             errorMessage: null,
             variantId: shopifyContext.variantId,
             externalId: shopifyContext.result.externalId,
-            updatedAt: shopifyContext.result.updatedAt.toISOString(),
+            updatedAt:
+              shopifyContext.result.updatedAt instanceof Date
+                ? shopifyContext.result.updatedAt.toISOString()
+                : new Date(shopifyContext.result.updatedAt ?? Date.now()).toISOString(),
             metadata: {
               priceChangeId: pc.id,
               projectId: pc.projectId,
               oldPrice: shopifyContext.result.oldPrice ?? pc.fromAmount,
               newPrice: shopifyContext.result.newPrice ?? pc.toAmount,
               currency: pc.currency,
+              attempts: shopifyContext.result.metadata?.attempts ?? null,
             },
           }
         : {

@@ -8,12 +8,13 @@ import { ShopifyWebhooks } from '@calibr/shopify-connector';
 import { prisma } from '@calibr/db';
 import type { Prisma } from '@calibr/db';
 import { createId } from '@paralleldrive/cuid2';
+import { withSecurity } from '@/lib/security-headers';
 
 type ShopifyIntegrationWithProject = Prisma.ShopifyIntegrationGetPayload<{
   include: { Project: true };
 }>;
 
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request: NextRequest) => {
   try {
     const signature = request.headers.get('x-shopify-hmac-sha256');
     const shopDomain = request.headers.get('x-shopify-shop-domain');
@@ -78,7 +79,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
+
+export const OPTIONS = withSecurity(async () => new NextResponse(null, { status: 204 }));
 
 /**
  * Process webhook based on topic
