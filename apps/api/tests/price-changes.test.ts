@@ -367,6 +367,15 @@ describe('price changes API', () => {
     shopifyMocks.initializeShopifyConnector.mockReset()
     shopifyMocks.initializeShopifyConnector.mockImplementation(async () => ({
       pricing: { updatePrice: shopifyMocks.updatePrice },
+      getConnectionStatus: async () => ({
+        connected: true,
+        rateLimit: {
+          limit: 40,
+          remaining: 30,
+          resetTime: new Date(),
+        },
+        shopInfo: null,
+      }),
     }))
     store.reset()
     clearSessions()
