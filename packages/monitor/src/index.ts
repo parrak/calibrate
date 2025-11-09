@@ -40,3 +40,16 @@ export {
   clearAllMetrics
 } from './performance'
 
+// Event bus metrics exports
+export {
+  type EventMetric,
+  type EventBusStats,
+  recordEventMetric,
+  getEventBusStats,
+  getSlowEvents,
+  getFailedEvents,
+  getEventsByCorrelation,
+  getAllEventMetrics,
+  clearEventMetrics
+} from './event-metrics'
+
