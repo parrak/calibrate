@@ -19,9 +19,15 @@ vi.mock('@/lib/api-client', () => ({
   },
 }))
 
-// Mock toast
+// Mock toast - create a stable reference
+const mockToast = {
+  success: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
+}
+
 vi.mock('@/components/Toast', () => ({
-  useToast: () => vi.fn(),
+  useToast: () => mockToast,
 }))
 
 const mockSession = {
@@ -69,7 +75,9 @@ describe('ProjectCatalog', () => {
 
   it('should render loading state initially', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockImplementation(() => new Promise(() => {}))
+    const mockFn = catalogApi.listProducts as ReturnType<typeof vi.fn>
+    mockFn.mockClear()
+    mockFn.mockImplementation(() => new Promise(() => {}))
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
     const skeletons = screen.getAllByTestId('skeleton')
@@ -78,7 +86,9 @@ describe('ProjectCatalog', () => {
 
   it('should render products after loading', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(mockProducts)
+    const mockFn = catalogApi.listProducts as ReturnType<typeof vi.fn>
+    mockFn.mockClear()
+    mockFn.mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -93,7 +103,9 @@ describe('ProjectCatalog', () => {
 
   it('should filter products by search query', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(mockProducts)
+    const mockFn = catalogApi.listProducts as ReturnType<typeof vi.fn>
+    mockFn.mockClear()
+    mockFn.mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -112,7 +124,9 @@ describe('ProjectCatalog', () => {
 
   it('should filter products by currency', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(mockProducts)
+    const mockFn = catalogApi.listProducts as ReturnType<typeof vi.fn>
+    mockFn.mockClear()
+    mockFn.mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -131,7 +145,9 @@ describe('ProjectCatalog', () => {
 
   it('should expand/collapse product details', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(mockProducts)
+    const mockFn = catalogApi.listProducts as ReturnType<typeof vi.fn>
+    mockFn.mockClear()
+    mockFn.mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -139,19 +155,24 @@ describe('ProjectCatalog', () => {
       expect(screen.getByText('Product One')).toBeInTheDocument()
     })
 
-    // Initially collapsed
+    // Initially collapsed - SKU codes should not be visible
     expect(screen.queryByText('SKU-001')).not.toBeInTheDocument()
 
-    // Click to expand - find the button containing the product name
-    const buttons = screen.getAllByRole('button')
-    const productButton = buttons.find((btn) => btn.textContent?.includes('Product One'))
+    // Find and click the product header button
+    const productNameElement = screen.getByText('Product One')
+    const productButton = productNameElement.closest('button')
+
+    expect(productButton).toBeTruthy()
+
     if (productButton) {
       fireEvent.click(productButton)
 
+      // Wait for expansion - SKU codes should now be visible (SKU-001 appears twice due to multiple prices)
       await waitFor(() => {
-        expect(screen.getByText('SKU-001')).toBeInTheDocument()
-        expect(screen.getByText('SKU-002')).toBeInTheDocument()
+        const sku001Elements = screen.getAllByText('SKU-001')
+        expect(sku001Elements.length).toBeGreaterThan(0)
       })
+      expect(screen.getByText('SKU-002')).toBeInTheDocument()
 
       // Click to collapse
       fireEvent.click(productButton)
@@ -175,7 +196,9 @@ describe('ProjectCatalog', () => {
     }))
 
     const { catalogApi } = await import('@/lib/api-client')
-    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(manyProducts)
+    const mockFn = catalogApi.listProducts as ReturnType<typeof vi.fn>
+    mockFn.mockClear()
+    mockFn.mockResolvedValue(manyProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -201,7 +224,9 @@ describe('ProjectCatalog', () => {
 
   it('should clear filters', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue(mockProducts)
+    const mockFn = catalogApi.listProducts as ReturnType<typeof vi.fn>
+    mockFn.mockClear()
+    mockFn.mockResolvedValue(mockProducts)
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -234,9 +259,9 @@ describe('ProjectCatalog', () => {
     }
 
     const { catalogApi } = await import('@/lib/api-client')
-    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new ApiError('Failed to load catalog', 500)
-    )
+    const mockFn = catalogApi.listProducts as ReturnType<typeof vi.fn>
+    mockFn.mockClear()
+    mockFn.mockRejectedValue(new ApiError('Failed to load catalog', 500))
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 
@@ -247,7 +272,9 @@ describe('ProjectCatalog', () => {
 
   it('should display empty state when no products', async () => {
     const { catalogApi } = await import('@/lib/api-client')
-    ;(catalogApi.listProducts as ReturnType<typeof vi.fn>).mockResolvedValue([])
+    const mockFn = catalogApi.listProducts as ReturnType<typeof vi.fn>
+    mockFn.mockClear()
+    mockFn.mockResolvedValue([])
 
     render(<ProjectCatalog params={{ slug: 'demo' }} />)
 

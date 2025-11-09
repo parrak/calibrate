@@ -106,15 +106,23 @@ describe('RulesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
     fireEvent.click(screen.getByRole('button', { name: /\+ SKU Code/i }))
 
-    expect(screen.getByText('sku')).toBeInTheDocument()
+    // Verify the SKU badge is present
+    const skuBadge = screen.getByText('sku')
+    expect(skuBadge).toBeInTheDocument()
 
-    // Find and click remove button
+    // Find and click remove button - look for button with SVG containing specific class
     const removeButtons = screen.getAllByRole('button')
-    const removeButton = removeButtons.find((btn) =>
-      btn.querySelector('svg.lucide-trash-2')
-    )
-    if (removeButton) fireEvent.click(removeButton)
+    const removeButton = removeButtons.find((btn) => {
+      const svg = btn.querySelector('svg')
+      return svg && svg.classList.contains('text-red-600')
+    })
 
+    expect(removeButton).toBeTruthy()
+    if (removeButton) {
+      fireEvent.click(removeButton)
+    }
+
+    // Verify the SKU badge is removed
     expect(screen.queryByText('sku')).not.toBeInTheDocument()
   })
 
