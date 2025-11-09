@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { withSecurity } from '@/lib/security-headers';
+import { decodeOAuthState, type ShopifyOAuthState } from '@/lib/shopify-oauth-state';
 import crypto from 'crypto';
 
 export const runtime = 'nodejs';
@@ -25,14 +26,16 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
   const code = searchParams.get('code');
   const hmac = searchParams.get('hmac');
   const shop = searchParams.get('shop');
-  const state = searchParams.get('state'); // projectSlug
+  const rawState = searchParams.get('state'); // encoded state payload
   const timestamp = searchParams.get('timestamp');
 
   // Validate required params
-  if (!code || !hmac || !shop || !state) {
-    console.error('Missing OAuth callback parameters', { code: !!code, hmac: !!hmac, shop, state });
-    return redirectToConsoleWithError(state, 'missing_parameters');
+  if (!code || !hmac || !shop || !rawState) {
+    console.error('Missing OAuth callback parameters', { code: !!code, hmac: !!hmac, shop, state: rawState });
+    return redirectToConsoleWithError(null, 'missing_parameters');
   }
+
+  const state = decodeOAuthState(rawState) ?? { projectSlug: rawState, host: null };
 
   // Verify HMAC signature
   const apiSecret = process.env.SHOPIFY_API_SECRET;
@@ -44,7 +47,8 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
   // Log callback parameters for debugging (without sensitive values)
   console.log('Shopify OAuth callback received:', {
     shop,
-    state,
+    project: state.projectSlug,
+    hasHost: !!state.host,
     hasCode: !!code,
     hasHmac: !!hmac,
     hasTimestamp: !!timestamp,
@@ -54,7 +58,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
   if (!verifyShopifyHMAC(searchParams, hmac, apiSecret, req.url)) {
     console.error('Invalid HMAC signature', {
       shop,
-      state,
+      state: state.projectSlug,
       apiSecretConfigured: !!apiSecret,
     });
     return redirectToConsoleWithError(state, 'invalid_signature');
@@ -98,7 +102,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          projectSlug: state,
+          projectSlug: state.projectSlug,
           platformName: shop, // Required by POST endpoint
           credentials: {
             shopDomain: shop,
@@ -120,9 +124,13 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
 
     // Redirect to console success page
     const consoleUrl = process.env.NEXT_PUBLIC_CONSOLE_URL || 'https://console.calibr.lat';
-    return NextResponse.redirect(
-      `${consoleUrl}/p/${state}/integrations/shopify?success=true`
-    );
+    const redirectUrl = new URL(`/p/${state.projectSlug}/integrations/shopify`, consoleUrl);
+    redirectUrl.searchParams.set('success', 'true');
+    if (state.host) {
+      redirectUrl.searchParams.set('host', state.host);
+    }
+
+    return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error('OAuth callback error:', error);
     return redirectToConsoleWithError(state, 'unexpected_error');
@@ -203,13 +211,18 @@ function verifyShopifyHMAC(
 /**
  * Redirect to console with error parameter
  */
-function redirectToConsoleWithError(projectSlug: string | null, error: string): NextResponse {
+function redirectToConsoleWithError(state: ShopifyOAuthState | null, error: string): NextResponse {
   const consoleBase = process.env.NEXT_PUBLIC_CONSOLE_URL || 'https://console.calibr.lat';
-  const consoleUrl = projectSlug
-    ? `${consoleBase}/p/${projectSlug}/integrations/shopify?error=${error}`
-    : `${consoleBase}/integrations/shopify?error=${error}`;
+  const path = state?.projectSlug
+    ? `/p/${state.projectSlug}/integrations/shopify`
+    : '/integrations/shopify';
+  const url = new URL(path, consoleBase);
+  url.searchParams.set('error', error);
+  if (state?.host) {
+    url.searchParams.set('host', state.host);
+  }
 
-  return NextResponse.redirect(consoleUrl);
+  return NextResponse.redirect(url);
 }
 
 export const OPTIONS = withSecurity(async () => {
