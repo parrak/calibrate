@@ -137,7 +137,7 @@ export const POST = withSecurity(async (req: NextRequest) => {
       total: products.length,
       products: ingestedProducts.map(p => ({
         id: p.id,
-        externalId: p.metadata?.asin,
+        externalId: (p.channelRefs as any)?.amazon?.asin,
         title: p.title,
         sku: p.sku,
         status: p.status
