@@ -38,24 +38,29 @@ vi.mock('@calibr/db', () => ({
   prisma: vi.fn(() => mockPrismaClient),
 }))
 
-// Mock analytics package
-vi.mock('../../../../packages/analytics/index', () => ({
-  getAnalyticsOverview: vi.fn().mockResolvedValue({
-    summary: {
-      totalSkus: 10,
-      totalPriceChanges: 5,
-      approvalRate: 0.8,
-      averageChangePerDay: 0.5,
-    },
-    trends: {
-      priceChanges: { current: 3, previous: 2, direction: 'up', changePercent: 50 },
-      averagePrice: { current: 10000, previous: 9500, direction: 'up', changePercent: 5.26 },
-    },
-    topPerformers: {
-      byMargin: [],
-      bySales: [],
-    },
-  }),
+// Mock analytics package - use the same relative path as the route imports
+// Route imports from: '../../../../../../../packages/analytics/index'
+// From test file, we need to match the module resolution
+const mockGetAnalyticsOverview = vi.fn().mockResolvedValue({
+  summary: {
+    totalSkus: 10,
+    totalPriceChanges: 5,
+    approvalRate: 0.8,
+    averageChangePerDay: 0.5,
+  },
+  trends: {
+    priceChanges: { current: 3, previous: 2, direction: 'up', changePercent: 50 },
+    averagePrice: { current: 10000, previous: 9500, direction: 'up', changePercent: 5.26 },
+  },
+  topPerformers: {
+    byMargin: [],
+    bySales: [],
+  },
+})
+
+// Mock using the exact relative path the route uses
+vi.mock('../../../../../../../packages/analytics/index', () => ({
+  getAnalyticsOverview: mockGetAnalyticsOverview,
 }))
 
 // Mock shopify connector
@@ -82,6 +87,23 @@ describe('Console Errors Regression Tests', () => {
     mockPrismaClient.project.findFirst.mockReset()
     mockPrismaClient.product.findFirst.mockReset()
     mockPrismaClient.product.findMany.mockReset()
+    // Reset analytics mock
+    mockGetAnalyticsOverview.mockResolvedValue({
+      summary: {
+        totalSkus: 10,
+        totalPriceChanges: 5,
+        approvalRate: 0.8,
+        averageChangePerDay: 0.5,
+      },
+      trends: {
+        priceChanges: { current: 3, previous: 2, direction: 'up', changePercent: 50 },
+        averagePrice: { current: 10000, previous: 9500, direction: 'up', changePercent: 5.26 },
+      },
+      topPerformers: {
+        byMargin: [],
+        bySales: [],
+      },
+    })
   })
 
   describe('Catalog API - Error Handling', () => {
@@ -217,7 +239,8 @@ describe('Console Errors Regression Tests', () => {
 
       expect(config.apiKey).toBe('test-key')
       expect(config.apiSecret).toBe('test-secret')
-      expect(config.webhookSecret).toBeUndefined()
+      // webhookSecret defaults to empty string to satisfy TypeScript type requirements
+      expect(config.webhookSecret).toBe('')
       expect(config.isActive).toBe(true)
     })
 
