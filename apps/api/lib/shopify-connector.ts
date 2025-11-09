@@ -4,6 +4,7 @@ import {
   ShopifyWebhooks,
   ShopifyPricing,
   type ShopifyConfig as ConnectorConfig,
+  type ShopifyRateLimit,
 } from '@calibr/shopify-connector';
 
 interface IntegrationCredentials {
@@ -79,4 +80,21 @@ export function getPricingClient(connector: ShopifyConnector): ShopifyPricing {
     throw new Error('Shopify pricing client not initialized');
   }
   return pricingClient;
+}
+
+export function serializeShopifyRateLimit(rateLimit?: ShopifyRateLimit | null) {
+  if (!rateLimit) {
+    return null;
+  }
+
+  const resetTime =
+    rateLimit.resetTime instanceof Date
+      ? rateLimit.resetTime.toISOString()
+      : new Date(rateLimit.resetTime).toISOString();
+
+  return {
+    limit: rateLimit.limit,
+    remaining: rateLimit.remaining,
+    resetTime,
+  };
 }

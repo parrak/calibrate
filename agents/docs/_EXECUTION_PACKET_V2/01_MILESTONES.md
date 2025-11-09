@@ -32,6 +32,7 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 **Success**
 - Real tenant ingest; write-back applies a single price change and surfaces audit.
+- ✅ Shopify apply flow hardened with retries, sanitized health telemetry, and structured event logging (Agent B — Codex).
 
 ---
 
