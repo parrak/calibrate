@@ -22,13 +22,15 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
     setError(null)
 
     try {
-      // Get project ID from slug (simplified - in production would query API)
+      // Use API base URL from environment
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
       const response = await fetch(
-        `/api/v1/analytics/${projectSlug}?days=${days}`
+        `${apiBase}/api/v1/analytics/${projectSlug}?days=${days}`
       )
 
       if (!response.ok) {
-        throw new Error('Failed to fetch analytics')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || errorData.error || 'Failed to fetch analytics')
       }
 
       const analytics = await response.json()

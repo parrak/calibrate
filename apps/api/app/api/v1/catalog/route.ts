@@ -3,14 +3,18 @@ import { prisma } from '@calibr/db'
 import { withSecurity } from '@/lib/security-headers'
 
 export const GET = withSecurity(async (req: NextRequest) => {
-  const productCode = req.nextUrl.searchParams.get('productCode')
-  const projectSlug = req.nextUrl.searchParams.get('project')
+  try {
+    const productCode = req.nextUrl.searchParams.get('productCode')
+    const projectSlug = req.nextUrl.searchParams.get('project')
 
-  if (!projectSlug) {
-    return NextResponse.json({ error: 'project required' }, { status: 400 })
-  }
-  const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
-  if (!project) return NextResponse.json({ error: 'project not found' }, { status: 404 })
+    if (!projectSlug) {
+      return NextResponse.json({ error: 'project required' }, { status: 400 })
+    }
+    
+    const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
+    if (!project) {
+      return NextResponse.json({ error: 'project not found' }, { status: 404 })
+    }
 
   // If productCode is provided, return single product
   if (productCode) {
@@ -78,7 +82,17 @@ export const GET = withSecurity(async (req: NextRequest) => {
     }
   })
 
-  return NextResponse.json({ products: productsWithSkus })
+    return NextResponse.json({ products: productsWithSkus })
+  } catch (error) {
+    console.error('[Catalog API] Error:', error)
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch catalog',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    )
+  }
 })
 
 // Handle OPTIONS preflight requests
