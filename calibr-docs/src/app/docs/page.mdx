@@ -1,120 +1,94 @@
-# 📘 Calibr — Webhook Pricing API (Docs v0.1)
+# 📚 Calibr Product Documentation (Docs v0.2)
 
-**What is Calibr?**  
-Calibr is a webhook-driven pricing engine. You send **price suggestions**; Calibr enforces **guardrails** (floors/ceilings, delta limits, daily budgets) and creates a **review queue** or **auto-applies** the change to your catalog and connected channels (e.g., Shopify) with full audit & rollback.
+Calibr is a composable pricing control plane for omnichannel commerce. Merchants ingest live prices, stream competitive signals, apply guardrails, and roll out approved updates across Shopify, Amazon, and first-party storefronts with full governance.
 
-**Base URLs**
-- **API**: `https://api.calibr.lat`
-- **Console**: `https://console.calibr.lat`
-- **This docs site**: `https://docs.calibr.lat`
+## Table of contents
+
+- [Platform overview](#platform-overview)
+- [System architecture](#system-architecture)
+- [Core pricing workflow](#core-pricing-workflow)
+  - [1. Ingest price suggestions](#1-ingest-price-suggestions)
+  - [2. Guardrail evaluation](#2-guardrail-evaluation)
+  - [3. Review, approve, apply](#3-review-approve-apply)
+  - [4. Channel synchronization](#4-channel-synchronization)
+- [Merchant console](#merchant-console)
+- [Analytics & copilot intelligence](#analytics--copilot-intelligence)
+- [Channel connectors](#channel-connectors)
+- [API surface](#api-surface)
+- [Data model quick reference](#data-model-quick-reference)
+- [Security & compliance](#security--compliance)
+- [Operations & monitoring](#operations--monitoring)
+- [Environments & onboarding](#environments--onboarding)
+- [Testing & sandbox flows](#testing--sandbox-flows)
 
 ---
 
-## ⚡ Quickstart
+## Platform overview
 
-1) **Get your Webhook Secret**  
-From the Calibr console: **Settings → Webhooks → Secret** (e.g., `whsec_***`).
+- **Pricing guardrails:** Policy evaluation (floors, ceilings, % deltas, budgets) runs on every suggestion before it reaches a human or connector.
+- **Governance workflow:** Price changes move through `PENDING → APPROVED → APPLIED`, with rollback support and per-role permissions.
+- **Explainability:** Each action writes to an append-only audit/event log for traceability and downstream automation.
+- **Composable services:** Dedicated packages handle AI suggestions, analytics rollups, connectors, monitoring, and security primitives.
 
-2) **Post a signed price suggestion**
+Base URLs:
+
+| Surface | URL |
+|---------|-----|
+| API     | `https://api.calibr.lat` |
+| Console | `https://console.calibr.lat` |
+| Docs    | `https://docs.calibr.lat` |
+
+---
+
+## System architecture
+
+```text
+calibrate/
+├── packages/
+│   ├── pricing-engine     # Guardrails, rule DSL, AI assisted suggestions
+│   ├── connectors         # Shopify + Amazon channel clients
+│   ├── analytics          # Daily snapshots, anomaly detection, insights
+│   ├── ai-engine          # Price recommendation models + explainers
+│   ├── monitor            # Request logging + metrics helpers
+│   ├── security           # HMAC signing, RBAC utilities, idempotency
+│   └── db                 # Prisma schema, migrations, event log
+└── apps/
+    ├── api                # Next.js API routing layer
+    ├── console            # Merchant console (Next.js App Router)
+    ├── site               # Marketing site
+    └── docs               # (legacy) static docs, superseded by this site
+```
+
+Each app consumes shared packages via pnpm/Turborepo and deploys independently (Railway for API, Vercel for web surfaces).
+
+---
+
+## Core pricing workflow
+
+### 1. Ingest price suggestions
+
+External systems send signed suggestions to the webhook endpoint.
+
 ```bash
-ts=$(date +%s)
-body='{"idempotencyKey":"sample_1","skuCode":"PRO-M","currency":"USD","proposedAmount":5290,"source":"AI"}'
-sig=$(printf "%s.%s" "$ts" "$body" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" -hex | sed 's/^.* //')
-curl -sS -X POST "https://api.calibr.lat/api/v1/webhooks/price-suggestion" \
-  -H "Content-Type: application/json" \
-  -H "X-Calibr-Signature: t=$ts,v1=$sig" \
-  -d "$body" | jq .
+POST https://api.calibr.lat/api/v1/webhooks/price-suggestion
 ```
 
-3. **Review/Apply (if not auto-applied)**
+Payload fields:
 
-```bash
-curl -s "https://api.calibr.lat/api/v1/price-changes?status=PENDING" | jq .
-curl -s -X POST "https://api.calibr.lat/api/v1/price-changes/<id>/approve" | jq .
-curl -s -X POST "https://api.calibr.lat/api/v1/price-changes/<id>/apply" | jq .
-```
+- `idempotencyKey` — dedupe per tenant.
+- `skuCode`, `currency`, `proposedAmount` — target SKU and price in minor units.
+- `context` — optional metadata (region, evidence URLs, experiment IDs).
+- `source` — `AI | RULE | MANUAL | CONNECTOR` for attribution.
 
----
+Sign requests with `X-Calibr-Signature: t=<unix_ts>,v1=<sha256>` using your webhook secret. Clock skew tolerance is ±5 minutes.
 
-## 🔐 Security & Auth
+### 2. Guardrail evaluation
 
-* **HMAC header**: `X-Calibr-Signature: t=<unix_ts>,v1=<hex_sha256>`
-  Signature is computed over `<ts>.<raw_body>` using your **Webhook Secret**.
-* **Clock tolerance**: 5 minutes.
-* **Idempotency**: include a unique `idempotencyKey` per suggestion. Duplicates return `{ status: "duplicate" }`.
-* **HTTPS only**: all endpoints require TLS.
+`@calibr/pricing-engine` evaluates policy checks (floors/ceilings, % delta, daily budgets) and competitor-aware rules before a change enters the queue. The engine exposes helpers to preview rule impact, simulate connectors, and call out to AI suggestion services when needed.
 
----
+### 3. Review, approve, apply
 
-## 🧾 Webhook: Price Suggestion
-
-**Endpoint**: `POST /api/v1/webhooks/price-suggestion`
-**Purpose**: Propose a new price for a SKU in minor units (e.g., cents).
-
-### Request body (JSON)
-
-```json
-{
-  "idempotencyKey": "pc_2025_10_19_001",
-  "skuCode": "PRO-M",
-  "currency": "USD",
-  "proposedAmount": 5290,
-  "context": { "region": "US", "reason": "competitor_drop", "evidenceUrl": "https://example.com/screenshot" },
-  "source": "AI"
-}
-```
-
-**Fields**
-
-* `idempotencyKey` *(string, required)*: unique per suggestion.
-* `skuCode` *(string, required)*: your SKU code registered in Calibr.
-* `currency` *(ISO 4217, required)*: e.g., `USD`, `EUR`.
-* `proposedAmount` *(integer, required)*: minor units (e.g., 5290 = $52.90).
-* `context` *(object, optional)*: arbitrary metadata (region, source signals).
-* `source` *(enum, required)*: `AI | RULE | MANUAL | CONNECTOR`.
-
-### Headers
-
-* `Content-Type: application/json`
-* `X-Calibr-Signature: t=<ts>,v1=<hex>`
-
-### Success response (200)
-
-```json
-{
-  "id": "pc_abc123",
-  "status": "PENDING",
-  "policyResult": {
-    "ok": true,
-    "checks": [
-      { "name": "maxPctDelta", "ok": true, "deltaPct": 0.08, "limit": 0.15 },
-      { "name": "dailyBudget", "ok": true, "used": 0.12, "limit": 0.25 }
-    ]
-  }
-}
-```
-
-### Error responses
-
-* 400 invalid payload / schema
-* 401 invalid signature
-* 404 unknown SKU or price
-* 429 rate limit exceeded
-* 500 server error
-
----
-
-## 🧮 Policy Guardrails (examples)
-
-* **Max % delta per change**: e.g., `≤ 15%`
-* **Daily change budget**: e.g., `≤ 25%`
-* **Floors/Ceilings**: per SKU
-* **Channel constraints**: e.g., Amazon fair pricing
-* **Time windows**: no changes during peak hours
-
----
-
-## 🧑‍⚖️ Human Review & Actions
+Humans (or automation) interact with the governance endpoints:
 
 ```
 GET  /api/v1/price-changes?status=PENDING|APPROVED|APPLIED|REJECTED|FAILED|ROLLED_BACK
@@ -124,54 +98,119 @@ POST /api/v1/price-changes/:id/reject
 POST /api/v1/price-changes/:id/rollback
 ```
 
----
+Responses include policy results, connector sync states, and audit metadata so the console can reflect live status and guardrail explanations.
 
-## 🧰 HMAC Signing & Verification (Node.js)
+### 4. Channel synchronization
 
-```js
-import crypto from "crypto";
-export function sign(body, secret) {
-  const ts = Math.floor(Date.now()/1000);
-  const digest = crypto.createHmac("sha256", secret).update(`${ts}.${body}`).digest("hex");
-  return `t=${ts},v1=${digest}`;
-}
-export function verify(rawBody, header, secret, toleranceSec=300) {
-  const parts = Object.fromEntries(header.split(",").map(p => p.split("=")));
-  const ts = Number(parts.t); const v1 = parts.v1;
-  if (!ts || !v1) return false;
-  const now = Math.floor(Date.now()/1000);
-  if (Math.abs(now - ts) > toleranceSec) return false;
-  const calc = crypto.createHmac("sha256", secret).update(`${ts}.${rawBody}`).digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(v1), Buffer.from(calc));
-}
-```
+Connector workers push applied price changes back to commerce channels. Shopify updates return simulated variant payloads today; Amazon uses the SP-API wrapper and can operate in dry-run or live feed mode. Connector state is attached to the price change item (e.g., `SYNCING`, `SYNCED`, `ERROR`) for real-time visibility.
 
 ---
 
-## 🧪 Testing Recipes
+## Merchant console
 
-* **Floor breach → PENDING (`ok=false`)**
+- **Project switcher & onboarding:** Users create projects, validate slug availability, and attach connectors during onboarding flows.
+- **Price change workspace:** Table view with status filters, full-text search, cursor pagination, and optimistic UI for approve/apply/reject/rollback.
+- **Context drawer:** Diff cards show `from → to` pricing, percentage deltas, policy check results, connector telemetry, and raw payload JSON.
+- **Role-aware actions:** RBAC enforces VIEWER/EDITOR/ADMIN/OWNER capabilities—only admins can apply or rollback.
+- **AI explainability:** Inline AI copilot explains the rationale behind suggested deltas using guardrail + analytics context.
 
-```bash
-ts=$(date +%s); body='{"idempotencyKey":"t_floor","skuCode":"PRO-M","currency":"USD","proposedAmount":3500,"source":"AI"}'
-sig=$(printf "%s.%s" "$ts" "$body" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" -hex | sed 's/^.* //')
-curl -sS -X POST https://api.calibr.lat/api/v1/webhooks/price-suggestion \
- -H "Content-Type: application/json" -H "X-Calibr-Signature: t=$ts,v1=$sig" -d "$body" | jq .
-```
-
-* **Within policy (APPROVED or PENDING)**
-
-```bash
-ts=$(date +%s); body='{"idempotencyKey":"t_ok","skuCode":"PRO-M","currency":"USD","proposedAmount":5290,"source":"AI"}'
-sig=$(printf "%s.%s" "$ts" "$body" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" -hex | sed 's/^.* //')
-curl -sS -X POST https://api.calibr.lat/api/v1/webhooks/price-suggestion \
- -H "Content-Type: application/json" -H "X-Calibr-Signature: t=$ts,v1=$sig" -d "$body" | jq .
-```
+The console calls the same public API endpoints shown above, using the authenticated user’s API token and `Idempotency-Key` headers for mutations.
 
 ---
 
-## ⏱️ Rate Limits (default)
+## Analytics & copilot intelligence
 
-* Suggestions: 60/min per source key
-* Admin actions: 30/min per user
-* Bursty traffic allowed; 429 has `Retry-After`
+- **Daily snapshots:** `/api/v1/analytics-digest` aggregates project performance, revenue deltas, and top performers. It highlights anomalies such as 20% price spikes or margin compression and persists the digest for reporting.
+- **Trend & anomaly helpers:** `@calibr/analytics` offers utilities for rolling aggregates, anomaly detection, and weekly insight digests.
+- **Copilot query endpoint:** `/api/v1/copilot` turns natural-language prompts into tenant-scoped SQL, enforces RBAC, sanitises queries, logs every execution, and redacts sensitive fields before returning results.
+- **AI price suggestions:** `@calibr/ai-engine` can generate candidate price moves with accompanying explanations that flow through the same guardrails as manual updates.
+
+---
+
+## Channel connectors
+
+| Channel  | Status | Capabilities |
+|----------|--------|--------------|
+| Shopify  | ✅ Stubbed write-back today. Logs variant updates, simulates Admin API responses, and lays groundwork for rate-limit aware retries. |
+| Amazon   | ✅ SP-API client with feeds, catalog, and competitive pricing helpers. Supports dry-run mode without credentials and feed submission when configured. |
+| Custom / Other | 🛠️ Use the connector interfaces in `@calibr/connectors` or `@calibr/platform-connector` to build additional targets while reusing policy + audit plumbing. |
+
+Each connector emits event log entries and updates the price change’s `connectorStatus` block so operators can monitor cross-channel propagation.
+
+---
+
+## API surface
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/v1/webhooks/price-suggestion` | Accept signed price suggestions and enqueue them for policy evaluation. |
+| `GET /api/v1/price-changes` | List price changes with filters (`status`, search `q`, cursor pagination) and role metadata. |
+| `POST /api/v1/price-changes/:id/(approve|apply|reject|rollback)` | Transition a price change through the governance workflow. |
+| `GET /api/v1/catalog` | Fetch products, SKUs, prices, connectors, and policy metadata for a project. |
+| `GET /api/v1/audit` | Retrieve audit trail entries and explainability payloads for compliance reviews. |
+| `GET /api/v1/competitors` | Manage competitor watchlists and latest scraped pricing. |
+| `POST /api/v1/analytics-digest` | Generate daily digest (invoked by cron or manual trigger). |
+| `POST /api/v1/copilot` | Execute AI-assisted analytics queries (read-only). |
+| `GET /api/health`, `GET /api/healthz`, `GET /api/metrics`, `GET /api/metrics/enhanced` | Operational health and Prometheus-style metrics. |
+| `POST /api/projects` | Create projects during onboarding; returns slug, tenant linkage, and membership. |
+| `GET /api/projects` | List a user’s projects plus attached Shopify/Amazon integrations. |
+
+Authentication uses session tokens issued from the console. Supply `Authorization: Bearer <token>` on API calls, plus `X-Calibr-Project` headers when acting on a specific workspace.
+
+---
+
+## Data model quick reference
+
+Key Prisma models in `@calibr/db`:
+
+- **Project & Tenant:** Multitenant scoping with owner memberships and connector associations.
+- **Sku & Price:** Current catalog pricing, including cost metadata stored in JSON attributes.
+- **PriceChange:** Tracks every proposed change, status, policy result, connector state, timestamps, and context payloads.
+- **Audit & EventLog:** Append-only stores for explainability traces, webhook events, and connector sync results.
+- **Competitor***:** Watchlists, competitor products, and captured competitor price points with timestamps.
+- **AmazonIntegration / ShopifyIntegration:** OAuth tokens, sync status, and channel configuration metadata.
+- **CopilotQueryLog:** History of NL→SQL requests, resolved SQL, execution metrics, and schema versioning for analytics governance.
+
+---
+
+## Security & compliance
+
+- **HMAC webhook signatures:** All incoming suggestions must be signed with tenant-specific secrets; signatures expire after 5 minutes.
+- **RBAC enforcement:** API checks membership roles (VIEWER/EDITOR/ADMIN/OWNER) before allowing mutations or sensitive reads.
+- **Idempotency:** Webhook payloads and mutation endpoints require `Idempotency-Key` headers; duplicates short-circuit safely.
+- **Rate limiting:** In-memory defaults ship with 60 suggestions/minute per project, 100 governance actions per 5 minutes, and permissive health limits. Swap the store for Redis in production.
+- **Security headers:** Responses include strict transport security, frame guards, and CORS allowances for console + docs hosts.
+- **Audit log:** Every governance action, connector sync, and copilot query is persisted for compliance review and rollback tooling.
+
+---
+
+## Operations & monitoring
+
+- **Request tracing:** `withMonitoring` wraps API routes with structured logging, request IDs, latency metrics, and error reporting via `@calibr/monitor`.
+- **Metrics endpoints:** `/api/metrics` exposes Prometheus-style counters/histograms; `/api/metrics/enhanced` includes latency percentiles and connector stats.
+- **Health checks:** `/api/health` (lightweight) and `/api/health/comprehensive` (DB + external dependencies) back deployment probes.
+- **Cron jobs:** Vercel cron triggers analytics digest generation; additional admin routes surface background job state, alert backlogs, and security posture snapshots.
+
+---
+
+## Environments & onboarding
+
+1. **Create an account** at the console (`https://console.calibr.lat`).
+2. **Create a project:** Choose a slug, invite teammates, and connect Shopify/Amazon when ready.
+3. **Retrieve credentials:** Copy your webhook secret and API token from project settings.
+4. **Send suggestions:** Use the webhook recipe above or the SDK helpers in `@calibr/security` to sign requests.
+5. **Review & ship:** Approve or auto-apply guardrail-safe changes, monitor connector statuses, and schedule analytics digests.
+
+Staging environments live at `staging-*.calibr.lat` with mirrored functionality for sandbox testing.
+
+---
+
+## Testing & sandbox flows
+
+- **Sample curl:** Try the quickstart snippet from the webhook section to submit a synthetic price change.
+- **Guardrail validation:** Adjust proposed amounts to trigger `policyResult.ok=false` and observe pending status + audit entry.
+- **Rollback drills:** Apply a change, then POST to `/api/v1/price-changes/:id/rollback` to verify connector compensation logic.
+- **Copilot QA:** Ask `/api/v1/copilot` natural-language questions (e.g., “Which SKUs had margin compression yesterday?”) to confirm RBAC-scoped analytics.
+- **Analytics digest:** Manually POST to `/api/v1/analytics-digest?project=<slug>` in staging to preview the daily summary payload.
+
+Need deeper integration support? Reach out via the console help beacon or email support@calibr.lat.
