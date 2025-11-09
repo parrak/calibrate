@@ -7,6 +7,37 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Copilot Read-Only (M1.4) — Intelligence Layer**
+  - Implemented `/api/v1/copilot` endpoint with schema-aware NL→SQL/GraphQL generation using GPT-4
+  - RBAC enforcement: checks user project membership and role (VIEWER, EDITOR, ADMIN, OWNER)
+  - SQL injection guards: validates read-only queries, blocks INSERT/UPDATE/DELETE/DROP operations
+  - Query logging with audit trail: new `CopilotQueryLog` table tracks all queries with resolved schemas and tenant scope
+  - Schema versioning: tracks schema version (1.4.0) for query generation compatibility
+  - Dual query modes: AI-powered (GPT-4) and pattern-based fallback for offline operation
+  - Pattern matching: supports common queries (price explanations, what-if simulations, margin analysis, trend queries)
+  - Cross-tenant isolation: enforces projectId filtering to prevent data leakage
+  - Query metadata: tracks execution time, result counts, user roles, and query types (read/aggregate/explain)
+  - Console UI: new `CopilotDrawer` and `CopilotButton` components for natural language pricing queries
+  - Floating action button: easily accessible copilot interface on all console pages
+  - Suggested queries: context-aware query suggestions to guide users
+  - Analytics digest cron job: daily digest generation with anomaly detection
+  - New `AnalyticsDigest` table: stores daily snapshots with detected anomalies and top performers
+  - Anomaly detection:
+    - Price spikes: detects >20% price increases in 24 hours (severity: medium/high/critical)
+    - Margin compression: flags products with <15% margin after price changes
+    - High volatility: identifies SKUs with >3 price changes in 7 days
+    - Unusual volume: alerts on abnormally high price change counts (>50 in 24h)
+  - Vercel cron integration: scheduled daily at 1:00 AM UTC via `/api/v1/analytics-digest`
+  - Comprehensive test coverage: 18+ tests for copilot queries, RBAC, logging, and anomaly detection
+  - See `agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md` (M1.4) for specification
+
+- **Competitor Monitoring: API Testing & UI Integration**
+  - Fixed CompetitorMonitor component to use projectSlug for monitoring
+  - Added createRule API method to competitorsApi client
+  - Added security headers (withSecurity wrapper) to all competitor endpoints
+  - Created manual API test script (`scripts/test-competitor-api.ps1`) for endpoint verification
+  - Updated 04_kickoff_checklist.md with competitor monitoring testing progress
+
 - **Pricing Engine: Rules DSL and MVP Implementation** (M1.1 — Engine Team)
   - Implemented complete rules DSL with selector, transform, and schedule definitions
   - Selector predicates: match by SKU, tags, price range, or custom fields with AND/OR operators
@@ -23,10 +54,27 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - See `agents/docs/_EXECUTION_PACKET_V2/M1.1_COMPLETION_SUMMARY.md` for complete documentation
 
 ### Fixed
+- **Console & API: Test Failures and Schema Mismatches** (PR #58)
+  - Fixed mock hoisting issue in regression-schema-mismatch.test.ts by using path alias `@/lib/auth-security`
+  - Fixed status parameter validation test to account for case-insensitive API behavior
+  - Fixed RSC route handling test to check query string for `_rsc` parameter
+  - Fixed M0.1 fields test to check fields after adding them to mock object
+  - All 26 regression tests now passing (8 in regression-schema-mismatch, 18 in regression-console-errors)
+- **Competitor Monitoring: Component & API Fixes**
+  - Fixed CompetitorMonitor component to pass projectSlug to monitor API endpoint
+  - Fixed CompetitorRules component to properly create rules via API
+  - Added missing security headers to competitor [id] and [id]/products] routes
+  - Fixed API client to include createRule method for competitor rules
 - **Console: Drawer Component Blocking Interactions**
   - Fixed Drawer component rendering invisible elements when closed that could block page interactions
   - Drawer now returns null when closed, completely removing from DOM instead of just hiding with CSS
   - Eliminates pointer-events-none elements interfering with click targets on pages like price-changes
+- **Console: API Error Fixes** (PR #51)
+  - Fixed price-changes API 400 errors by setting proper API_BASE defaults (`'https://api.calibr.lat'`) in console components
+  - Fixed catalog API 500 errors by adding proper error handling with try-catch blocks
+  - Fixed analytics API 404 errors by supporting both projectId and project slug parameters
+  - Made SHOPIFY_WEBHOOK_SECRET optional in Shopify connector config to prevent sync failures
+  - Added regression test suite to prevent reintroduction of these errors
 
 ### Added
 - **Connectors: Shopify health telemetry** (Agent B — Codex)

@@ -26,6 +26,8 @@ const config: Config = {
         foreground: 'var(--fg)',
         input: 'var(--border)',
         ring: 'var(--brand)',
+        card: 'var(--card)',
+        'card-foreground': 'var(--card-foreground)',
       },
       borderColor: {
         DEFAULT: 'var(--border)',

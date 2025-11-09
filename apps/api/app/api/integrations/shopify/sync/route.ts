@@ -84,6 +84,17 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
       );
     }
 
+    // Log integration details for debugging (mask access token)
+    console.log('Retrieved Shopify integration from database:', {
+      id: integration.id,
+      projectId: integration.projectId,
+      shopDomain: integration.shopDomain,
+      accessTokenLength: integration.accessToken?.length || 0,
+      accessTokenPrefix: integration.accessToken ? integration.accessToken.substring(0, 8) + '...' : 'none',
+      scope: integration.scope,
+      isActive: integration.isActive,
+    });
+
     const connector = await initializeShopifyConnector(integration);
 
     // Update sync status to in progress (only for non-test actions)

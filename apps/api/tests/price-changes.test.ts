@@ -63,6 +63,17 @@ type StoreState = {
     scope: string
     isActive: boolean
   }>
+  audit: Array<{
+    id: string
+    tenantId: string
+    projectId: string | null
+    entity: string
+    entityId: string
+    action: string
+    actor: string
+    explain: Record<string, any> | null
+    createdAt: Date
+  }>
 }
 
 const uid = () => Math.random().toString(36).slice(2)
@@ -181,6 +192,7 @@ const initialState = (): StoreState => ({
       isActive: true,
     },
   ],
+  audit: [],
 })
 
 const store = (() => {
@@ -314,6 +326,13 @@ const store = (() => {
           return true
         })
         return clone(matches ?? null)
+      },
+    },
+    audit: {
+      create: async ({ data }: any) => {
+        const record = { id: `audit_${uid()}`, createdAt: new Date(), ...data }
+        state.audit.push(record)
+        return clone(record)
       },
     },
     $transaction: async (cb: any) => cb(client),
@@ -669,5 +688,94 @@ describe('price changes API', () => {
     })
     const res = await applyRoute(req, paramsFor('pc_approved') as any)
     expect(res.status).toBe(403)
+  })
+
+  it('creates audit record when approving a price change', async () => {
+    const token = makeToken('user-editor')
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_pending/approve', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+      },
+    })
+    const initialAuditCount = store.state.audit.length
+    const res = await approveRoute(req, paramsFor('pc_pending') as any)
+    expect(res.status).toBe(200)
+
+    // Verify audit record was created
+    expect(store.state.audit.length).toBe(initialAuditCount + 1)
+    const auditRecord = store.state.audit[store.state.audit.length - 1]
+    expect(auditRecord.entity).toBe('PriceChange')
+    expect(auditRecord.entityId).toBe('pc_pending')
+    expect(auditRecord.action).toBe('approved')
+    expect(auditRecord.actor).toBe('user-editor')
+    expect(auditRecord.tenantId).toBe('tenant1')
+    expect(auditRecord.projectId).toBe('proj1')
+    expect(auditRecord.explain).toBeDefined()
+  })
+
+  it('creates audit record when rejecting a price change', async () => {
+    const token = makeToken('user-editor')
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/reject', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+      },
+    })
+    const initialAuditCount = store.state.audit.length
+    const res = await rejectRoute(req, paramsFor('pc_approved') as any)
+    expect(res.status).toBe(200)
+
+    // Verify audit record was created
+    expect(store.state.audit.length).toBe(initialAuditCount + 1)
+    const auditRecord = store.state.audit[store.state.audit.length - 1]
+    expect(auditRecord.entity).toBe('PriceChange')
+    expect(auditRecord.entityId).toBe('pc_approved')
+    expect(auditRecord.action).toBe('rejected')
+    expect(auditRecord.actor).toBe('user-editor')
+    expect(auditRecord.tenantId).toBe('tenant1')
+    expect(auditRecord.projectId).toBe('proj1')
+    expect(auditRecord.explain).toBeDefined()
+  })
+
+  it('includes correlation ID in audit records when provided in headers', async () => {
+    const token = makeToken('user-editor')
+    const correlationId = 'test-correlation-id-123'
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_pending/approve', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+        'X-Correlation-ID': correlationId,
+      },
+    })
+    const res = await approveRoute(req, paramsFor('pc_pending') as any)
+    expect(res.status).toBe(200)
+
+    // Verify correlation ID is in the audit record
+    const auditRecord = store.state.audit[store.state.audit.length - 1]
+    expect(auditRecord.explain).toBeDefined()
+    expect((auditRecord.explain as any).correlationId).toBe(correlationId)
+  })
+
+  it('generates correlation ID when not provided in headers', async () => {
+    const token = makeToken('user-editor')
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_pending/approve', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+      },
+    })
+    const res = await approveRoute(req, paramsFor('pc_pending') as any)
+    expect(res.status).toBe(200)
+
+    // Verify correlation ID was generated
+    const auditRecord = store.state.audit[store.state.audit.length - 1]
+    expect(auditRecord.explain).toBeDefined()
+    expect((auditRecord.explain as any).correlationId).toBeDefined()
+    expect((auditRecord.explain as any).correlationId).toMatch(/^corr_/)
   })
 })

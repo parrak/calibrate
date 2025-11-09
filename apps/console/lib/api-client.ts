@@ -82,6 +82,13 @@ export const priceChangesApi = {
       token,
     })
   },
+
+  rollback: async (id: string, token?: string) => {
+    return fetchApi(`/api/v1/price-changes/${id}/rollback`, {
+      method: 'POST',
+      token,
+    })
+  },
 }
 
 // Catalog API
@@ -137,6 +144,17 @@ export const competitorsApi = {
   getRules: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
     const res = await fetchApi<{ rules: Array<Record<string, unknown>> }>(`/api/v1/competitors/rules?projectSlug=${projectSlug}`)
     return res.rules || []
+  },
+
+  createRule: async (projectSlug: string, rule: { name: string; description?: string; rules: Record<string, unknown>; isActive?: boolean }): Promise<Record<string, unknown>> => {
+    const res = await fetchApi<{ rule: Record<string, unknown> }>(`/api/v1/competitors/rules`, {
+      method: 'POST',
+      body: JSON.stringify({
+        projectSlug,
+        ...rule
+      }),
+    })
+    return res.rule
   },
 }
 

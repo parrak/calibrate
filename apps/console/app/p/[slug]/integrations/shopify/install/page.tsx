@@ -41,7 +41,7 @@ export default function ShopifyInstallPage({ params }: ShopifyInstallPageProps) 
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card className="p-8">
           <div className="text-center">
@@ -51,15 +51,15 @@ export default function ShopifyInstallPage({ params }: ShopifyInstallPageProps) 
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               )}
               {status === 'success' && (
-                <div className="rounded-full h-12 w-12 bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                  <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="rounded-full h-12 w-12 bg-green-100 flex items-center justify-center">
+                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
               )}
               {status === 'error' && (
-                <div className="rounded-full h-12 w-12 bg-red-100 dark:bg-red-900 flex items-center justify-center">
-                  <svg className="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="rounded-full h-12 w-12 bg-red-100 flex items-center justify-center">
+                  <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
@@ -67,13 +67,13 @@ export default function ShopifyInstallPage({ params }: ShopifyInstallPageProps) 
             </div>
 
             {/* Status Message */}
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
               {status === 'loading' && 'Installing Shopify Integration'}
               {status === 'success' && 'Installation Complete'}
               {status === 'error' && 'Installation Failed'}
             </h1>
 
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-gray-600 mb-6">
               {message}
             </p>
 
@@ -94,7 +94,7 @@ export default function ShopifyInstallPage({ params }: ShopifyInstallPageProps) 
                   >
                     Go to Integration Dashboard
                   </Button>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500">
                     You can now sync products and manage pricing from your Shopify store.
                   </p>
                 </div>
@@ -120,7 +120,7 @@ export default function ShopifyInstallPage({ params }: ShopifyInstallPageProps) 
 
               {status === 'loading' && (
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500">
                     Please wait while we complete the installation...
                   </p>
                   <Button
@@ -135,14 +135,14 @@ export default function ShopifyInstallPage({ params }: ShopifyInstallPageProps) 
             </div>
 
             {/* Help Text */}
-            <div className="mt-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+            <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-sm font-medium text-gray-900 mb-2">
                 Need Help?
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600">
                 If you're experiencing issues with the installation, please check that:
               </p>
-              <ul className="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+              <ul className="text-sm text-gray-600 mt-2 space-y-1">
                 <li>• You have admin access to your Shopify store</li>
                 <li>• Your store is not in development mode</li>
                 <li>• You're using a supported Shopify plan</li>

@@ -7,10 +7,11 @@ export default async function ShopifyIntegrationPage({
   params,
   searchParams,
 }: {
-  params: { slug: string };
-  searchParams: { success?: string; error?: string };
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ success?: string; error?: string }>;
 }) {
   const { slug } = await params;
+  const resolvedSearchParams = await searchParams;
 
   // Fetch current integration status
   const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
@@ -28,16 +29,16 @@ export default async function ShopifyIntegrationPage({
         Connect your Shopify store to sync products and manage pricing.
       </p>
 
-      {searchParams.success && (
+      {resolvedSearchParams.success && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
           <p className="text-green-800 font-medium">✓ Successfully connected to Shopify!</p>
         </div>
       )}
 
-      {searchParams.error && (
+      {resolvedSearchParams.error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <p className="text-red-800 font-medium">
-            Failed to connect: {getErrorMessage(searchParams.error)}
+            Failed to connect: {getErrorMessage(resolvedSearchParams.error)}
           </p>
         </div>
       )}

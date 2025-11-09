@@ -173,7 +173,7 @@ export async function applyPriceChangeEnhanced(
         tenantId: pc.tenantId,
         projectId: pc.projectId,
         kind: 'PRICE_APPLIED',
-        type: 'pricechange.applied',
+        // type: 'pricechange.applied', // TODO: Re-enable after Event.type migration
         payload: {
           priceChangeId: pc.id,
           skuId: pc.skuId,
@@ -329,7 +329,7 @@ export async function rollbackPriceChangeEnhanced(
         tenantId: pc.tenantId,
         projectId: pc.projectId,
         kind: 'PRICE_ROLLED_BACK',
-        type: 'pricechange.rolled_back',
+        // type: 'pricechange.rolled_back', // TODO: Re-enable after Event.type migration
         payload: {
           priceChangeId: pc.id,
           skuId: pc.skuId,

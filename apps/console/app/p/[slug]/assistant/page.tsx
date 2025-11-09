@@ -21,7 +21,7 @@ type Message = {
   timestamp: Date
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ''
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
 
 const SUGGESTED_QUERIES = [
   "Why was this price changed?",
@@ -150,7 +150,7 @@ export default function AssistantPage() {
                     <summary className="cursor-pointer font-medium mb-2">
                       View Data ({message.response.method === 'ai' ? 'AI-powered' : 'Pattern-based'})
                     </summary>
-                    <pre className="bg-black/20 p-2 rounded overflow-x-auto">
+                    <pre className="bg-bg border border-border p-2 rounded overflow-x-auto text-fg">
                       {JSON.stringify(message.response.data, null, 2)}
                     </pre>
                   </details>
@@ -164,7 +164,7 @@ export default function AssistantPage() {
                     <summary className="cursor-pointer font-medium mb-2">
                       View SQL Query
                     </summary>
-                    <pre className="bg-black/20 p-2 rounded overflow-x-auto font-mono text-xs">
+                    <pre className="bg-bg border border-border p-2 rounded overflow-x-auto font-mono text-xs text-fg">
                       {message.response.sql}
                     </pre>
                   </details>
@@ -180,7 +180,7 @@ export default function AssistantPage() {
                       <button
                         key={idx}
                         onClick={() => handleSuggestionClick(suggestion)}
-                        className="block text-xs text-left w-full px-2 py-1 rounded hover:bg-black/20 transition"
+                        className="block text-xs text-left w-full px-2 py-1 rounded hover:bg-muted/20 transition"
                       >
                         • {suggestion}
                       </button>
