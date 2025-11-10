@@ -49,8 +49,9 @@ describe('ResponsiveTable', () => {
         keyExtractor={(item) => item.id}
       />
     )
-    expect(screen.getByText('Name')).toBeInTheDocument()
-    expect(screen.getByText('Price')).toBeInTheDocument()
+    // Both desktop and mobile views render, so use getAllByText
+    expect(screen.getAllByText('Name').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Price').length).toBeGreaterThan(0)
   })
 
   it('renders data in table format', () => {
