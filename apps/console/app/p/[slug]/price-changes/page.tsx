@@ -379,12 +379,12 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
       </header>
 
       {/* Workflow Guidance Banner */}
-      <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
         <div className="flex items-start gap-3">
-          <div className="text-blue-400 text-xl shrink-0" aria-hidden="true">ℹ️</div>
+          <div className="text-blue-600 text-xl shrink-0" aria-hidden="true">ℹ️</div>
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-blue-100 mb-1">Two-Step Approval Process</h3>
-            <p className="text-xs text-blue-200">
+            <h3 className="text-sm font-semibold text-blue-900 mb-1">Two-Step Approval Process</h3>
+            <p className="text-xs text-gray-700">
               Price changes require two separate actions: <strong>Approve</strong> (review and validate) → <strong>Apply</strong> (sync to platform).
               Approved changes are NOT automatically applied — you must explicitly click "Apply" to push changes live.
             </p>

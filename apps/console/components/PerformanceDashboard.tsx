@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@calibr/ui'
 import { Badge } from '@calibr/ui'
 import { Button } from '@calibr/ui'
@@ -110,6 +111,9 @@ interface PerformanceData {
 }
 
 export default function PerformanceDashboard() {
+  const { data: session } = useSession()
+  const token = (session as { apiToken?: string })?.apiToken
+
   const [data, setData] = useState<PerformanceData | null>(null)
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState('24h')
@@ -121,8 +125,16 @@ export default function PerformanceDashboard() {
       setError(null)
 
       const base = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
-      const response = await fetch(`${base}/api/admin/performance?timeRange=${timeRange}`)
+      const response = await fetch(`${base}/api/admin/performance?timeRange=${timeRange}`, {
+        headers: {
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      })
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please sign in to view performance data.')
+        }
         throw new Error('Failed to fetch performance data')
       }
 
@@ -136,12 +148,13 @@ export default function PerformanceDashboard() {
   }
 
   useEffect(() => {
+    if (!token) return
     fetchData()
 
     // Refresh every 30 seconds
     const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
-  }, [timeRange])
+  }, [timeRange, token])
 
   const getHealthScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-600'
@@ -188,10 +201,12 @@ export default function PerformanceDashboard() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <AlertTriangle className="h-8 w-8 text-red-500" />
-        <span className="ml-2 text-red-600">Error: {error}</span>
-        <Button onClick={fetchData} className="ml-4">
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <div className="flex items-center">
+          <AlertTriangle className="h-8 w-8 text-red-500" />
+          <span className="ml-2 text-red-600">Error: {error}</span>
+        </div>
+        <Button onClick={fetchData} variant="primary" className="bg-blue-600 hover:bg-blue-700 text-white">
           Retry
         </Button>
       </div>
