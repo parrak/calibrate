@@ -4,13 +4,16 @@
  * Displays user info and sign out button
  */
 
-import { getServerSession, authOptions } from '@/lib/auth'
+'use client'
+
+import { useSession } from 'next-auth/react'
 import SignOutButton from './SignOutButton'
 
-export async function UserMenu() {
-  const session = await getServerSession(authOptions)
+export function UserMenu() {
+  const { data: session, status } = useSession()
 
-  if (!session?.user) {
+  // Don't show anything while loading or if not authenticated
+  if (status === 'loading' || !session?.user) {
     return null
   }
 
