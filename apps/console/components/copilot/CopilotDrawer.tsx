@@ -138,7 +138,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-fg/20 backdrop-blur-sm z-40 transition-opacity"
+        className="fixed inset-0 bg-gray-900/20 backdrop-blur-sm z-40 transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -231,7 +231,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                 {/* Method badge */}
                 {message.method ? (
                   <div className="mt-2 pt-2 border-t border-border/30">
-                    <span className="text-xs px-2 py-1 rounded bg-bg border border-border">
+                    <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">
                       {message.method === 'ai' ? '✨ AI-powered' : '🔍 Pattern-based'}
                     </span>
                   </div>
@@ -244,7 +244,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                       <summary className="cursor-pointer font-medium mb-2">
                         View Data
                       </summary>
-                      <pre className="bg-bg border border-border p-3 rounded overflow-x-auto text-xs font-mono text-fg">
+                      <pre className="bg-gray-50 border border-gray-200 p-3 rounded overflow-x-auto text-xs font-mono text-gray-800">
                         {JSON.stringify(message.data, null, 2)}
                       </pre>
                     </details>
@@ -258,7 +258,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                       <summary className="cursor-pointer font-medium mb-2">
                         View SQL Query
                       </summary>
-                      <pre className="bg-bg border border-border p-3 rounded overflow-x-auto font-mono text-xs text-fg">
+                      <pre className="bg-gray-50 border border-gray-200 p-3 rounded overflow-x-auto font-mono text-xs text-gray-800">
                         {message.sql}
                       </pre>
                     </details>
@@ -274,7 +274,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                         <button
                           key={idx}
                           onClick={() => handleSuggestionClick(suggestion)}
-                          className="block text-xs text-left w-full px-2 py-1.5 rounded hover:bg-muted/20 transition"
+                          className="block text-xs text-left w-full px-2 py-1.5 rounded hover:bg-gray-100 transition"
                         >
                           • {suggestion}
                         </button>

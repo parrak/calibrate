@@ -48,11 +48,16 @@ describe('Layout Components - Stripe-like UX Regression Tests', () => {
         </Drawer>
       )
 
-      // Find the backdrop div - it should have fg color with low opacity, not black
-      const backdrop = document.querySelector('[class*="bg-fg"]')
+      // Find the backdrop div - it should have gray-900 with low opacity for light theme
+      const backdrop = document.querySelector('[class*="bg-gray-900/"]')
       expect(backdrop).toBeInTheDocument()
 
-      // Should NOT have black backdrop
+      // Should have backdrop blur
+      if (backdrop) {
+        expect(backdrop.className).toContain('backdrop-blur')
+      }
+
+      // Should NOT have black backdrop without opacity
       const blackBackdrop = document.querySelector('[class*="bg-black"]')
       expect(blackBackdrop).not.toBeInTheDocument()
     })

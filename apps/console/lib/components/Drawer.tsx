@@ -9,7 +9,7 @@ export function Drawer({ open, onClose, title, children, width=460 }: Props) {
   return createPortal(
     <div className="fixed inset-0 z-50 pointer-events-auto">
       <div
-        className="absolute inset-0 bg-fg/20 backdrop-blur-sm transition-opacity opacity-100"
+        className="absolute inset-0 bg-gray-900/20 backdrop-blur-sm transition-opacity opacity-100"
         onClick={onClose}
       />
       <aside
