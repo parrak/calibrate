@@ -95,3 +95,115 @@ jobs:
             } else {
               core.info('PR author is not a bot; agent metadata not required.');
             }
+
+            // Check that all review comments are resolved
+            core.info('Checking for unresolved review comments...');
+
+            // Get all review threads
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            // Get all review comments (inline code review comments)
+            const { data: reviewComments } = await github.rest.pulls.listReviewComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            // Get all issue comments (general PR comments)
+            const { data: issueComments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            // GitHub doesn't provide a direct "unresolved" flag, but we can check for:
+            // 1. Review comments that are part of a review thread
+            // 2. Check if the thread has been marked as resolved via the Resolve Conversation feature
+
+            // GitHub's REST API doesn't expose the "resolved" status directly for review threads.
+            // We need to use the GraphQL API or check for specific patterns.
+            // For now, we'll use a heuristic: if there are any review comments requesting changes
+            // and the latest review is not an approval, we'll flag it.
+
+            const latestReviewByUser = new Map();
+            for (const review of reviews) {
+              const user = review.user?.login;
+              if (user && review.submitted_at) {
+                const existing = latestReviewByUser.get(user);
+                if (!existing || new Date(review.submitted_at) > new Date(existing.submitted_at)) {
+                  latestReviewByUser.set(user, review);
+                }
+              }
+            }
+
+            const unresolvedReviewers = [];
+            for (const [user, review] of latestReviewByUser.entries()) {
+              if (review.state === 'CHANGES_REQUESTED' || review.state === 'COMMENTED') {
+                // Check if there are unresolved comments from this reviewer
+                const userComments = reviewComments.filter(c => c.user?.login === user);
+                if (userComments.length > 0) {
+                  unresolvedReviewers.push(user);
+                }
+              }
+            }
+
+            // Additionally, check for review comments that are explicitly in unresolved threads
+            // using GitHub's GraphQL API through github-script
+            let hasUnresolvedThreads = false;
+            try {
+              const query = `
+                query($owner: String!, $repo: String!, $prNumber: Int!) {
+                  repository(owner: $owner, name: $repo) {
+                    pullRequest(number: $prNumber) {
+                      reviewThreads(first: 100) {
+                        nodes {
+                          isResolved
+                          isOutdated
+                          comments(first: 1) {
+                            nodes {
+                              author {
+                                login
+                              }
+                              body
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `;
+
+              const result = await github.graphql(query, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                prNumber: prNumber,
+              });
+
+              const threads = result.repository.pullRequest.reviewThreads.nodes;
+              const unresolvedThreads = threads.filter(t => !t.isResolved && !t.isOutdated);
+
+              if (unresolvedThreads.length > 0) {
+                hasUnresolvedThreads = true;
+                core.info(`Found ${unresolvedThreads.length} unresolved review thread(s)`);
+
+                const comment3 = `:warning: **Unresolved review comments**\n\nThis PR has ${unresolvedThreads.length} unresolved review thread(s).\n\nPlease address all review comments and mark conversations as resolved before merging.\n\nTo resolve a conversation:\n1. Address the feedback by making the requested changes\n2. Click "Resolve conversation" on each review thread\n\nThis check will pass automatically once all review threads are resolved.`;
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  body: comment3
+                });
+                core.setFailed(`PR has ${unresolvedThreads.length} unresolved review thread(s).`);
+              } else {
+                core.info('All review threads are resolved or outdated.');
+              }
+            } catch (error) {
+              core.warning(`Could not check review threads via GraphQL: ${error.message}`);
+              // Fallback: if GraphQL fails, just log a warning but don't fail the check
+              core.info('Skipping unresolved review threads check due to GraphQL error.');
+            }
