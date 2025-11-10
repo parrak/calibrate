@@ -86,8 +86,9 @@ const initialState = (): StoreState => ({
       description: '20% off all products',
       selectorJson: { all: true },
       transformJson: {
-        transform: { type: 'percentage', value: -20 },
-        constraints: { floor: 100 }
+        op: 'percent',
+        value: -20,
+        floor: 100
       },
       scheduleAt: null,
       enabled: true,
@@ -414,7 +415,7 @@ describe('Pricing Rules API - End to End', () => {
         name: 'Winter Sale',
         description: null,
         selectorJson: { all: true },
-        transformJson: { transform: { type: 'percentage', value: -10 }, constraints: {} },
+        transformJson: { op: 'percent', value: -10 },
         scheduleAt: null,
         enabled: false,
         deletedAt: null,
@@ -461,8 +462,10 @@ describe('Pricing Rules API - End to End', () => {
           tag: ['electronics']
         },
         transformJson: {
-          transform: { type: 'percentage', value: -15 },
-          constraints: { floor: 100, ceiling: 10000 }
+          op: 'percent',
+          value: -15,
+          floor: 100,
+          ceiling: 10000
         },
         enabled: true
       }
@@ -516,7 +519,7 @@ describe('Pricing Rules API - End to End', () => {
         method: 'POST',
         body: JSON.stringify({
           name: 'Test',
-          transformJson: { transform: { type: 'percentage', value: 0 } }
+          transformJson: { op: 'percent', value: 0 }
         })
       })
 
@@ -699,8 +702,9 @@ describe('Pricing Rules API - End to End', () => {
             tag: ['electronics']
           },
           transformJson: {
-            transform: { type: 'percentage', value: -10 },
-            constraints: { floor: 100 }
+            op: 'percent',
+            value: -10,
+            floor: 100
           },
           enabled: true
         })

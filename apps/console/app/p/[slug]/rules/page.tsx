@@ -250,7 +250,8 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
 
       // First, we need to save the rule temporarily to preview it
       // Or if it already has an ID, use that
-      let ruleId: string | undefined = 'id' in editingRule ? (editingRule as PricingRule & { id: string }).id : undefined
+      const editingRuleWithId = editingRule as (RuleFormData & { id?: string })
+      let ruleId: string | undefined = editingRuleWithId.id
 
       if (!ruleId) {
         // Create temporary rule for preview
