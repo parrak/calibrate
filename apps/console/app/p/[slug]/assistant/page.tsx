@@ -113,7 +113,7 @@ export default function AssistantPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold">AI Pricing Assistant</h1>
+        <h1 className="text-2xl font-semibold">AI Assistant</h1>
         <p className="text-sm text-mute mt-1">
           Ask questions about your pricing data in natural language
         </p>
