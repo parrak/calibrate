@@ -1,8 +1,9 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { Drawer } from './Drawer'
 
 describe('Drawer', () => {
-  const mockOnClose = jest.fn()
+  const mockOnClose = vi.fn()
 
   beforeEach(() => {
     mockOnClose.mockClear()

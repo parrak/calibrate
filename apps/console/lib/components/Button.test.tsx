@@ -1,3 +1,4 @@
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Button } from './Button'
 
@@ -62,7 +63,7 @@ describe('Button', () => {
   })
 
   it('forwards other props', () => {
-    const onClick = jest.fn()
+    const onClick = vi.fn()
     render(<Button onClick={onClick}>Click</Button>)
     screen.getByText('Click').click()
     expect(onClick).toHaveBeenCalled()

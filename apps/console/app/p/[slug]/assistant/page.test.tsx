@@ -1,29 +1,33 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { useSession } from 'next-auth/react'
 import AssistantPage from './page'
 
-jest.mock('next-auth/react')
-jest.mock('next/navigation', () => ({
+vi.mock('next-auth/react', () => ({
+  useSession: vi.fn(),
+}))
+
+vi.mock('next/navigation', () => ({
   useParams: () => ({ slug: 'demo' }),
 }))
 
-const mockUseSession = useSession as jest.MockedFunction<typeof useSession>
+// Mock global fetch
+global.fetch = vi.fn()
 
 describe('AssistantPage', () => {
-  beforeEach(() => {
-    mockUseSession.mockReturnValue({
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    const { useSession } = await import('next-auth/react')
+    ;(useSession as ReturnType<typeof vi.fn>).mockReturnValue({
       data: {
         user: { email: 'test@example.com' },
         apiToken: 'test-token',
       },
       status: 'authenticated',
-    } as ReturnType<typeof useSession>)
-
-    global.fetch = jest.fn()
+    })
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('renders the page title', () => {
@@ -40,7 +44,7 @@ describe('AssistantPage', () => {
 
   it('renders Ask button with proper ARIA attributes', () => {
     render(<AssistantPage />)
-    const button = screen.getByRole('button', { name: /submit question/i })
+    const button = screen.getByRole('button', { name: /ask the ai assistant/i })
     expect(button).toBeInTheDocument()
     expect(button).toBeDisabled() // Initially disabled when input is empty
   })
@@ -48,7 +52,7 @@ describe('AssistantPage', () => {
   it('enables Ask button when input has text', () => {
     render(<AssistantPage />)
     const input = screen.getByLabelText('Ask a question about your pricing data')
-    const button = screen.getByRole('button', { name: /submit question/i })
+    const button = screen.getByRole('button', { name: /ask the ai assistant/i })
 
     fireEvent.change(input, { target: { value: 'Test question' } })
 
@@ -80,7 +84,7 @@ describe('AssistantPage', () => {
   })
 
   it('submits query on Enter key', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         answer: 'Test answer',
@@ -99,14 +103,17 @@ describe('AssistantPage', () => {
     })
   })
 
-  it('shows warning when no token', () => {
-    mockUseSession.mockReturnValue({
+  it('shows warning when no token', async () => {
+    const { useSession } = await import('next-auth/react')
+    ;(useSession as ReturnType<typeof vi.fn>).mockReturnValue({
       data: null,
       status: 'unauthenticated',
-    } as ReturnType<typeof useSession>)
+    })
 
     render(<AssistantPage />)
-    expect(screen.getByText(/Please sign in to use the AI Assistant/i)).toBeInTheDocument()
+    // There are multiple instances of this text, so use getAllByText
+    const warnings = screen.getAllByText(/Please sign in to use the AI Assistant/i)
+    expect(warnings.length).toBeGreaterThan(0)
   })
 })
 

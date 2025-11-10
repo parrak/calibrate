@@ -1,18 +1,19 @@
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { ResponsiveTable } from './ResponsiveTable'
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation((query) => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: query === '(min-width: 768px)',
     media: query,
     onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   })),
 })
 
@@ -78,7 +79,7 @@ describe('ResponsiveTable', () => {
   })
 
   it('calls onRowClick when row is clicked', () => {
-    const handleClick = jest.fn()
+    const handleClick = vi.fn()
     render(
       <ResponsiveTable
         columns={columns}
@@ -96,7 +97,7 @@ describe('ResponsiveTable', () => {
   })
 
   it('handles keyboard navigation on rows', () => {
-    const handleClick = jest.fn()
+    const handleClick = vi.fn()
     render(
       <ResponsiveTable
         columns={columns}
