@@ -13,11 +13,13 @@ The competitor monitoring system allows you to:
 ## Features Implemented
 
 ### 1. Competitor Management
-- **Add Competitors**: Track competitors by name, domain, and channel
-- **Product Mapping**: Map competitor products to your SKUs
+- **Add Competitors**: Track competitors by name, domain, and channel *(API only - no UI form yet)*
+- **Product Mapping**: Map competitor products to your SKUs *(API only)*
 - **Channel Support**: Support for Shopify, Amazon, and Google Shopping
-- **Status Management**: Enable/disable competitor monitoring
-- **UI**: Dedicated competitors page with Monitor, Analytics, and Rules tabs
+- **Status Management**: Enable/disable competitor monitoring *(API only)*
+- **UI**: Monitoring dashboard displays configured competitors and price updates
+  - **Current Limitation**: Competitors must be added via API. The UI provides a monitoring view with empty state guidance for API usage.
+  - **Planned**: UI forms for adding/editing competitors, Analytics tab, and Rules tab are not yet implemented.
 
 ### 2. Price Monitoring
 - **Automated Scraping**: Monitor competitor prices automatically with channel-specific scrapers
@@ -191,18 +193,19 @@ const results = await fetch('/api/v1/competitors/monitor', {
 
 ## UI Components
 
-### CompetitorMonitor
-- Displays competitor list with status
-- Shows monitoring results
-- Lists recent price updates
-- Provides monitoring controls
+### CompetitorMonitor *(Production)*
+- Displays competitor list with status (when competitors exist)
+- Shows monitoring results from latest monitoring run
+- Lists recent price updates from all competitors
+- Provides monitoring controls (start monitoring button)
+- **Empty State**: Shows helpful guidance with API documentation link when no competitors are configured
 
-### CompetitorRules
+### CompetitorRules *(Planned - Not Yet Implemented)*
 - Rule creation and management
 - Rule configuration forms
 - Rule status and performance
 
-### CompetitorAnalytics (NEW)
+### CompetitorAnalytics *(Planned - Not Yet Implemented)*
 - Market position dashboard with visual indicators
 - Average market price tracking
 - Price spread analysis (min/max competitor prices)
@@ -324,14 +327,22 @@ Choose one of two approaches:
 
 ## Future Enhancements
 
-1. **Amazon & Google Shopping APIs**: Complete production integration for these channels
-2. **Machine Learning**: Add ML-based price prediction and optimization
-3. **Alerts**: Email/SMS notifications for significant price changes
-4. **Advanced Analytics**: Historical trend charts, price elasticity analysis
-5. **Bulk Operations**: Bulk competitor and product management
-6. **Custom Channels**: Support for custom competitor data sources (CSV import, custom APIs)
-7. **Scheduled Monitoring**: Cron jobs for automated price checks
-8. **Price Change Alerts**: Real-time notifications when competitors change prices
+### High Priority (UI Gaps)
+1. **UI Forms for Competitor Management**: Add web forms to create/edit/delete competitors without requiring API calls
+2. **Analytics Dashboard**: Implement the CompetitorAnalytics component with visual market position tracking
+3. **Rules Management UI**: Build the CompetitorRules interface for creating and managing pricing rules
+
+### Medium Priority (Feature Expansion)
+4. **Amazon & Google Shopping APIs**: Complete production integration for these channels
+5. **Alerts**: Email/SMS notifications for significant price changes
+6. **Advanced Analytics**: Historical trend charts, price elasticity analysis
+7. **Bulk Operations**: Bulk competitor and product management via CSV import
+
+### Lower Priority (Advanced Features)
+8. **Machine Learning**: Add ML-based price prediction and optimization
+9. **Custom Channels**: Support for custom competitor data sources (custom APIs, web scrapers)
+10. **Scheduled Monitoring**: Cron jobs for automated price checks
+11. **Real-time Price Change Alerts**: Webhook-based notifications when competitors change prices
 
 ## Security Considerations
 
