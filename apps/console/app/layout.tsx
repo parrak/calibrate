@@ -25,17 +25,17 @@ export default function RootLayout({
           Skip to content
         </a>
         <header className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-lg font-semibold">Calibrate Console</span>
-              <span className="text-xs text-[color:var(--mute)]">Enterprise pricing ops</span>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <span className="text-base sm:text-lg font-semibold whitespace-nowrap">Calibrate Console</span>
+              <span className="hidden sm:inline text-xs text-[color:var(--mute)] whitespace-nowrap">Enterprise pricing ops</span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               <a
                 href="https://docs.calibr.lat"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors flex items-center gap-1"
+                className="hidden sm:flex text-sm text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors items-center gap-1"
               >
                 <span>Docs</span>
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

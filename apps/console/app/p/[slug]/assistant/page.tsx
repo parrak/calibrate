@@ -290,7 +290,16 @@ export default function AssistantPage() {
       {/* Warning if no token */}
       {!token && (
         <div className="bg-amber-500/10 border border-amber-500/40 rounded-lg px-4 py-3 text-sm text-amber-200">
-          Please sign in to use the AI Assistant
+          <div className="font-medium mb-2">⚠️ AI Assistant Unavailable</div>
+          <div className="text-xs space-y-1">
+            <div>The AI Assistant requires API authentication, which is not currently configured.</div>
+            <div className="mt-2"><strong>Required configuration:</strong></div>
+            <ul className="list-disc list-inside ml-2">
+              <li>Environment variable <code className="bg-amber-900/40 px-1 rounded">CONSOLE_INTERNAL_TOKEN</code> must be set</li>
+              <li>Environment variable <code className="bg-amber-900/40 px-1 rounded">NEXT_PUBLIC_API_BASE</code> or <code className="bg-amber-900/40 px-1 rounded">API_BASE_URL</code> must be set</li>
+            </ul>
+            <div className="mt-2">Please contact your system administrator to enable this feature, then sign out and sign back in.</div>
+          </div>
         </div>
       )}
 
