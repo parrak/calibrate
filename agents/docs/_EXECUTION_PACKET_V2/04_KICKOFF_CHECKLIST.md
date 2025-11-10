@@ -101,11 +101,26 @@
 
 ### Milestone M1.3 — Explainability & Audit
 
-- [x] Ensure all actions write Audit + ExplainTrace
-- [x] Add `/api/audit` endpoint for Console
-- [x] Integrate correlation IDs with `@calibr/monitor`
-- [x] Verify replay can fully reconstruct historical price change
-- [x] Generate sample audit reports for QA (2 tenants)
+- [ ] Ensure all actions write Audit + ExplainTrace
+- [ ] Add `/api/audit` endpoint for Console
+- [ ] Integrate correlation IDs with `@calibr/monitor`
+- [ ] Verify replay can fully reconstruct historical price change
+- [ ] Generate sample audit reports for QA (2 tenants)
+
+### Competitor Monitoring (Testing & Verification)
+
+- [x] API endpoints implemented with `withSecurity` wrapper
+- [x] Fixed CompetitorMonitor component to use projectSlug
+- [x] Fixed CompetitorRules component with createRule API integration
+- [x] Added security headers to all competitor endpoints
+- [x] Created manual API test script (`scripts/test-competitor-api.ps1`)
+- [x] Unit tests passing (31 tests in competitor-monitoring package)
+- [x] Manual API testing completed — Automated test suite added
+- [x] Authentication requirement added to GET and POST `/api/v1/competitors` endpoints
+- [x] Comprehensive test coverage: 12 tests covering GET/POST endpoints, validation, and authentication (401 responses)
+- [x] Tests integrated into PR checks via Turborepo pipeline
+- [ ] UI integration testing (CompetitorMonitor, Analytics, Rules)
+- [ ] End-to-end flow verification
 
 ---
 

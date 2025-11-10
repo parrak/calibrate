@@ -1,0 +1,275 @@
+import Link from 'next/link'
+
+export default function ConsoleDocsHome() {
+  return (
+    <div className="min-h-screen bg-bg">
+      <div className="max-w-5xl mx-auto px-6 py-16">
+        {/* Header */}
+        <div className="mb-12">
+          <Link href="/" className="text-brand hover:underline text-sm mb-4 inline-block">
+            ← Back to Documentation Home
+          </Link>
+          <h1 className="text-5xl font-bold text-fg mb-4">
+            Console User Guide
+          </h1>
+          <p className="text-xl text-mute mb-6">
+            Complete guide to using the Calibrate pricing management console
+          </p>
+          <p className="text-fg max-w-3xl">
+            Calibrate Console provides a centralized platform for managing e-commerce pricing across multiple channels.
+            Whether you're running flash sales, matching competitor prices, or optimizing margins - this guide will help
+            you get started and master advanced features.
+          </p>
+        </div>
+
+        {/* What's in this guide */}
+        <div className="bg-surface border border-border rounded-xl p-8 mb-12">
+          <h2 className="text-2xl font-semibold text-fg mb-4">What's in this guide</h2>
+          <div className="grid md:grid-cols-3 gap-6 text-fg">
+            <div>
+              <div className="font-semibold mb-2 text-brand">Getting Started</div>
+              <div className="text-sm text-mute">Account setup, project creation, and your first price changes</div>
+            </div>
+            <div>
+              <div className="font-semibold mb-2 text-brand">Core Features</div>
+              <div className="text-sm text-mute">Catalog, price changes, pricing rules, and automation</div>
+            </div>
+            <div>
+              <div className="font-semibold mb-2 text-brand">Advanced Topics</div>
+              <div className="text-sm text-mute">AI assistant, analytics, competitor monitoring, and best practices</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Start Card */}
+        <div className="bg-surface border border-brand/30 rounded-2xl p-8 shadow-xl mb-12">
+          <h2 className="text-2xl font-semibold text-fg mb-4">🚀 Quick Start</h2>
+          <p className="text-mute mb-4">
+            New to Calibrate Console? Follow these steps to get up and running in 10 minutes.
+          </p>
+          <ol className="space-y-3 text-fg mb-6">
+            <li className="flex gap-3">
+              <span className="font-bold text-brand shrink-0">1.</span>
+              <div>
+                <strong>Sign up</strong> at <a href="https://console.calibr.lat/signup" className="text-brand hover:underline">console.calibr.lat/signup</a>
+                <div className="text-sm text-mute mt-1">Create your account and verify your email</div>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="font-bold text-brand shrink-0">2.</span>
+              <div>
+                <strong>Create your first project</strong> during onboarding
+                <div className="text-sm text-mute mt-1">Give it a name and URL slug</div>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="font-bold text-brand shrink-0">3.</span>
+              <div>
+                <strong>Connect a platform</strong> (Shopify or Amazon)
+                <div className="text-sm text-mute mt-1">Sync your product catalog automatically</div>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="font-bold text-brand shrink-0">4.</span>
+              <div>
+                <strong>Start managing prices</strong> from your dashboard
+                <div className="text-sm text-mute mt-1">Create rules, review changes, and optimize pricing</div>
+              </div>
+            </li>
+          </ol>
+          <Link
+            href="/console/getting-started"
+            className="inline-block px-6 py-3 bg-brand text-white rounded-lg hover:bg-brand/90 transition-colors font-semibold"
+          >
+            View Full Getting Started Guide →
+          </Link>
+        </div>
+
+        {/* Popular Topics */}
+        <div className="bg-bg border border-border rounded-xl p-6 mb-12">
+          <h2 className="text-xl font-semibold text-fg mb-4">Popular Topics</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <PopularLink href="/console/integrations" text="Connect Shopify Store" />
+            <PopularLink href="/console/pricing-rules" text="Create Automated Pricing Rules" />
+            <PopularLink href="/console/price-changes" text="Approve & Apply Price Changes" />
+            <PopularLink href="/console/ai-assistant" text="Query with AI Assistant" />
+            <PopularLink href="/console/troubleshooting" text="Troubleshoot Sync Issues" />
+            <PopularLink href="/console/best-practices" text="Pricing Best Practices" />
+          </div>
+        </div>
+
+        {/* Core Features */}
+        <div className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Core Features</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <DocCard
+              title="Product Catalog"
+              href="/console/catalog"
+              description="Browse products, view pricing, search and filter your catalog"
+              icon="📦"
+            />
+
+            <DocCard
+              title="Price Changes"
+              href="/console/price-changes"
+              description="Review, approve, and manage price changes with full workflow control"
+              icon="💰"
+            />
+
+            <DocCard
+              title="Pricing Rules"
+              href="/console/pricing-rules"
+              description="Automate pricing with rules, selectors, and schedules"
+              icon="⚙️"
+            />
+
+            <DocCard
+              title="Platform Integrations"
+              href="/console/integrations"
+              description="Connect Shopify, Amazon, and other e-commerce platforms"
+              icon="🔗"
+            />
+          </div>
+        </div>
+
+        {/* Intelligence & Insights */}
+        <div className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Intelligence & Insights</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <DocCard
+              title="AI Assistant"
+              href="/console/ai-assistant"
+              description="Query your pricing data with natural language"
+              icon="🤖"
+            />
+
+            <DocCard
+              title="Analytics"
+              href="/console/analytics"
+              description="View pricing trends and performance insights"
+              icon="📊"
+            />
+
+            <DocCard
+              title="Competitor Monitoring"
+              href="/console/competitors"
+              description="Track competitor prices and create monitoring rules"
+              icon="👀"
+            />
+
+            <DocCard
+              title="Best Practices"
+              href="/console/best-practices"
+              description="Tips and strategies for effective pricing management"
+              icon="✨"
+            />
+          </div>
+        </div>
+
+        {/* Reference & Help */}
+        <div className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Reference & Help</h2>
+          <div className="bg-surface border border-border rounded-xl p-6">
+            <div className="grid md:grid-cols-2 gap-4">
+              <ResourceLink
+                href="/console/getting-started"
+                title="Getting Started Guide"
+                description="Step-by-step guide to setting up your account"
+              />
+              <ResourceLink
+                href="/console/roles-permissions"
+                title="Roles & Permissions"
+                description="Understanding user roles and access control"
+              />
+              <ResourceLink
+                href="/console/troubleshooting"
+                title="Troubleshooting"
+                description="Common issues and solutions"
+              />
+              <ResourceLink
+                href="/console/api-reference"
+                title="API Reference"
+                description="API endpoints used by the console"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Help Section */}
+        <div className="bg-brand/5 border border-brand/20 rounded-xl p-8">
+          <h2 className="text-2xl font-semibold text-fg mb-4">Need Help?</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-semibold text-fg mb-2">Can't find what you're looking for?</h3>
+              <p className="text-mute text-sm mb-4">
+                Try our AI Assistant within the console, or check the Troubleshooting guide for common issues.
+              </p>
+              <Link
+                href="/console/troubleshooting"
+                className="text-brand hover:underline text-sm font-semibold"
+              >
+                View Troubleshooting Guide →
+              </Link>
+            </div>
+            <div>
+              <h3 className="font-semibold text-fg mb-2">Want to see it in action?</h3>
+              <p className="text-mute text-sm mb-4">
+                Use the demo account to explore all features with sample data before connecting your own store.
+              </p>
+              <a
+                href="https://console.calibr.lat"
+                className="text-brand hover:underline text-sm font-semibold"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Try Demo Account →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DocCard({ title, href, description, icon }: { title: string; href: string; description: string; icon: string }) {
+  return (
+    <Link
+      href={href}
+      className="block bg-surface border border-border rounded-xl p-6 hover:border-brand/50 hover:shadow-lg transition-all group"
+    >
+      <div className="flex items-start gap-3 mb-3">
+        <span className="text-3xl">{icon}</span>
+        <h3 className="text-xl font-semibold text-fg group-hover:text-brand transition-colors">
+          {title}
+        </h3>
+      </div>
+      <p className="text-mute text-sm">
+        {description}
+      </p>
+    </Link>
+  )
+}
+
+function ResourceLink({ href, title, description }: { href: string; title: string; description: string }) {
+  return (
+    <Link
+      href={href}
+      className="block p-4 bg-bg border border-border rounded-lg hover:border-brand/30 transition-all"
+    >
+      <div className="font-semibold text-fg mb-1">{title}</div>
+      <div className="text-sm text-mute">{description}</div>
+    </Link>
+  )
+}
+
+function PopularLink({ href, text }: { href: string; text: string }) {
+  return (
+    <Link
+      href={href}
+      className="block px-4 py-2 text-sm text-fg hover:text-brand border border-border rounded-lg hover:border-brand/30 transition-all"
+    >
+      {text} →
+    </Link>
+  )
+}

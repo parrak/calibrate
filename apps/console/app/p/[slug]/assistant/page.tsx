@@ -150,7 +150,7 @@ export default function AssistantPage() {
                     <summary className="cursor-pointer font-medium mb-2">
                       View Data ({message.response.method === 'ai' ? 'AI-powered' : 'Pattern-based'})
                     </summary>
-                    <pre className="bg-black/20 p-2 rounded overflow-x-auto">
+                    <pre className="bg-gray-50 border border-gray-200 p-2 rounded overflow-x-auto text-gray-800">
                       {JSON.stringify(message.response.data, null, 2)}
                     </pre>
                   </details>
@@ -164,7 +164,7 @@ export default function AssistantPage() {
                     <summary className="cursor-pointer font-medium mb-2">
                       View SQL Query
                     </summary>
-                    <pre className="bg-black/20 p-2 rounded overflow-x-auto font-mono text-xs">
+                    <pre className="bg-gray-50 border border-gray-200 p-2 rounded overflow-x-auto font-mono text-xs text-gray-800">
                       {message.response.sql}
                     </pre>
                   </details>
@@ -180,7 +180,7 @@ export default function AssistantPage() {
                       <button
                         key={idx}
                         onClick={() => handleSuggestionClick(suggestion)}
-                        className="block text-xs text-left w-full px-2 py-1 rounded hover:bg-black/20 transition"
+                        className="block text-xs text-left w-full px-2 py-1 rounded hover:bg-gray-100 transition"
                       >
                         • {suggestion}
                       </button>
@@ -223,6 +223,22 @@ export default function AssistantPage() {
           type="submit"
           variant="primary"
           disabled={!query.trim() || loading || !token}
+          title={
+            !token
+              ? 'Please sign in to use the AI Assistant'
+              : !query.trim()
+              ? 'Enter a question to ask the AI Assistant'
+              : ''
+          }
+          aria-label={
+            !token
+              ? 'Ask button disabled: Please sign in to use the AI Assistant'
+              : !query.trim()
+              ? 'Ask button disabled: Enter a question first'
+              : loading
+              ? 'Processing your question'
+              : 'Ask the AI Assistant'
+          }
         >
           {loading ? 'Thinking...' : 'Ask'}
         </Button>

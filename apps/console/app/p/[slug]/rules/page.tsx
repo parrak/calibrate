@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Button, Card, Input, Badge, EmptyState } from '@/lib/components'
 import { Plus, Trash2, Play, Save } from 'lucide-react'
@@ -97,14 +97,65 @@ type PreviewResults = {
   averageChange: number
 }
 
-export default function RulesPage({ params: _params }: { params: { slug: string } }) {
+export default function RulesPage({ params }: { params: { slug: string } }) {
   const { data: _session } = useSession()
 
-  const [rules] = useState<PricingRule[]>([])
+  const [rules, setRules] = useState<PricingRule[]>([])
   const [editingRule, setEditingRule] = useState<RuleFormData | null>(null)
   const [previewResults, setPreviewResults] = useState<PreviewResults | null>(null)
   const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [toastMessage, setToastMessage] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  // Fetch pricing rules when component mounts or slug changes
+  useEffect(() => {
+    const fetchRules = async () => {
+      try {
+        setLoading(true)
+        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.calibr.lat'
+        const response = await fetch(`${API_BASE}/api/v1/rules?project=${params.slug}`)
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch rules: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        // Transform API response to local format
+        const transformedRules: PricingRule[] = (data.items || []).map((item: {
+          id: string
+          name: string
+          description: string | null
+          enabled: boolean
+          selectorJson: Selector
+          transformJson: TransformDefinition
+          scheduleAt: string | null
+        }) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description || undefined,
+          enabled: item.enabled,
+          selector: item.selectorJson,
+          transform: item.transformJson,
+          schedule: item.scheduleAt
+            ? { type: 'scheduled' as const, scheduledAt: new Date(item.scheduleAt) }
+            : { type: 'immediate' as const },
+        }))
+
+        setRules(transformedRules)
+      } catch (err) {
+        console.error('Failed to fetch pricing rules:', err)
+        setToastMessage({
+          msg: 'Failed to load pricing rules',
+          type: 'error'
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRules()
+  }, [params.slug])
 
   const startNewRule = () => {
     setEditingRule({ ...DEFAULT_RULE })
@@ -195,13 +246,47 @@ export default function RulesPage({ params: _params }: { params: { slug: string 
     }
 
     try {
-      // TODO: Save to API
+      // Create the rule object from form data
+      const newRule: PricingRule = {
+        id: `rule-${Date.now()}`, // Generate temporary ID
+        name: editingRule.name,
+        description: editingRule.description,
+        enabled: editingRule.enabled,
+        selector: editingRule.selector,
+        transform: {
+          transform: editingRule.transform.type === 'multiply'
+            ? { type: editingRule.transform.type, factor: editingRule.transform.factor || 1 }
+            : { type: editingRule.transform.type, value: editingRule.transform.value || 0 },
+          constraints: editingRule.constraints
+        },
+        schedule: editingRule.schedule.type === 'scheduled'
+          ? { type: 'scheduled', scheduledAt: editingRule.schedule.scheduledAt ? new Date(editingRule.schedule.scheduledAt) : undefined }
+          : editingRule.schedule.type === 'recurring'
+          ? { type: 'recurring', cron: editingRule.schedule.cron, timezone: editingRule.schedule.timezone }
+          : { type: 'immediate' }
+      }
+
+      // Add the new rule to the rules list
+      setRules([...rules, newRule])
+
+      // TODO: Save to API when backend is ready
       setToastMessage({ msg: 'Rule saved successfully!', type: 'success' })
       setEditingRule(null)
       setIsPreviewMode(false)
     } catch (_err) {
       setToastMessage({ msg: 'Failed to save rule', type: 'error' })
     }
+  }
+
+  const handleDeleteRule = (ruleId: string) => {
+    setRules(rules.filter(r => r.id !== ruleId))
+    setToastMessage({ msg: 'Rule deleted successfully', type: 'success' })
+  }
+
+  const handleToggleRule = (ruleId: string) => {
+    setRules(rules.map(r =>
+      r.id === ruleId ? { ...r, enabled: !r.enabled } : r
+    ))
   }
 
   return (
@@ -743,7 +828,13 @@ export default function RulesPage({ params: _params }: { params: { slug: string 
       )}
 
       {/* Rules List */}
-      {!editingRule && rules.length === 0 && (
+      {!editingRule && loading && (
+        <div className="flex items-center justify-center p-12">
+          <div className="text-gray-500">Loading pricing rules...</div>
+        </div>
+      )}
+
+      {!editingRule && !loading && rules.length === 0 && (
         <EmptyState
           title="No pricing rules yet"
           desc="Create your first automated pricing rule to get started."
@@ -752,16 +843,41 @@ export default function RulesPage({ params: _params }: { params: { slug: string 
 
       {!editingRule && rules.length > 0 && (
         <div className="space-y-3">
-          {rules.map((rule, idx) => (
-            <Card key={idx} className="p-4">
+          {rules.map((rule) => (
+            <Card key={rule.id} className="p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold">{rule.name}</h3>
-                  <p className="text-sm text-gray-500">{rule.description}</p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-semibold">{rule.name}</h3>
+                    <Badge variant={rule.enabled ? 'secondary' : 'outline'}>
+                      {rule.enabled ? 'Active' : 'Disabled'}
+                    </Badge>
+                  </div>
+                  {rule.description && (
+                    <p className="text-sm text-gray-500 mt-1">{rule.description}</p>
+                  )}
+                  <div className="text-xs text-gray-400 mt-2">
+                    Transform: {rule.transform.transform.type}
+                    {' | '}
+                    Predicates: {rule.selector.predicates.length}
+                  </div>
                 </div>
-                <Badge variant={rule.enabled ? 'secondary' : 'outline'}>
-                  {rule.enabled ? 'Active' : 'Disabled'}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleToggleRule(rule.id!)}
+                  >
+                    {rule.enabled ? 'Disable' : 'Enable'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteRule(rule.id!)}
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}

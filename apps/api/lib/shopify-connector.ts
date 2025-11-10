@@ -57,6 +57,27 @@ export async function initializeShopifyConnector(integration: IntegrationCredent
     throw new Error(`Invalid shop domain format: ${integration.shopDomain}. Expected format: yourstore.myshopify.com`);
   }
 
+  // Validate access token format
+  // Shopify access tokens should be alphanumeric strings (base64-like format)
+  const accessTokenTrimmed = integration.accessToken.trim();
+  if (accessTokenTrimmed !== integration.accessToken) {
+    console.warn('Access token has leading/trailing whitespace - this will cause authentication to fail');
+    throw new Error('Access token contains invalid whitespace. Please reconnect your Shopify integration.');
+  }
+
+  // Log credentials for debugging (mask access token for security)
+  console.log('Initializing Shopify connector with credentials:', {
+    shopDomain: integration.shopDomain,
+    accessTokenLength: integration.accessToken.length,
+    accessTokenPrefix: integration.accessToken.substring(0, 8) + '...',
+    accessTokenSuffix: '...' + integration.accessToken.substring(integration.accessToken.length - 4),
+    accessTokenType: typeof integration.accessToken,
+    scope: integration.scope,
+    // Check for potential encoding issues
+    hasWhitespace: /\s/.test(integration.accessToken),
+    hasSpecialChars: /[^a-zA-Z0-9_-]/.test(integration.accessToken),
+  });
+
   const connector = new ShopifyConnector(buildShopifyConnectorConfig(integration.isActive));
 
   try {
@@ -77,7 +98,18 @@ export async function initializeShopifyConnector(integration: IntegrationCredent
         shopDomain: integration.shopDomain,
         latency: health.latency,
       });
-      throw new Error(`Failed to connect to Shopify: ${errorMessage}`);
+
+      // Provide actionable error messages for common issues
+      let userFacingMessage = errorMessage;
+      if (errorMessage.includes('401') || errorMessage.toLowerCase().includes('authentication')) {
+        userFacingMessage = 'Authentication failed. The access token is invalid or has been revoked. Please reconnect your Shopify integration to get a new access token.';
+      } else if (errorMessage.includes('404')) {
+        userFacingMessage = 'Shop not found. Please verify your shop domain and reconnect your Shopify integration.';
+      } else if (errorMessage.includes('429')) {
+        userFacingMessage = 'Rate limit exceeded. Please try again in a few moments.';
+      }
+
+      throw new Error(`Failed to connect to Shopify: ${userFacingMessage}`);
     }
 
     return connector;

@@ -6,12 +6,12 @@ type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: 'sm' | 'md' | 'lg'
 }
 export function Button({ as:Tag='button', variant='primary', size='md', className='', ...props }: Props) {
-  const base = 'inline-flex items-center justify-center rounded-md font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500/50'
+  const base = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm'
   const variants: Record<string,string> = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700',
-    ghost: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
-    danger: 'bg-red-600 text-white hover:bg-red-700',
-    outline: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+    primary: 'bg-brand text-white hover:bg-brand/90 focus:ring-brand/20',
+    ghost: 'bg-surface text-fg border-2 border-border hover:bg-bg focus:ring-brand/20',
+    danger: 'bg-danger text-white hover:bg-danger/90 focus:ring-danger/20',
+    outline: 'bg-surface text-fg border-2 border-border hover:border-brand focus:ring-brand/20'
   }
   const sizes: Record<string, string> = {
     sm: 'px-2 py-1 text-xs',

@@ -215,7 +215,7 @@ export const POST = withSecurity(
     let shopifyContext: ShopifyContext | null = null
 
     if (connectorTarget === 'shopify') {
-      const variantId = resolveShopifyVariantId(pc)
+      const variantId = await resolveShopifyVariantId(pc)
       if (!variantId) {
         return errorJson({
           status: 422,

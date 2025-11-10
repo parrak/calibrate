@@ -8,6 +8,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, Badge, Button } from '@calibr/ui';
 import { platformsApi } from '@/lib/api-client';
+import { useToast } from '@/components/Toast';
 
 interface ShopifyIntegration {
   id: string;
@@ -25,11 +26,22 @@ interface ShopifyStatusProps {
   onUpdate?: (integration: ShopifyIntegration) => void;
 }
 
+interface ShopifyConnectionTestResponse {
+  result?: {
+    connected?: boolean;
+    status?: {
+      message?: string;
+    };
+  };
+}
+
 export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifyStatusProps) {
   const [testing, setTesting] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [currentIntegration, setCurrentIntegration] = useState<ShopifyIntegration>(integration);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastPollErrorRef = useRef<string | null>(null);
+  const toast = useToast();
 
   // Sync prop changes to local state
   useEffect(() => {
@@ -41,7 +53,12 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
     const isSyncing = currentIntegration.syncStatus === 'SYNCING' || currentIntegration.syncStatus === 'in_progress';
 
     if (isSyncing && projectSlug) {
-      // Poll every 2 seconds when sync is active
+      // Clear any existing poller before creating a new one
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+
+      // Poll every 3 seconds when sync is active
       pollingIntervalRef.current = setInterval(async () => {
         try {
           const data = await platformsApi.getSyncStatus('shopify', projectSlug);
@@ -56,11 +73,17 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
             if (onUpdate) {
               onUpdate(updated);
             }
+            lastPollErrorRef.current = null;
           }
         } catch (err) {
           console.error('Failed to poll sync status:', err);
+          const message = err instanceof Error ? err.message : 'Unable to refresh sync status';
+          if (lastPollErrorRef.current !== message) {
+            toast.error('Failed to refresh Shopify sync status.');
+            lastPollErrorRef.current = message;
+          }
         }
-      }, 2000);
+      }, 3000);
     } else {
       // Clear polling when no active sync
       if (pollingIntervalRef.current) {
@@ -74,24 +97,21 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
         clearInterval(pollingIntervalRef.current);
       }
     };
-  }, [currentIntegration.syncStatus, projectSlug]);
+  }, [currentIntegration.syncStatus, projectSlug, onUpdate, toast]);
 
   const handleSync = async () => {
     if (!projectSlug) {
-      alert('Project slug is required for sync');
+      toast.error('Project slug is required to start a sync.');
       return;
     }
 
     try {
       setSyncing(true);
-
-      // Use platformsApi to trigger sync
       await platformsApi.triggerSync('shopify', projectSlug, 'full');
 
-      // Update local state to show syncing
       const updated: ShopifyIntegration = {
         ...currentIntegration,
-        syncStatus: 'SYNCING',
+        syncStatus: 'in_progress',
         syncError: null,
       };
       setCurrentIntegration(updated);
@@ -100,7 +120,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
         onUpdate(updated);
       }
 
-      // The polling effect will handle updating the status
+      toast.success('Shopify sync started. We’ll update the status shortly.');
     } catch (error) {
       console.error('Sync error:', error);
 
@@ -115,15 +135,14 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       if (onUpdate) {
         onUpdate(updated);
       }
+
+      toast.error(`Failed to start Shopify sync: ${errorMessage}`);
     } finally {
       setSyncing(false);
     }
   };
 
   const handleTestConnection = async () => {
-    // Use NEXT_PUBLIC_API_BASE with fallback to production API
-    const apiUrl = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
-
     try {
       setTesting(true);
 
@@ -131,32 +150,19 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
         throw new Error('Project slug is required for connection test');
       }
 
-      // Call the sync endpoint with projectSlug
-      // Include credentials for CORS if needed
-      const response = await fetch(`${apiUrl}/api/integrations/shopify/sync`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include credentials for CORS
-        body: JSON.stringify({
-          projectSlug,
-          action: 'test_connection',
-        }),
-      });
+      const data = await platformsApi.triggerSync<ShopifyConnectionTestResponse>(
+        'shopify',
+        projectSlug,
+        'test_connection',
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Connection test failed');
-      }
-
-      const data = await response.json();
+      const result = data?.result;
 
       // Update local state
       const updated = {
         ...currentIntegration,
-        syncStatus: data.result?.connected ? 'success' : 'error',
-        syncError: data.result?.connected ? null : (data.result?.status?.message || 'Connection failed'),
+        syncStatus: result?.connected ? 'success' : 'error',
+        syncError: result?.connected ? null : result?.status?.message || 'Connection failed',
         lastSyncAt: new Date().toISOString(),
       };
       setCurrentIntegration(updated);
@@ -166,14 +172,18 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
         onUpdate(updated);
       }
 
+      if (updated.syncStatus === 'success') {
+        toast.success('Shopify connection verified successfully.');
+      } else {
+        toast.error(updated.syncError || 'Connection test failed');
+      }
+
     } catch (error) {
       console.error('Connection test error:', error);
-      console.error('API URL used:', apiUrl);
-      console.error('Project slug:', projectSlug);
 
       let errorMessage = 'Connection test failed';
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        errorMessage = `Network error: Cannot connect to API at ${apiUrl}. Make sure the API server is running.`;
+        errorMessage = 'Network error: Cannot reach the Calibr API. Please verify connectivity.';
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
@@ -188,6 +198,8 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       if (onUpdate) {
         onUpdate(updated);
       }
+
+      toast.error(errorMessage);
     } finally {
       setTesting(false);
     }
@@ -204,7 +216,11 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       case 'error':
         return <Badge variant="danger">Error</Badge>;
       case 'in_progress':
+      case 'SYNCING':
+      case 'pending':
         return <Badge variant="primary">Syncing</Badge>;
+      case null:
+        return <Badge>Idle</Badge>;
       default:
         return <Badge>Unknown</Badge>;
     }
@@ -218,7 +234,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-xl font-semibold text-gray-900">
           Integration Status
         </h2>
         {getStatusBadge()}
@@ -227,25 +243,25 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Connection Info */}
         <div>
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+          <h3 className="text-sm font-medium text-gray-500 mb-2">
             Connection Details
           </h3>
           <div className="space-y-2">
             <div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Store:</span>
-              <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
+              <span className="text-sm text-gray-600">Store:</span>
+              <span className="ml-2 text-sm font-medium text-gray-900">
                 {currentIntegration.shopDomain}
               </span>
             </div>
             <div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Installed:</span>
-              <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
+              <span className="text-sm text-gray-600">Installed:</span>
+              <span className="ml-2 text-sm font-medium text-gray-900">
                 {formatDate(currentIntegration.installedAt)}
               </span>
             </div>
             <div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Last Sync:</span>
-              <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
+              <span className="text-sm text-gray-600">Last Sync:</span>
+              <span className="ml-2 text-sm font-medium text-gray-900">
                 {formatDate(currentIntegration.lastSyncAt)}
               </span>
             </div>
@@ -254,7 +270,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
 
         {/* Actions */}
         <div>
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+          <h3 className="text-sm font-medium text-gray-500 mb-2">
             Actions
           </h3>
           <div className="space-y-2">
@@ -282,16 +298,16 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
 
       {/* Error Display */}
       {currentIntegration.syncError && (
-        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-start">
             <svg className="w-5 h-5 text-red-400 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
+              <h4 className="text-sm font-medium text-red-800">
                 Sync Error
               </h4>
-              <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+              <p className="text-sm text-red-700 mt-1">
                 {currentIntegration.syncError}
               </p>
             </div>
@@ -301,16 +317,16 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
 
       {/* Success Message */}
       {currentIntegration.syncStatus === 'success' && !currentIntegration.syncError && (
-        <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-start">
             <svg className="w-5 h-5 text-green-400 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <h4 className="text-sm font-medium text-green-800 dark:text-green-200">
+              <h4 className="text-sm font-medium text-green-800">
                 Connection Successful
               </h4>
-              <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+              <p className="text-sm text-green-700 mt-1">
                 Your Shopify store is connected and ready for syncing.
               </p>
             </div>

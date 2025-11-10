@@ -47,8 +47,8 @@ export function PlatformSettings({
 
   if (!integration) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="fixed inset-0 bg-gray-900/20 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-surface rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">{platform.name} Settings</h2>
             <p className="text-sm text-gray-600 mt-1">Connect to {platform.name} to manage settings</p>
@@ -74,8 +74,8 @@ export function PlatformSettings({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-gray-900/20 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-surface rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-gray-200 flex items-center justify-between">
           <div>
