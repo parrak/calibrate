@@ -97,6 +97,15 @@ type PreviewResults = {
   averageChange: number
 }
 
+type PreviewTarget = {
+  productId: string
+  variantId: string | null
+  before: { amount: number; currency: string }
+  after: { amount: number; currency: string }
+  applied: boolean
+  trace?: string[]
+}
+
 export default function RulesPage({ params }: { params: { slug: string } }) {
   const { data: _session } = useSession()
 
@@ -241,7 +250,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
 
       // First, we need to save the rule temporarily to preview it
       // Or if it already has an ID, use that
-      let ruleId = (editingRule as any).id
+      let ruleId: string | undefined = 'id' in editingRule ? (editingRule as PricingRule & { id: string }).id : undefined
 
       if (!ruleId) {
         // Create temporary rule for preview
@@ -287,7 +296,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
         matchedProducts: previewData.matchedProducts || 0,
         totalPriceChanges: previewData.appliedTargets || 0,
         averageChange: previewData.targets?.length > 0
-          ? previewData.targets.reduce((sum: number, t: any) => {
+          ? previewData.targets.reduce((sum: number, t: PreviewTarget) => {
               const pctChange = t.after && t.before
                 ? ((t.after.amount - t.before.amount) / t.before.amount) * 100
                 : 0

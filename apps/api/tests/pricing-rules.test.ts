@@ -31,6 +31,14 @@ type ProductRecord = {
   currentPrice: number | null
   currency: string | null
   tags: string[]
+  active: boolean
+  channelRefs?: Record<string, unknown>
+  PriceVersion?: Array<{
+    unitAmount: number
+    currency: string
+    validTo: Date | null
+    createdAt: Date
+  }>
 }
 
 type RuleRunRecord = {
@@ -76,7 +84,7 @@ const initialState = (): StoreState => ({
       projectId: 'proj1',
       name: 'Summer Sale',
       description: '20% off all products',
-      selectorJson: { predicates: [{ type: 'all' }], operator: 'AND' },
+      selectorJson: { all: true },
       transformJson: {
         transform: { type: 'percentage', value: -20 },
         constraints: { floor: 100 }
@@ -99,7 +107,15 @@ const initialState = (): StoreState => ({
       name: 'Product 1',
       currentPrice: 1000,
       currency: 'USD',
-      tags: ['electronics']
+      tags: ['electronics'],
+      active: true,
+      channelRefs: {},
+      PriceVersion: [{
+        unitAmount: 1000,
+        currency: 'USD',
+        validTo: null,
+        createdAt: new Date()
+      }]
     },
     {
       id: 'prod2',
@@ -110,7 +126,15 @@ const initialState = (): StoreState => ({
       name: 'Product 2',
       currentPrice: 2000,
       currency: 'USD',
-      tags: ['clothing']
+      tags: ['clothing'],
+      active: true,
+      channelRefs: {},
+      PriceVersion: [{
+        unitAmount: 2000,
+        currency: 'USD',
+        validTo: null,
+        createdAt: new Date()
+      }]
     },
     {
       id: 'prod3',
@@ -121,7 +145,15 @@ const initialState = (): StoreState => ({
       name: 'Product 3',
       currentPrice: 500,
       currency: 'USD',
-      tags: ['electronics', 'sale']
+      tags: ['electronics', 'sale'],
+      active: true,
+      channelRefs: {},
+      PriceVersion: [{
+        unitAmount: 500,
+        currency: 'USD',
+        validTo: null,
+        createdAt: new Date()
+      }]
     }
   ],
   ruleRuns: [],
@@ -224,15 +256,20 @@ vi.mock('@calibr/db', () => {
       })
     },
     product: {
-      findMany: vi.fn(async ({ where }: any) => {
+      findMany: vi.fn(async ({ where, include }: any) => {
         let products = store.products.filter(p =>
           p.tenantId === where.tenantId &&
           p.projectId === where.projectId
         )
 
+        // Handle active filter
+        if (where.active !== undefined) {
+          products = products.filter(p => p.active === where.active)
+        }
+
         // Handle SKU filter
-        if (where.skuCode?.in) {
-          products = products.filter(p => where.skuCode.in.includes(p.skuCode))
+        if (where.sku?.in) {
+          products = products.filter(p => where.sku.in.includes(p.skuCode))
         }
 
         // Handle tag filter
@@ -242,17 +279,41 @@ vi.mock('@calibr/db', () => {
           )
         }
 
-        // Handle price range
-        if (where.currentPrice) {
-          if (where.currentPrice.gte !== undefined) {
-            products = products.filter(p => p.currentPrice && p.currentPrice >= where.currentPrice.gte)
-          }
-          if (where.currentPrice.lte !== undefined) {
-            products = products.filter(p => p.currentPrice && p.currentPrice <= where.currentPrice.lte)
+        // Handle price range through PriceVersion
+        if (where.AND && Array.isArray(where.AND)) {
+          for (const condition of where.AND) {
+            if (condition.PriceVersion?.some) {
+              products = products.filter(p => {
+                if (!p.PriceVersion || p.PriceVersion.length === 0) return false
+                const price = p.PriceVersion[0]
+                if (condition.PriceVersion.some.unitAmount?.gte !== undefined) {
+                  if (price.unitAmount < condition.PriceVersion.some.unitAmount.gte) return false
+                }
+                if (condition.PriceVersion.some.unitAmount?.lte !== undefined) {
+                  if (price.unitAmount > condition.PriceVersion.some.unitAmount.lte) return false
+                }
+                if (condition.PriceVersion.some.unitAmount?.gt !== undefined) {
+                  if (price.unitAmount <= condition.PriceVersion.some.unitAmount.gt) return false
+                }
+                if (condition.PriceVersion.some.unitAmount?.lt !== undefined) {
+                  if (price.unitAmount >= condition.PriceVersion.some.unitAmount.lt) return false
+                }
+                return true
+              })
+            }
           }
         }
 
-        return products
+        // Return products with or without includes based on query
+        return products.map(p => {
+          if (include?.PriceVersion) {
+            return {
+              ...p,
+              PriceVersion: p.PriceVersion || []
+            }
+          }
+          return p
+        })
       })
     },
     ruleRun: {
@@ -352,7 +413,7 @@ describe('Pricing Rules API - End to End', () => {
         projectId: 'proj1',
         name: 'Winter Sale',
         description: null,
-        selectorJson: { predicates: [{ type: 'all' }], operator: 'AND' },
+        selectorJson: { all: true },
         transformJson: { transform: { type: 'percentage', value: -10 }, constraints: {} },
         scheduleAt: null,
         enabled: false,
@@ -397,8 +458,7 @@ describe('Pricing Rules API - End to End', () => {
         name: 'Test Rule',
         description: 'A test pricing rule',
         selectorJson: {
-          predicates: [{ type: 'tag', tags: ['electronics'] }],
-          operator: 'AND'
+          tag: ['electronics']
         },
         transformJson: {
           transform: { type: 'percentage', value: -15 },
@@ -472,7 +532,7 @@ describe('Pricing Rules API - End to End', () => {
         method: 'POST',
         body: JSON.stringify({
           name: 'Test',
-          selectorJson: { predicates: [], operator: 'AND' }
+          selectorJson: { all: true }
         })
       })
 
@@ -636,8 +696,7 @@ describe('Pricing Rules API - End to End', () => {
           name: 'E2E Test Rule',
           description: 'End-to-end test rule',
           selectorJson: {
-            predicates: [{ type: 'tag', tags: ['electronics'] }],
-            operator: 'AND'
+            tag: ['electronics']
           },
           transformJson: {
             transform: { type: 'percentage', value: -10 },
