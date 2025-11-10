@@ -1,0 +1,116 @@
+import { render, screen, fireEvent } from '@testing-library/react'
+import { ResponsiveTable } from './ResponsiveTable'
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation((query) => ({
+    matches: query === '(min-width: 768px)',
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+})
+
+describe('ResponsiveTable', () => {
+  type TestItem = { id: string; name: string; price: number }
+  const columns = [
+    { key: 'name', header: 'Name', accessor: (item: TestItem) => item.name },
+    { key: 'price', header: 'Price', accessor: (item: TestItem) => `$${item.price}` },
+  ]
+
+  const data = [
+    { id: '1', name: 'Product A', price: 100 },
+    { id: '2', name: 'Product B', price: 200 },
+  ]
+
+  it('renders empty message when no data', () => {
+    render(
+      <ResponsiveTable
+        columns={columns}
+        data={[]}
+        keyExtractor={(item) => item.id}
+        emptyMessage="No products found"
+      />
+    )
+    expect(screen.getByText('No products found')).toBeInTheDocument()
+  })
+
+  it('renders table headers', () => {
+    render(
+      <ResponsiveTable
+        columns={columns}
+        data={data}
+        keyExtractor={(item) => item.id}
+      />
+    )
+    expect(screen.getByText('Name')).toBeInTheDocument()
+    expect(screen.getByText('Price')).toBeInTheDocument()
+  })
+
+  it('renders data in table format', () => {
+    render(
+      <ResponsiveTable
+        columns={columns}
+        data={data}
+        keyExtractor={(item) => item.id}
+      />
+    )
+    expect(screen.getByText('Product A')).toBeInTheDocument()
+    expect(screen.getByText('$100')).toBeInTheDocument()
+  })
+
+  it('has proper ARIA attributes', () => {
+    render(
+      <ResponsiveTable
+        columns={columns}
+        data={data}
+        keyExtractor={(item) => item.id}
+        aria-label="Product table"
+      />
+    )
+    const table = screen.getByRole('table')
+    expect(table).toHaveAttribute('aria-label', 'Product table')
+  })
+
+  it('calls onRowClick when row is clicked', () => {
+    const handleClick = jest.fn()
+    render(
+      <ResponsiveTable
+        columns={columns}
+        data={data}
+        keyExtractor={(item) => item.id}
+        onRowClick={handleClick}
+      />
+    )
+
+    const row = screen.getByText('Product A').closest('tr')
+    if (row) {
+      fireEvent.click(row)
+      expect(handleClick).toHaveBeenCalledWith(data[0])
+    }
+  })
+
+  it('handles keyboard navigation on rows', () => {
+    const handleClick = jest.fn()
+    render(
+      <ResponsiveTable
+        columns={columns}
+        data={data}
+        keyExtractor={(item) => item.id}
+        onRowClick={handleClick}
+      />
+    )
+
+    const row = screen.getByText('Product A').closest('tr')
+    if (row) {
+      fireEvent.keyDown(row, { key: 'Enter' })
+      expect(handleClick).toHaveBeenCalledWith(data[0])
+    }
+  })
+})
+
