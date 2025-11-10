@@ -57,51 +57,82 @@ export default function Home() {
           </a>
         </div>
 
-        <div className="bg-surface border border-border rounded-2xl p-8 shadow-xl mb-12">
-          <h2 className="text-2xl font-semibold text-fg mb-6">Quick Links</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            <a
-              href="/console/getting-started"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">Getting Started</div>
-              <div className="text-sm text-mute">Setup and onboarding guide</div>
-            </a>
-            <a
-              href="/console/price-changes"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">Price Changes</div>
-              <div className="text-sm text-mute">Workflow and API reference</div>
-            </a>
-            <a
-              href="/console/pricing-rules"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">Pricing Rules</div>
-              <div className="text-sm text-mute">Automate pricing strategies</div>
-            </a>
-            <a
-              href="/console/integrations"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">Integrations</div>
-              <div className="text-sm text-mute">Connect platforms & API</div>
-            </a>
-            <a
-              href="/console/ai-assistant"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">AI Assistant</div>
-              <div className="text-sm text-mute">Natural language queries & API</div>
-            </a>
-            <a
-              href="/console/best-practices"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">Best Practices</div>
-              <div className="text-sm text-mute">Tips for effective pricing</div>
-            </a>
+        <div className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Documentation Index</h2>
+
+          <div className="space-y-6">
+            {/* Getting Started */}
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-4">Getting Started</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                <a href="/console/getting-started" className="text-brand hover:underline text-sm">
+                  → Setup & Onboarding Guide
+                </a>
+              </div>
+            </div>
+
+            {/* Core Features */}
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-4">Core Features</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                <a href="/console/catalog" className="text-brand hover:underline text-sm">
+                  → Product Catalog
+                </a>
+                <a href="/console/catalog#api-reference" className="text-mute hover:text-brand text-sm ml-4">
+                  ↳ Catalog API
+                </a>
+                <a href="/console/price-changes" className="text-brand hover:underline text-sm">
+                  → Price Changes Workflow
+                </a>
+                <a href="/console/price-changes#api-reference" className="text-mute hover:text-brand text-sm ml-4">
+                  ↳ Price Changes API
+                </a>
+                <a href="/console/pricing-rules" className="text-brand hover:underline text-sm">
+                  → Pricing Rules & Automation
+                </a>
+                <a href="/console/integrations" className="text-brand hover:underline text-sm">
+                  → Platform Integrations
+                </a>
+                <a href="/console/integrations#api-reference" className="text-mute hover:text-brand text-sm ml-4">
+                  ↳ Platforms API
+                </a>
+              </div>
+            </div>
+
+            {/* Intelligence & Insights */}
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-4">Intelligence & Insights</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                <a href="/console/ai-assistant" className="text-brand hover:underline text-sm">
+                  → AI Assistant
+                </a>
+                <a href="/console/ai-assistant#api-reference" className="text-mute hover:text-brand text-sm ml-4">
+                  ↳ Assistant API
+                </a>
+                <a href="/console/analytics" className="text-brand hover:underline text-sm">
+                  → Analytics & Reporting
+                </a>
+                <a href="/console/competitors" className="text-brand hover:underline text-sm">
+                  → Competitor Monitoring
+                </a>
+              </div>
+            </div>
+
+            {/* Reference & Help */}
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-4">Reference & Help</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                <a href="/console/roles-permissions" className="text-brand hover:underline text-sm">
+                  → Roles & Permissions
+                </a>
+                <a href="/console/troubleshooting" className="text-brand hover:underline text-sm">
+                  → Troubleshooting Guide
+                </a>
+                <a href="/console/best-practices" className="text-brand hover:underline text-sm">
+                  → Best Practices
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 
