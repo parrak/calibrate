@@ -171,7 +171,7 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
               This usually means your authentication token has expired or is invalid.
             </p>
             <div className="flex gap-2 justify-center">
-              <Button onClick={handleSignOut} className="mt-4" variant="default">
+              <Button onClick={handleSignOut} className="mt-4" variant="primary">
                 Sign Out
               </Button>
               <Button onClick={fetchRules} className="mt-4" variant="outline">

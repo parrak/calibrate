@@ -133,7 +133,7 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
             <div className="flex gap-2 justify-center">
               {isAuthError ? (
                 <>
-                  <Button onClick={handleSignOut} className="mt-4" variant="default">
+                  <Button onClick={handleSignOut} className="mt-4" variant="primary">
                     Sign Out
                   </Button>
                   <Button onClick={fetchCompetitors} className="mt-4" variant="outline">
