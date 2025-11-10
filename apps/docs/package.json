@@ -29,6 +29,7 @@
     "@vitejs/plugin-react": "^5.1.0",
     "eslint": "^8.55.0",
     "eslint-config-next": "14.0.4",
+    "ignore-loader": "^0.1.2",
     "jsdom": "^22.1.0",
     "vitest": "^4.0.8"
   }
