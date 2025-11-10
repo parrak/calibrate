@@ -97,7 +97,14 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
     projectSlug,
     host: host || null,
   };
-  const encodedState = encodeOAuthState(state);
+
+  let encodedState: string;
+  try {
+    encodedState = encodeOAuthState(state);
+  } catch (error) {
+    console.error('Failed to encode Shopify OAuth state', error);
+    return NextResponse.json({ error: 'Shopify integration not configured' }, { status: 500 });
+  }
 
   authUrl.searchParams.set('state', encodedState); // Use state to track project and embedded host
   authUrl.searchParams.set('grant_options[]', 'per-user');

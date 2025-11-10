@@ -243,6 +243,7 @@ function getErrorMessage(error: string): string {
     missing_parameters: 'OAuth callback missing required parameters',
     configuration_error: 'Shopify app not properly configured',
     invalid_signature: 'Invalid request signature',
+    invalid_state: 'Your session expired. Start the connection again.',
     token_exchange_failed: 'Failed to exchange authorization code',
     no_access_token: 'No access token received from Shopify',
     save_failed: 'Failed to save integration',

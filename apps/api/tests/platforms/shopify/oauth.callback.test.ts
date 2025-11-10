@@ -53,6 +53,36 @@ describe('Shopify OAuth Callback Route', () => {
     expect(location).toContain('error=invalid_signature')
   })
 
+  it('redirects with invalid_state when the OAuth state token is tampered with', async () => {
+    const validState = encodeOAuthState({ projectSlug: 'demo', host: 'admin.shopify.com' })
+    const envelope = JSON.parse(Buffer.from(validState, 'base64url').toString('utf8'))
+    envelope.payload.projectSlug = 'other-project'
+    const tamperedState = Buffer.from(JSON.stringify(envelope), 'utf8').toString('base64url')
+
+    const params = new URLSearchParams({
+      code: 'test_code',
+      shop: 'test-shop.myshopify.com',
+      state: tamperedState,
+      timestamp: '1234567890',
+    })
+
+    const baseParams = Array.from(params.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&')
+
+    const hmac = crypto.createHmac('sha256', process.env.SHOPIFY_API_SECRET!).update(baseParams).digest('hex')
+    params.set('hmac', hmac)
+
+    const req = new Request(`https://api.example.com/api/platforms/shopify/oauth/callback?${params.toString()}`)
+    // @ts-expect-error NextRequest compatible
+    const res = await callbackGET(req)
+
+    expect(res.status).toBe(307)
+    const location = res.headers.get('location') || ''
+    expect(location).toContain('error=invalid_state')
+  })
+
   it('exchanges token, saves integration, and redirects to success', async () => {
     const state = encodeOAuthState({ projectSlug: 'demo', host: 'admin.shopify.com' })
     const params = new URLSearchParams({
