@@ -93,7 +93,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
     }
 
     // Save integration using Agent C's POST endpoint
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
+    const apiBase = resolveInternalApiBase(req);
     const saveResponse = await fetch(
       `${apiBase}/api/platforms/shopify`,
       {
@@ -123,7 +123,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
     console.log('Shopify integration saved successfully:', integration.integration.id);
 
     // Redirect to console success page
-    const consoleUrl = process.env.NEXT_PUBLIC_CONSOLE_URL || 'https://console.calibr.lat';
+    const consoleUrl = resolveConsoleBase();
     const redirectUrl = new URL(`/p/${state.projectSlug}/integrations/shopify`, consoleUrl);
     redirectUrl.searchParams.set('success', 'true');
     if (state.host) {
@@ -212,7 +212,7 @@ function verifyShopifyHMAC(
  * Redirect to console with error parameter
  */
 function redirectToConsoleWithError(state: ShopifyOAuthState | null, error: string): NextResponse {
-  const consoleBase = process.env.NEXT_PUBLIC_CONSOLE_URL || 'https://console.calibr.lat';
+  const consoleBase = resolveConsoleBase();
   const path = state?.projectSlug
     ? `/p/${state.projectSlug}/integrations/shopify`
     : '/integrations/shopify';
@@ -228,3 +228,31 @@ function redirectToConsoleWithError(state: ShopifyOAuthState | null, error: stri
 export const OPTIONS = withSecurity(async () => {
   return new NextResponse(null, { status: 204 });
 });
+function resolveInternalApiBase(req: NextRequest): string {
+  const explicitBase =
+    process.env.INTERNAL_API_BASE ||
+    process.env.API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_BASE ||
+    null;
+
+  if (explicitBase) {
+    return explicitBase.replace(/\/$/, '');
+  }
+
+  const forwardedProto = req.headers.get('x-forwarded-proto');
+  const forwardedHost = req.headers.get('x-forwarded-host');
+  if (forwardedProto && forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+
+  const url = new URL(req.url);
+  return url.origin;
+}
+
+function resolveConsoleBase(): string {
+  const consoleBase =
+    process.env.NEXT_PUBLIC_CONSOLE_URL ||
+    process.env.CONSOLE_BASE_URL ||
+    'https://console.calibr.lat';
+  return consoleBase.replace(/\/$/, '');
+}
