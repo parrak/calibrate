@@ -362,9 +362,9 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
             <button
               key={option.value}
               className={clsx(
-                'rounded-full px-3 py-1 text-sm text-white font-medium transition',
+                'rounded-full px-3 py-1 text-sm font-medium transition',
                 status === option.value
-                  ? option.color
+                  ? `${option.color} text-white`
                   : 'bg-surface/50 border border-border text-mute hover:bg-surface hover:text-fg'
               )}
               onClick={() => {
