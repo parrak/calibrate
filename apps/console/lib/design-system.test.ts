@@ -132,11 +132,12 @@ describe('Design System - Stripe-like UX', () => {
       })
 
       // Only check for dark BACKGROUND colors (most critical for UX)
+      // Allow bg-gray-900 with opacity (e.g., bg-gray-900/20) for backdrop overlays
       const darkBackgroundPatterns = [
-        /bg-black\b/,
-        /bg-gray-900\b/,
-        /bg-slate-900\b/,
-        /bg-zinc-900\b/,
+        /bg-black\b(?!\/)/,  // bg-black but not bg-black/50
+        /bg-gray-900\b(?!\/)/,  // bg-gray-900 but not bg-gray-900/20
+        /bg-slate-900\b(?!\/)/,
+        /bg-zinc-900\b(?!\/)/,
       ]
 
       const filesWithDarkBgs: Array<{ file: string; pattern: string }> = []
