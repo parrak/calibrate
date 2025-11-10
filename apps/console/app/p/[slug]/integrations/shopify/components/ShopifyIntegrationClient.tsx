@@ -117,7 +117,7 @@ export function ShopifyIntegrationClient({
           setIntegration(null)
           setIsConnected(false)
           if (!silent) {
-            toast.info('Shopify integration not found for this project yet.')
+            toast.show('Shopify integration not found for this project yet.', { type: 'info' })
           }
           return
         }

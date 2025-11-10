@@ -26,6 +26,15 @@ interface ShopifyStatusProps {
   onUpdate?: (integration: ShopifyIntegration) => void;
 }
 
+interface ShopifyConnectionTestResponse {
+  result?: {
+    connected?: boolean;
+    status?: {
+      message?: string;
+    };
+  };
+}
+
 export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifyStatusProps) {
   const [testing, setTesting] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -141,15 +150,19 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
         throw new Error('Project slug is required for connection test');
       }
 
-      const data = await platformsApi.triggerSync('shopify', projectSlug, 'test_connection');
+      const data = await platformsApi.triggerSync<ShopifyConnectionTestResponse>(
+        'shopify',
+        projectSlug,
+        'test_connection',
+      );
+
+      const result = data?.result;
 
       // Update local state
       const updated = {
         ...currentIntegration,
-        syncStatus: data?.result?.connected ? 'success' : 'error',
-        syncError: data?.result?.connected
-          ? null
-          : data?.result?.status?.message || 'Connection failed',
+        syncStatus: result?.connected ? 'success' : 'error',
+        syncError: result?.connected ? null : result?.status?.message || 'Connection failed',
         lastSyncAt: new Date().toISOString(),
       };
       setCurrentIntegration(updated);
