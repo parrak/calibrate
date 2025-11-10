@@ -45,6 +45,7 @@ type PriceChangeRecord = {
   appliedAt?: Date | null
   createdAt: Date
   connectorStatus?: any
+  variantId?: string | null
 }
 
 type StoreState = {
@@ -335,6 +336,12 @@ const store = (() => {
         return clone(record)
       },
     },
+    sku: {
+      findUnique: async ({ where, select }: any) => {
+        // Return null by default - tests can override this if needed
+        return null
+      },
+    },
     $transaction: async (cb: any) => cb(client),
   }
 
@@ -586,21 +593,51 @@ describe('price changes API', () => {
 
   it('returns 422 when Shopify variant identifier is unavailable', async () => {
     const target = store.state.priceChanges.find((pc) => pc.id === 'pc_approved')
-    if (target?.context) {
-      delete target.context.shopifyVariantId
+    if (target) {
+      // Remove variantId from all possible sources
+      if (target.context) {
+        delete target.context.shopifyVariantId
+        delete target.context.variantId
+        delete target.context.connectorVariantId
+        delete target.context.externalVariantId
+        delete target.context.shopify
+      }
+      // Clear direct variantId field
+      target.variantId = null
+      // Clear connectorStatus variantId
+      if (target.connectorStatus && typeof target.connectorStatus === 'object') {
+        const status = target.connectorStatus as Record<string, unknown>
+        delete status.variantId
+        if (status.metadata && typeof status.metadata === 'object') {
+          const metadata = status.metadata as Record<string, unknown>
+          delete metadata.variantId
+          delete metadata.externalId
+        }
+      }
     }
-    const token = makeToken('user-admin')
-    const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/apply', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'X-Calibr-Project': 'demo',
-      },
-    })
-    const res = await applyRoute(req, paramsFor('pc_approved') as any)
-    expect(res.status).toBe(422)
-    const body = await res.json()
-    expect(body.error).toBe('MissingVariant')
+    // Mock SKU to return null to prevent fallback resolution from SKU attributes
+    const originalSku = store.client.sku
+    store.client.sku = {
+      findUnique: async () => null,
+    } as any
+
+    try {
+      const token = makeToken('user-admin')
+      const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/apply', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'X-Calibr-Project': 'demo',
+        },
+      })
+      const res = await applyRoute(req, paramsFor('pc_approved') as any)
+      expect(res.status).toBe(422)
+      const body = await res.json()
+      expect(body.error).toBe('MissingVariant')
+    } finally {
+      // Restore original SKU mock
+      store.client.sku = originalSku
+    }
   })
 
   it('surfaces Shopify connector API failures', async () => {

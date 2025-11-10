@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import './globals.css'
+import { Sidebar } from '../components/Sidebar'
 
 export const metadata: Metadata = {
   title: 'Calibrate Documentation',
@@ -27,125 +28,130 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-[color:var(--bg)] text-[color:var(--fg)]">
-        {/* Navigation Header */}
-        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-surface/80 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/60">
-          <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-            <div className="flex items-center gap-8">
-              <Link href="/" className="flex items-center gap-2 font-semibold text-fg hover:text-brand transition-colors">
-                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-brand" />
-                  <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-brand opacity-60" />
-                  <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-brand opacity-60" />
-                  <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-accent" />
-                </svg>
-                <span className="text-lg">Calibrate</span>
-              </Link>
-              <div className="hidden md:flex items-center gap-6">
-                <Link href="/" className="text-sm text-fg-muted hover:text-fg transition-colors">
-                  Docs
-                </Link>
-                <Link href="/console" className="text-sm text-fg-muted hover:text-fg transition-colors">
-                  Console Guide
-                </Link>
-                <Link href="/api-spec" target="_blank" className="text-sm text-fg-muted hover:text-fg transition-colors">
-                  API Reference
-                </Link>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <a
-                href="https://calibr.lat"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-fg-muted hover:text-fg transition-colors"
-              >
-                calibr.lat
-              </a>
-            </div>
-          </nav>
-        </header>
-
-        {/* Main Content */}
-        <main className="min-h-[calc(100vh-4rem)]">
-          {children}
-        </main>
-
-        {/* Footer */}
-        <footer className="border-t border-border/40 bg-surface/50">
-          <div className="mx-auto max-w-7xl px-6 py-12">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="md:col-span-2">
-                <div className="flex items-center gap-2 mb-4">
+        <div className="flex flex-col min-h-screen">
+          {/* Navigation Header */}
+          <header className="sticky top-0 z-50 w-full border-b border-[color:var(--border)] bg-[color:var(--surface)]/80 backdrop-blur-xl supports-[backdrop-filter]:bg-[color:var(--surface)]/60">
+            <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+              <div className="flex items-center gap-8">
+                <Link href="/" className="flex items-center gap-2 font-semibold text-[color:var(--fg)] hover:text-[color:var(--brand)] transition-colors">
                   <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none">
-                    <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-brand" />
-                    <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-brand opacity-60" />
-                    <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-brand opacity-60" />
-                    <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-accent" />
+                    <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)]" />
+                    <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
+                    <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
+                    <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--accent)]" />
                   </svg>
-                  <span className="font-semibold text-fg">Calibrate</span>
+                  <span className="text-lg">Calibrate</span>
+                </Link>
+                <div className="hidden md:flex items-center gap-6">
+                  <Link href="/" className="text-sm text-[color:var(--mute)] hover:text-[color:var(--fg)] transition-colors">
+                    Docs
+                  </Link>
+                  <Link href="/console" className="text-sm text-[color:var(--mute)] hover:text-[color:var(--fg)] transition-colors">
+                    Console Guide
+                  </Link>
+                  <Link href="/api-spec" target="_blank" className="text-sm text-[color:var(--mute)] hover:text-[color:var(--fg)] transition-colors">
+                    API Reference
+                  </Link>
                 </div>
-                <p className="text-sm text-fg-muted max-w-md">
-                  Complete guide to using the Calibrate pricing management platform. Learn how to manage your product catalog, automate pricing, and integrate with your systems.
+              </div>
+              <div className="flex items-center gap-4">
+                <a
+                  href="https://calibr.lat"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[color:var(--mute)] hover:text-[color:var(--fg)] transition-colors"
+                >
+                  calibr.lat
+                </a>
+              </div>
+            </nav>
+          </header>
+
+          {/* Main Content with Sidebar */}
+          <div className="flex flex-1 overflow-hidden">
+            <Sidebar />
+            <main className="flex-1 overflow-y-auto min-h-[calc(100vh-4rem)]">
+              {children}
+            </main>
+          </div>
+
+          {/* Footer */}
+          <footer className="border-t border-[color:var(--border)] bg-[color:var(--surface)]">
+            <div className="mx-auto max-w-7xl px-6 py-12">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div className="md:col-span-2">
+                  <div className="flex items-center gap-2 mb-4">
+                    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)]" />
+                      <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
+                      <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
+                      <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--accent)]" />
+                    </svg>
+                    <span className="font-semibold text-[color:var(--fg)]">Calibrate</span>
+                  </div>
+                  <p className="text-sm text-[color:var(--mute)] max-w-md">
+                    Complete guide to using the Calibrate pricing management platform. Learn how to manage your product catalog, automate pricing, and integrate with your systems.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[color:var(--fg)] mb-3">Documentation</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li>
+                      <Link href="/console/getting-started" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Getting Started
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/console/catalog" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Catalog
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/console/price-changes" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Price Changes
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/console/integrations" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Integrations
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[color:var(--fg)] mb-3">Resources</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li>
+                      <Link href="/api-spec" target="_blank" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        API Reference
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/console/best-practices" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Best Practices
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/console/troubleshooting" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Troubleshooting
+                      </Link>
+                    </li>
+                    <li>
+                      <a href="https://calibr.lat" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Main Site
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="mt-8 pt-8 border-t border-[color:var(--border)]">
+                <p className="text-xs text-[color:var(--mute)] text-center">
+                  © {new Date().getFullYear()} Calibrate. All rights reserved.
                 </p>
               </div>
-              <div>
-                <h3 className="text-sm font-semibold text-fg mb-3">Documentation</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <Link href="/console/getting-started" className="text-fg-muted hover:text-brand transition-colors">
-                      Getting Started
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/console/catalog" className="text-fg-muted hover:text-brand transition-colors">
-                      Catalog
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/console/price-changes" className="text-fg-muted hover:text-brand transition-colors">
-                      Price Changes
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/console/integrations" className="text-fg-muted hover:text-brand transition-colors">
-                      Integrations
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-fg mb-3">Resources</h3>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <Link href="/api-spec" target="_blank" className="text-fg-muted hover:text-brand transition-colors">
-                      API Reference
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/console/best-practices" className="text-fg-muted hover:text-brand transition-colors">
-                      Best Practices
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/console/troubleshooting" className="text-fg-muted hover:text-brand transition-colors">
-                      Troubleshooting
-                    </Link>
-                  </li>
-                  <li>
-                    <a href="https://calibr.lat" className="text-fg-muted hover:text-brand transition-colors">
-                      Main Site
-                    </a>
-                  </li>
-                </ul>
-              </div>
             </div>
-            <div className="mt-8 pt-8 border-t border-border/40">
-              <p className="text-xs text-fg-subtle text-center">
-                © {new Date().getFullYear()} Calibrate. All rights reserved.
-              </p>
-            </div>
-          </div>
-        </footer>
+          </footer>
+        </div>
       </body>
     </html>
   )
