@@ -52,7 +52,7 @@ export function Sidebar() {
     <>
       {/* Mobile menu button */}
       <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg shadow-sm"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[color:var(--surface)] border border-[color:var(--border)] rounded-lg shadow-sm"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         aria-label="Toggle menu"
       >
@@ -83,7 +83,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-40
+          fixed top-0 left-0 h-full w-64 bg-[color:var(--surface)] border-r border-[color:var(--border)] z-40
           transform transition-transform duration-200 ease-in-out
           lg:translate-x-0 lg:static lg:z-auto
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -93,7 +93,7 @@ export function Sidebar() {
           <div className="mb-8">
             <Link
               href="/"
-              className="flex items-center gap-2 text-gray-900 hover:text-gray-700 transition-colors"
+              className="flex items-center gap-2 text-[color:var(--fg)] hover:text-[color:var(--brand)] transition-colors"
             >
               <svg
                 className="w-6 h-6"
@@ -119,8 +119,8 @@ export function Sidebar() {
                 block px-3 py-2 rounded-md text-sm font-medium transition-colors
                 ${
                   isActive('/console') && pathname === '/console'
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-[color:var(--brand-light)] text-[color:var(--brand)]'
+                    : 'text-[color:var(--fg)] hover:bg-[color:var(--bg)] hover:text-[color:var(--brand)]'
                 }
               `}
             >
@@ -136,8 +136,8 @@ export function Sidebar() {
                       block px-3 py-2 rounded-md text-sm font-medium transition-colors
                       ${
                         isActive(section.href)
-                          ? 'bg-blue-50 text-blue-600'
-                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                          ? 'bg-[color:var(--brand-light)] text-[color:var(--brand)]'
+                          : 'text-[color:var(--fg)] hover:bg-[color:var(--bg)] hover:text-[color:var(--brand)]'
                       }
                     `}
                   >
@@ -145,7 +145,7 @@ export function Sidebar() {
                   </Link>
                 ) : (
                   <>
-                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <div className="px-3 py-2 text-xs font-semibold text-[color:var(--mute)] uppercase tracking-wider">
                       {section.title}
                     </div>
                     {section.items?.map((item) => (
@@ -156,8 +156,8 @@ export function Sidebar() {
                           block px-3 py-2 ml-2 rounded-md text-sm transition-colors
                           ${
                             isActive(item.href)
-                              ? 'bg-blue-50 text-blue-600 font-medium'
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                              ? 'bg-[color:var(--brand-light)] text-[color:var(--brand)] font-medium'
+                              : 'text-[color:var(--mute)] hover:bg-[color:var(--bg)] hover:text-[color:var(--brand)]'
                           }
                         `}
                       >
