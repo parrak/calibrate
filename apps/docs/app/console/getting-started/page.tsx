@@ -288,15 +288,15 @@ export default function GettingStarted() {
             <ol className="space-y-3 text-fg">
               <li className="flex gap-3">
                 <span className="font-bold text-brand">1.</span>
-                Click the <strong>project dropdown</strong> in the top navigation
+                Click <strong>Home</strong> in the breadcrumb navigation or navigate to the home page
               </li>
               <li className="flex gap-3">
                 <span className="font-bold text-brand">2.</span>
-                Select the project you want to view
+                You'll see a grid of all your projects
               </li>
               <li className="flex gap-3">
                 <span className="font-bold text-brand">3.</span>
-                You'll be redirected to that project's dashboard
+                Click any project card to open that project's dashboard
               </li>
             </ol>
           </div>
@@ -306,11 +306,11 @@ export default function GettingStarted() {
             <ol className="space-y-3 text-fg">
               <li className="flex gap-3">
                 <span className="font-bold text-brand">1.</span>
-                Navigate to the <strong>Projects</strong> page from your account menu
+                Navigate to the <strong>home page</strong> by clicking Home in the breadcrumb or the logo
               </li>
               <li className="flex gap-3">
                 <span className="font-bold text-brand">2.</span>
-                Click <strong>"Create New Project"</strong>
+                Click the <strong>"Create New Project"</strong> tile in the project grid
               </li>
               <li className="flex gap-3">
                 <span className="font-bold text-brand">3.</span>
@@ -376,7 +376,7 @@ export default function GettingStarted() {
               <h3 className="text-lg font-semibold text-fg mb-2">Can I manage multiple stores in one account?</h3>
               <p className="text-mute text-sm">
                 Yes! You can create multiple projects within one account, each connected to different e-commerce platforms or stores.
-                Use the project dropdown to switch between them.
+                Navigate to the home page to view all your projects and switch between them.
               </p>
             </div>
 
