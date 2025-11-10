@@ -61,8 +61,9 @@ describe('ResponsiveTable', () => {
         keyExtractor={(item) => item.id}
       />
     )
-    expect(screen.getByText('Product A')).toBeInTheDocument()
-    expect(screen.getByText('$100')).toBeInTheDocument()
+    // Both desktop and mobile views render, so use getAllByText
+    expect(screen.getAllByText('Product A').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('$100').length).toBeGreaterThan(0)
   })
 
   it('has proper ARIA attributes', () => {
@@ -89,9 +90,11 @@ describe('ResponsiveTable', () => {
       />
     )
 
-    const row = screen.getByText('Product A').closest('tr')
-    if (row) {
-      fireEvent.click(row)
+    // Find the table row (desktop view) - use getAllByText since both desktop/mobile might render
+    const productTexts = screen.getAllByText('Product A')
+    const tableRow = productTexts[0]?.closest('tr')
+    if (tableRow) {
+      fireEvent.click(tableRow)
       expect(handleClick).toHaveBeenCalledWith(data[0])
     }
   })
@@ -107,9 +110,11 @@ describe('ResponsiveTable', () => {
       />
     )
 
-    const row = screen.getByText('Product A').closest('tr')
-    if (row) {
-      fireEvent.keyDown(row, { key: 'Enter' })
+    // Find the table row (desktop view) - use getAllByText since both desktop/mobile might render
+    const productTexts = screen.getAllByText('Product A')
+    const tableRow = productTexts[0]?.closest('tr')
+    if (tableRow) {
+      fireEvent.keyDown(tableRow, { key: 'Enter' })
       expect(handleClick).toHaveBeenCalledWith(data[0])
     }
   })

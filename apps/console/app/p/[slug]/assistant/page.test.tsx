@@ -44,7 +44,8 @@ describe('AssistantPage', () => {
 
   it('renders Ask button with proper ARIA attributes', () => {
     render(<AssistantPage />)
-    const button = screen.getByRole('button', { name: /ask the ai assistant/i })
+    // When input is empty, button has aria-label "Ask button disabled: Enter a question first"
+    const button = screen.getByRole('button', { name: /ask button disabled: enter a question first/i })
     expect(button).toBeInTheDocument()
     expect(button).toBeDisabled() // Initially disabled when input is empty
   })
@@ -52,10 +53,11 @@ describe('AssistantPage', () => {
   it('enables Ask button when input has text', () => {
     render(<AssistantPage />)
     const input = screen.getByLabelText('Ask a question about your pricing data')
-    const button = screen.getByRole('button', { name: /ask the ai assistant/i })
 
     fireEvent.change(input, { target: { value: 'Test question' } })
 
+    // After input has text, button aria-label changes to "Ask the AI Assistant"
+    const button = screen.getByRole('button', { name: /ask the ai assistant/i })
     expect(button).not.toBeDisabled()
   })
 
@@ -84,7 +86,7 @@ describe('AssistantPage', () => {
   })
 
   it('submits query on Enter key', async () => {
-    ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         answer: 'Test answer',
