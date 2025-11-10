@@ -10,6 +10,7 @@ import SignOutButton from './SignOutButton'
 export async function UserMenu() {
   const session = await getServerSession(authOptions)
 
+  // Only return null if definitely not authenticated
   if (!session?.user) {
     return null
   }

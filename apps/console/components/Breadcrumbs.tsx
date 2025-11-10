@@ -23,7 +23,11 @@ export function Breadcrumbs() {
 
   // Build cumulative hrefs
   const crumbs = parts.map((seg, idx) => {
-    const href = '/' + parts.slice(0, idx + 1).join('/')
+    let href = '/' + parts.slice(0, idx + 1).join('/')
+    // Special case: 'p' segment should link to home (project list)
+    if (seg === 'p' && idx === 0) {
+      href = '/'
+    }
     return { href, segment: seg, isLast: idx === parts.length - 1 }
   })
 
