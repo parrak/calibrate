@@ -28,10 +28,12 @@ const config: Config = {
           hover: 'var(--brand-hover)',
           light: 'var(--brand-light)',
         },
+        'brand-hover': 'var(--brand-hover)',
         accent: {
           DEFAULT: 'var(--accent)',
           light: 'var(--accent-light)',
         },
+        mute: 'var(--mute)',
         danger: '#EF4444',
         warning: '#F59E0B',
         success: '#10B981',

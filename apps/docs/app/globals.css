@@ -75,7 +75,11 @@
   }
 
   a {
-    @apply text-brand hover:text-brand-hover underline;
+    @apply text-brand underline;
+  }
+
+  a:hover {
+    color: var(--brand-hover);
   }
 
   code {
@@ -143,7 +147,11 @@
 
   /* Link styles */
   .link-primary {
-    @apply text-brand hover:text-brand-hover transition-colors duration-150;
+    @apply text-brand transition-colors duration-150;
+  }
+
+  .link-primary:hover {
+    color: var(--brand-hover);
   }
 
   /* Button base */
