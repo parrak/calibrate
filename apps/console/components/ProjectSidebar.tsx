@@ -8,6 +8,7 @@ const iconMap: Record<string, string> = {
   dashboard: '📊',
   'price-changes': '💰',
   catalog: '📦',
+  rules: '⚙️',
   competitors: '🎯',
   assistant: '🤖',
   analytics: '📈',
