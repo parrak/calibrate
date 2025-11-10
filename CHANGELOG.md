@@ -72,12 +72,29 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - See `agents/docs/_EXECUTION_PACKET_V2/M1.1_COMPLETION_SUMMARY.md` for complete documentation
 
 ### Fixed
-- **Console & API: Test Failures and Schema Mismatches** (PR #58)
+- **Competitor Monitoring: CORS Preflight Issues** (PR #60) — Completed Nov 9, 2025
+  - Added OPTIONS handlers to all competitor API endpoints for CORS preflight requests
+  - Fixed "Failed to fetch" errors when calling competitor endpoints from console
+  - Endpoints updated:
+    - `/api/v1/competitors/monitor` (POST)
+    - `/api/v1/competitors/[id]` (PUT, DELETE)
+    - `/api/v1/competitors/[id]/products` (POST)
+    - `/api/v1/competitors/rules` (POST)
+  - All OPTIONS handlers wrapped with `withSecurity` middleware for consistent CORS headers
+  - Fixes net::ERR_FAILED browser errors during competitor monitoring operations
+
+- **Console & API: Test Failures and Schema Mismatches** (PR #58) — Completed Nov 9, 2025
   - Fixed mock hoisting issue in regression-schema-mismatch.test.ts by using path alias `@/lib/auth-security`
   - Fixed status parameter validation test to account for case-insensitive API behavior
   - Fixed RSC route handling test to check query string for `_rsc` parameter
   - Fixed M0.1 fields test to check fields after adding them to mock object
   - All 26 regression tests now passing (8 in regression-schema-mismatch, 18 in regression-console-errors)
+
+- **Shopify Connector: Connection Error Handling** (PR #59) — Completed Nov 9, 2025
+  - Improved Shopify sync connection error handling and diagnostics
+  - Enhanced error messages for better debugging of connection issues
+  - Better handling of rate limits and API failures
+
 - **Competitor Monitoring: Component & API Fixes**
   - Fixed CompetitorMonitor component to pass projectSlug to monitor API endpoint
   - Fixed CompetitorRules component to properly create rules via API
