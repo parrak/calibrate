@@ -171,7 +171,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
 
           // For auth errors, show helpful message
           if (res.status === 401) {
-            setError('Authentication failed. Please sign out and sign in again.')
+            setError('Authentication failed: API session token is missing. This feature requires CONSOLE_INTERNAL_TOKEN environment variable to be configured. Please contact your system administrator.')
             setItems([])
             setCursor(undefined)
             cursorRef.current = undefined
@@ -424,9 +424,15 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
           <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
             <div className="font-medium mb-1">{error}</div>
             {error.includes('Authentication failed') && (
-              <div className="text-xs text-red-300 mt-2">
-                This usually means the API authentication token is missing or invalid.
-                Please ensure CONSOLE_INTERNAL_TOKEN is configured correctly in both Console and API environments.
+              <div className="text-xs text-red-300 mt-2 space-y-1">
+                <div><strong>Why is this happening?</strong> The API authentication token could not be generated.</div>
+                <div><strong>What you need:</strong></div>
+                <ul className="list-disc list-inside ml-2">
+                  <li>Environment variable <code className="bg-red-900/40 px-1 rounded">CONSOLE_INTERNAL_TOKEN</code> must be set in the Console app</li>
+                  <li>Environment variable <code className="bg-red-900/40 px-1 rounded">NEXT_PUBLIC_API_BASE</code> or <code className="bg-red-900/40 px-1 rounded">API_BASE_URL</code> must be set</li>
+                  <li>The API must be accessible and configured to accept the internal token</li>
+                </ul>
+                <div className="mt-2"><strong>Next steps:</strong> Contact your system administrator to configure these environment variables, then sign out and sign back in.</div>
               </div>
             )}
           </div>
