@@ -1,5 +1,5 @@
 # Calibr V2 Execution Packet — Internal Engineering Summary
-_Last updated: Nov 2025_
+_Last updated: November 10, 2025_
 
 ## Purpose
 Define the **technical execution plan** for Calibr V2 with an **e‑commerce wedge** (Shopify launch; Amazon read‑only stub), while preserving the long‑term **Composable Data OS** architecture.
@@ -29,8 +29,8 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - `Audit(id, tenant_id, entity, entity_id, action, actor, explain jsonb, created_at)`
 
 ## Connectors
-- **Shopify (Launch)**: Products/Variants ingest; price update write-back; health check; idempotent retries; rate-limit backoff.
-- **Amazon (Stub)**: SP-API auth model + catalog ingest **only**; no write; marks schema generality.
+- **Shopify (Launch)** ✅: Products/Variants ingest; price update write-back; health check; idempotent retries; rate-limit backoff.
+- **Amazon (Stub)** ✅: SP-API auth model + catalog ingest **only**; no write; marks schema generality. **VALIDATED** November 10, 2025 — 8/8 tests passing, acceptance report complete.
 
 ## Copilot (Platform Feature)
 - **Read-only**: `/copilot/query` → NL→SQL/GraphQL with schema-aware RAG; scope by tenant; log generated query + sources.
