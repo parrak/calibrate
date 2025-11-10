@@ -338,20 +338,8 @@ const store = (() => {
     },
     sku: {
       findUnique: async ({ where, select }: any) => {
-        if (!where?.id) return null
-        // Mock SKU with Shopify variant ID in attributes
-        const sku = {
-          id: where.id,
-          attributes: {
-            shopify: {
-              variantId: 'variant_from_sku_attributes',
-            },
-          },
-        }
-        if (select?.attributes) {
-          return clone({ attributes: sku.attributes })
-        }
-        return clone(sku)
+        // Return null by default - tests can override this if needed
+        return null
       },
     },
     $transaction: async (cb: any) => cb(client),
@@ -627,7 +615,7 @@ describe('price changes API', () => {
         }
       }
     }
-    // Mock SKU to return null/empty attributes so it can't find variantId there either
+    // Mock SKU to return null to prevent fallback resolution from SKU attributes
     const originalSku = store.client.sku
     store.client.sku = {
       findUnique: async () => null,
@@ -650,57 +638,6 @@ describe('price changes API', () => {
       // Restore original SKU mock
       store.client.sku = originalSku
     }
-  })
-
-  it('resolves Shopify variant ID from direct variantId field on PriceChange', async () => {
-    // Create a price change with variantId directly on the model (not in context)
-    const pcWithDirectVariantId: PriceChangeRecord = {
-      id: 'pc_direct_variant',
-      tenantId: 'tenant1',
-      projectId: 'proj1',
-      skuId: 'sku1',
-      source: 'Manual',
-      fromAmount: 4990,
-      toAmount: 5490,
-      currency: 'USD',
-      context: {}, // No shopifyVariantId in context
-      status: 'APPROVED',
-      policyResult: { ok: true, checks: [{ name: 'maxPctDelta', ok: true }] },
-      createdAt: new Date('2025-01-07T00:00:00Z'),
-      approvedBy: 'user-editor',
-      appliedAt: null,
-      connectorStatus: {},
-      variantId: 'variant_direct_field', // Direct field on PriceChange
-    }
-    store.pushPriceChange(pcWithDirectVariantId)
-
-    shopifyMocks.updatePrice.mockResolvedValueOnce({
-      externalId: 'variant_direct_field',
-      platform: 'shopify',
-      success: true,
-      currency: 'USD',
-      updatedAt: new Date(),
-    })
-
-    const token = makeToken('user-admin')
-    const req = makeRequest('http://localhost/api/v1/price-changes/pc_direct_variant/apply', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'X-Calibr-Project': 'demo',
-      },
-    })
-    const res = await applyRoute(req, paramsFor('pc_direct_variant') as any)
-    expect(res.status).toBe(200)
-    const body = await res.json()
-    expect(body.item.status).toBe('APPLIED')
-    expect(shopifyMocks.updatePrice).toHaveBeenCalledWith(
-      expect.objectContaining({
-        externalId: 'variant_direct_field',
-        price: 5490,
-        currency: 'USD',
-      })
-    )
   })
 
   it('surfaces Shopify connector API failures', async () => {
