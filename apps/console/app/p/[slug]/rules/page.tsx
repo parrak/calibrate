@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Button, Card, Input, Badge, EmptyState } from '@/lib/components'
 import { Plus, Trash2, Play, Save } from 'lucide-react'
@@ -97,7 +97,7 @@ type PreviewResults = {
   averageChange: number
 }
 
-export default function RulesPage({ params: _params }: { params: { slug: string } }) {
+export default function RulesPage({ params }: { params: { slug: string } }) {
   const { data: _session } = useSession()
 
   const [rules, setRules] = useState<PricingRule[]>([])
@@ -105,6 +105,57 @@ export default function RulesPage({ params: _params }: { params: { slug: string 
   const [previewResults, setPreviewResults] = useState<PreviewResults | null>(null)
   const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [toastMessage, setToastMessage] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  // Fetch pricing rules when component mounts or slug changes
+  useEffect(() => {
+    const fetchRules = async () => {
+      try {
+        setLoading(true)
+        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.calibr.lat'
+        const response = await fetch(`${API_BASE}/api/v1/rules?project=${params.slug}`)
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch rules: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        // Transform API response to local format
+        const transformedRules: PricingRule[] = (data.items || []).map((item: {
+          id: string
+          name: string
+          description: string | null
+          enabled: boolean
+          selectorJson: Selector
+          transformJson: TransformDefinition
+          scheduleAt: string | null
+        }) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description || undefined,
+          enabled: item.enabled,
+          selector: item.selectorJson,
+          transform: item.transformJson,
+          schedule: item.scheduleAt
+            ? { type: 'scheduled' as const, scheduledAt: new Date(item.scheduleAt) }
+            : { type: 'immediate' as const },
+        }))
+
+        setRules(transformedRules)
+      } catch (err) {
+        console.error('Failed to fetch pricing rules:', err)
+        setToastMessage({
+          msg: 'Failed to load pricing rules',
+          type: 'error'
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRules()
+  }, [params.slug])
 
   const startNewRule = () => {
     setEditingRule({ ...DEFAULT_RULE })
@@ -777,7 +828,13 @@ export default function RulesPage({ params: _params }: { params: { slug: string 
       )}
 
       {/* Rules List */}
-      {!editingRule && rules.length === 0 && (
+      {!editingRule && loading && (
+        <div className="flex items-center justify-center p-12">
+          <div className="text-gray-500">Loading pricing rules...</div>
+        </div>
+      )}
+
+      {!editingRule && !loading && rules.length === 0 && (
         <EmptyState
           title="No pricing rules yet"
           desc="Create your first automated pricing rule to get started."
