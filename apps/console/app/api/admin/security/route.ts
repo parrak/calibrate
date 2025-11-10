@@ -9,10 +9,11 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const includeDetails = searchParams.get('includeDetails') === 'true'
-    const runScan = searchParams.get('runScan') === 'true'
+    const _includeDetails = searchParams.get('includeDetails') === 'true'
+    const _runScan = searchParams.get('runScan') === 'true'
 
     // Mock data for now - replace with real security audit later
+    // TODO: Use _includeDetails and _runScan parameters in real implementation
     const data = {
       timestamp: new Date().toISOString(),
       overallScore: 88,
