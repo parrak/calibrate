@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { withSecurity } from '@/lib/security-headers'
 import { createId } from '@paralleldrive/cuid2'
-import { authSecurityManager } from '@/lib/auth-security'
+import { authSecurityManager, type AuthContext } from '@/lib/auth-security'
 
 const db = () => prisma()
 
-function requireAuth(request: NextRequest): { error?: NextResponse; session?: any } {
+function requireAuth(request: NextRequest): { error?: NextResponse; session?: AuthContext } {
   const authHeader = request.headers.get('authorization') || request.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return {
