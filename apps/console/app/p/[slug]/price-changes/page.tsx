@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import clsx from 'clsx'
-import { Button, Drawer, DiffCard, EmptyState, JSONView, PolicyList, StatusPill, useToast } from '@/lib/components'
+import { Button, Drawer, DiffCard, EmptyState, PolicyList, StatusPill, useToast } from '@/lib/components'
 import { SimpleTable as Table } from '@/lib/components/SimpleTable'
 import { AIExplanation } from './components/AIExplanation'
 
@@ -573,7 +573,24 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
 
             <div>
               <div className="mb-2 text-sm font-medium">Context</div>
-              <JSONView value={active.context} />
+              <div className="rounded-xl border border-border bg-surface p-4 space-y-2 text-sm">
+                {active.context && Object.keys(active.context).length > 0 ? (
+                  Object.entries(active.context).map(([key, value]) => (
+                    <div key={key} className="flex flex-col gap-1">
+                      <span className="text-xs text-mute capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
+                      </span>
+                      <span className="font-medium">
+                        {typeof value === 'object' && value !== null
+                          ? JSON.stringify(value)
+                          : String(value)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-mute">No context data available</span>
+                )}
+              </div>
             </div>
 
             {active.connectorStatus?.state === 'ERROR' && canApply && (
