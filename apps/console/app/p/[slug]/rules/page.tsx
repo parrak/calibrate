@@ -246,47 +246,137 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
     }
 
     try {
-      // Create the rule object from form data
-      const newRule: PricingRule = {
-        id: `rule-${Date.now()}`, // Generate temporary ID
+      setLoading(true)
+
+      // Build the transform JSON
+      const transformJson: TransformDefinition = {
+        transform: editingRule.transform.type === 'multiply'
+          ? { type: editingRule.transform.type, factor: editingRule.transform.factor || 1 }
+          : { type: editingRule.transform.type, value: editingRule.transform.value || 0 },
+        constraints: editingRule.constraints
+      }
+
+      // Build the request body
+      const requestBody = {
         name: editingRule.name,
-        description: editingRule.description,
+        description: editingRule.description || undefined,
         enabled: editingRule.enabled,
-        selector: editingRule.selector,
-        transform: {
-          transform: editingRule.transform.type === 'multiply'
-            ? { type: editingRule.transform.type, factor: editingRule.transform.factor || 1 }
-            : { type: editingRule.transform.type, value: editingRule.transform.value || 0 },
-          constraints: editingRule.constraints
+        selectorJson: editingRule.selector,
+        transformJson: transformJson,
+        scheduleAt: editingRule.schedule.type === 'scheduled' && editingRule.schedule.scheduledAt
+          ? new Date(editingRule.schedule.scheduledAt).toISOString()
+          : undefined,
+      }
+
+      // Call the API to create the rule
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
+      const response = await fetch(`${API_BASE}/api/v1/rules?project=${params.slug}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        schedule: editingRule.schedule.type === 'scheduled'
-          ? { type: 'scheduled', scheduledAt: editingRule.schedule.scheduledAt ? new Date(editingRule.schedule.scheduledAt) : undefined }
-          : editingRule.schedule.type === 'recurring'
-          ? { type: 'recurring', cron: editingRule.schedule.cron, timezone: editingRule.schedule.timezone }
-          : { type: 'immediate' }
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to save rule' }))
+        throw new Error(errorData.message || `Failed to save rule: ${response.status}`)
+      }
+
+      const savedRule = await response.json()
+
+      // Transform API response to local format
+      const newRule: PricingRule = {
+        id: savedRule.id,
+        name: savedRule.name,
+        description: savedRule.description || undefined,
+        enabled: savedRule.enabled,
+        selector: savedRule.selectorJson,
+        transform: savedRule.transformJson,
+        schedule: savedRule.scheduleAt
+          ? { type: 'scheduled' as const, scheduledAt: new Date(savedRule.scheduleAt) }
+          : { type: 'immediate' as const },
       }
 
       // Add the new rule to the rules list
       setRules([...rules, newRule])
 
-      // TODO: Save to API when backend is ready
       setToastMessage({ msg: 'Rule saved successfully!', type: 'success' })
       setEditingRule(null)
       setIsPreviewMode(false)
-    } catch (_err) {
-      setToastMessage({ msg: 'Failed to save rule', type: 'error' })
+    } catch (err) {
+      console.error('Error saving rule:', err)
+      setToastMessage({
+        msg: err instanceof Error ? err.message : 'Failed to save rule',
+        type: 'error'
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleDeleteRule = (ruleId: string) => {
-    setRules(rules.filter(r => r.id !== ruleId))
-    setToastMessage({ msg: 'Rule deleted successfully', type: 'success' })
+  const handleDeleteRule = async (ruleId: string) => {
+    try {
+      setLoading(true)
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
+      const response = await fetch(`${API_BASE}/api/v1/rules/${ruleId}?project=${params.slug}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to delete rule' }))
+        throw new Error(errorData.message || `Failed to delete rule: ${response.status}`)
+      }
+
+      setRules(rules.filter(r => r.id !== ruleId))
+      setToastMessage({ msg: 'Rule deleted successfully', type: 'success' })
+    } catch (err) {
+      console.error('Error deleting rule:', err)
+      setToastMessage({
+        msg: err instanceof Error ? err.message : 'Failed to delete rule',
+        type: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleToggleRule = (ruleId: string) => {
-    setRules(rules.map(r =>
-      r.id === ruleId ? { ...r, enabled: !r.enabled } : r
-    ))
+  const handleToggleRule = async (ruleId: string) => {
+    const rule = rules.find(r => r.id === ruleId)
+    if (!rule) return
+
+    try {
+      setLoading(true)
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
+      const response = await fetch(`${API_BASE}/api/v1/rules/${ruleId}?project=${params.slug}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled: !rule.enabled }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to update rule' }))
+        throw new Error(errorData.message || `Failed to update rule: ${response.status}`)
+      }
+
+      setRules(rules.map(r =>
+        r.id === ruleId ? { ...r, enabled: !r.enabled } : r
+      ))
+      setToastMessage({
+        msg: `Rule ${!rule.enabled ? 'enabled' : 'disabled'} successfully`,
+        type: 'success'
+      })
+    } catch (err) {
+      console.error('Error toggling rule:', err)
+      setToastMessage({
+        msg: err instanceof Error ? err.message : 'Failed to update rule',
+        type: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
