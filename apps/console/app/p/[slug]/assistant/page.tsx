@@ -238,7 +238,22 @@ export default function AssistantPage() {
             type="submit"
             variant="primary"
             disabled={!query.trim() || loading || !token}
-            aria-label={!query.trim() ? "Enter a question to enable the Ask button" : loading ? "Processing your question" : "Submit question"}
+            title={
+              !token
+                ? 'Please sign in to use the AI Assistant'
+                : !query.trim()
+                ? 'Enter a question to ask the AI Assistant'
+                : ''
+            }
+            aria-label={
+              !token
+                ? 'Ask button disabled: Please sign in to use the AI Assistant'
+                : !query.trim()
+                ? 'Ask button disabled: Enter a question first'
+                : loading
+                ? 'Processing your question'
+                : 'Ask the AI Assistant'
+            }
             aria-describedby="ask-button-help"
           >
             {loading ? 'Thinking...' : 'Ask'}

@@ -42,11 +42,18 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Comprehensive test coverage: 18+ tests for copilot queries, RBAC, logging, and anomaly detection
   - See `agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md` (M1.4) for specification
 
-- **Competitor Monitoring: API Testing & UI Integration**
+- **Competitor Monitoring: API Testing & Authentication** (Agent A — Cursor)
   - Fixed CompetitorMonitor component to use projectSlug for monitoring
   - Added createRule API method to competitorsApi client
   - Added security headers (withSecurity wrapper) to all competitor endpoints
   - Created manual API test script (`scripts/test-competitor-api.ps1`) for endpoint verification
+  - **Added authentication requirement** to GET and POST `/api/v1/competitors` endpoints
+  - **Comprehensive automated test suite** (`apps/api/tests/competitors.test.ts`):
+    - 12 tests covering GET and POST endpoints
+    - Validation tests (missing parameters, project not found, required fields)
+    - Authentication tests (401 without Bearer token, invalid token handling)
+    - Success cases (listing competitors with products/prices, creating competitors)
+  - All tests passing and integrated into PR checks via Turborepo pipeline
   - Updated 04_kickoff_checklist.md with competitor monitoring testing progress
 
 - **Pricing Engine: Rules DSL and MVP Implementation** (M1.1 — Engine Team)

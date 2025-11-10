@@ -8,7 +8,13 @@ function labelFor(segment: string) {
   if (segment === 'price-changes') return 'Price Changes'
   if (segment === 'catalog') return 'Catalog'
   if (segment === 'competitors') return 'Competitors'
-  return decodeURIComponent(segment)
+  if (segment === 'analytics') return 'Analytics'
+  if (segment === 'assistant') return 'Assistant'
+  if (segment === 'settings') return 'Settings'
+  if (segment === 'rules') return 'Rules'
+  // Capitalize first letter of decoded segment
+  const decoded = decodeURIComponent(segment)
+  return decoded.charAt(0).toUpperCase() + decoded.slice(1)
 }
 
 export function Breadcrumbs() {
