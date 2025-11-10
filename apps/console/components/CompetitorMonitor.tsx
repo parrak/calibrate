@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../lib/components/Card'
 import { Button } from '../lib/components/Button'
 import { Badge } from '../lib/components/Badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../lib/components/Table'
 import { AlertCircle, CheckCircle, Clock, ExternalLink } from 'lucide-react'
-import { competitorsApi } from '@/lib/api-client'
+import { competitorsApi, ApiError } from '@/lib/api-client'
 
 interface Competitor {
   id: string
@@ -39,24 +41,35 @@ interface MonitoringResult {
 }
 
 export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
+  const { data: session } = useSession()
+  const token = (session as { apiToken?: string })?.apiToken
+
   const [competitors, setCompetitors] = useState<Competitor[]>([])
   const [monitoringResults, setMonitoringResults] = useState<MonitoringResult[]>([])
   const [isMonitoring, setIsMonitoring] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isAuthError, setIsAuthError] = useState(false)
 
   useEffect(() => {
     fetchCompetitors()
-  }, [projectSlug])
+  }, [projectSlug, token])
 
   const fetchCompetitors = async () => {
     try {
       setError(null)
-      const data = await competitorsApi.list(projectSlug)
+      setIsAuthError(false)
+      const data = await competitorsApi.list(projectSlug, token)
       setCompetitors(Array.isArray(data) ? (data as unknown as Competitor[]) : [])
     } catch (error) {
       console.error('Error fetching competitors:', error)
-      setError('Failed to load competitors')
+      if (error instanceof ApiError && error.status === 401) {
+        setError('Authentication failed. Please sign out and sign in again to refresh your session.')
+        setIsAuthError(true)
+      } else {
+        setError('Failed to load competitors')
+        setIsAuthError(false)
+      }
     } finally {
       setLoading(false)
     }
@@ -65,18 +78,29 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
   const startMonitoring = async () => {
     setIsMonitoring(true)
     setError(null)
+    setIsAuthError(false)
     try {
       // Monitor all competitors in the project using projectSlug
-      const result = await competitorsApi.monitor('', projectSlug)
+      const result = await competitorsApi.monitor('', projectSlug, token)
       const results = (result.results || []) as unknown as MonitoringResult[]
       setMonitoringResults(results)
       await fetchCompetitors() // Refresh data
     } catch (error) {
       console.error('Error monitoring competitors:', error)
-      setError('Failed to start monitoring')
+      if (error instanceof ApiError && error.status === 401) {
+        setError('Authentication failed. Please sign out and sign in again to refresh your session.')
+        setIsAuthError(true)
+      } else {
+        setError('Failed to start monitoring')
+        setIsAuthError(false)
+      }
     } finally {
       setIsMonitoring(false)
     }
+  }
+
+  const handleSignOut = () => {
+    signOut({ callbackUrl: '/login' })
   }
 
   const formatPrice = (amount: number, currency: string) => {
@@ -98,12 +122,30 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center py-8 text-red-600">
-            <AlertCircle className="h-12 w-12 mx-auto mb-4" />
-            <p>{error}</p>
-            <Button onClick={fetchCompetitors} className="mt-4" variant="outline">
-              Retry
-            </Button>
+          <div className="text-center py-8">
+            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-600" />
+            <p className="text-red-600 mb-2">{error}</p>
+            {isAuthError && (
+              <p className="text-sm text-gray-600 mb-4">
+                This usually means your authentication token has expired or is invalid.
+              </p>
+            )}
+            <div className="flex gap-2 justify-center">
+              {isAuthError ? (
+                <>
+                  <Button onClick={handleSignOut} className="mt-4" variant="primary">
+                    Sign Out
+                  </Button>
+                  <Button onClick={fetchCompetitors} className="mt-4" variant="outline">
+                    Retry
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={fetchCompetitors} className="mt-4" variant="outline">
+                  Retry
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

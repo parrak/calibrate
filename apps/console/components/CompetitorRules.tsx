@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../lib/components/Card'
 import { Button } from '../lib/components/Button'
 import { Badge } from '../lib/components/Badge'
@@ -9,8 +11,8 @@ import { Label } from '../lib/components/Label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../lib/components/Select'
 import { Switch } from '../lib/components/Switch'
 import { Textarea } from '../lib/components/Textarea'
-import { Plus, Edit, Trash2 } from 'lucide-react'
-import { competitorsApi } from '@/lib/api-client'
+import { Plus, Edit, Trash2, AlertCircle } from 'lucide-react'
+import { competitorsApi, ApiError } from '@/lib/api-client'
 
 interface CompetitorRule {
   id: string
@@ -29,9 +31,14 @@ interface CompetitorRule {
 }
 
 export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
+  const { data: session } = useSession()
+  const token = (session as { apiToken?: string })?.apiToken
+
   const [rules, setRules] = useState<CompetitorRule[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isAuthError, setIsAuthError] = useState(false)
 
   const [newRule, setNewRule] = useState<{
     name: string
@@ -55,14 +62,23 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
 
   useEffect(() => {
     fetchRules()
-  }, [projectSlug])
+  }, [projectSlug, token])
 
   const fetchRules = async () => {
     try {
-      const data = await competitorsApi.getRules(projectSlug)
+      setError(null)
+      setIsAuthError(false)
+      const data = await competitorsApi.getRules(projectSlug, token)
       setRules(Array.isArray(data) ? (data as unknown as CompetitorRule[]) : [])
     } catch (error) {
       console.error('Error fetching rules:', error)
+      if (error instanceof ApiError && error.status === 401) {
+        setError('Authentication failed. Please sign out and sign in again to refresh your session.')
+        setIsAuthError(true)
+      } else {
+        setError('Failed to load rules')
+        setIsAuthError(false)
+      }
     } finally {
       setLoading(false)
     }
@@ -70,6 +86,8 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
 
   const createRule = async () => {
     try {
+      setError(null)
+      setIsAuthError(false)
       const ruleData = {
         name: newRule.name,
         description: newRule.description || undefined,
@@ -82,7 +100,7 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
         },
         isActive: newRule.isActive
       }
-      await competitorsApi.createRule(projectSlug, ruleData)
+      await competitorsApi.createRule(projectSlug, ruleData, token)
       setIsCreating(false)
       setNewRule({
         name: '',
@@ -97,7 +115,19 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
       await fetchRules() // Refresh rules list
     } catch (error) {
       console.error('Error creating rule:', error)
+      if (error instanceof ApiError && error.status === 401) {
+        setError('Authentication failed. Please sign out and sign in again to refresh your session.')
+        setIsAuthError(true)
+        setIsCreating(false)
+      } else {
+        setError('Failed to create rule')
+        setIsAuthError(false)
+      }
     }
+  }
+
+  const handleSignOut = () => {
+    signOut({ callbackUrl: '/login' })
   }
 
   // updateRule function removed - not currently used
@@ -130,6 +160,30 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
     return <div>Loading rules...</div>
   }
 
+  if (error && isAuthError) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-8">
+            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-600" />
+            <p className="text-red-600 mb-2">{error}</p>
+            <p className="text-sm text-gray-600 mb-4">
+              This usually means your authentication token has expired or is invalid.
+            </p>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={handleSignOut} className="mt-4" variant="primary">
+                Sign Out
+              </Button>
+              <Button onClick={fetchRules} className="mt-4" variant="outline">
+                Retry
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -144,6 +198,21 @@ export function CompetitorRules({ projectSlug }: { projectSlug: string }) {
           New Rule
         </Button>
       </div>
+
+      {/* Non-auth error message */}
+      {error && !isAuthError && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="h-5 w-5" />
+              <p>{error}</p>
+              <Button onClick={() => setError(null)} variant="ghost" size="sm" className="ml-auto">
+                Dismiss
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Create Rule Form */}
       {isCreating && (
