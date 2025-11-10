@@ -7,14 +7,14 @@ export default function Home() {
             Calibrate Documentation
           </h1>
           <p className="text-xl text-mute">
-            API reference and integration guides for the Calibrate pricing platform
+            Complete guide to using the Calibrate pricing management platform
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <div className="mb-12">
           <a
             href="/console"
-            className="block bg-surface border border-border rounded-2xl p-8 shadow-xl hover:border-brand/50 hover:shadow-2xl transition-all group"
+            className="block bg-surface border border-brand/30 rounded-2xl p-8 shadow-xl hover:border-brand/50 hover:shadow-2xl transition-all group"
           >
             <div className="flex items-center gap-3 mb-4">
               <span className="text-4xl">🖥️</span>
@@ -23,7 +23,7 @@ export default function Home() {
               </h2>
             </div>
             <p className="text-mute mb-4">
-              Complete guide to using the Calibrate pricing management console
+              Complete guide to using the Calibrate pricing management console, including feature documentation and integrated API references
             </p>
             <ul className="space-y-2 text-sm text-fg">
               <li className="flex items-center gap-2">
@@ -46,99 +46,117 @@ export default function Home() {
                 <span className="text-brand">→</span>
                 Platform Integrations
               </li>
+              <li className="flex items-center gap-2">
+                <span className="text-brand">→</span>
+                API References (integrated into each feature)
+              </li>
             </ul>
             <div className="mt-6 text-brand font-semibold group-hover:underline">
               View Console Docs →
             </div>
           </a>
+        </div>
 
-          <div className="bg-surface border border-border rounded-2xl p-8 shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-4xl">⚡</span>
-              <h2 className="text-2xl font-semibold text-fg">API Reference</h2>
-            </div>
-            <p className="text-mute mb-6">
-              RESTful API for programmatic access to Calibrate pricing platform
-            </p>
+        <div className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Documentation Index</h2>
 
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold text-fg mb-2">Price Changes API</h3>
-                <div className="bg-bg border border-border p-3 rounded-lg font-mono text-xs">
-                  <div className="text-brand">GET /api/v1/price-changes</div>
-                  <div className="text-mute mt-1">POST /api/v1/price-changes/:id/approve</div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold text-fg mb-2">Catalog API</h3>
-                <div className="bg-bg border border-border p-3 rounded-lg font-mono text-xs">
-                  <div className="text-brand">GET /api/v1/catalog</div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold text-fg mb-2">Platforms API</h3>
-                <div className="bg-bg border border-border p-3 rounded-lg font-mono text-xs">
-                  <div className="text-brand">GET /api/platforms</div>
-                  <div className="text-mute mt-1">POST /api/platforms/:platform/sync</div>
-                </div>
+          <div className="space-y-6">
+            {/* Getting Started */}
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-4">Getting Started</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                <a href="/console/getting-started" className="text-brand hover:underline text-sm">
+                  → Setup & Onboarding Guide
+                </a>
               </div>
             </div>
 
-            <div className="mt-6">
-              <a href="/console/api-reference" className="text-brand hover:underline font-semibold">
-                View Full API Reference →
-              </a>
+            {/* Core Features */}
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-4">Core Features</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                <a href="/console/catalog" className="text-brand hover:underline text-sm">
+                  → Product Catalog
+                </a>
+                <a href="/console/catalog#api-reference" className="text-mute hover:text-brand text-sm ml-4">
+                  ↳ Catalog API
+                </a>
+                <a href="/console/price-changes" className="text-brand hover:underline text-sm">
+                  → Price Changes Workflow
+                </a>
+                <a href="/console/price-changes#api-reference" className="text-mute hover:text-brand text-sm ml-4">
+                  ↳ Price Changes API
+                </a>
+                <a href="/console/pricing-rules" className="text-brand hover:underline text-sm">
+                  → Pricing Rules & Automation
+                </a>
+                <a href="/console/integrations" className="text-brand hover:underline text-sm">
+                  → Platform Integrations
+                </a>
+                <a href="/console/integrations#api-reference" className="text-mute hover:text-brand text-sm ml-4">
+                  ↳ Platforms API
+                </a>
+              </div>
+            </div>
+
+            {/* Intelligence & Insights */}
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-4">Intelligence & Insights</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                <a href="/console/ai-assistant" className="text-brand hover:underline text-sm">
+                  → AI Assistant
+                </a>
+                <a href="/console/ai-assistant#api-reference" className="text-mute hover:text-brand text-sm ml-4">
+                  ↳ Assistant API
+                </a>
+                <a href="/console/analytics" className="text-brand hover:underline text-sm">
+                  → Analytics & Reporting
+                </a>
+                <a href="/console/competitors" className="text-brand hover:underline text-sm">
+                  → Competitor Monitoring
+                </a>
+              </div>
+            </div>
+
+            {/* Reference & Help */}
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-4">Reference & Help</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                <a href="/console/roles-permissions" className="text-brand hover:underline text-sm">
+                  → Roles & Permissions
+                </a>
+                <a href="/console/troubleshooting" className="text-brand hover:underline text-sm">
+                  → Troubleshooting Guide
+                </a>
+                <a href="/console/best-practices" className="text-brand hover:underline text-sm">
+                  → Best Practices
+                </a>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-2xl p-8 shadow-xl">
-          <h2 className="text-2xl font-semibold text-fg mb-6">Quick Links</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            <a
-              href="/console/getting-started"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">Getting Started</div>
-              <div className="text-sm text-mute">Setup and onboarding guide</div>
-            </a>
-            <a
-              href="/console/price-changes"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">Price Changes</div>
-              <div className="text-sm text-mute">Workflow and approval process</div>
-            </a>
-            <a
-              href="/console/pricing-rules"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">Pricing Rules</div>
-              <div className="text-sm text-mute">Automate pricing strategies</div>
-            </a>
-            <a
-              href="/console/integrations"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">Integrations</div>
-              <div className="text-sm text-mute">Connect Shopify and Amazon</div>
-            </a>
-            <a
-              href="/console/ai-assistant"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">AI Assistant</div>
-              <div className="text-sm text-mute">Natural language queries</div>
-            </a>
-            <a
-              href="/console/best-practices"
-              className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
-            >
-              <div className="font-semibold text-fg mb-1">Best Practices</div>
-              <div className="text-sm text-mute">Tips for effective pricing</div>
-            </a>
+        <div className="bg-brand/5 border border-brand/20 rounded-xl p-6 mb-6">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">⚡</span>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-fg mb-2">API Documentation</h3>
+              <p className="text-mute text-sm mb-4">
+                API references are integrated into each feature page. Navigate to any feature (Price Changes, Catalog, Integrations, etc.) to find relevant API endpoints, request/response examples, and integration guides.
+              </p>
+              <div className="flex items-center gap-4">
+                <a
+                  href="/api-spec"
+                  target="_blank"
+                  className="inline-flex items-center gap-2 text-brand hover:underline text-sm font-semibold"
+                >
+                  <span>📖 View Full OpenAPI Specification</span>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 
