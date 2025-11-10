@@ -13,6 +13,80 @@ export default function GettingStarted() {
           Everything you need to know to get started with Calibrate Console
         </p>
 
+        {/* What is Calibrate Console */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">What is Calibrate Console?</h2>
+
+          <div className="bg-surface border border-border rounded-xl p-6 mb-6">
+            <p className="text-fg mb-4">
+              Calibrate Console is a pricing management platform that helps e-commerce businesses automate and optimize
+              their pricing strategies. It provides a centralized system for managing prices across multiple platforms,
+              with built-in approval workflows, competitive monitoring, and AI-powered insights.
+            </p>
+            <h3 className="text-lg font-semibold text-fg mb-3">Key Benefits</h3>
+            <ul className="space-y-2 text-fg">
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                <div><strong>Governance:</strong> Human-in-the-loop approval before any price changes go live</div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                <div><strong>Automation:</strong> Create rules that automatically adjust prices based on conditions</div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                <div><strong>Intelligence:</strong> AI-powered pricing recommendations and natural language queries</div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                <div><strong>Integration:</strong> Seamlessly sync with Shopify, Amazon, and other platforms</div>
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-brand/10 border border-brand/20 rounded-xl p-4">
+            <p className="text-fg text-sm">
+              <strong className="text-brand">Time to get started:</strong> 5-10 minutes for account creation and basic setup.
+              Full platform integration and first pricing rule: 15-20 minutes.
+            </p>
+          </div>
+        </section>
+
+        {/* Prerequisites */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Prerequisites</h2>
+
+          <div className="bg-surface border border-border rounded-xl p-6">
+            <p className="text-fg mb-4">Before you begin, make sure you have:</p>
+            <ul className="space-y-3 text-fg">
+              <li className="flex items-start gap-2">
+                <span className="text-brand">✓</span>
+                <div>
+                  <strong>Valid Email Address:</strong> You'll need this to create your account and receive notifications
+                </div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">✓</span>
+                <div>
+                  <strong>E-commerce Platform Account:</strong> Admin access to Shopify, Amazon Seller Central, or both
+                </div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">✓</span>
+                <div>
+                  <strong>Modern Web Browser:</strong> Chrome, Firefox, Safari, or Edge (latest versions)
+                </div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">●</span>
+                <div>
+                  <strong>Optional: Product Catalog:</strong> At least a few products in your e-commerce platform to test with
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
         {/* Account Creation */}
         <section className="mb-12">
           <h2 className="text-3xl font-semibold text-fg mb-6">Creating Your Account</h2>
@@ -50,11 +124,30 @@ export default function GettingStarted() {
             </ol>
           </div>
 
-          <div className="bg-brand/10 border border-brand/20 rounded-xl p-4">
+          <div className="bg-brand/10 border border-brand/20 rounded-xl p-4 mb-4">
             <p className="text-fg text-sm">
               <strong className="text-brand">Demo Account:</strong> Want to try before signing up? Use the demo account:{' '}
               <code className="bg-bg px-2 py-1 rounded">demo@calibr.lat</code>
             </p>
+          </div>
+
+          <div className="bg-surface border border-border rounded-xl p-6">
+            <h3 className="text-xl font-semibold text-fg mb-4">Expected Outcome</h3>
+            <p className="text-fg mb-3">After completing the signup process, you will:</p>
+            <ul className="space-y-2 text-fg text-sm">
+              <li className="flex items-start gap-2">
+                <span className="text-green-500">✓</span>
+                Receive a confirmation email (check spam folder if not received within 5 minutes)
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500">✓</span>
+                Be automatically logged in to the console
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500">✓</span>
+                See the onboarding wizard to create your first project
+              </li>
+            </ul>
           </div>
         </section>
 
@@ -224,6 +317,84 @@ export default function GettingStarted() {
                 Follow the same onboarding flow as your first project
               </li>
             </ol>
+          </div>
+        </section>
+
+        {/* Common Issues */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Troubleshooting Common Issues</h2>
+
+          <div className="space-y-4">
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">Issue: Can't receive confirmation email</h3>
+              <p className="text-mute text-sm mb-3">
+                <strong className="text-fg">Solution:</strong> Check your spam/junk folder. Add noreply@calibr.lat to your contacts.
+                If still not received after 10 minutes, try resending from the login page.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">Issue: Onboarding wizard doesn't appear</h3>
+              <p className="text-mute text-sm mb-3">
+                <strong className="text-fg">Solution:</strong> Clear your browser cache and cookies, then log in again.
+                Alternatively, navigate directly to /onboarding in your browser.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">Issue: Platform integration fails during onboarding</h3>
+              <p className="text-mute text-sm mb-3">
+                <strong className="text-fg">Solution:</strong> You can skip platform integration during onboarding and set it up later
+                from the Integrations page. Make sure you have admin access to your e-commerce platform.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Frequently Asked Questions</h2>
+
+          <div className="space-y-4">
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-2">Can I test Calibrate without connecting my store?</h3>
+              <p className="text-mute text-sm">
+                Yes! Use the demo account (demo@calibr.lat) to explore all features with sample data. You can also create
+                your own account and skip platform integration during onboarding.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-2">How long does the initial product sync take?</h3>
+              <p className="text-mute text-sm">
+                Initial sync time depends on catalog size. Small catalogs (under 100 products) typically complete in 1-2 minutes.
+                Larger catalogs (1000+ products) may take 10-15 minutes. You can start using the console while sync is in progress.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-2">Can I manage multiple stores in one account?</h3>
+              <p className="text-mute text-sm">
+                Yes! You can create multiple projects within one account, each connected to different e-commerce platforms or stores.
+                Use the project dropdown to switch between them.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-2">Will Calibrate automatically change my prices?</h3>
+              <p className="text-mute text-sm">
+                No. Calibrate follows a human-in-the-loop workflow. Price changes are proposed (by rules or AI), but you must
+                explicitly approve and apply them before they go live. This ensures full control over your pricing.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-2">What if I make a mistake?</h3>
+              <p className="text-mute text-sm">
+                Every applied price change can be rolled back with a single click. Calibrate maintains a complete history
+                of all price changes, so you can always revert to previous prices.
+              </p>
+            </div>
           </div>
         </section>
 
