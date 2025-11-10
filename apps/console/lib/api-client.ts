@@ -189,8 +189,12 @@ export const platformsApi = {
     })
   },
 
-  triggerSync: async (platform: string, projectSlug: string, syncType: string = 'full') => {
-    return fetchApi(`/api/platforms/${platform}/sync`, {
+  triggerSync: async <T = Record<string, unknown>>(
+    platform: string,
+    projectSlug: string,
+    syncType: string = 'full',
+  ) => {
+    return fetchApi<T>(`/api/platforms/${platform}/sync`, {
       method: 'POST',
       body: JSON.stringify({ projectSlug, syncType }),
     })

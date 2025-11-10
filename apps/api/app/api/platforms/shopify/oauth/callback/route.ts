@@ -35,7 +35,12 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
     return redirectToConsoleWithError(null, 'missing_parameters');
   }
 
-  const state = decodeOAuthState(rawState) ?? { projectSlug: rawState, host: null };
+  const state = decodeOAuthState(rawState);
+
+  if (!state) {
+    console.error('Invalid or expired Shopify OAuth state token');
+    return redirectToConsoleWithError(null, 'invalid_state');
+  }
 
   // Verify HMAC signature
   const apiSecret = process.env.SHOPIFY_API_SECRET;
@@ -93,7 +98,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
     }
 
     // Save integration using Agent C's POST endpoint
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat';
+    const apiBase = resolveInternalApiBase(req);
     const saveResponse = await fetch(
       `${apiBase}/api/platforms/shopify`,
       {
@@ -123,7 +128,7 @@ export const GET = withSecurity(async function GET(req: NextRequest) {
     console.log('Shopify integration saved successfully:', integration.integration.id);
 
     // Redirect to console success page
-    const consoleUrl = process.env.NEXT_PUBLIC_CONSOLE_URL || 'https://console.calibr.lat';
+    const consoleUrl = resolveConsoleBase();
     const redirectUrl = new URL(`/p/${state.projectSlug}/integrations/shopify`, consoleUrl);
     redirectUrl.searchParams.set('success', 'true');
     if (state.host) {
@@ -169,33 +174,50 @@ function verifyShopifyHMAC(
       .map(([key, value]) => `${key}=${value}`)
       .join('&');
 
-    // Calculate HMAC-SHA256 hex digest
-    const hash = crypto
-      .createHmac('sha256', apiSecret)
-      .update(queryString)
-      .digest('hex');
+    // Calculate HMAC-SHA256 digest
+    const calculated = crypto.createHmac('sha256', apiSecret).update(queryString).digest();
+
+    let provided: Buffer;
+    try {
+      provided = Buffer.from(receivedHmac, 'hex');
+    } catch (error) {
+      console.error('Invalid HMAC format received from Shopify', { error: error instanceof Error ? error.message : error });
+      return false;
+    }
 
     // Debug logging (remove in production or make conditional)
     if (process.env.NODE_ENV !== 'production') {
       console.log('HMAC Verification Debug:', {
         queryString,
-        calculatedHash: hash.substring(0, 16) + '...',
+        calculatedHash: calculated.toString('hex').substring(0, 16) + '...',
         receivedHmac: receivedHmac.substring(0, 16) + '...',
         paramsCount: params.length,
       });
     }
 
+    if (calculated.length !== provided.length) {
+      console.error('HMAC length mismatch', {
+        calculatedLength: calculated.length,
+        providedLength: provided.length,
+      });
+      return false;
+    }
+
     // Compare using timing-safe comparison to prevent timing attacks
-    // Both hash and receivedHmac are hex strings
-    const isValid = crypto.timingSafeEqual(
-      Buffer.from(hash, 'hex'),
-      Buffer.from(receivedHmac, 'hex')
-    );
+    let isValid = false;
+    try {
+      isValid = crypto.timingSafeEqual(calculated, provided);
+    } catch (error) {
+      console.error('Failed to compare Shopify HMAC signatures', {
+        error: error instanceof Error ? error.message : error,
+      });
+      return false;
+    }
 
     if (!isValid) {
       console.error('HMAC mismatch:', {
         queryString,
-        calculatedHash: hash,
+        calculatedHash: calculated.toString('hex'),
         receivedHmac,
         params: params.map(([k, v]) => `${k}=${v.substring(0, 10)}...`),
       });
@@ -212,7 +234,7 @@ function verifyShopifyHMAC(
  * Redirect to console with error parameter
  */
 function redirectToConsoleWithError(state: ShopifyOAuthState | null, error: string): NextResponse {
-  const consoleBase = process.env.NEXT_PUBLIC_CONSOLE_URL || 'https://console.calibr.lat';
+  const consoleBase = resolveConsoleBase();
   const path = state?.projectSlug
     ? `/p/${state.projectSlug}/integrations/shopify`
     : '/integrations/shopify';
@@ -228,3 +250,31 @@ function redirectToConsoleWithError(state: ShopifyOAuthState | null, error: stri
 export const OPTIONS = withSecurity(async () => {
   return new NextResponse(null, { status: 204 });
 });
+function resolveInternalApiBase(req: NextRequest): string {
+  const explicitBase =
+    process.env.INTERNAL_API_BASE ||
+    process.env.API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_BASE ||
+    null;
+
+  if (explicitBase) {
+    return explicitBase.replace(/\/$/, '');
+  }
+
+  const forwardedProto = req.headers.get('x-forwarded-proto');
+  const forwardedHost = req.headers.get('x-forwarded-host');
+  if (forwardedProto && forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+
+  const url = new URL(req.url);
+  return url.origin;
+}
+
+function resolveConsoleBase(): string {
+  const consoleBase =
+    process.env.NEXT_PUBLIC_CONSOLE_URL ||
+    process.env.CONSOLE_BASE_URL ||
+    'https://console.calibr.lat';
+  return consoleBase.replace(/\/$/, '');
+}
