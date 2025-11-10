@@ -16,51 +16,39 @@ export default function AnalyticsDocs() {
         <section className="mb-12">
           <h2 className="text-3xl font-semibold text-fg mb-6">Overview</h2>
           <p className="text-fg mb-6">
-            The Analytics dashboard provides comprehensive insights into your pricing strategy performance,
-            historical trends, and revenue impact.
+            The Analytics dashboard provides key insights into your pricing operations,
+            including summary metrics, price change trends, and product performance data.
           </p>
         </section>
 
         <section className="mb-12">
-          <h2 className="text-3xl font-semibold text-fg mb-6">Available Dashboards</h2>
+          <h2 className="text-3xl font-semibold text-fg mb-6">Current Features</h2>
           <div className="space-y-4">
             <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-fg mb-3">📈 Pricing Trends</h3>
+              <h3 className="text-lg font-semibold text-fg mb-3">📊 Summary Metrics</h3>
               <ul className="space-y-2 text-fg text-sm">
-                <li className="flex gap-2"><span className="text-brand">•</span>Average price over time</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Price change frequency</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Category-level pricing trends</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Seasonal pricing patterns</li>
+                <li className="flex gap-2"><span className="text-brand">•</span>Total SKUs tracked in your catalog</li>
+                <li className="flex gap-2"><span className="text-brand">•</span>Total price changes over selected time period</li>
+                <li className="flex gap-2"><span className="text-brand">•</span>Approval rate percentage</li>
+                <li className="flex gap-2"><span className="text-brand">•</span>Average price across your catalog</li>
               </ul>
             </div>
 
             <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-fg mb-3">💰 Revenue Impact</h3>
+              <h3 className="text-lg font-semibold text-fg mb-3">📈 Trend Visualization</h3>
               <ul className="space-y-2 text-fg text-sm">
-                <li className="flex gap-2"><span className="text-brand">•</span>Revenue before and after price changes</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Estimated impact of pending changes</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Price elasticity insights</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Margin analysis</li>
+                <li className="flex gap-2"><span className="text-brand">•</span>Simple bar chart comparing current vs. previous period</li>
+                <li className="flex gap-2"><span className="text-brand">•</span>Directional indicators (up/down/stable) with percentage change</li>
+                <li className="flex gap-2"><span className="text-brand">•</span>Configurable time ranges (7, 30, or 90 days)</li>
               </ul>
             </div>
 
             <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-fg mb-3">📊 Price Distribution</h3>
+              <h3 className="text-lg font-semibold text-fg mb-3">🏆 Top Performers</h3>
               <ul className="space-y-2 text-fg text-sm">
-                <li className="flex gap-2"><span className="text-brand">•</span>Price range histogram</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Products by price tier</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Outlier detection</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Currency-specific distributions</li>
-              </ul>
-            </div>
-
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-fg mb-3">🎯 Performance Metrics</h3>
-              <ul className="space-y-2 text-fg text-sm">
-                <li className="flex gap-2"><span className="text-brand">•</span>Price change approval rate</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Time to approval (SLA tracking)</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Rollback frequency</li>
-                <li className="flex gap-2"><span className="text-brand">•</span>Platform sync success rate</li>
+                <li className="flex gap-2"><span className="text-brand">•</span>Products with highest margins</li>
+                <li className="flex gap-2"><span className="text-brand">•</span>Recently added or updated products</li>
+                <li className="flex gap-2"><span className="text-brand">•</span>Basic product information (SKU, name, price)</li>
               </ul>
             </div>
           </div>
@@ -76,33 +64,33 @@ export default function AnalyticsDocs() {
               </li>
               <li className="flex gap-3">
                 <span className="font-bold text-brand">2.</span>
-                Select a time range (7 days, 30 days, 90 days, or custom)
+                Select a time range using the buttons in the top right (7 days, 30 days, or 90 days)
               </li>
               <li className="flex gap-3">
                 <span className="font-bold text-brand">3.</span>
-                Choose specific categories or products to analyze
+                View the summary metrics cards for quick insights
               </li>
               <li className="flex gap-3">
                 <span className="font-bold text-brand">4.</span>
-                View interactive charts and graphs
+                Review the trend chart to see period-over-period changes
               </li>
               <li className="flex gap-3">
                 <span className="font-bold text-brand">5.</span>
-                Export data as CSV or PDF for reporting
+                Scroll down to see top performing products by margin
               </li>
             </ol>
           </div>
         </section>
 
         <section className="mb-12">
-          <h2 className="text-3xl font-semibold text-fg mb-6">Key Insights</h2>
+          <h2 className="text-3xl font-semibold text-fg mb-6">Understanding Your Data</h2>
           <div className="space-y-4">
             <div className="bg-bg border border-border rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <span className="text-2xl">📌</span>
                 <div>
-                  <div className="font-semibold text-fg mb-1">Historical Comparisons</div>
-                  <div className="text-sm text-mute">Compare current pricing against previous periods to identify trends and opportunities.</div>
+                  <div className="font-semibold text-fg mb-1">Period Comparisons</div>
+                  <div className="text-sm text-mute">The dashboard compares your selected period against the equivalent previous period to show trends.</div>
                 </div>
               </div>
             </div>
@@ -110,8 +98,8 @@ export default function AnalyticsDocs() {
               <div className="flex items-start gap-3">
                 <span className="text-2xl">📌</span>
                 <div>
-                  <div className="font-semibold text-fg mb-1">Competitive Positioning</div>
-                  <div className="text-sm text-mute">See how your prices compare to competitor averages and market benchmarks.</div>
+                  <div className="font-semibold text-fg mb-1">Approval Rate</div>
+                  <div className="text-sm text-mute">Shows the percentage of price changes that have been approved, helping you gauge confidence in automated suggestions.</div>
                 </div>
               </div>
             </div>
@@ -119,11 +107,28 @@ export default function AnalyticsDocs() {
               <div className="flex items-start gap-3">
                 <span className="text-2xl">📌</span>
                 <div>
-                  <div className="font-semibold text-fg mb-1">Rule Performance</div>
-                  <div className="text-sm text-mute">Track which pricing rules generate the most value and highest approval rates.</div>
+                  <div className="font-semibold text-fg mb-1">Top Performers</div>
+                  <div className="text-sm text-mute">Identify your highest-margin products to understand which items drive profitability.</div>
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Coming Soon</h2>
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6">
+            <p className="text-fg mb-3">The following analytics features are planned for future releases:</p>
+            <ul className="space-y-2 text-fg text-sm list-disc list-inside">
+              <li>Advanced filtering by category and product attributes</li>
+              <li>Revenue impact analysis and forecasting</li>
+              <li>Competitive positioning insights</li>
+              <li>Custom date range selection</li>
+              <li>Data export (CSV and PDF)</li>
+              <li>Interactive time-series charts</li>
+              <li>Price distribution histograms</li>
+              <li>Rule performance tracking</li>
+            </ul>
           </div>
         </section>
 
