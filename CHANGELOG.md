@@ -7,6 +7,16 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Docs Site Modernization** (PR #91) — Completed Jan 2, 2025
+  - Modernized docs.calibr.lat with Stripe-inspired design
+  - Added sidebar navigation with hierarchical menu structure
+  - Implemented responsive mobile menu with hamburger button
+  - Updated color scheme to match console app (light theme: #F6F9FC background, #0A2540 text)
+  - Migrated from hardcoded Tailwind colors to CSS variables for consistency
+  - Added vitest test setup and Sidebar component tests (3 tests, all passing)
+  - Improved typography, spacing, and overall UX
+  - All PR checks passing (lint, typecheck, build, tests)
+
 - **Amazon M0.4 Connector Validation** (PR #85) — Completed Nov 10, 2025 ✅ MILESTONE
   - **M0.4 COMPLETE**: Amazon connector validated and ready for automation gate
   - Created comprehensive 812-line acceptance report (`M0.4_ACCEPTANCE_REPORT.md`)
