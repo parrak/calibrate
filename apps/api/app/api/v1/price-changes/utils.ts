@@ -231,7 +231,7 @@ export async function getPCForProject(id: string, projectSlug: string) {
   return { pc, project }
 }
 
-export function resolveShopifyVariantId(pc: PriceChange): string | null {
+export async function resolveShopifyVariantId(pc: PriceChange): Promise<string | null> {
   const tryValue = (value: unknown): string | null => extractString(value)
 
   const ctx = (pc.context ?? undefined) as Record<string, unknown> | undefined
@@ -269,6 +269,25 @@ export function resolveShopifyVariantId(pc: PriceChange): string | null {
         tryValue((metadata as Record<string, unknown>).externalId)
       if (resolved) return resolved
     }
+  }
+
+  // If not found in context or connectorStatus, look it up from the SKU's attributes
+  try {
+    const sku = await prisma().sku.findUnique({
+      where: { id: pc.skuId },
+      select: { attributes: true },
+    })
+
+    if (sku?.attributes && typeof sku.attributes === 'object') {
+      const attributes = sku.attributes as Record<string, unknown>
+      const shopifyAttrs = attributes.shopify
+      if (shopifyAttrs && typeof shopifyAttrs === 'object') {
+        const variantId = tryValue((shopifyAttrs as Record<string, unknown>).variantId)
+        if (variantId) return variantId
+      }
+    }
+  } catch (error) {
+    console.error('Failed to look up variant ID from SKU attributes:', error)
   }
 
   return null
