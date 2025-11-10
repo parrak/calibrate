@@ -7,6 +7,17 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Accessibility Improvements (QA Recommendations)**
+  - Comprehensive ARIA labels for all interactive elements (Drawer, Button, StatusPill, AI Assistant)
+  - Mobile-optimized ResponsiveTable component that switches to card layout on mobile devices
+  - Enhanced keyboard navigation with Escape key support, focus management, and proper tab order
+  - WCAG AA compliant color contrast for StatusPill component (all statuses meet 4.5:1 minimum)
+  - User-facing documentation: comprehensive console user guide covering all major features
+  - Screen reader support with `.sr-only` utility class and proper ARIA live regions
+  - Focus indicators with ring-offset for better visibility on all backgrounds
+  - Regression tests for accessibility features (Drawer, Button, StatusPill, ResponsiveTable, AI Assistant)
+  - Accessibility documentation: `ACCESSIBILITY_IMPROVEMENTS.md` and `COLOR_CONTRAST_AUDIT.md`
+
 - **Copilot Read-Only (M1.4) — Intelligence Layer**
   - Implemented `/api/v1/copilot` endpoint with schema-aware NL→SQL/GraphQL generation using GPT-4
   - RBAC enforcement: checks user project membership and role (VIEWER, EDITOR, ADMIN, OWNER)
