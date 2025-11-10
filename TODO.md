@@ -1,61 +1,122 @@
 # Calibr Development Plan
 
+## 🏆 MAJOR MILESTONE: Ready-For-Automation Gate — 87.5% COMPLETE!
+**Status:** 7/8 requirements met | Only 1 remaining task!
+**Last Updated:** November 10, 2025
+
+### Ready-For-Automation Gate Checklist:
+- [x] Engine supports schedule + revert — ✅ READY
+- [x] Audit/explain complete — ✅ READY
+- [x] Console shows lineage — ✅ READY
+- [x] Connectors resilient (retry/backoff) — ✅ READY
+- [x] Error surfacing — ✅ READY
+- [x] Health checks — ✅ READY
+- [x] **Amazon validation** — ✅ COMPLETE (PR #85)
+- [ ] **Staging deployment validation** — 🟡 PENDING
+
+**Next Action:** Deploy to staging and validate all services end-to-end
+
+---
+
 ## ✅ Completed Tasks
-- [x] AI Copilot UI implementation
+- [x] AI Copilot UI implementation (M1.4)
 - [x] Infrastructure setup and monitoring
 - [x] Database schema corrections
 - [x] BigInt serialization handling
+- [x] Amazon M0.4 Connector validation
+- [x] Competitor monitoring E2E testing
 
-## ✅ Recently Completed
+## ✅ Recently Completed (Last 24 Hours)
+
+### Amazon M0.4 Connector Validation ✅ COMPLETE
+**Status:** 🏆 Validated and ready for staging deployment
+**Completed:** November 10, 2025 (PR #85)
+**Validation Duration:** 4 hours | Confidence: HIGH
+
+**Achievements:**
+- ✅ **812-line acceptance report** — M0.4_ACCEPTANCE_REPORT.md
+- ✅ **8/8 tests passing** (100% pass rate)
+- ✅ **Feature flag system** — AMAZON_CONNECTOR_ENABLED implemented
+- ✅ **Database schema validated** — Multi-connector architecture confirmed
+- ✅ **Dry-run mode working** — Safe testing without credentials
+- ✅ **Catalog ingest complete** — Database persistence validated
+- ✅ **Ready-For-Automation gate** — Requirement #7 COMPLETE
+
+**Test Coverage:**
+- Configuration loading + dry-run mode
+- Price change operations (without credentials)
+- Connector registry interface compliance
+- Feed status polling + parsing
+- Competitive pricing data retrieval
+
+**Documentation:**
+- [M0.4_ACCEPTANCE_REPORT.md](M0.4_ACCEPTANCE_REPORT.md)
+- [.env.example](.env.example) — Feature flag docs
+- Protected API endpoints with flag checks
+
+---
+
+### Competitor Monitoring E2E Testing ✅ COMPLETE
+**Status:** 🎯 All authentication issues resolved
+**Completed:** November 10, 2025 (PR #83)
+
+**Achievements:**
+- ✅ **E2E test results** — COMPETITOR_MONITORING_E2E_TEST_RESULTS.md (269 lines)
+- ✅ **Authentication fixes** — Components now pass API tokens
+- ✅ **433+ lines of tests** — CompetitorMonitor + CompetitorRules
+- ✅ **API validation complete** — Browser testing passed
+- ✅ **CORS verified** — No preflight errors
+- ✅ **UI improvements** — Better error messages with sign-out
+
+**Changes Made:**
+- ✅ Fixed CompetitorMonitor to use `useSession()` hook
+- ✅ Fixed CompetitorRules authentication
+- ✅ Updated competitorsApi client with `token` parameter
+- ✅ Added clear 401 error messages with sign-out button
+- ✅ Manual API testing: CORS + OPTIONS handlers functional
+
+**Files Updated:**
+- [apps/console/components/CompetitorMonitor.tsx](apps/console/components/CompetitorMonitor.tsx) + tests (207 lines)
+- [apps/console/components/CompetitorRules.tsx](apps/console/components/CompetitorRules.tsx) + tests (226 lines)
+- [apps/console/lib/api-client.ts](apps/console/lib/api-client.ts) — Token support
+- [COMPETITOR_MONITORING_E2E_TEST_RESULTS.md](COMPETITOR_MONITORING_E2E_TEST_RESULTS.md)
+
+---
 
 ### Competitors Integration (COMPLETE - All API Issues Resolved)
-**Status:** ✅ API fully functional with CORS support — Ready for E2E testing
+**Status:** ✅ API fully functional with CORS support
 **Completed:** November 9, 2025 (PRs #57, #58, #59, #60)
 
 **Changes Made:**
-- ✅ **Removed HMAC authentication** from all competitor endpoints
-- ✅ **Added `withSecurity` wrapper** for consistent security headers
-- ✅ **Updated to use `projectSlug`** instead of tenantId/projectId
-- ✅ **Added projectSlug → project resolution** in all endpoints
-- ✅ **Updated client API calls** to match new response formats
-- ✅ **Type checking passed** - no TypeScript errors
-- ✅ **Added OPTIONS handlers** to all endpoints for CORS preflight (PR #60)
-- ✅ **Fixed "Failed to fetch" errors** - Browser CORS issues resolved
-- ✅ **Fixed test failures** - All 26 regression tests passing (PR #58)
-- ✅ **Improved Shopify sync** - Better error handling (PR #59)
+- ✅ Removed HMAC authentication from all competitor endpoints
+- ✅ Added `withSecurity` wrapper for consistent security headers
+- ✅ Updated to use `projectSlug` instead of tenantId/projectId
+- ✅ Added OPTIONS handlers to all endpoints (PR #60)
+- ✅ Fixed "Failed to fetch" errors (PR #60)
+- ✅ Fixed test failures — 26 regression tests passing (PR #58)
+- ✅ Improved Shopify sync error handling (PR #59)
 
-**Files Updated:**
-- [apps/api/app/api/v1/competitors/route.ts](apps/api/app/api/v1/competitors/route.ts) - Main GET/POST + OPTIONS
-- [apps/api/app/api/v1/competitors/[id]/route.ts](apps/api/app/api/v1/competitors/[id]/route.ts) - GET/PUT/DELETE + OPTIONS
-- [apps/api/app/api/v1/competitors/[id]/products/route.ts](apps/api/app/api/v1/competitors/[id]/products/route.ts) - POST + OPTIONS
-- [apps/api/app/api/v1/competitors/monitor/route.ts](apps/api/app/api/v1/competitors/monitor/route.ts) - POST + OPTIONS
-- [apps/api/app/api/v1/competitors/rules/route.ts](apps/api/app/api/v1/competitors/rules/route.ts) - POST + OPTIONS
-- [apps/console/lib/api-client.ts](apps/console/lib/api-client.ts) - Client API calls
-- [apps/api/lib/shopify-connector.ts](apps/api/lib/shopify-connector.ts) - Enhanced error handling
-
-**Next Steps (E2E Testing & Validation):**
-- [ ] **Manual API testing** ⭐ HIGH PRIORITY
-  - Test GET /api/v1/competitors?projectSlug=demo
-  - Test POST /api/v1/competitors with projectSlug
-  - Verify CORS preflight requests succeed (OPTIONS)
-  - Test all endpoints from browser console
-
-- [ ] **UI Integration Testing** ⭐ HIGH PRIORITY
-  - Wire up [CompetitorMonitor.tsx](apps/console/components/CompetitorMonitor.tsx)
-  - Test [CompetitorAnalytics.tsx](apps/console/components/CompetitorAnalytics.tsx)
-  - Verify [CompetitorRules.tsx](apps/console/components/CompetitorRules.tsx) functionality
-  - Validate no CORS errors in browser DevTools
-
-- [ ] **End-to-end flow**
-  - Add competitor via UI
-  - Fetch competitor list
-  - View competitor products
-  - Monitor competitor prices
-  - Apply competitor rules
-  - Verify price change events are created
+---
 
 ## 🔄 In Progress
-No active tasks
+
+### Staging Deployment Validation
+**Priority:** ⭐⭐⭐ CRITICAL — Last gate requirement
+**Estimated Time:** 2-3 hours
+
+**Tasks:**
+1. Deploy all services to staging
+2. Run end-to-end integration tests
+3. Validate health endpoints
+4. Verify feature flags working
+5. Test authentication flows
+6. Document staging validation results
+
+**Success Criteria:**
+- All services healthy and responding
+- Feature flags operational
+- Auth flows working
+- No critical errors in logs
 
 **Related Files:**
 - API: [apps/api/app/api/v1/competitors/route.ts](apps/api/app/api/v1/competitors/route.ts)
