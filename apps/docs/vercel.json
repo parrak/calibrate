@@ -3,17 +3,23 @@
   "name": "calibrate-docs",
   "buildCommand": "cd ../.. && pnpm install && pnpm --filter @calibr/docs build",
   "installCommand": "corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile=false",
-  "builds": [
-    {
-      "src": "**/*",
-      "use": "@vercel/static"
-    }
-  ],
+  "framework": "nextjs",
+  "outputDirectory": ".next",
   "env": {
     "NODE_ENV": "production",
     "DOCS_BASE_URL": "https://docs.calibr.lat",
     "API_BASE_URL": "https://api.calibr.lat"
   },
+  "rewrites": [
+    {
+      "source": "/api-spec",
+      "destination": "/api-spec.html"
+    },
+    {
+      "source": "/api-spec/(.*)",
+      "destination": "/api/$1"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
