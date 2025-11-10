@@ -353,7 +353,7 @@ export default function AIAssistantDocs() {
 }
 
 // Helper components
-function QueryExample({ category, queries }: any) {
+function QueryExample({ category, queries }: { category: string; queries: string[] }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-6">
       <h3 className="text-lg font-semibold text-fg mb-3">{category}</h3>
@@ -369,7 +369,7 @@ function QueryExample({ category, queries }: any) {
   )
 }
 
-function ResponseCard({ title, description, example }: any) {
+function ResponseCard({ title, description, example }: { title: string; description: string; example: string }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-6">
       <h3 className="text-lg font-semibold text-fg mb-2">{title}</h3>
@@ -382,7 +382,7 @@ function ResponseCard({ title, description, example }: any) {
   )
 }
 
-function QueryTypeCard({ title, icon, description, examples }: any) {
+function QueryTypeCard({ title, icon, description, examples }: { title: string; icon: string; description: string; examples: string[] }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-6">
       <div className="flex items-center gap-2 mb-3">
@@ -400,7 +400,7 @@ function QueryTypeCard({ title, icon, description, examples }: any) {
   )
 }
 
-function BestPractice({ title, tip }: any) {
+function BestPractice({ title, tip }: { title: string; tip: string }) {
   return (
     <div className="bg-bg border border-border rounded-lg p-4">
       <div className="flex items-start gap-3">
@@ -414,7 +414,7 @@ function BestPractice({ title, tip }: any) {
   )
 }
 
-function RelatedLink({ href, title, description }: any) {
+function RelatedLink({ href, title, description }: { href: string; title: string; description: string }) {
   return (
     <Link
       href={href}

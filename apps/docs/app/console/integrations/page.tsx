@@ -434,7 +434,7 @@ export default function IntegrationsDocs() {
 }
 
 // Helper components
-function PlatformCard({ name, icon, status, features, capabilities }: any) {
+function PlatformCard({ name, icon, status, features, capabilities }: { name: string; icon: string; status: string; features: string[]; capabilities: string }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-6">
       <div className="flex items-center gap-3 mb-4">
@@ -460,7 +460,7 @@ function PlatformCard({ name, icon, status, features, capabilities }: any) {
   )
 }
 
-function FeatureBox({ title, description, items }: any) {
+function FeatureBox({ title, description, items }: { title: string; description: string; items: string[] }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-6">
       <h3 className="text-lg font-semibold text-fg mb-2">{title}</h3>
@@ -477,7 +477,7 @@ function FeatureBox({ title, description, items }: any) {
   )
 }
 
-function TroubleshootCard({ issue, causes, solutions }: any) {
+function TroubleshootCard({ issue, causes, solutions }: { issue: string; causes: string[]; solutions: string[] }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-6">
       <h3 className="text-lg font-semibold text-fg mb-3">❗ {issue}</h3>
@@ -507,7 +507,7 @@ function TroubleshootCard({ issue, causes, solutions }: any) {
   )
 }
 
-function BestPractice({ title, tip }: any) {
+function BestPractice({ title, tip }: { title: string; tip: string }) {
   return (
     <div className="bg-bg border border-border rounded-lg p-4">
       <div className="flex items-start gap-3">
@@ -521,7 +521,7 @@ function BestPractice({ title, tip }: any) {
   )
 }
 
-function RelatedLink({ href, title, description }: any) {
+function RelatedLink({ href, title, description }: { href: string; title: string; description: string }) {
   return (
     <Link
       href={href}

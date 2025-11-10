@@ -498,7 +498,7 @@ export default function PricingRulesDocs() {
 }
 
 // Helper components
-function ComponentCard({ number, title, description, details }: any) {
+function ComponentCard({ number, title, description, details }: { number: string; title: string; description: string; details: string[] }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-6">
       <div className="flex items-start gap-3 mb-3">
@@ -522,13 +522,13 @@ function ComponentCard({ number, title, description, details }: any) {
   )
 }
 
-function SelectorCard({ type, description, examples }: any) {
+function SelectorCard({ type, description, examples }: { type: string; description: string; examples: Array<{ pattern: string; desc: string }> }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-6">
       <h3 className="text-lg font-semibold text-fg mb-2">{type}</h3>
       <p className="text-mute text-sm mb-4">{description}</p>
       <div className="space-y-2">
-        {examples.map((ex: any, i: number) => (
+        {examples.map((ex: { pattern: string; desc: string }, i: number) => (
           <div key={i} className="bg-bg border border-border p-3 rounded-lg">
             <code className="text-brand font-mono text-sm">{ex.pattern}</code>
             <p className="text-mute text-xs mt-1">→ {ex.desc}</p>
@@ -539,7 +539,7 @@ function SelectorCard({ type, description, examples }: any) {
   )
 }
 
-function TransformCard({ type, icon, description, examples, useCase }: any) {
+function TransformCard({ type, icon, description, examples, useCase }: { type: string; icon: string; description: string; examples: string[]; useCase: string }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-6">
       <div className="flex items-center gap-3 mb-3">
@@ -560,7 +560,7 @@ function TransformCard({ type, icon, description, examples, useCase }: any) {
   )
 }
 
-function ScheduleCard({ type, description, useCase, config }: any) {
+function ScheduleCard({ type, description, useCase, config }: { type: string; description: string; useCase: string; config: string[] }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-6">
       <h3 className="text-lg font-semibold text-fg mb-2">{type}</h3>
@@ -583,7 +583,7 @@ function ScheduleCard({ type, description, useCase, config }: any) {
   )
 }
 
-function ManagementCard({ title, description, steps }: any) {
+function ManagementCard({ title, description, steps }: { title: string; description: string; steps: string[] }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-6">
       <h3 className="text-lg font-semibold text-fg mb-2">{title}</h3>
@@ -600,7 +600,7 @@ function ManagementCard({ title, description, steps }: any) {
   )
 }
 
-function BestPractice({ title, tip }: any) {
+function BestPractice({ title, tip }: { title: string; tip: string }) {
   return (
     <div className="bg-bg border border-border rounded-lg p-4">
       <div className="flex items-start gap-3">
@@ -614,7 +614,7 @@ function BestPractice({ title, tip }: any) {
   )
 }
 
-function RelatedLink({ href, title, description }: any) {
+function RelatedLink({ href, title, description }: { href: string; title: string; description: string }) {
   return (
     <Link
       href={href}
