@@ -223,17 +223,88 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
   const handlePreview = async () => {
     if (!editingRule) return
 
+    if (!editingRule.name.trim()) {
+      setToastMessage({ msg: 'Please enter a rule name', type: 'error' })
+      return
+    }
+
     try {
-      // Mock preview for now - will integrate with API
-      setToastMessage({ msg: 'Preview functionality coming soon!', type: 'info' })
+      setLoading(true)
+
+      // Build the transform JSON
+      const transformJson: TransformDefinition = {
+        transform: editingRule.transform.type === 'multiply'
+          ? { type: editingRule.transform.type, factor: editingRule.transform.factor || 1 }
+          : { type: editingRule.transform.type, value: editingRule.transform.value || 0 },
+        constraints: editingRule.constraints
+      }
+
+      // First, we need to save the rule temporarily to preview it
+      // Or if it already has an ID, use that
+      let ruleId = (editingRule as any).id
+
+      if (!ruleId) {
+        // Create temporary rule for preview
+        const requestBody = {
+          name: `[PREVIEW] ${editingRule.name}`,
+          description: editingRule.description || 'Temporary preview rule',
+          enabled: false, // Create as disabled for preview
+          selectorJson: editingRule.selector,
+          transformJson: transformJson,
+        }
+
+        const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
+        const createResponse = await fetch(`${API_BASE}/api/v1/rules?project=${params.slug}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        })
+
+        if (!createResponse.ok) {
+          throw new Error('Failed to create preview rule')
+        }
+
+        const tempRule = await createResponse.json()
+        ruleId = tempRule.id
+      }
+
+      // Call preview API
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
+      const response = await fetch(`${API_BASE}/api/v1/rules/${ruleId}/preview?project=${params.slug}`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to preview rule')
+      }
+
+      const previewData = await response.json()
+
       setIsPreviewMode(true)
       setPreviewResults({
-        matchedProducts: 5,
-        totalPriceChanges: 12,
-        averageChange: 8.5,
+        matchedProducts: previewData.matchedProducts || 0,
+        totalPriceChanges: previewData.appliedTargets || 0,
+        averageChange: previewData.targets?.length > 0
+          ? previewData.targets.reduce((sum: number, t: any) => {
+              const pctChange = t.after && t.before
+                ? ((t.after.amount - t.before.amount) / t.before.amount) * 100
+                : 0
+              return sum + Math.abs(pctChange)
+            }, 0) / previewData.targets.length
+          : 0,
       })
-    } catch (_err) {
-      setToastMessage({ msg: 'Failed to preview rule', type: 'error' })
+
+      setToastMessage({ msg: 'Preview generated successfully!', type: 'success' })
+    } catch (err) {
+      console.error('Error previewing rule:', err)
+      setToastMessage({
+        msg: err instanceof Error ? err.message : 'Failed to preview rule',
+        type: 'error'
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
