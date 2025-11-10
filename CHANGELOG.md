@@ -6,6 +6,15 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+- **Competitor Monitoring Authentication & Error Handling**
+  - Fixed authentication token not being passed to competitor API calls in CompetitorMonitor and CompetitorRules components
+  - Added clear error messages and sign-out button for authentication failures (401 errors)
+  - Updated `competitorsApi` methods to accept optional `token` parameter for all endpoints
+  - Improved error handling: distinguishes between auth errors (with sign-out option) and generic errors
+  - Added comprehensive test coverage for authentication scenarios and error handling
+  - Components now properly use `useSession()` hook to get and pass API tokens
+
 ### Added
 - **Accessibility Improvements (QA Recommendations)**
   - Comprehensive ARIA labels for all interactive elements (Drawer, Button, StatusPill, AI Assistant)
