@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import './globals.css'
 import { Sidebar } from '../components/Sidebar'
+import { TopNav } from '../components/TopNav'
 
 export const metadata: Metadata = {
   title: 'Calibrate Documentation',
@@ -27,45 +28,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+      </head>
       <body className="min-h-screen bg-[color:var(--bg)] text-[color:var(--fg)]">
         <div className="flex flex-col min-h-screen">
           {/* Navigation Header */}
-          <header className="sticky top-0 z-50 w-full border-b border-[color:var(--border)] bg-[color:var(--surface)]/80 backdrop-blur-xl supports-[backdrop-filter]:bg-[color:var(--surface)]/60">
-            <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-              <div className="flex items-center gap-8">
-                <Link href="/" className="flex items-center gap-2 font-semibold text-[color:var(--fg)] hover:text-[color:var(--brand)] transition-colors">
-                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none">
-                    <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)]" />
-                    <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
-                    <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
-                    <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--accent)]" />
-                  </svg>
-                  <span className="text-lg">Calibrate</span>
-                </Link>
-                <div className="hidden md:flex items-center gap-6">
-                  <Link href="/" className="text-sm text-[color:var(--mute)] hover:text-[color:var(--fg)] transition-colors">
-                    Docs
-                  </Link>
-                  <Link href="/console" className="text-sm text-[color:var(--mute)] hover:text-[color:var(--fg)] transition-colors">
-                    Console Guide
-                  </Link>
-                  <Link href="/api-spec" target="_blank" className="text-sm text-[color:var(--mute)] hover:text-[color:var(--fg)] transition-colors">
-                    API Reference
-                  </Link>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <a
-                  href="https://calibr.lat"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[color:var(--mute)] hover:text-[color:var(--fg)] transition-colors"
-                >
-                  calibr.lat
-                </a>
-              </div>
-            </nav>
-          </header>
+          <TopNav />
 
           {/* Main Content with Sidebar */}
           <div className="flex flex-1 overflow-hidden">
@@ -81,7 +52,7 @@ export default function RootLayout({
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div className="md:col-span-2">
                   <div className="flex items-center gap-2 mb-4">
-                    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none">
+                    <svg className="icon" viewBox="0 0 24 24" fill="none">
                       <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)]" />
                       <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
                       <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
