@@ -41,8 +41,8 @@ export default function LoginPage({ searchParams }: { searchParams?: { callbackU
             <p className="font-semibold text-gray-700 mb-2">
               Quick access:
             </p>
-            <p>• admin@calibr.lat - Admin user</p>
-            <p>• demo@calibr.lat - Demo user</p>
+            <p>• <span className="font-mono">admin@calibr.lat</span> / <span className="font-mono">Admin1234!</span> - Admin user</p>
+            <p>• <span className="font-mono">demo@calibr.lat</span> / <span className="font-mono">Demo1234!</span> - Demo user</p>
           </div>
         </div>
       </div>
