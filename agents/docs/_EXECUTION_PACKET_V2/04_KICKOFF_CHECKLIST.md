@@ -84,8 +84,6 @@ Schema + Event Bus stable.
 - [x] Add rate-limit guard (Shopify API limits)
 - [x] Add error surfacing → Console notifications
 
-### M0.3 Shopify Connector ✅ Live  
-
 ### Milestone M0.4 — Amazon Connector (Read-Only Stub) ✅ COMPLETE
 
 - [x] Implement SP-API OAuth scaffolding + LWA client
@@ -97,6 +95,7 @@ Schema + Event Bus stable.
 - [x] Create acceptance report (`M0.4_ACCEPTANCE_REPORT.md`)
 - [x] Update documentation and environment configuration
 
+### M0.3 Shopify Connector ✅ Live  
 ### M0.4 Amazon Connector ✅ Validated  
 
 ### M0.6 — Competitor Monitoring E2E ✅ (Option A Chosen)
@@ -108,21 +107,6 @@ Schema + Event Bus stable.
 - [ ] Error rate < 1% per 24 h across two tenants
 - [ ] Add alert hook to `@calibr/monitor` for scrape failures
 - [ ] Update docs → mark Competitor Monitoring **Green**
-
-### Competitor Monitoring (Testing & Verification)
-
-- [x] API endpoints implemented with `withSecurity` wrapper
-- [x] Fixed CompetitorMonitor component to use projectSlug
-- [x] Fixed CompetitorRules component with createRule API integration
-- [x] Added security headers to all competitor endpoints
-- [x] Created manual API test script (`scripts/test-competitor-api.ps1`)
-- [x] Unit tests passing (31 tests in competitor-monitoring package)
-- [x] Manual API testing completed — Automated test suite added
-- [x] Authentication requirement added to GET and POST `/api/v1/competitors` endpoints
-- [x] Comprehensive test coverage: 12 tests covering GET/POST endpoints, validation, and authentication (401 responses)
-- [x] Tests integrated into PR checks via Turborepo pipeline
-- [ ] UI integration testing (CompetitorMonitor, Analytics, Rules)
-- [ ] End-to-end flow verification
 
 ### Milestone M1.5 (Conditional) — Stripe Connector
 
@@ -171,6 +155,21 @@ Schema + Event Bus stable.
 - [ ] Metrics → `@calibr/monitor`; alert thresholds wired
 - [ ] Docs: "Automation Runner Architecture" (`docs/automation_runner.md`)
 
+### Competitor Monitoring (Testing & Verification)
+
+- [x] API endpoints implemented with `withSecurity` wrapper
+- [x] Fixed CompetitorMonitor component to use projectSlug
+- [x] Fixed CompetitorRules component with createRule API integration
+- [x] Added security headers to all competitor endpoints
+- [x] Created manual API test script (`scripts/test-competitor-api.ps1`)
+- [x] Unit tests passing (31 tests in competitor-monitoring package)
+- [x] Manual API testing completed — Automated test suite added
+- [x] Authentication requirement added to GET and POST `/api/v1/competitors` endpoints
+- [x] Comprehensive test coverage: 12 tests covering GET/POST endpoints, validation, and authentication (401 responses)
+- [x] Tests integrated into PR checks via Turborepo pipeline
+- [ ] UI integration testing (CompetitorMonitor, Analytics, Rules)
+- [ ] End-to-end flow verification
+
 ---
 
 ## 🖥️ Interface Team (Console / Site / Docs)
@@ -201,10 +200,9 @@ Schema + Event Bus stable.
 
 ### UI Theming & Usability
 
-- [ ] Roll out Light Theme (shared tokens)
-- [ ] Ensure WCAG AA contrast and Lighthouse ≥ 90
-- [ ] Unify styles across Console, Site, Docs
-- [ ] Add guided tour for first-time users
+- [ ] Light theme rolled out (all apps)
+- [ ] WCAG AA contrast / Lighthouse ≥ 90
+- [ ] Guided tour for first-time users
 
 ### Site / Docs / SaaS Validation
 
@@ -278,7 +276,7 @@ Schema + Event Bus stable.
 - [ ] Approve Automation Runner design doc → merged in repo  
 - [ ] Run weekly sync on Automation Runner & Copilot PR status  
 - [ ] Coordinate 2 staging tenants + 1 canary merchant for Automation Runner test  
-- [ ] Validate Ready-for-Automation Gate criteria below  
+- [ ] Validate Ready-for-Automation Gate criteria below
 
 ---
 
@@ -297,14 +295,6 @@ Schema + Event Bus stable.
 | Post-Validation | Stripe connector active | Collector "Go" threshold met |
 
 ---
-
-## 📦 Operational Reminders
-
-- [ ] CI pipeline = typecheck → build → test → migrate → package types → preview deploy  
-- [ ] `.env.example` validated in prestart hook  
-- [ ] `pnpm setup` bootstraps dev in < 5 min  
-- [ ] Synthetic probes monitor price-changes, analytics, copilot, competitor feeds  
-- [ ] Error budget: 5xx < 2% / Connector success ≥ 98% / Cron ≥ 99%  
 
 ## Environment & Tooling
 
@@ -349,6 +339,16 @@ Schema + Event Bus stable.
 
 - [ ] Apply/rollback reliable; audit/explain intact.
 - [ ] Connectors stable under backoff; surfaced in health page.
+
+---
+
+## 📦 Operational Reminders
+
+- [ ] CI pipeline = typecheck → build → test → migrate → package types → preview deploy  
+- [ ] `.env.example` validated in prestart hook  
+- [ ] `pnpm setup` bootstraps dev in < 5 min  
+- [ ] Synthetic probes monitor price-changes, analytics, copilot, competitor feeds  
+- [ ] Error budget: 5xx < 2% / Connector success ≥ 98% / Cron ≥ 99%  
 
 ---
 
