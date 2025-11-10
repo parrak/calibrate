@@ -288,3 +288,193 @@ Before requesting review, ensure:
 - [ ] Execution packet files updated with progress
 - [ ] PR description includes all relevant context
 - [ ] No breaking changes (or clearly documented if present)
+
+---
+
+## 📚 Agent Learnings & Best Practices
+
+This section captures critical lessons learned during development to prevent future issues.
+
+### **Bug Fix Session - November 10, 2025**
+
+**Context:** Comprehensive manual testing of console.calibr.lat revealed 4 critical production bugs that were fixed systematically.
+
+#### **1. AI SQL Generation Security**
+**Lesson:** Always replace AI-generated filter values, don't just check for presence.
+
+**Problem:**
+- AI (GPT-4) generated SQL like `SELECT COUNT(*) FROM "Product" WHERE "projectId" = 'demo'`
+- Used project **slug** ('demo') instead of **CUID** ('proj-cuid-123')
+- Security injection code only checked if 'projectId' was present, not if value was correct
+- Result: Queries returned 0 results instead of actual product count
+
+**Fix Applied:**
+```typescript
+// BEFORE (Bug):
+if (!sql.includes('projectId')) {
+  secureSQL = sql.replace(/WHERE/i, `WHERE "projectId" = '${projectId}' AND`)
+}
+
+// AFTER (Fixed):
+// Pattern 1: Replace "projectId" = 'any-value' with actual CUID
+secureSQL = secureSQL.replace(/"projectId"\s*=\s*['"][^'"]+['"]/gi, `"projectId" = '${projectId}'`)
+// Pattern 2: Also handle unquoted column names
+secureSQL = secureSQL.replace(/\bprojectId\b\s*=\s*['"][^'"]+['"]/gi, `"projectId" = '${projectId}'`)
+```
+
+**Best Practice:**
+- Never trust AI-generated filter values
+- Use regex replacement to fix incorrect values, not just injection when missing
+- Apply belt-and-suspenders: replace + inject if missing
+- Test with real project IDs vs slugs
+
+**File:** `apps/api/app/api/v1/copilot/route.ts:394-416`
+
+---
+
+#### **2. Database Schema vs Migrations**
+**Lesson:** Schema files don't create tables - migrations do.
+
+**Problem:**
+- `Audit` table defined in `schema.prisma` but no migration file existed
+- When approving price changes, code tried to create audit records
+- Failed with: `The table 'public.Audit' does not exist in the current database`
+- Production 500 errors on critical price change approval flow
+
+**Fix Applied:**
+- Created missing migration: `20251210000000_add_audit_table/migration.sql`
+- Used `IF NOT EXISTS` for idempotency
+- Added proper indexes and foreign key constraints
+
+**Best Practice:**
+- **Always** run `prisma migrate dev` after schema changes
+- Never commit schema.prisma changes without corresponding migration
+- Verify migration files exist before deploying
+- Consider pre-commit hook to check for missing migrations
+- Use `IF NOT EXISTS` in migrations for safety
+
+**File:** `packages/db/prisma/migrations/20251210000000_add_audit_table/migration.sql`
+
+---
+
+#### **3. Case Sensitivity in String Comparisons**
+**Lesson:** Never assume database field casing - always normalize.
+
+**Problem:**
+- Shopify integration stores `syncStatus` as lowercase 'success'
+- Sync status endpoint checked: `if (integration.syncStatus === 'SUCCESS')`
+- Condition never matched, so sync logs never displayed
+- Users saw "No sync history yet" despite successful syncs
+
+**Fix Applied:**
+```typescript
+// BEFORE (Bug):
+} else if (integration.syncStatus === 'SUCCESS') {
+
+// AFTER (Fixed):
+} else if (integration.syncStatus?.toUpperCase() === 'SUCCESS') {
+```
+
+**Best Practice:**
+- Use case-insensitive comparisons for status/enum-like strings
+- Normalize values when storing (use middleware or DB constraints)
+- Consider using actual database ENUMs for status fields
+- Test with lowercase, uppercase, and mixed case variations
+
+**File:** `apps/api/app/api/platforms/shopify/sync/status/route.ts:113,121-126`
+
+---
+
+#### **4. Client-Side Data Fetching in Next.js**
+**Lesson:** Client Components need explicit data fetching - they don't auto-load.
+
+**Problem:**
+- Price rules page (`'use client'` component) never fetched data from API
+- Component initialized with empty array, no useEffect
+- Users always saw "No pricing rules yet" despite existing rules
+- Backend API was working correctly - frontend just never called it
+
+**Fix Applied:**
+```typescript
+// Added useEffect to fetch on mount:
+useEffect(() => {
+  const fetchRules = async () => {
+    const response = await fetch(`${API_BASE}/api/v1/rules?project=${params.slug}`)
+    const data = await response.json()
+    setRules(transformAPIResponse(data.items))
+  }
+  fetchRules()
+}, [params.slug])
+```
+
+**Best Practice:**
+- Client Components require explicit `useEffect` for data fetching
+- Server Components auto-fetch (prefer when possible for better UX)
+- Handle loading states properly
+- Consider React Query or SWR for caching/revalidation
+- Verify API endpoints are actually being called (check Network tab)
+
+**File:** `apps/console/app/p/[slug]/rules/page.tsx:110-158`
+
+---
+
+#### **5. Integration Test Complexity**
+**Lesson:** Perfect mocks are hard - focus on unit tests and real integration tests.
+
+**Problem:**
+- Regression tests created with complex mocks for entire API routes
+- Authentication, session handling, and database mocking became fragile
+- Tests failed due to mock complexity, not actual bugs
+- Time spent on mocking > time spent on actual fixes
+
+**Better Approach:**
+- Unit test individual functions with minimal mocking
+- Use real database for integration tests (test containers, separate test DB)
+- Or skip complex mocks and rely on manual testing + E2E tests (Playwright/Cypress)
+- Mock external services (OpenAI, Shopify) but keep internal mocking minimal
+
+**Recommendation:**
+- Add E2E test suite with real browser automation
+- Use test database containers for integration tests
+- Reserve mocks for external API calls only
+
+---
+
+### **Testing Recommendations for All Agents**
+
+1. **Always Test Edge Cases:**
+   - Empty states (0 products, no rules)
+   - Case variations (lowercase, uppercase, mixed)
+   - Missing data (null, undefined)
+   - Wrong data types (slug instead of ID)
+
+2. **Verify Database State:**
+   - Don't assume tables exist - check migrations
+   - Don't assume data format - normalize inputs
+   - Don't assume field casing - use case-insensitive comparisons
+
+3. **AI Integration:**
+   - Never trust AI-generated values without validation
+   - Always sanitize and replace with actual data
+   - Test with real IDs vs human-readable slugs
+   - Log generated SQL for debugging
+
+4. **Next.js Client vs Server:**
+   - Know when component needs explicit data fetching
+   - Prefer Server Components when possible
+   - Test that API endpoints are actually called
+   - Handle loading and error states
+
+5. **Manual Testing:**
+   - Test full user flows end-to-end
+   - Check console for errors
+   - Verify network requests in DevTools
+   - Test navigation between pages
+   - Test with real data, not just fixtures
+
+---
+
+**Document Updated:** November 10, 2025
+**Session:** Bug Fix & Regression Testing
+**Files Changed:** 4 code files, 1 migration, 1 test file, 2 documentation files
+**Impact:** Fixed 4 critical production bugs affecting AI queries, price approvals, sync history, and pricing rules
