@@ -146,7 +146,7 @@ export default function CatalogDocs() {
             <ul className="space-y-2 text-fg">
               <li className="flex items-start gap-2">
                 <span className="text-brand">•</span>
-                Default page size: 50 products per page
+                Default page size: 20 products per page
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand">•</span>

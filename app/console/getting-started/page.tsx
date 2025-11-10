@@ -137,15 +137,15 @@ export default function GettingStarted() {
             <ul className="space-y-2 text-fg text-sm">
               <li className="flex items-start gap-2">
                 <span className="text-green-500">✓</span>
-                Receive a confirmation email (check spam folder if not received within 5 minutes)
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-500">✓</span>
                 Be automatically logged in to the console
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-500">✓</span>
                 See the onboarding wizard to create your first project
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500">✓</span>
+                Have immediate access to all console features
               </li>
             </ul>
           </div>
@@ -326,14 +326,6 @@ export default function GettingStarted() {
 
           <div className="space-y-4">
             <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-fg mb-3">Issue: Can't receive confirmation email</h3>
-              <p className="text-mute text-sm mb-3">
-                <strong className="text-fg">Solution:</strong> Check your spam/junk folder. Add noreply@calibr.lat to your contacts.
-                If still not received after 10 minutes, try resending from the login page.
-              </p>
-            </div>
-
-            <div className="bg-surface border border-border rounded-xl p-6">
               <h3 className="text-lg font-semibold text-fg mb-3">Issue: Onboarding wizard doesn't appear</h3>
               <p className="text-mute text-sm mb-3">
                 <strong className="text-fg">Solution:</strong> Clear your browser cache and cookies, then log in again.
@@ -346,6 +338,14 @@ export default function GettingStarted() {
               <p className="text-mute text-sm mb-3">
                 <strong className="text-fg">Solution:</strong> You can skip platform integration during onboarding and set it up later
                 from the Integrations page. Make sure you have admin access to your e-commerce platform.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">Issue: Can't access account after signup</h3>
+              <p className="text-mute text-sm mb-3">
+                <strong className="text-fg">Solution:</strong> Ensure you're using the correct email and password.
+                If you forgot your password, use the password reset option on the login page.
               </p>
             </div>
           </div>
