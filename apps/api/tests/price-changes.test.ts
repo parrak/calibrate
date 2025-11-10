@@ -45,6 +45,7 @@ type PriceChangeRecord = {
   appliedAt?: Date | null
   createdAt: Date
   connectorStatus?: any
+  variantId?: string | null
 }
 
 type StoreState = {
@@ -335,6 +336,24 @@ const store = (() => {
         return clone(record)
       },
     },
+    sku: {
+      findUnique: async ({ where, select }: any) => {
+        if (!where?.id) return null
+        // Mock SKU with Shopify variant ID in attributes
+        const sku = {
+          id: where.id,
+          attributes: {
+            shopify: {
+              variantId: 'variant_from_sku_attributes',
+            },
+          },
+        }
+        if (select?.attributes) {
+          return clone({ attributes: sku.attributes })
+        }
+        return clone(sku)
+      },
+    },
     $transaction: async (cb: any) => cb(client),
   }
 
@@ -589,6 +608,11 @@ describe('price changes API', () => {
     if (target?.context) {
       delete target.context.shopifyVariantId
     }
+    // Also remove variantId field and connectorStatus to ensure no fallback
+    if (target) {
+      target.variantId = null
+      target.connectorStatus = {}
+    }
     const token = makeToken('user-admin')
     const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/apply', {
       method: 'POST',
@@ -601,6 +625,57 @@ describe('price changes API', () => {
     expect(res.status).toBe(422)
     const body = await res.json()
     expect(body.error).toBe('MissingVariant')
+  })
+
+  it('resolves Shopify variant ID from direct variantId field on PriceChange', async () => {
+    // Create a price change with variantId directly on the model (not in context)
+    const pcWithDirectVariantId: PriceChangeRecord = {
+      id: 'pc_direct_variant',
+      tenantId: 'tenant1',
+      projectId: 'proj1',
+      skuId: 'sku1',
+      source: 'Manual',
+      fromAmount: 4990,
+      toAmount: 5490,
+      currency: 'USD',
+      context: {}, // No shopifyVariantId in context
+      status: 'APPROVED',
+      policyResult: { ok: true, checks: [{ name: 'maxPctDelta', ok: true }] },
+      createdAt: new Date('2025-01-07T00:00:00Z'),
+      approvedBy: 'user-editor',
+      appliedAt: null,
+      connectorStatus: {},
+      variantId: 'variant_direct_field', // Direct field on PriceChange
+    }
+    store.pushPriceChange(pcWithDirectVariantId)
+
+    shopifyMocks.updatePrice.mockResolvedValueOnce({
+      externalId: 'variant_direct_field',
+      platform: 'shopify',
+      success: true,
+      currency: 'USD',
+      updatedAt: new Date(),
+    })
+
+    const token = makeToken('user-admin')
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_direct_variant/apply', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+      },
+    })
+    const res = await applyRoute(req, paramsFor('pc_direct_variant') as any)
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.item.status).toBe('APPLIED')
+    expect(shopifyMocks.updatePrice).toHaveBeenCalledWith(
+      expect.objectContaining({
+        externalId: 'variant_direct_field',
+        price: 5490,
+        currency: 'USD',
+      })
+    )
   })
 
   it('surfaces Shopify connector API failures', async () => {

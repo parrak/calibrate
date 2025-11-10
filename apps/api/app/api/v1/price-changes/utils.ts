@@ -21,6 +21,7 @@ type PriceChange = {
   connectorStatus: Prisma.JsonValue | null
   projectId: string
   skuId: string
+  variantId: string | null
 }
 
 export type ConnectorState = 'QUEUED' | 'SYNCING' | 'SYNCED' | 'ERROR'
@@ -233,6 +234,12 @@ export async function getPCForProject(id: string, projectSlug: string) {
 
 export async function resolveShopifyVariantId(pc: PriceChange): Promise<string | null> {
   const tryValue = (value: unknown): string | null => extractString(value)
+
+  // First, check the direct variantId field on the PriceChange model (most reliable)
+  if (pc.variantId) {
+    const resolved = tryValue(pc.variantId)
+    if (resolved) return resolved
+  }
 
   const ctx = (pc.context ?? undefined) as Record<string, unknown> | undefined
   if (ctx) {
