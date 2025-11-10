@@ -1,19 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    // ESLint runs during build, but we can ignore errors if needed
+    // ESLint runs during build
     ignoreDuringBuilds: false,
   },
   typescript: {
-    // Exclude test files and vitest config from TypeScript compilation
+    // TypeScript errors are checked, but vitest.config.ts is excluded in tsconfig.json
     ignoreBuildErrors: false,
   },
-  // Exclude test files and vitest config from webpack build
+  // Exclude test files from webpack build
   webpack: (config, { isServer }) => {
-    // Ignore vitest config files during build
+    // Exclude vitest config and test files from webpack compilation
+    // These files are already excluded in tsconfig.json, but we ensure webpack ignores them too
     config.module.rules.push({
-      test: /vitest\.config\.(ts|js)$/,
-      use: 'ignore-loader',
+      test: /(vitest\.config|\.test|\.spec)\.(ts|tsx|js|jsx)$/,
+      exclude: /node_modules/,
+      use: {
+        loader: 'ignore-loader',
+      },
     })
     
     if (!isServer) {
