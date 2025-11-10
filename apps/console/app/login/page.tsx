@@ -37,13 +37,15 @@ export default function LoginPage({ searchParams }: { searchParams?: { callbackU
         </div>
 
         <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="text-xs text-gray-500 space-y-1">
-            <p className="font-semibold text-gray-700 mb-2">
-              Quick access:
-            </p>
-            <p>• <span className="font-mono">admin@calibr.lat</span> / <span className="font-mono">Admin1234!</span> - Admin user</p>
-            <p>• <span className="font-mono">demo@calibr.lat</span> / <span className="font-mono">Demo1234!</span> - Demo user</p>
-          </div>
+          <details className="text-xs text-gray-500">
+            <summary className="font-semibold text-gray-700 mb-2 cursor-pointer hover:text-blue-600 transition-colors">
+              Demo Credentials (click to show)
+            </summary>
+            <div className="mt-2 space-y-1 ml-2">
+              <p>• <span className="font-mono">admin@calibr.lat</span> / <span className="font-mono">Admin1234!</span> - Admin user</p>
+              <p>• <span className="font-mono">demo@calibr.lat</span> / <span className="font-mono">Demo1234!</span> - Demo user</p>
+            </div>
+          </details>
         </div>
       </div>
     </div>
