@@ -441,6 +441,80 @@ export default function PriceChangesDocs() {
           </div>
         </section>
 
+        {/* API Reference */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">API Reference</h2>
+
+          <div className="bg-brand/5 border border-brand/20 rounded-xl p-6 mb-6">
+            <p className="text-fg text-sm">
+              The Price Changes API allows programmatic access to price change workflows. All endpoints require authentication via Bearer token.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <div className="font-mono text-brand text-sm mb-3">GET /api/v1/price-changes</div>
+              <p className="text-fg mb-4">List price changes with filters and pagination</p>
+              <div className="bg-bg border border-border p-4 rounded-lg">
+                <div className="text-xs font-semibold text-mute mb-2">QUERY PARAMETERS:</div>
+                <ul className="space-y-1 text-sm text-fg font-mono">
+                  <li>• project: Project slug (required)</li>
+                  <li>• status: Filter by status (PENDING, APPROVED, APPLIED, etc.)</li>
+                  <li>• q: Search query (SKU or source)</li>
+                  <li>• cursor: Pagination cursor</li>
+                  <li>• limit: Results per page (default: 25)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <div className="font-mono text-brand text-sm mb-3">POST /api/v1/price-changes/:id/approve</div>
+              <p className="text-fg">Approve a pending price change</p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <div className="font-mono text-brand text-sm mb-3">POST /api/v1/price-changes/:id/apply</div>
+              <p className="text-fg">Apply an approved price change to platforms</p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <div className="font-mono text-brand text-sm mb-3">POST /api/v1/price-changes/:id/reject</div>
+              <p className="text-fg">Reject a price change</p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <div className="font-mono text-brand text-sm mb-3">POST /api/v1/price-changes/:id/rollback</div>
+              <p className="text-fg">Rollback an applied price change to its previous value</p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">Response Example</h3>
+              <div className="bg-bg border border-border p-4 rounded-lg">
+                <pre className="text-xs text-fg font-mono overflow-x-auto">{`{
+  "id": "string",
+  "status": "PENDING" | "APPROVED" | "APPLIED" | "REJECTED",
+  "currency": "USD",
+  "fromAmount": 2999,  // in cents
+  "toAmount": 3499,    // in cents
+  "createdAt": "2024-01-15T10:30:00Z",
+  "source": "ai" | "rule" | "manual",
+  "context": {
+    "skuCode": "SKU-123"
+  },
+  "policyResult": {
+    "ok": true,
+    "checks": [...]
+  },
+  "connectorStatus": {
+    "target": "shopify",
+    "state": "QUEUED" | "SYNCING" | "SYNCED" | "ERROR"
+  }
+}`}</pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Related Docs */}
         <section className="mb-12">
           <h2 className="text-3xl font-semibold text-fg mb-6">Related Documentation</h2>

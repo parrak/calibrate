@@ -169,7 +169,7 @@ export default function ConsoleDocsHome() {
         {/* Reference & Help */}
         <div className="mb-12">
           <h2 className="text-3xl font-semibold text-fg mb-6">Reference & Help</h2>
-          <div className="bg-surface border border-border rounded-xl p-6">
+          <div className="bg-surface border border-border rounded-xl p-6 mb-6">
             <div className="grid md:grid-cols-2 gap-4">
               <ResourceLink
                 href="/console/getting-started"
@@ -187,10 +187,26 @@ export default function ConsoleDocsHome() {
                 description="Common issues and solutions"
               />
               <ResourceLink
-                href="/console/api-reference"
-                title="API Reference"
-                description="API endpoints used by the console"
+                href="/console/best-practices"
+                title="Best Practices"
+                description="Tips and strategies for effective pricing"
               />
+            </div>
+          </div>
+
+          <div className="bg-brand/5 border border-brand/20 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-fg mb-3">API References</h3>
+            <p className="text-mute text-sm mb-4">
+              API documentation is integrated into each feature page. Visit any feature page (Price Changes, Catalog, Integrations, AI Assistant) to find relevant API endpoints and examples.
+            </p>
+            <div className="flex gap-3 text-sm">
+              <a href="/console/price-changes#api-reference" className="text-brand hover:underline">Price Changes API</a>
+              <span className="text-mute">•</span>
+              <a href="/console/catalog#api-reference" className="text-brand hover:underline">Catalog API</a>
+              <span className="text-mute">•</span>
+              <a href="/console/integrations#api-reference" className="text-brand hover:underline">Platforms API</a>
+              <span className="text-mute">•</span>
+              <a href="/console/ai-assistant#api-reference" className="text-brand hover:underline">Assistant API</a>
             </div>
           </div>
         </div>

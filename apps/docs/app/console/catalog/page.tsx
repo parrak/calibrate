@@ -326,6 +326,82 @@ export default function CatalogDocs() {
           </div>
         </section>
 
+        {/* API Reference */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">API Reference</h2>
+
+          <div className="bg-brand/5 border border-brand/20 rounded-xl p-6 mb-6">
+            <p className="text-fg text-sm">
+              The Catalog API provides programmatic access to your product catalog. All endpoints require authentication via Bearer token.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <div className="font-mono text-brand text-sm mb-3">GET /api/v1/catalog</div>
+              <p className="text-fg mb-4">Get product catalog for a project with all SKUs and pricing information</p>
+              <div className="bg-bg border border-border p-4 rounded-lg">
+                <div className="text-xs font-semibold text-mute mb-2">QUERY PARAMETERS:</div>
+                <ul className="space-y-1 text-sm text-fg font-mono">
+                  <li>• project: Project slug (required)</li>
+                  <li>• productCode: Filter by specific product code (optional)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">Response Example</h3>
+              <div className="bg-bg border border-border p-4 rounded-lg">
+                <pre className="text-xs text-fg font-mono overflow-x-auto">{`{
+  "products": [
+    {
+      "code": "PROD-001",
+      "name": "Example Product",
+      "skus": [
+        {
+          "code": "SKU-001",
+          "prices": [
+            {
+              "currency": "USD",
+              "amount": 2999  // in cents ($29.99)
+            },
+            {
+              "currency": "EUR",
+              "amount": 2799  // in cents (€27.99)
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}`}</pre>
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">Usage Notes</h3>
+              <ul className="space-y-2 text-fg text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">•</span>
+                  Prices are returned in cents (or smallest currency unit) as integers
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">•</span>
+                  Multi-currency products include price objects for each configured currency
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">•</span>
+                  Use the productCode parameter to fetch details for a specific product
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">•</span>
+                  Catalog data reflects the latest sync from connected platforms
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
         {/* Next Steps */}
         <section className="mb-12">
           <h2 className="text-3xl font-semibold text-fg mb-6">Related Documentation</h2>

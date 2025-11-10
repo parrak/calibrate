@@ -492,6 +492,79 @@ export default function IntegrationsDocs() {
           </div>
         </section>
 
+        {/* API Reference */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">API Reference</h2>
+
+          <div className="bg-brand/5 border border-brand/20 rounded-xl p-6 mb-6">
+            <p className="text-fg text-sm">
+              The Platforms API allows you to manage platform integrations and trigger sync operations programmatically. All endpoints require authentication via Bearer token.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <div className="font-mono text-brand text-sm mb-3">GET /api/platforms</div>
+              <p className="text-fg mb-4">List all available platform integrations and their connection status</p>
+              <div className="bg-bg border border-border p-4 rounded-lg">
+                <div className="text-xs font-semibold text-mute mb-2">QUERY PARAMETERS:</div>
+                <ul className="space-y-1 text-sm text-fg font-mono">
+                  <li>• project: Project slug (required)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <div className="font-mono text-brand text-sm mb-3">GET /api/platforms/:platform</div>
+              <p className="text-fg mb-4">Get connection status and details for a specific platform (shopify, amazon)</p>
+              <div className="bg-bg border border-border p-4 rounded-lg">
+                <div className="text-xs font-semibold text-mute mb-2">QUERY PARAMETERS:</div>
+                <ul className="space-y-1 text-sm text-fg font-mono">
+                  <li>• project: Project slug (required)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <div className="font-mono text-brand text-sm mb-3">POST /api/platforms/:platform/sync</div>
+              <p className="text-fg mb-4">Trigger a manual sync operation for a connected platform</p>
+              <div className="bg-bg border border-border p-4 rounded-lg">
+                <div className="text-xs font-semibold text-mute mb-2">REQUEST BODY:</div>
+                <pre className="text-sm text-fg font-mono overflow-x-auto">{`{
+  "projectSlug": "demo",
+  "syncType": "full" | "products" | "prices"
+}`}</pre>
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <div className="font-mono text-brand text-sm mb-3">GET /api/platforms/:platform/sync/status</div>
+              <p className="text-fg">Get sync status and history for a platform integration</p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">Response Example</h3>
+              <div className="bg-bg border border-border p-4 rounded-lg">
+                <pre className="text-xs text-fg font-mono overflow-x-auto">{`{
+  "platform": "shopify",
+  "connected": true,
+  "status": "active" | "error" | "disconnected",
+  "lastSync": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "status": "success" | "in_progress" | "failed",
+    "productsCount": 150,
+    "errorMessage": null
+  },
+  "capabilities": {
+    "read": true,
+    "write": true
+  }
+}`}</pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Related Docs */}
         <section className="mb-12">
           <h2 className="text-3xl font-semibold text-fg mb-6">Related Documentation</h2>
