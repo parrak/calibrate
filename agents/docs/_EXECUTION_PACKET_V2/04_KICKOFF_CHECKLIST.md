@@ -1,4 +1,4 @@
-# Kickoff Checklist — First 30 Days (Milestone-Oriented)
+# Kickoff Checklist — Next 30 Days (Execution Packet V2 Continuation)
 
 > **⚠️ IMPORTANT FOR AGENTS AND EXECUTORS**
 >
@@ -14,7 +14,7 @@
 
 ---
 
-## 🧱 Platform Team (Infra, Schema, RLS, Eventing, CI/CD)
+## 🧱 Platform Team (Infrastructure / Schema / Eventing / CI & SLAs)
 
 ### Milestone M0.1 — Core Schema
 
@@ -33,6 +33,24 @@
 - [x] Add dead-letter queue (`dlq_event_log`)
 - [x] Verify replay logic and connector subscriber consumption
 - [x] Integrate into `@calibr/monitor` for event latency metrics
+
+### Milestone M0.1 → M0.2 ✅ COMPLETE
+Schema + Event Bus stable.
+
+### Milestone M0.5 — Automation Runner Foundation 🚀 NEW
+- [ ] Extend `RuleRun` + `RuleTarget` models → state machine (`queued → applying → applied | failed`)
+- [ ] Add worker queue (`rulesWorker.ts`) consuming outbox `job.rules.apply`
+- [ ] Implement exponential backoff / jitter / 429 handling
+- [ ] Reconciliation pass verifying external price = intended price
+- [ ] DLQ drain job + aggregate report → `audit_event`
+- [ ] Add metrics: `rules.apply.count`, `duration_ms`, `success_rate`, `dlq.size`
+- [ ] Alert policies: success < 97% / DLQ > threshold / Shopify 429 burst
+- [ ] Publish Grafana dashboard panel → `/api/metrics`
+
+### Acceptance
+- [ ] 100-SKU rule runs < 5 min p95 end-to-end  
+- [ ] Partial failures recoverable via "Retry Failed" API  
+- [ ] All apply events audited + idempotent
 
 ### Monitoring & Observability
 
@@ -53,7 +71,7 @@
 
 ---
 
-## 🔌 Connectors Team (Shopify Launch, Amazon Stub, Stripe Conditional)
+## 🔌 Connectors Team (Shopify Launch / Amazon Read-Only / Monitoring)
 
 ### Milestone M0.3 — Shopify Connector (Live)
 
@@ -77,6 +95,19 @@
 - [x] Create acceptance report (`M0.4_ACCEPTANCE_REPORT.md`)
 - [x] Update documentation and environment configuration
 
+### M0.3 Shopify Connector ✅ Live  
+### M0.4 Amazon Connector ✅ Validated  
+
+### M0.6 — Competitor Monitoring E2E ✅ (Option A Chosen)
+- [x] Backend API tests complete (12 tests, auth 401 verified)
+- [x] Manual API testing + integration in PR checks
+- [x] Auth enforcement on GET/POST endpoints
+- [ ] UI integration testing (CompetitorMonitor ↔ Analytics ↔ Rules)
+- [ ] End-to-end verification (ingest → normalize → visualize)
+- [ ] Error rate < 1% per 24 h across two tenants
+- [ ] Add alert hook to `@calibr/monitor` for scrape failures
+- [ ] Update docs → mark Competitor Monitoring **Green**
+
 ### Milestone M1.5 (Conditional) — Stripe Connector
 
 - [ ] Only active after SaaS Validation "Go" signal
@@ -90,7 +121,7 @@
 
 ---
 
-## ⚙️ Engine Team (Rules DSL, Apply/Rollback, Explainability)
+## ⚙️ Engine Team (Rules DSL / Apply / Rollback / Automation Runner)
 
 ### Milestone M1.1 — Pricing Engine MVP
 
@@ -102,6 +133,8 @@
 - [x] Write integration tests with deterministic diff fixtures
 - [x] Add rule simulation mode (preview without apply)
 
+### M1.1 Pricing Engine ✅ Complete  
+
 ### Milestone M1.3 — Explainability & Audit
 
 - [ ] Ensure all actions write Audit + ExplainTrace
@@ -109,6 +142,18 @@
 - [ ] Integrate correlation IDs with `@calibr/monitor`
 - [ ] Verify replay can fully reconstruct historical price change
 - [ ] Generate sample audit reports for QA (2 tenants)
+
+### M1.3 Explainability & Audit (Extend)
+- [ ] Verify every apply writes Audit + ExplainTrace  
+- [ ] `/api/audit` endpoint wired with pagination + filters  
+- [ ] Sample audit report for 2 tenants generated  
+
+### M1.6 — Automation Runner Execution Layer NEW
+- [ ] Implement `job.rule.materialize`, `job.rule.apply.batch`, `job.rule.reconcile`
+- [ ] Add `POST /api/v1/runs/:runId/retry-failed`
+- [ ] End-to-end worker test (100 targets, retry path covered)
+- [ ] Metrics → `@calibr/monitor`; alert thresholds wired
+- [ ] Docs: "Automation Runner Architecture" (`docs/automation_runner.md`)
 
 ### Competitor Monitoring (Testing & Verification)
 
@@ -127,7 +172,7 @@
 
 ---
 
-## 🖥️ Interface Team (Console, Site, Docs)
+## 🖥️ Interface Team (Console / Site / Docs)
 
 ### Milestone M1.2 — Console MVP
 
@@ -139,12 +184,25 @@
 - [ ] Integrate with `/api/v1/price-changes` + `/audit`
 - [ ] Test via React Testing Library; snapshot diff coverage ≥ 80%
 
+### M1.2 Console MVP (In Progress)
+- [ ] Catalog Table (filters, pagination, variant grouping)
+- [ ] Rule Builder (selector + transform UI)
+- [ ] Diff Preview Drawer (before/after + audit)
+- [ ] Action buttons (Approve, Apply, Reject, Rollback)
+- [ ] Optimistic updates + status badges + audit drawer
+
+### M1.7 — Automation Runner UI Enhancements NEW
+- [ ] Add "Retry Failed" control in Runs table
+- [ ] Add "Explain" tab displaying transform and audit trace
+- [ ] Show apply progress indicator via SSE or polling
+- [ ] Toasts reflect server statuses (queued/applied/failed)
+- [ ] Snapshot test coverage ≥ 85%
+
 ### UI Theming & Usability
 
-- [ ] Roll out Light Theme (shared tokens)
-- [ ] Ensure WCAG AA contrast and Lighthouse ≥ 90
-- [ ] Unify styles across Console, Site, Docs
-- [ ] Add guided tour for first-time users
+- [ ] Light theme rolled out (all apps)
+- [ ] WCAG AA contrast / Lighthouse ≥ 90
+- [ ] Guided tour for first-time users
 
 ### Site / Docs / SaaS Validation
 
@@ -157,7 +215,7 @@
 
 ---
 
-## 🧠 Copilot & Analytics Team (Read-Only Intelligence Layer)
+## 🧠 Copilot & Analytics Team (Read-Only → Simulation)
 
 ### Milestone M1.4 — Copilot (Read-Only)
 
@@ -168,6 +226,22 @@
 - [ ] Integrate with Console → "Ask Copilot" drawer
 - [ ] Add analytics digest cron job → daily summary
 - [ ] Add anomaly detection (price spike/drop, margin compression, etc.)
+
+### M1.4 Copilot Read-Only ✅ Baseline Complete
+
+### M1.8 — Copilot Simulation NEW
+- [ ] Build `POST /api/v1/copilot/simulate` (read-only, schema validated)
+- [ ] Build `POST /api/v1/copilot/propose` → persist disabled PricingRule + preview run
+- [ ] Add modal "Ask Copilot" → show Proposed Rule + Preview Summary
+- [ ] "Open in Rule Builder" handoff to Console
+- [ ] Log full prompt, scope, and SQL for audit
+- [ ] Red-team prompt tests (denylist, injection, scope abuse)
+- [ ] Add Copilot section in docs (`docs/copilot_simulation.md`)
+
+### Acceptance
+- [ ] NL prompt → proposal → preview → manual approve/apply path works E2E  
+- [ ] No writes occur without human approval  
+- [ ] All Copilot actions audited and logged
 
 ### Analytics Pipeline
 
@@ -189,7 +263,7 @@
 
 ---
 
-## 👩‍💻 Human (PM / Governance / QA)
+## 👩‍💻 Human / Governance / QA (PM Oversight)
 
 - [ ] Assign milestone owners in `/agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md`
 - [ ] Ensure DoR criteria met before any coding
@@ -198,17 +272,26 @@
 - [ ] Coordinate 5 early-access merchant testers (Shopify)
 - [ ] Review Stripe connector gating after 3 months
 - [ ] Approve `v0.3.9-stable` tag once all checklists hit 100%
+- [ ] Confirm Competitor Monitoring marked Green in gate report  
+- [ ] Approve Automation Runner design doc → merged in repo  
+- [ ] Run weekly sync on Automation Runner & Copilot PR status  
+- [ ] Coordinate 2 staging tenants + 1 canary merchant for Automation Runner test  
+- [ ] Validate Ready-for-Automation Gate criteria below
 
 ---
 
-## ✅ Completion Gates by Phase
+## ✅ Completion Gates / Readiness Matrix
 
 | Phase | Gate | Key Artifacts |
-|-------|------|---------------|
+|:--|:--|:--|
 | M0.1–M0.2 | Schema + Event Bus stable | DB migrations pass, outbox live |
+| M0.1–M0.4 | Schema + Connectors Green | Outbox + Shopify/Amazon live |
 | M0.3–M1.1 | Shopify + Rules Engine live | Price change applied + audited |
+| M1.1–M1.3 | Rules Engine + Explainability Green | Price change audited |
 | M1.2–M1.4 | Console + Copilot live | User completes end-to-end apply/query |
+| M1.5–M1.8 | Automation Runner + Copilot Sim Green | Worker metrics + Copilot proposal demo |
 | Ready for Automation Runner | All SLAs green + audit complete | `/api/metrics` dashboard |
+| Ready for Automation Runner Gate | All SLAs green + 100-SKU test pass | `/api/metrics` dashboard snapshot |
 | Post-Validation | Stripe connector active | Collector "Go" threshold met |
 
 ---
@@ -256,3 +339,17 @@
 
 - [ ] Apply/rollback reliable; audit/explain intact.
 - [ ] Connectors stable under backoff; surfaced in health page.
+
+---
+
+## 📦 Operational Reminders
+
+- [ ] CI pipeline = typecheck → build → test → migrate → package types → preview deploy  
+- [ ] `.env.example` validated in prestart hook  
+- [ ] `pnpm setup` bootstraps dev in < 5 min  
+- [ ] Synthetic probes monitor price-changes, analytics, copilot, competitor feeds  
+- [ ] Error budget: 5xx < 2% / Connector success ≥ 98% / Cron ≥ 99%  
+
+---
+
+**Next Review Window:** after Automation Runner PR #3 and Copilot Simulation PR #2 merge, or 30 days (whichever first).
