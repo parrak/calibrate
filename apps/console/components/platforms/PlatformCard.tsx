@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { platformsApi } from '@/lib/api-client'
 import { PlatformSettings } from './PlatformSettings'
+import { useToast } from '@/lib/components'
 
 interface PlatformCardProps {
   platform: {
@@ -20,13 +21,24 @@ interface PlatformCardProps {
 export function PlatformCard({ platform, integration, projectSlug, onUpdate }: PlatformCardProps) {
   const [syncing, setSyncing] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const { Toast, setMsg } = useToast()
 
   const handleSync = async () => {
     try {
       setSyncing(true)
       await platformsApi.triggerSync(platform.platform, projectSlug)
+      setMsg(`${platform.name} sync initiated successfully`)
       onUpdate?.()
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Sync failed'
+
+      // Check if it's a 501 (not implemented) error
+      if (errorMessage.includes('not yet implemented') || errorMessage.includes('501')) {
+        setMsg(`Sync feature is not yet available for ${platform.name}. This feature is coming soon.`)
+      } else {
+        setMsg(`Failed to sync ${platform.name}: ${errorMessage}`)
+      }
+
       console.error('Sync failed:', error)
     } finally {
       setSyncing(false)
@@ -159,6 +171,8 @@ export function PlatformCard({ platform, integration, projectSlug, onUpdate }: P
           }}
         />
       )}
+
+      {Toast}
     </>
   )
 }
