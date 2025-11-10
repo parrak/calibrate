@@ -13,12 +13,102 @@ export default function IntegrationsDocs() {
           Connect your e-commerce platforms and sync products automatically
         </p>
 
+        {/* What are Integrations */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">What are Platform Integrations?</h2>
+
+          <div className="bg-surface border border-border rounded-xl p-6 mb-6">
+            <p className="text-fg mb-4">
+              Platform Integrations connect Calibrate to your e-commerce systems (like Shopify or Amazon), enabling
+              bidirectional data sync. Calibrate imports your product catalog and prices, then can push approved
+              price changes back to your storefront - all automatically.
+            </p>
+            <h3 className="text-lg font-semibold text-fg mb-3">How Integrations Work</h3>
+            <ol className="space-y-2 text-fg">
+              <li className="flex items-start gap-2">
+                <span className="font-bold text-brand">1.</span>
+                <div><strong>Authentication:</strong> You authorize Calibrate to access your platform via OAuth (Shopify) or API credentials (Amazon)</div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-bold text-brand">2.</span>
+                <div><strong>Initial Sync:</strong> Calibrate imports your complete product catalog, variants, and current prices</div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-bold text-brand">3.</span>
+                <div><strong>Ongoing Sync:</strong> Periodic and webhook-based updates keep data current</div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-bold text-brand">4.</span>
+                <div><strong>Price Application:</strong> When you apply price changes in Calibrate, they're pushed back to your platform</div>
+              </li>
+            </ol>
+          </div>
+
+          <div className="bg-brand/10 border border-brand/20 rounded-xl p-4">
+            <p className="text-fg text-sm">
+              <strong className="text-brand">Security:</strong> All credentials are encrypted at rest. Calibrate only requests
+              the minimum permissions needed (read products, write prices). You can revoke access anytime from your platform admin.
+            </p>
+          </div>
+        </section>
+
+        {/* Prerequisites */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Prerequisites</h2>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">For Shopify Integration</h3>
+              <ul className="space-y-2 text-fg text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">✓</span>
+                  Active Shopify store (any plan)
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">✓</span>
+                  Store Owner or Staff account with "Manage products" permission
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">✓</span>
+                  Your Shopify store domain (e.g., mystore.myshopify.com)
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">●</span>
+                  Products already created in Shopify (or ready to import)
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">For Amazon Integration</h3>
+              <ul className="space-y-2 text-fg text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">✓</span>
+                  Amazon Seller Central account
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">✓</span>
+                  Registered SP-API Developer Application
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">✓</span>
+                  LWA Client ID, Client Secret, and Refresh Token
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">●</span>
+                  Active product listings in Amazon
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
         {/* Overview */}
         <section className="mb-12">
-          <h2 className="text-3xl font-semibold text-fg mb-6">Overview</h2>
+          <h2 className="text-3xl font-semibold text-fg mb-6">Supported Platforms</h2>
           <p className="text-fg mb-6">
-            Platform integrations allow Calibrate to sync your product catalog, monitor prices, and push price changes
-            back to your e-commerce platforms. Currently supported platforms include Shopify and Amazon.
+            Calibrate currently supports Shopify (full bidirectional sync) and Amazon SP-API (read-only import).
+            More platforms coming soon.
           </p>
 
           <div className="bg-brand/10 border border-brand/20 rounded-xl p-4">
