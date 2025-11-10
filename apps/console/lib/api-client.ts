@@ -110,22 +110,28 @@ export const catalogApi = {
 
 // Competitors API
 export const competitorsApi = {
-  list: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
-    const res = await fetchApi<{ competitors: Array<Record<string, unknown>> }>(`/api/v1/competitors?projectSlug=${projectSlug}`)
+  list: async (projectSlug: string, token?: string): Promise<Array<Record<string, unknown>>> => {
+    const res = await fetchApi<{ competitors: Array<Record<string, unknown>> }>(`/api/v1/competitors?projectSlug=${projectSlug}`, {
+      token,
+    })
     return res.competitors || []
   },
 
-  get: async (id: string) => {
-    const res = await fetchApi<{ competitor: Record<string, unknown> }>(`/api/v1/competitors/${id}`)
+  get: async (id: string, token?: string) => {
+    const res = await fetchApi<{ competitor: Record<string, unknown> }>(`/api/v1/competitors/${id}`, {
+      token,
+    })
     return res.competitor
   },
 
-  getProducts: async (id: string) => {
-    const res = await fetchApi<{ products: Array<Record<string, unknown>> }>(`/api/v1/competitors/${id}/products`)
+  getProducts: async (id: string, token?: string) => {
+    const res = await fetchApi<{ products: Array<Record<string, unknown>> }>(`/api/v1/competitors/${id}/products`, {
+      token,
+    })
     return res.products || []
   },
 
-  monitor: async (id: string, projectSlug?: string): Promise<Record<string, unknown>> => {
+  monitor: async (id: string, projectSlug?: string, token?: string): Promise<Record<string, unknown>> => {
     const body: Record<string, string> = {}
     if (id) {
       body.competitorId = id
@@ -137,22 +143,26 @@ export const competitorsApi = {
     const res = await fetchApi<{ results: Array<Record<string, unknown>> }>(`/api/v1/competitors/monitor`, {
       method: 'POST',
       body: JSON.stringify(body),
+      token,
     })
     return { results: res.results || [] }
   },
 
-  getRules: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
-    const res = await fetchApi<{ rules: Array<Record<string, unknown>> }>(`/api/v1/competitors/rules?projectSlug=${projectSlug}`)
+  getRules: async (projectSlug: string, token?: string): Promise<Array<Record<string, unknown>>> => {
+    const res = await fetchApi<{ rules: Array<Record<string, unknown>> }>(`/api/v1/competitors/rules?projectSlug=${projectSlug}`, {
+      token,
+    })
     return res.rules || []
   },
 
-  createRule: async (projectSlug: string, rule: { name: string; description?: string; rules: Record<string, unknown>; isActive?: boolean }): Promise<Record<string, unknown>> => {
+  createRule: async (projectSlug: string, rule: { name: string; description?: string; rules: Record<string, unknown>; isActive?: boolean }, token?: string): Promise<Record<string, unknown>> => {
     const res = await fetchApi<{ rule: Record<string, unknown> }>(`/api/v1/competitors/rules`, {
       method: 'POST',
       body: JSON.stringify({
         projectSlug,
         ...rule
       }),
+      token,
     })
     return res.rule
   },
