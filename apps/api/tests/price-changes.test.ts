@@ -605,26 +605,51 @@ describe('price changes API', () => {
 
   it('returns 422 when Shopify variant identifier is unavailable', async () => {
     const target = store.state.priceChanges.find((pc) => pc.id === 'pc_approved')
-    if (target?.context) {
-      delete target.context.shopifyVariantId
-    }
-    // Also remove variantId field and connectorStatus to ensure no fallback
     if (target) {
+      // Remove variantId from all possible sources
+      if (target.context) {
+        delete target.context.shopifyVariantId
+        delete target.context.variantId
+        delete target.context.connectorVariantId
+        delete target.context.externalVariantId
+        delete target.context.shopify
+      }
+      // Clear direct variantId field
       target.variantId = null
-      target.connectorStatus = {}
+      // Clear connectorStatus variantId
+      if (target.connectorStatus && typeof target.connectorStatus === 'object') {
+        const status = target.connectorStatus as Record<string, unknown>
+        delete status.variantId
+        if (status.metadata && typeof status.metadata === 'object') {
+          const metadata = status.metadata as Record<string, unknown>
+          delete metadata.variantId
+          delete metadata.externalId
+        }
+      }
     }
-    const token = makeToken('user-admin')
-    const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/apply', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'X-Calibr-Project': 'demo',
-      },
-    })
-    const res = await applyRoute(req, paramsFor('pc_approved') as any)
-    expect(res.status).toBe(422)
-    const body = await res.json()
-    expect(body.error).toBe('MissingVariant')
+    // Mock SKU to return null/empty attributes so it can't find variantId there either
+    const originalSku = store.client.sku
+    store.client.sku = {
+      findUnique: async () => null,
+    } as any
+
+    try {
+      const token = makeToken('user-admin')
+      const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/apply', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'X-Calibr-Project': 'demo',
+        },
+      })
+      const res = await applyRoute(req, paramsFor('pc_approved') as any)
+      expect(res.status).toBe(422)
+      const body = await res.json()
+      expect(body.error).toBe('MissingVariant')
+    } finally {
+      // Restore original SKU mock
+      store.client.sku = originalSku
+    }
   })
 
   it('resolves Shopify variant ID from direct variantId field on PriceChange', async () => {
