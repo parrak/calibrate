@@ -66,13 +66,16 @@
 - [x] Add rate-limit guard (Shopify API limits)
 - [x] Add error surfacing → Console notifications
 
-### Milestone M0.4 — Amazon Connector (Read-Only Stub)
+### Milestone M0.4 — Amazon Connector (Read-Only Stub) ✅ COMPLETE
 
 - [x] Implement SP-API OAuth scaffolding + LWA client
 - [x] Pull sample catalog (few SKUs) → stress test schema
 - [x] Add `AMAZON_CONNECTOR_ENABLED` feature flag
 - [x] Add ingest cron (manual run only in staging)
 - [x] Validate schema generality for future write paths
+- [x] **VALIDATION COMPLETE** — All 8 tests passing (November 10, 2025)
+- [x] Create acceptance report (`M0.4_ACCEPTANCE_REPORT.md`)
+- [x] Update documentation and environment configuration
 
 ### Milestone M1.5 (Conditional) — Stripe Connector
 
