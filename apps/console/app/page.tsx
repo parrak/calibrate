@@ -48,7 +48,7 @@ export default async function Home() {
           ))}
           <Link
             href="/onboarding"
-            className="block border-2 border-dashed border-gray-300 text-gray-600 px-4 py-3 rounded hover:border-blue-500 hover:text-blue-600 transition-colors text-center flex items-center justify-center"
+            className="flex items-center justify-center border-2 border-dashed border-gray-300 text-gray-600 px-4 py-3 rounded hover:border-blue-500 hover:text-blue-600 transition-colors text-center min-h-[72px]"
           >
             <div>
               <div className="text-2xl mb-1">+</div>

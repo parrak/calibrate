@@ -112,7 +112,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
     const fetchRules = async () => {
       try {
         setLoading(true)
-        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.calibr.lat'
+        const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
         const response = await fetch(`${API_BASE}/api/v1/rules?project=${params.slug}`)
 
         if (!response.ok) {
@@ -344,8 +344,9 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
           {/* Basic Info */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Rule Name</label>
+              <label htmlFor="ruleName" className="block text-sm font-medium mb-1">Rule Name</label>
               <Input
+                id="ruleName"
                 type="text"
                 value={editingRule.name}
                 onChange={(e) =>
@@ -356,8 +357,9 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
+              <label htmlFor="ruleDescription" className="block text-sm font-medium mb-1">Description</label>
               <Input
+                id="ruleDescription"
                 type="text"
                 value={editingRule.description}
                 onChange={(e) =>
@@ -588,8 +590,9 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Transform Type</label>
+                <label htmlFor="transformType" className="block text-sm font-medium mb-1">Transform Type</label>
                 <select
+                  id="transformType"
                   value={editingRule.transform.type}
                   onChange={(e) =>
                     setEditingRule({
@@ -610,7 +613,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label htmlFor="transformValue" className="block text-sm font-medium mb-1">
                   {editingRule.transform.type === 'percentage'
                     ? 'Percentage (%)'
                     : editingRule.transform.type === 'multiply'
@@ -618,6 +621,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
                     : 'Amount'}
                 </label>
                 <Input
+                  id="transformValue"
                   type="number"
                   step={editingRule.transform.type === 'percentage' ? '0.1' : '0.01'}
                   value={
@@ -649,10 +653,11 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
               </h4>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">
+                  <label htmlFor="constraintFloor" className="block text-sm text-gray-600 mb-1">
                     Minimum Price Floor
                   </label>
                   <Input
+                    id="constraintFloor"
                     type="number"
                     step="0.01"
                     value={editingRule.constraints.floor || ''}
@@ -669,10 +674,11 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">
+                  <label htmlFor="constraintCeiling" className="block text-sm text-gray-600 mb-1">
                     Maximum Price Ceiling
                   </label>
                   <Input
+                    id="constraintCeiling"
                     type="number"
                     step="0.01"
                     value={editingRule.constraints.ceiling || ''}
@@ -689,10 +695,11 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">
+                  <label htmlFor="constraintMaxPctDelta" className="block text-sm text-gray-600 mb-1">
                     Max Change (%)
                   </label>
                   <Input
+                    id="constraintMaxPctDelta"
                     type="number"
                     step="1"
                     value={editingRule.constraints.maxPctDelta || ''}
@@ -717,8 +724,9 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
             <h3 className="text-md font-semibold">Schedule</h3>
 
             <div>
-              <label className="block text-sm font-medium mb-1">When to apply</label>
+              <label htmlFor="scheduleType" className="block text-sm font-medium mb-1">When to apply</label>
               <select
+                id="scheduleType"
                 value={editingRule.schedule.type}
                 onChange={(e) =>
                   setEditingRule({
@@ -738,8 +746,9 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
 
             {editingRule.schedule.type === 'scheduled' && (
               <div>
-                <label className="block text-sm font-medium mb-1">Scheduled Date & Time</label>
+                <label htmlFor="scheduledDateTime" className="block text-sm font-medium mb-1">Scheduled Date & Time</label>
                 <Input
+                  id="scheduledDateTime"
                   type="datetime-local"
                   value={editingRule.schedule.scheduledAt || ''}
                   onChange={(e) =>
@@ -758,8 +767,9 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
             {editingRule.schedule.type === 'recurring' && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Cron Expression</label>
+                  <label htmlFor="scheduleCron" className="block text-sm font-medium mb-1">Cron Expression</label>
                   <Input
+                    id="scheduleCron"
                     type="text"
                     value={editingRule.schedule.cron || ''}
                     onChange={(e) =>
@@ -772,14 +782,16 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
                       })
                     }
                     placeholder="0 0 * * *"
+                    aria-describedby="cronHelp"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p id="cronHelp" className="text-xs text-gray-500 mt-1">
                     e.g., "0 0 * * *" for daily at midnight
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Timezone</label>
+                  <label htmlFor="scheduleTimezone" className="block text-sm font-medium mb-1">Timezone</label>
                   <Input
+                    id="scheduleTimezone"
                     type="text"
                     value={editingRule.schedule.timezone || 'UTC'}
                     onChange={(e) =>

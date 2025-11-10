@@ -6,8 +6,52 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Amazon M0.4 Connector Validation** (PR #85) — Completed Nov 10, 2025 ✅ MILESTONE
+  - **M0.4 COMPLETE**: Amazon connector validated and ready for automation gate
+  - Created comprehensive 812-line acceptance report (`M0.4_ACCEPTANCE_REPORT.md`)
+  - **Test Results**: 8/8 tests passing (100% pass rate)
+    - ✅ Configuration loading and dry-run mode
+    - ✅ Price change operations without credentials
+    - ✅ Connector registry interface compliance
+    - ✅ Feed status polling and parsing
+    - ✅ Competitive pricing data retrieval
+  - **Feature Flag System**: `AMAZON_CONNECTOR_ENABLED` implemented
+    - Added to `.env.example` with documentation
+    - Protected API endpoints (`/api/platforms/amazon/catalog`, `/api/platforms/amazon/catalog/cron`)
+    - Feature flag checked in staging config
+  - **Database Schema Validation**: Multi-connector architecture confirmed
+    - Product model supports flexible `channelRefs` JSON for platform-specific metadata
+    - Unique constraints prevent duplicate products across channels
+    - SKU model handles variant-level data with proper relationships
+    - Price/PriceVersion tables support cross-connector price history
+  - **Dry-Run Mode**: Fully functional without real credentials for safe testing
+  - **Catalog Ingest**: Complete implementation with database persistence
+  - **Ready-For-Automation Gate**: 7/8 requirements now met (87.5% complete)
+  - Validation duration: 4 hours | Confidence: HIGH
+  - See `M0.4_ACCEPTANCE_REPORT.md` for full validation details
+
+- **Competitor Monitoring E2E Testing** (PR #83) — Completed Nov 10, 2025 ✅
+  - Created comprehensive E2E test results document (`COMPETITOR_MONITORING_E2E_TEST_RESULTS.md`)
+  - **Authentication Fixes**: Components now properly pass API tokens
+    - Fixed `CompetitorMonitor` component to use `useSession()` hook
+    - Fixed `CompetitorRules` component authentication
+    - Updated `competitorsApi` client to accept optional `token` parameter
+  - **Test Coverage**: 433+ lines of new tests
+    - 207 lines: `CompetitorMonitor.test.tsx` (auth scenarios, error handling)
+    - 226 lines: `CompetitorRules.test.tsx` (rule creation, auth, errors)
+  - **API Validation**: Manual browser testing completed
+    - ✅ CORS working correctly (no preflight errors)
+    - ✅ OPTIONS handlers functional
+    - ✅ Authentication properly enforced
+  - **UI Improvements**: Better error messages
+    - Clear "Sign in required" messages for 401 errors
+    - Sign-out button for auth failures
+    - Graceful error handling with retry options
+  - **Result**: Competitor monitoring fully functional with proper auth
+
 ### Fixed
-- **Competitor Monitoring Authentication & Error Handling**
+- **Competitor Monitoring Authentication & Error Handling** (PR #83)
   - Fixed authentication token not being passed to competitor API calls in CompetitorMonitor and CompetitorRules components
   - Added clear error messages and sign-out button for authentication failures (401 errors)
   - Updated `competitorsApi` methods to accept optional `token` parameter for all endpoints

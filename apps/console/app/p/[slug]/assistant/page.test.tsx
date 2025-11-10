@@ -32,7 +32,7 @@ describe('AssistantPage', () => {
 
   it('renders the page title', () => {
     render(<AssistantPage />)
-    expect(screen.getByText('AI Pricing Assistant')).toBeInTheDocument()
+    expect(screen.getByText('AI Assistant')).toBeInTheDocument()
   })
 
   it('renders input field with proper ARIA attributes', () => {
