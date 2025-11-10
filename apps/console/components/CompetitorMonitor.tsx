@@ -231,8 +231,31 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
         </CardHeader>
         <CardContent>
           {competitors.length === 0 ? (
-            <div className="text-center py-8 text-gray-600">
-              No competitors configured. Add competitors to start monitoring.
+            <div className="text-center py-12 px-4">
+              <div className="max-w-md mx-auto">
+                <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Competitors Configured</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Add competitors to start monitoring their prices and market positioning.
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                  <p className="text-xs font-semibold text-blue-900 mb-2">How to add competitors:</p>
+                  <ol className="text-xs text-gray-700 space-y-1 list-decimal list-inside">
+                    <li>Use the API endpoint: <code className="bg-white px-1 py-0.5 rounded text-blue-600">POST /api/v1/competitors</code></li>
+                    <li>Provide competitor details (name, domain, channel)</li>
+                    <li>Map competitor products to your SKUs</li>
+                  </ol>
+                  <a
+                    href="https://docs.calibr.lat"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-3 text-xs font-medium text-blue-600 hover:text-blue-800"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    View API Documentation
+                  </a>
+                </div>
+              </div>
             </div>
           ) : (
             <Table>
