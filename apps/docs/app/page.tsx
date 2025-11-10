@@ -7,14 +7,14 @@ export default function Home() {
             Calibrate Documentation
           </h1>
           <p className="text-xl text-mute">
-            API reference and integration guides for the Calibrate pricing platform
+            Complete guide to using the Calibrate pricing management platform
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <div className="mb-12">
           <a
             href="/console"
-            className="block bg-surface border border-border rounded-2xl p-8 shadow-xl hover:border-brand/50 hover:shadow-2xl transition-all group"
+            className="block bg-surface border border-brand/30 rounded-2xl p-8 shadow-xl hover:border-brand/50 hover:shadow-2xl transition-all group"
           >
             <div className="flex items-center gap-3 mb-4">
               <span className="text-4xl">🖥️</span>
@@ -23,7 +23,7 @@ export default function Home() {
               </h2>
             </div>
             <p className="text-mute mb-4">
-              Complete guide to using the Calibrate pricing management console
+              Complete guide to using the Calibrate pricing management console, including feature documentation and integrated API references
             </p>
             <ul className="space-y-2 text-sm text-fg">
               <li className="flex items-center gap-2">
@@ -46,55 +46,18 @@ export default function Home() {
                 <span className="text-brand">→</span>
                 Platform Integrations
               </li>
+              <li className="flex items-center gap-2">
+                <span className="text-brand">→</span>
+                API References (integrated into each feature)
+              </li>
             </ul>
             <div className="mt-6 text-brand font-semibold group-hover:underline">
               View Console Docs →
             </div>
           </a>
-
-          <div className="bg-surface border border-border rounded-2xl p-8 shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-4xl">⚡</span>
-              <h2 className="text-2xl font-semibold text-fg">API Reference</h2>
-            </div>
-            <p className="text-mute mb-6">
-              RESTful API for programmatic access to Calibrate pricing platform
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold text-fg mb-2">Price Changes API</h3>
-                <div className="bg-bg border border-border p-3 rounded-lg font-mono text-xs">
-                  <div className="text-brand">GET /api/v1/price-changes</div>
-                  <div className="text-mute mt-1">POST /api/v1/price-changes/:id/approve</div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold text-fg mb-2">Catalog API</h3>
-                <div className="bg-bg border border-border p-3 rounded-lg font-mono text-xs">
-                  <div className="text-brand">GET /api/v1/catalog</div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold text-fg mb-2">Platforms API</h3>
-                <div className="bg-bg border border-border p-3 rounded-lg font-mono text-xs">
-                  <div className="text-brand">GET /api/platforms</div>
-                  <div className="text-mute mt-1">POST /api/platforms/:platform/sync</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <a href="/console/api-reference" className="text-brand hover:underline font-semibold">
-                View Full API Reference →
-              </a>
-            </div>
-          </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-2xl p-8 shadow-xl">
+        <div className="bg-surface border border-border rounded-2xl p-8 shadow-xl mb-12">
           <h2 className="text-2xl font-semibold text-fg mb-6">Quick Links</h2>
           <div className="grid md:grid-cols-3 gap-4">
             <a
@@ -109,7 +72,7 @@ export default function Home() {
               className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
             >
               <div className="font-semibold text-fg mb-1">Price Changes</div>
-              <div className="text-sm text-mute">Workflow and approval process</div>
+              <div className="text-sm text-mute">Workflow and API reference</div>
             </a>
             <a
               href="/console/pricing-rules"
@@ -123,14 +86,14 @@ export default function Home() {
               className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
             >
               <div className="font-semibold text-fg mb-1">Integrations</div>
-              <div className="text-sm text-mute">Connect Shopify and Amazon</div>
+              <div className="text-sm text-mute">Connect platforms & API</div>
             </a>
             <a
               href="/console/ai-assistant"
               className="block p-4 bg-bg border border-border rounded-xl hover:border-brand/30 transition-all"
             >
               <div className="font-semibold text-fg mb-1">AI Assistant</div>
-              <div className="text-sm text-mute">Natural language queries</div>
+              <div className="text-sm text-mute">Natural language queries & API</div>
             </a>
             <a
               href="/console/best-practices"
@@ -139,6 +102,18 @@ export default function Home() {
               <div className="font-semibold text-fg mb-1">Best Practices</div>
               <div className="text-sm text-mute">Tips for effective pricing</div>
             </a>
+          </div>
+        </div>
+
+        <div className="bg-brand/5 border border-brand/20 rounded-xl p-6">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">⚡</span>
+            <div>
+              <h3 className="text-lg font-semibold text-fg mb-2">API Documentation</h3>
+              <p className="text-mute text-sm">
+                API references are integrated into each feature page. Navigate to any feature (Price Changes, Catalog, Integrations, etc.) to find relevant API endpoints, request/response examples, and integration guides.
+              </p>
+            </div>
           </div>
         </div>
 
