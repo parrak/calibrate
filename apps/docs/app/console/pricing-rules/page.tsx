@@ -13,12 +13,86 @@ export default function PricingRulesDocs() {
           Automate your pricing strategy with intelligent rules and schedules
         </p>
 
+        {/* What are Pricing Rules */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">What are Pricing Rules?</h2>
+
+          <div className="bg-surface border border-border rounded-xl p-6 mb-6">
+            <p className="text-fg mb-4">
+              Pricing Rules are automated workflows that apply price transformations to products based on conditions you define.
+              Instead of manually adjusting prices for individual products, you create rules that describe "when" and "how" prices
+              should change, and Calibrate executes them automatically.
+            </p>
+            <h3 className="text-lg font-semibold text-fg mb-3">Why Use Pricing Rules?</h3>
+            <ul className="space-y-2 text-fg">
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                <div><strong>Scale:</strong> Apply pricing changes to hundreds or thousands of products simultaneously</div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                <div><strong>Consistency:</strong> Ensure pricing strategy is applied uniformly across your catalog</div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                <div><strong>Efficiency:</strong> Save time by eliminating manual, repetitive price updates</div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                <div><strong>Timing:</strong> Schedule price changes for optimal times (sales events, competitor changes)</div>
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-brand/10 border border-brand/20 rounded-xl p-4">
+            <p className="text-fg text-sm">
+              <strong className="text-brand">Important:</strong> Pricing rules generate price change proposals. These still require
+              human approval before being applied to your platforms, maintaining full governance and control.
+            </p>
+          </div>
+        </section>
+
+        {/* Prerequisites */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Prerequisites</h2>
+
+          <div className="bg-surface border border-border rounded-xl p-6">
+            <p className="text-fg mb-4">Before creating pricing rules, ensure you have:</p>
+            <ul className="space-y-3 text-fg">
+              <li className="flex items-start gap-2">
+                <span className="text-brand">✓</span>
+                <div>
+                  <strong>Product Catalog:</strong> At least one platform integration with products synced to Calibrate
+                </div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">✓</span>
+                <div>
+                  <strong>Role Permissions:</strong> Editor, Admin, or Owner role to create and manage rules
+                </div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">✓</span>
+                <div>
+                  <strong>Pricing Strategy:</strong> Clear understanding of which products to target and desired price changes
+                </div>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">●</span>
+                <div>
+                  <strong>Optional: Test Products:</strong> A small subset of products to test rules before full deployment
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
         {/* Overview */}
         <section className="mb-12">
-          <h2 className="text-3xl font-semibold text-fg mb-6">Overview</h2>
+          <h2 className="text-3xl font-semibold text-fg mb-6">How Pricing Rules Work</h2>
           <p className="text-fg mb-6">
-            Pricing Rules allow you to automate price changes based on product selectors, transforms, and schedules.
-            Create sophisticated pricing strategies that execute automatically without manual intervention.
+            Pricing Rules combine three components to automate price changes: product selectors (which products),
+            price transforms (how to change prices), and schedules (when to execute). Rules can run once or repeatedly.
           </p>
 
           <div className="bg-brand/10 border border-brand/20 rounded-xl p-4">
@@ -434,6 +508,138 @@ export default function PricingRulesDocs() {
           </div>
         </section>
 
+        {/* Real-World Use Cases */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Real-World Use Cases</h2>
+
+          <div className="space-y-6">
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-3">Use Case 1: Weekend Flash Sale</h3>
+              <p className="text-mute text-sm mb-4">
+                <strong className="text-fg">Scenario:</strong> Run a 25% discount on all summer apparel every Friday at 6 PM, automatically reverting prices on Monday morning.
+              </p>
+              <div className="bg-bg border border-border p-4 rounded-lg mb-3">
+                <div className="text-xs font-semibold text-mute mb-2">RULE CONFIGURATION:</div>
+                <ul className="space-y-1 text-sm text-fg">
+                  <li>• <strong>Selector:</strong> Tag equals "summer" AND Category equals "apparel"</li>
+                  <li>• <strong>Transform:</strong> Percentage -25%</li>
+                  <li>• <strong>Constraints:</strong> Floor $10 (maintain minimum margins)</li>
+                  <li>• <strong>Schedule:</strong> Cron: 0 18 * * 5 (Every Friday at 6 PM)</li>
+                  <li>• <strong>Reversion Rule:</strong> Separate rule with +33.33% on Mondays at 6 AM</li>
+                </ul>
+              </div>
+              <p className="text-mute text-sm">
+                <strong className="text-fg">Tip:</strong> Create two rules - one for discount and one for reversion. Monitor the first execution carefully before leaving it automated.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-3">Use Case 2: Clearance for Slow-Moving Inventory</h3>
+              <p className="text-mute text-sm mb-4">
+                <strong className="text-fg">Scenario:</strong> Automatically mark down products that haven't sold in 90 days by 30%, with weekly increases until sold.
+              </p>
+              <div className="bg-bg border border-border p-4 rounded-lg mb-3">
+                <div className="text-xs font-semibold text-mute mb-2">RULE CONFIGURATION:</div>
+                <ul className="space-y-1 text-sm text-fg">
+                  <li>• <strong>Selector:</strong> Custom field "days_since_sale" &gt; 90</li>
+                  <li>• <strong>Transform:</strong> Percentage -30% (initial markdown)</li>
+                  <li>• <strong>Constraints:</strong> Floor at cost price, Max delta 70%</li>
+                  <li>• <strong>Schedule:</strong> Weekly review: 0 9 * * 1 (Mondays at 9 AM)</li>
+                </ul>
+              </div>
+              <p className="text-mute text-sm">
+                <strong className="text-fg">Tip:</strong> Requires inventory data integration. Start with manual execution to verify product selection before enabling recurring schedule.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-3">Use Case 3: Competitive Price Matching</h3>
+              <p className="text-mute text-sm mb-4">
+                <strong className="text-fg">Scenario:</strong> Match competitor prices for electronics category, but stay 5% cheaper while maintaining 20% minimum margin.
+              </p>
+              <div className="bg-bg border border-border p-4 rounded-lg mb-3">
+                <div className="text-xs font-semibold text-mute mb-2">RULE CONFIGURATION:</div>
+                <ul className="space-y-1 text-sm text-fg">
+                  <li>• <strong>Selector:</strong> Category equals "electronics" AND has_competitor_data equals true</li>
+                  <li>• <strong>Transform:</strong> Set to competitor_avg_price × 0.95</li>
+                  <li>• <strong>Constraints:</strong> Floor at cost × 1.20, Ceiling at MSRP</li>
+                  <li>• <strong>Schedule:</strong> Daily: 0 6 * * * (Every morning at 6 AM)</li>
+                </ul>
+              </div>
+              <p className="text-mute text-sm">
+                <strong className="text-fg">Tip:</strong> Requires competitor monitoring setup. Set aggressive floor to protect margins - not all products may match competitor prices.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-xl font-semibold text-fg mb-3">Use Case 4: Dynamic Premium Tier Pricing</h3>
+              <p className="text-mute text-sm mb-4">
+                <strong className="text-fg">Scenario:</strong> Maintain premium positioning by ensuring high-end products are always priced 50% above category average.
+              </p>
+              <div className="bg-bg border border-border p-4 rounded-lg mb-3">
+                <div className="text-xs font-semibold text-mute mb-2">RULE CONFIGURATION:</div>
+                <ul className="space-y-1 text-sm text-fg">
+                  <li>• <strong>Selector:</strong> Tag equals "premium" AND brand in ["Gucci", "Prada", "LV"]</li>
+                  <li>• <strong>Transform:</strong> Set to category_avg_price × 1.50</li>
+                  <li>• <strong>Constraints:</strong> Floor $100, Max delta 25% per execution</li>
+                  <li>• <strong>Schedule:</strong> Bi-weekly: 0 0 1,15 * * (1st and 15th of month)</li>
+                </ul>
+              </div>
+              <p className="text-mute text-sm">
+                <strong className="text-fg">Tip:</strong> Requires category average calculation. Use max delta constraint to avoid shocking price jumps for customers.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Advanced Techniques */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Advanced Techniques</h2>
+
+          <div className="space-y-4">
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">Chaining Rules for Complex Strategies</h3>
+              <p className="text-mute text-sm mb-3">
+                Create multiple rules that execute in sequence to build sophisticated pricing logic:
+              </p>
+              <ol className="space-y-2 text-fg text-sm">
+                <li className="flex gap-3"><span className="font-bold text-brand">1.</span>Base Price Rule: Set foundational prices based on cost + margin</li>
+                <li className="flex gap-3"><span className="font-bold text-brand">2.</span>Competitive Adjustment: Modify prices based on competitor data</li>
+                <li className="flex gap-3"><span className="font-bold text-brand">3.</span>Promotional Rule: Apply temporary discounts to specific segments</li>
+                <li className="flex gap-3"><span className="font-bold text-brand">4.</span>Safety Rule: Ensure no price violates absolute floor/ceiling</li>
+              </ol>
+              <p className="text-mute text-sm mt-3">
+                <strong className="text-fg">Note:</strong> Schedule these rules 5-10 minutes apart to ensure proper execution order.
+              </p>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">A/B Testing Price Points</h3>
+              <p className="text-mute text-sm mb-3">
+                Use rules to test different pricing strategies on product segments:
+              </p>
+              <ul className="space-y-2 text-fg text-sm">
+                <li>• Rule A: Set 50% of SKUs (even numbered) to price point $X</li>
+                <li>• Rule B: Set 50% of SKUs (odd numbered) to price point $Y</li>
+                <li>• Monitor performance for 2 weeks via Analytics</li>
+                <li>• Scale winning strategy to full catalog</li>
+              </ul>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">Regional Pricing Strategies</h3>
+              <p className="text-mute text-sm mb-3">
+                Apply different pricing logic based on currency or market conditions:
+              </p>
+              <ul className="space-y-2 text-fg text-sm">
+                <li>• Create separate rules for USD, EUR, GBP with region-specific transforms</li>
+                <li>• Adjust for local competition and purchasing power</li>
+                <li>• Use currency-specific floors to maintain margins after conversion</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
         {/* Best Practices */}
         <section className="mb-12">
           <h2 className="text-3xl font-semibold text-fg mb-6">Best Practices</h2>
@@ -462,6 +668,14 @@ export default function PricingRulesDocs() {
             <BestPractice
               title="Monitor Price Changes"
               tip="Check the Price Changes page after rules execute to review and approve the generated changes."
+            />
+            <BestPractice
+              title="Document Your Strategy"
+              tip="Use rule descriptions to explain the business logic and expected outcomes for your team."
+            />
+            <BestPractice
+              title="Set Alerts"
+              tip="Configure notifications when rules execute so you can review generated price changes promptly."
             />
           </div>
         </section>
