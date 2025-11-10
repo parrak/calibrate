@@ -61,6 +61,13 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - **Result**: Competitor monitoring fully functional with proper auth
 
 ### Fixed
+- **Price Change Shopify Variant ID Resolution** (PR #TBD)
+  - Fixed 422 "MissingVariant" error when applying price changes that have `variantId` stored directly on the PriceChange model
+  - Updated `resolveShopifyVariantId` function to check `pc.variantId` field first (most reliable source) before falling back to context JSON, connectorStatus, or SKU attributes
+  - Added `variantId` field to PriceChange type definition to match database schema
+  - Resolves issue where price changes created with direct `variantId` field could not be applied to Shopify
+  - All existing tests passing (18/18)
+
 - **Competitor Monitoring Authentication & Error Handling** (PR #83)
   - Fixed authentication token not being passed to competitor API calls in CompetitorMonitor and CompetitorRules components
   - Added clear error messages and sign-out button for authentication failures (401 errors)
