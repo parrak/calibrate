@@ -321,6 +321,71 @@ export default function AIAssistantDocs() {
           </div>
         </section>
 
+        {/* API Reference */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">API Reference</h2>
+
+          <div className="bg-brand/5 border border-brand/20 rounded-xl p-6 mb-6">
+            <p className="text-fg text-sm">
+              The AI Assistant API allows you to submit natural language queries programmatically and receive structured responses. All endpoints require authentication via Bearer token.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <div className="font-mono text-brand text-sm mb-3">POST /api/v1/assistant/query</div>
+              <p className="text-fg mb-4">Submit a natural language query to the AI Assistant</p>
+              <div className="bg-bg border border-border p-4 rounded-lg mb-4">
+                <div className="text-xs font-semibold text-mute mb-2">REQUEST BODY:</div>
+                <pre className="text-sm text-fg font-mono overflow-x-auto">{`{
+  "query": "What are my most expensive products?",
+  "projectSlug": "demo"
+}`}</pre>
+              </div>
+              <div className="bg-bg border border-border p-4 rounded-lg">
+                <div className="text-xs font-semibold text-mute mb-2">RESPONSE:</div>
+                <pre className="text-xs text-fg font-mono overflow-x-auto">{`{
+  "answer": "Your top 3 most expensive products are...",
+  "data": [
+    {
+      "productCode": "PROD-001",
+      "name": "Premium Widget",
+      "price": 19999  // in cents ($199.99)
+    }
+  ],
+  "sql": "SELECT * FROM products ORDER BY price DESC LIMIT 10",
+  "suggestions": [
+    "Show me price history for these products",
+    "What's the average price across all products?"
+  ]
+}`}</pre>
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-fg mb-3">Usage Notes</h3>
+              <ul className="space-y-2 text-fg text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">•</span>
+                  Queries should be natural language questions about your pricing data
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">•</span>
+                  Responses include the natural language answer, structured data, and generated SQL
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">•</span>
+                  The API is read-only and cannot modify data or create price changes
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-brand">•</span>
+                  Rate limits apply: 20 queries per minute per user
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
         {/* Related Docs */}
         <section className="mb-12">
           <h2 className="text-3xl font-semibold text-fg mb-6">Related Documentation</h2>
@@ -341,9 +406,9 @@ export default function AIAssistantDocs() {
               description="View pre-built pricing insights"
             />
             <RelatedLink
-              href="/console/api-reference"
-              title="API Reference"
-              description="Direct API access for advanced queries"
+              href="/console/best-practices"
+              title="Best Practices"
+              description="Tips for effective pricing management"
             />
           </div>
         </section>
