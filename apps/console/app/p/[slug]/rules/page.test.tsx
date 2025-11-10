@@ -13,11 +13,27 @@ const mockSession = {
   apiToken: 'mock-token',
 }
 
+// Mock global fetch
+global.fetch = vi.fn()
+
 describe('RulesPage', () => {
+  // Helper to wait for initial loading
+  const waitForLoading = async () => {
+    await waitFor(() => {
+      expect(screen.queryByText('Loading pricing rules...')).not.toBeInTheDocument()
+    })
+  }
+
   beforeEach(async () => {
     vi.clearAllMocks()
     const { useSession } = await import('next-auth/react')
     ;(useSession as ReturnType<typeof vi.fn>).mockReturnValue({ data: mockSession })
+
+    // Mock fetch to return empty rules by default
+    ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [], count: 0 }),
+    })
   })
 
   it('should render pricing rules header', () => {
@@ -28,13 +44,18 @@ describe('RulesPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('should show empty state when no rules', () => {
+  it('should show empty state when no rules', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
-    expect(screen.getByText('No pricing rules yet')).toBeInTheDocument()
+
+    // Wait for loading to complete
+    await waitFor(() => {
+      expect(screen.getByText('No pricing rules yet')).toBeInTheDocument()
+    })
   })
 
-  it('should open rule editor when clicking New Rule', () => {
+  it('should open rule editor when clicking New Rule', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     const newRuleButton = screen.getByRole('button', { name: /new rule/i })
     fireEvent.click(newRuleButton)
@@ -44,8 +65,9 @@ describe('RulesPage', () => {
     expect(screen.getByText('Product Selector')).toBeInTheDocument()
   })
 
-  it('should add SKU predicate', () => {
+  it('should add SKU predicate', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 
@@ -58,8 +80,9 @@ describe('RulesPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('should add tag predicate', () => {
+  it('should add tag predicate', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 
@@ -72,8 +95,9 @@ describe('RulesPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('should add price range predicate', () => {
+  it('should add price range predicate', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 
@@ -86,8 +110,9 @@ describe('RulesPage', () => {
     expect(screen.getByPlaceholderText('Max price')).toBeInTheDocument()
   })
 
-  it('should add custom field predicate', () => {
+  it('should add custom field predicate', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 
@@ -100,8 +125,9 @@ describe('RulesPage', () => {
     expect(screen.getByPlaceholderText('Value')).toBeInTheDocument()
   })
 
-  it('should remove predicate', () => {
+  it('should remove predicate', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
     fireEvent.click(screen.getByRole('button', { name: /\+ SKU Code/i }))
@@ -126,8 +152,9 @@ describe('RulesPage', () => {
     expect(screen.queryByText('sku')).not.toBeInTheDocument()
   })
 
-  it('should change transform type', () => {
+  it('should change transform type', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 
@@ -137,8 +164,9 @@ describe('RulesPage', () => {
     expect(screen.getByDisplayValue('Absolute Change')).toBeInTheDocument()
   })
 
-  it('should set transform value', () => {
+  it('should set transform value', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 
@@ -148,8 +176,9 @@ describe('RulesPage', () => {
     expect(valueInput).toHaveValue(10)
   })
 
-  it('should set constraints', () => {
+  it('should set constraints', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 
@@ -166,8 +195,9 @@ describe('RulesPage', () => {
     expect(maxDeltaInput).toHaveValue(20)
   })
 
-  it('should change schedule type', () => {
+  it('should change schedule type', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 
@@ -177,8 +207,9 @@ describe('RulesPage', () => {
     expect(screen.getByDisplayValue('Schedule for Later')).toBeInTheDocument()
   })
 
-  it('should show recurring schedule fields', () => {
+  it('should show recurring schedule fields', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 
@@ -189,8 +220,9 @@ describe('RulesPage', () => {
     expect(screen.getByPlaceholderText('UTC')).toBeInTheDocument()
   })
 
-  it('should toggle enabled checkbox', () => {
+  it('should toggle enabled checkbox', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 
@@ -201,8 +233,9 @@ describe('RulesPage', () => {
     expect(enabledCheckbox.checked).toBe(false)
   })
 
-  it('should cancel rule editing', () => {
+  it('should cancel rule editing', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
     expect(screen.getByPlaceholderText('e.g., Summer Sale - 20% Off')).toBeInTheDocument()
@@ -215,6 +248,7 @@ describe('RulesPage', () => {
 
   it('should show error when saving without name', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 
@@ -228,6 +262,7 @@ describe('RulesPage', () => {
 
   it('should handle preview button click', async () => {
     render(<RulesPage params={{ slug: 'demo' }} />)
+    await waitForLoading()
 
     fireEvent.click(screen.getByRole('button', { name: /new rule/i }))
 

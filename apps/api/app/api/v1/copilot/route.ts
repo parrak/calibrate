@@ -394,14 +394,24 @@ async function handleAIQuery(
   // Inject tenant scope constraint for security (prevent cross-tenant data access)
   let secureSQL = sql
 
-  // Add projectId filter if not present
-  if (!sql.includes('projectId')) {
+  // CRITICAL FIX: Replace any existing projectId values with the actual CUID
+  // The AI might generate SQL with projectId = 'demo' (slug) instead of the actual project ID
+  // We need to ensure ALL projectId references use the correct CUID for security and correctness
+
+  // Pattern 1: Replace "projectId" = 'any-value' or "projectId" = "any-value"
+  secureSQL = secureSQL.replace(/"projectId"\s*=\s*['"][^'"]+['"]/gi, `"projectId" = '${projectId}'`)
+
+  // Pattern 2: Replace projectId = 'any-value' (without quotes around column name)
+  secureSQL = secureSQL.replace(/\bprojectId\b\s*=\s*['"][^'"]+['"]/gi, `"projectId" = '${projectId}'`)
+
+  // Add projectId filter if still not present (belt and suspenders approach)
+  if (!secureSQL.match(/"projectId"|projectId/i)) {
     // Try to inject WHERE clause
-    if (sql.includes('WHERE')) {
-      secureSQL = sql.replace(/WHERE/i, `WHERE "projectId" = '${projectId}' AND`)
-    } else if (sql.includes('FROM')) {
+    if (secureSQL.includes('WHERE')) {
+      secureSQL = secureSQL.replace(/WHERE/i, `WHERE "projectId" = '${projectId}' AND`)
+    } else if (secureSQL.includes('FROM')) {
       // Find the first FROM clause and inject WHERE after it
-      secureSQL = sql.replace(/FROM\s+"?(\w+)"?/i, (match) => `${match} WHERE "projectId" = '${projectId}'`)
+      secureSQL = secureSQL.replace(/FROM\s+"?(\w+)"?/i, (match) => `${match} WHERE "projectId" = '${projectId}'`)
     }
   }
 

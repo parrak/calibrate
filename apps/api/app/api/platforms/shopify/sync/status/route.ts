@@ -110,18 +110,19 @@ export const GET = withSecurity(async function GET(request: NextRequest) {
               itemsProcessed = 1;
             }
           }
-        } else if (integration.syncStatus === 'SUCCESS') {
+        } else if (integration.syncStatus?.toUpperCase() === 'SUCCESS') {
           // For successful syncs without error details, we can't know the count
           // But we'll show it as successful
           itemsSuccessful = 1; // At least 1 item was synced
           itemsProcessed = 1;
         }
 
-        // Determine status
+        // Determine status (case-insensitive comparison)
         const status = integration.syncStatus?.toUpperCase() || 'SUCCESS';
         const finalStatus = status === 'SUCCESS' ? 'SUCCESS'
           : status === 'ERROR' ? 'ERROR'
           : status === 'PARTIAL' ? 'PARTIAL'
+          : status === 'SYNCING' ? 'SYNCING'
           : 'SUCCESS';
 
         syncLogs.push({
