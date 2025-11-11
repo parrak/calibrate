@@ -85,6 +85,13 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - **Result**: Competitor monitoring fully functional with proper auth
 
 ### Fixed
+- **Docs Vitest Timeout in CI** (PR #TBD)
+  - Fixed Vitest timeout error when starting forks runner in CI environments
+  - Updated `apps/docs/vitest.config.ts` to use threads pool instead of forks pool
+  - Threads pool starts faster and is more reliable in resource-constrained CI environments
+  - All tests passing locally (3/3 tests in Sidebar.test.tsx)
+  - Resolves "[vitest-pool]: Timeout starting forks runner" error in GitHub Actions
+
 - **Price Change Shopify Variant ID Resolution** (PR #TBD)
   - Fixed 422 "MissingVariant" error when applying price changes that have `variantId` stored directly on the PriceChange model
   - Updated `resolveShopifyVariantId` function to check `pc.variantId` field first (most reliable source) before falling back to context JSON, connectorStatus, or SKU attributes
