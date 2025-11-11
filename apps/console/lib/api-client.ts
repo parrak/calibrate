@@ -1,6 +1,6 @@
 /**
- * API Client for Calibr Console
- * Communicates with the Calibr API backend
+ * API Client for Calibrate Console
+ * Communicates with the Calibrate API backend
  *
  * 📚 API Documentation: https://docs.calibr.lat
  * 🔗 Base URL: https://api.calibr.lat

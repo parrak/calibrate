@@ -28,6 +28,12 @@ const config: Config = {
         ring: 'var(--brand)',
         card: 'var(--card)',
         'card-foreground': 'var(--card-foreground)',
+        // Calibrate brand colors (Teal)
+        'cb-teal-100': '#80D9D9',  // Light Teal (L1)
+        'cb-teal-500': '#00A3A3',  // Mid Teal (L2) - Primary
+        'cb-teal-800': '#008080',  // Deep Teal (L3)
+        'cb-navy': '#001845',      // Navy text
+        'cb-bg': '#F8FAFF',        // Off-white background
       },
       borderColor: {
         DEFAULT: 'var(--border)',
@@ -39,7 +45,12 @@ const config: Config = {
       },
       fontFamily: {
         sans: "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'",
-        mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+        mono: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+      },
+      gradientColorStops: {
+        'cb-start': '#80D9D9',  // Light Teal (L1)
+        'cb-mid': '#00A3A3',   // Mid Teal (L2)
+        'cb-end': '#008080',   // Deep Teal (L3)
       }
     },
   },

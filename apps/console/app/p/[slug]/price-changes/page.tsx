@@ -416,7 +416,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         {initialized && items.length === 0 && !loading && !error && (
           <EmptyState
             title="No price changes yet"
-            desc="When Calibr generates new price suggestions you'll see them here."
+            desc="When Calibrate generates new price suggestions you'll see them here."
           />
         )}
 

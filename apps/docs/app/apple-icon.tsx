@@ -2,10 +2,10 @@ import { ImageResponse } from 'next/og'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 
-export const size = { width: 64, height: 64 }
+export const size = { width: 180, height: 180 }
 export const contentType = 'image/png'
 
-export default async function Icon() {
+export default async function AppleIcon() {
   // Read the logo image from public folder
   const logoPath = join(process.cwd(), 'public', 'favicon.ico')
   let logoData: Buffer | null = null
@@ -38,8 +38,8 @@ export default async function Icon() {
           <img
             src={logoBase64}
             alt="Calibrate"
-            width={64}
-            height={64}
+            width={180}
+            height={180}
             style={{
               objectFit: 'contain',
             }}
@@ -53,10 +53,10 @@ export default async function Icon() {
               alignItems: 'center',
               justifyContent: 'center',
               background: 'linear-gradient(90deg, #80D9D9 0%, #00A3A3 50%, #008080 100%)',
-              borderRadius: 14,
+              borderRadius: 28,
             }}
           >
-            <svg width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="96" height="96" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="32" cy="32" r="28" stroke="#001845" strokeWidth="3" fill="none" opacity="0.3"/>
               <path d="M32 4 L32 12" stroke="#001845" strokeWidth="3" strokeLinecap="round"/>
               <path d="M32 52 L32 60" stroke="#001845" strokeWidth="3" strokeLinecap="round"/>
@@ -71,3 +71,4 @@ export default async function Icon() {
     size
   )
 }
+

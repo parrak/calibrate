@@ -124,7 +124,7 @@ export default function Home() {
               Projects scope your catalog, policies, and users. Sign in and create your first Project.
             </Step>
             <Step n="2" title="Send a price suggestion">
-              Post a signed webhook with your <code>X-Calibr-Project</code> header. Calibr evaluates guardrails.
+              Post a signed webhook with your <code>X-Calibr-Project</code> header. Calibrate evaluates guardrails.
             </Step>
             <Step n="3" title="Approve & apply safely">
               Apply with one click (or auto-apply). Rollback instantly with versioned prices.

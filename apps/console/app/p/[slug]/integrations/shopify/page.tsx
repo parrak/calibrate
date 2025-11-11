@@ -56,7 +56,7 @@ export default async function ShopifyIntegrationPage({
         <div className="border rounded-lg p-6 bg-white">
           <h2 className="text-xl font-semibold mb-4">Connect Your Store</h2>
           <p className="text-gray-600 mb-6">
-            Authorize Calibr to access your Shopify store. You'll be redirected to Shopify to grant permissions.
+            Authorize Calibrate to access your Shopify store. You'll be redirected to Shopify to grant permissions.
           </p>
           <ShopifyAuthButton projectSlug={slug} />
         </div>

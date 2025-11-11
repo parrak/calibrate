@@ -183,7 +183,7 @@ export function ShopifyStatus({ integration, projectSlug, onUpdate }: ShopifySta
 
       let errorMessage = 'Connection test failed';
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        errorMessage = 'Network error: Cannot reach the Calibr API. Please verify connectivity.';
+        errorMessage = 'Network error: Cannot reach the Calibrate API. Please verify connectivity.';
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }

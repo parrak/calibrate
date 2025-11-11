@@ -18,9 +18,9 @@ module.exports = {
         fg: '#425466',           // Medium gray for body text
         text: '#425466',         // Medium gray for body text
         mute: '#6b7a90',         // Lighter gray for secondary text
-        brand: '#635bff',        // Purple brand color (Stripe-like)
-        'brand-hover': '#4b45e5', // Darker purple on hover
-        'brand-light': '#f0efff', // Very light purple background
+        brand: '#00A3A3',        // Teal brand color
+        'brand-hover': '#008c8c', // Darker teal on hover
+        'brand-light': '#e6f7f7', // Very light teal background
         accent: '#0074D9',       // Blue accent
         code: '#f6f9fc',         // Light gray for code blocks
       },

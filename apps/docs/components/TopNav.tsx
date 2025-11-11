@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import useStickyHeader from './useStickyHeader';
 
 export function TopNav() {
@@ -12,16 +13,10 @@ export function TopNav() {
         <div className="flex items-center gap-8">
           <Link
             href="/"
-            className="flex items-center gap-2 font-semibold transition-colors"
-            style={{ color: 'var(--text-strong)' }}
+            className="flex items-center gap-2"
           >
-            <svg className="icon" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" style={{ color: 'var(--brand)' }} />
-              <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" style={{ color: 'var(--brand)', opacity: 0.6 }} />
-              <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" style={{ color: 'var(--brand)', opacity: 0.6 }} />
-              <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" style={{ color: 'var(--accent)' }} />
-            </svg>
-            <span className="text-lg">Calibrate</span>
+            <Image src="/logo.png" alt="Calibrate" width={120} height={32} className="h-8 w-auto" priority />
+            <span className="text-lg font-semibold" style={{ color: 'var(--brand)' }}>Calibrate</span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
             <Link

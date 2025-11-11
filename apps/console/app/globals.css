@@ -4,33 +4,34 @@
 
 @layer base {
   :root {
-    /* Light UI - Clean white background with soft grays */
-    --bg: #ffffff;           /* Pure white page background */
-    --bg-subtle: #f6f9fc;    /* Very light gray for code/panels */
-    --panel: #ffffff;        /* Pure white for cards */
-    --surface: #ffffff;      /* Pure white for surfaces */
-    --border: #e0e6ed;       /* Clear, visible borders */
+    /* Calibrate Brand Colors */
+    --bg: #F8FAFF;           /* Off-white background */
+    --bg-subtle: #F6F9FC;    /* Very light gray for code/panels */
+    --panel: #FFFFFF;        /* Pure white for cards */
+    --surface: #FFFFFF;      /* Pure white for cards and inputs */
+    --border: #E3E8EE;       /* Clear, visible borders */
 
-    --text-strong: #0a2540;  /* Dark blue-gray for headings */
-    --fg: #425466;           /* Medium gray for body text */
-    --text: #425466;         /* Medium gray for body text */
-    --mute: #6b7a90;         /* Lighter gray for secondary text */
+    --text-strong: #001845;  /* Navy for headings */
+    --fg: #001845;           /* Navy text */
+    --text: #001845;         /* Navy text (alias) */
+    --mute: #697386;         /* Medium gray for secondary text */
 
-    --brand: #635bff;        /* Purple brand color */
-    --brand-hover: #4b45e5;  /* Darker purple on hover */
-    --brand-light: #f0efff;  /* Very light purple background */
-    --accent: #0074D9;       /* Blue accent */
+    --brand: #00A3A3;        /* Teal - primary brand color (L2) */
+    --brand-hover: #008c8c;  /* Darker teal on hover */
+    --brand-light: #80D9D9;  /* Light Teal (L1) */
+    --brand-dark: #008080;   /* Deep Teal (L3) */
+    --accent: #008080;       /* Deep Teal accent */
 
-    --code-bg: #f6f9fc;      /* Light gray for code blocks */
-    --code-border: #e0e6ed;  /* Border for code blocks */
+    --code-bg: #F6F9FC;      /* Light gray for code blocks */
+    --code-border: #E3E8EE;  /* Border for code blocks */
 
     /* Card specific colors */
-    --card: #ffffff;
-    --card-foreground: #0a2540;
+    --card: #FFFFFF;
+    --card-foreground: #001845;
 
     /* Typography - Inter font family */
     --font-sans: 'Inter', system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 
     /* Radius & shadow */
     --radius: 8px;

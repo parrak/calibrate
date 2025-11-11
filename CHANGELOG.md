@@ -7,6 +7,30 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Calibrate Branding Update v1** — November 2025
+  - Implemented new brand color system across all apps (site, console, docs)
+    - L1 (Light Teal): `#80D9D9`, L2 (Mid Teal): `#00A3A3` - Primary brand color, L3 (Deep Teal): `#008080` - Accent and theme color
+    - Navy: `#001845` for text, Background: `#F8FAFF`
+    - Gradient: `linear-gradient(90deg, #80D9D9 0%, #00A3A3 50%, #008080 100%)`
+  - Updated typography: Inter SemiBold (600) for headings, IBM Plex Mono for code
+  - Created dynamic icon system using Next.js App Router (`icon.tsx`, `apple-icon.tsx`)
+    - All icons use teal-colored logo image from branding assets
+    - Icons automatically generated at build time with fallback to teal gradient
+  - Updated OpenGraph images with new teal brand colors and tagline
+  - Added branding packet structure with style guide and usage examples
+  - Updated metadata across all apps with new tagline: "The AI-native pricing control plane for commerce"
+  - Theme color set to `#008080` (Deep Teal) for browser UI elements
+  - Added Tailwind color tokens for brand colors (`cb-teal-100`, `cb-teal-500`, `cb-teal-800`) and gradient stops
+  - Added logo image to all app headers (site, console, docs)
+  - Updated all "Calibr" references to "Calibrate" in visible text and documentation
+
+### Changed
+- **Branding Colors**: Migrated to teal color palette (Light Teal → Mid Teal → Deep Teal gradient)
+- **Favicon System**: Switched from static files to Next.js dynamic icon generation
+- **Typography**: Updated monospace font from JetBrains Mono to IBM Plex Mono
+- **Site Tagline**: Updated to "The AI-native pricing control plane for commerce"
+
+### Added
 - **Docs Site Modernization** (PR #91) — Completed Jan 2, 2025
   - Modernized docs.calibr.lat with Stripe-inspired design
   - Added sidebar navigation with hierarchical menu structure

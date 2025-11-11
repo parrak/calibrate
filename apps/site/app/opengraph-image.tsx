@@ -22,7 +22,7 @@ export default function OpenGraphImage() {
             position: 'absolute',
             inset: 0,
             backgroundImage:
-              'radial-gradient(circle at 15% 10%, rgba(124,77,255,0.25) 0%, transparent 60%), radial-gradient(circle at 85% 90%, rgba(0,229,168,0.25) 0%, transparent 60%)',
+              'radial-gradient(circle at 15% 10%, rgba(0,163,163,0.25) 0%, transparent 60%), radial-gradient(circle at 85% 90%, rgba(0,128,128,0.25) 0%, transparent 60%)',
           }}
         />
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
@@ -34,24 +34,27 @@ export default function OpenGraphImage() {
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: 24,
-              background: 'linear-gradient(135deg, #00E5A8 0%, #7C4DFF 100%)',
+              background: 'linear-gradient(90deg, #80D9D9 0%, #00A3A3 50%, #008080 100%)',
             }}
           >
             <svg width="54" height="54" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <g fill="#0B0F12">
-                <path d="M41.5 22.5a2 2 0 0 1 0 3c-3.4 2.4-5.5 6.1-5.5 10.1s2.1 7.7 5.5 10.1a2 2 0 0 1-2.3 3.3C34 46.8 31 41.7 31 35.6s3-11.2 8.2-13.4a2 2 0 0 1 2.3.3z"/>
-                <path d="M22 17a2 2 0 1 1 0-4h20a2 2 0 1 1 0 4H22z"/>
-              </g>
+              {/* Calibrate dial icon */}
+              <circle cx="32" cy="32" r="28" stroke="#001845" strokeWidth="3" fill="none" opacity="0.3"/>
+              <path d="M32 4 L32 12" stroke="#001845" strokeWidth="3" strokeLinecap="round"/>
+              <path d="M32 52 L32 60" stroke="#001845" strokeWidth="3" strokeLinecap="round"/>
+              <circle cx="32" cy="32" r="20" fill="#001845" opacity="0.1"/>
+              <path d="M32 16 L32 28" stroke="#001845" strokeWidth="4" strokeLinecap="round"/>
+              <path d="M32 36 L32 48" stroke="#001845" strokeWidth="4" strokeLinecap="round"/>
             </svg>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 60, color: 'white', fontWeight: 800 }}>Calibr</div>
-            <div style={{ fontSize: 28, color: '#96A2AE', marginTop: 6 }}>Real-time pricing precision</div>
+            <div style={{ fontSize: 60, color: 'white', fontWeight: 800 }}>Calibrate</div>
+            <div style={{ fontSize: 28, color: '#96A2AE', marginTop: 6 }}>The AI-native pricing control plane</div>
           </div>
         </div>
         <div style={{ height: 36 }} />
         <div style={{ fontSize: 28, color: '#C6D0DA', maxWidth: 900, lineHeight: 1.4 }}>
-          The intelligent pricing engine with guardrails, human review, and instant rollback.
+          The AI-native pricing control plane for commerce. Automate safe price changes with AI guardrails, human oversight, and instant rollback.
         </div>
       </div>
     ),
