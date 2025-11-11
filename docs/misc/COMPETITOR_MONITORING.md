@@ -1,5 +1,7 @@
 # Competitor Monitoring Features
 
+**Status:** ✅ **COMPLETE (M0.6)** — E2E flow validated, error monitoring active, < 1% error rate validated
+
 This document describes the competitor monitoring features adapted from Prisync for Shopify and integrated into the Calibrate platform.
 
 ## Overview
@@ -26,7 +28,7 @@ The competitor monitoring system allows you to:
   - Empty state with quick-start guide for adding first competitor
   - In-line product addition for each competitor
   - Real-time validation for competitor and product forms
-  - **Planned**: Analytics tab is partially implemented with mock data
+  - ✅ **Analytics tab**: Fully integrated with real-time data (M0.6)
 
 ### 2. Price Monitoring
 - **Automated Scraping**: Monitor competitor prices automatically with channel-specific scrapers
@@ -47,7 +49,7 @@ The competitor monitoring system allows you to:
 - **Margin Protection**: Ensure minimum profit margins
 - **Price Constraints**: Set minimum and maximum price limits
 
-### 4. Analytics & Insights
+### 4. Analytics & Insights ✅ **COMPLETE**
 - **Price Comparisons**: Compare your prices with competitors side-by-side
 - **Market Position**: See where you stand in the market (lowest/highest/middle)
 - **Price Spread Analysis**: Understand price ranges and market dynamics
@@ -57,6 +59,9 @@ The competitor monitoring system allows you to:
   - Your position relative to competitors
   - Per-SKU price comparisons with competitor breakdown
 - **Trend Analysis**: Track price changes over time (via historical data)
+- **API Endpoint**: `/api/v1/competitors/analytics?projectSlug=demo`
+- **UI Component**: CompetitorAnalytics integrated in competitors page
+- **Real-time Data**: Connected to live pricing data via API
 
 ## Database Schema
 
@@ -212,12 +217,74 @@ const results = await fetch('/api/v1/competitors/monitor', {
 - Rule configuration forms
 - Rule status and performance
 
-### CompetitorAnalytics *(Planned - Not Yet Implemented)*
+### CompetitorAnalytics ✅ **COMPLETE (M0.6)**
 - Market position dashboard with visual indicators
 - Average market price tracking
 - Price spread analysis (min/max competitor prices)
 - Per-product price comparisons with competitor breakdown
 - Sale indicators and alerts
+- Real-time data integration via API endpoint
+- Authentication support with session tokens
+- Error handling with retry and sign-out options
+
+## Error Monitoring & Validation ✅ **COMPLETE (M0.6)**
+
+### Alert Policies
+Four alert policies monitor competitor scraping health:
+
+1. **Error Rate High (Warning)**: Triggers when scraping error rate exceeds 1% in 24h
+   - Channels: Slack, Email
+   - Cooldown: 30 minutes
+   - Message: Reports error rate and total errors
+
+2. **Error Rate Critical**: Triggers when scraping error rate exceeds 5% in 24h
+   - Severity: Critical
+   - Channels: Slack, PagerDuty
+   - Cooldown: 15 minutes
+   - Message: Critical alert with error count
+
+3. **Consecutive Failures**: Triggers when a competitor has 3+ consecutive scrape failures
+   - Severity: Warning
+   - Channels: Slack
+   - Cooldown: 20 minutes
+   - Message: Lists competitors with failure counts
+
+4. **Stale Data**: Triggers when competitor has not been successfully monitored in 24h
+   - Severity: Warning
+   - Channels: Slack, Email
+   - Cooldown: 60 minutes
+   - Message: Lists stale competitors with last check times
+
+### Validation Script
+Located at: `scripts/validate-competitor-error-rate.ts`
+
+**Usage:**
+```bash
+# Run with defaults (1% threshold, 24h window)
+pnpm tsx scripts/validate-competitor-error-rate.ts
+
+# Run with custom parameters
+pnpm tsx scripts/validate-competitor-error-rate.ts --threshold=1 --hours=24
+```
+
+**Metrics Tracked:**
+- Total scrape attempts across all tenants
+- Total scrape errors
+- Overall error rate
+- Per-tenant error rates
+- Competitors with consecutive failures
+- Competitors with stale data (>24h since last check)
+
+**Exit Codes:**
+- `0`: Validation passed (error rate ≤ threshold)
+- `1`: Validation failed (error rate > threshold)
+
+### M0.6 Acceptance Criteria
+- ✅ CompetitorMonitor ↔ Analytics ↔ Rules flow verified
+- ✅ End-to-end competitor price tracking tested
+- ✅ Error rate validation: < 1% per 24h across tenants
+- ✅ Alert hooks added for scrape failures
+- ✅ Documentation updated
 
 ## Implementation Details
 
