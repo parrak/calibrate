@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../li
 import { Button } from '../lib/components/Button'
 import { Badge } from '../lib/components/Badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../lib/components/Table'
-import { AlertCircle, CheckCircle, Clock, ExternalLink } from 'lucide-react'
+import { AlertCircle, CheckCircle, Clock, ExternalLink, Plus } from 'lucide-react'
 import { competitorsApi, ApiError } from '@/lib/api-client'
+import { AddCompetitorModal, type CompetitorData } from './AddCompetitorModal'
+import { AddProductModal, type ProductData } from './AddProductModal'
 
 interface Competitor {
   id: string
@@ -50,6 +52,11 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAuthError, setIsAuthError] = useState(false)
+  const [showAddCompetitor, setShowAddCompetitor] = useState(false)
+  const [showAddProduct, setShowAddProduct] = useState(false)
+  const [selectedCompetitor, setSelectedCompetitor] = useState<Competitor | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [modalError, setModalError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchCompetitors()
@@ -103,6 +110,53 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
     signOut({ callbackUrl: '/login' })
   }
 
+  const handleAddCompetitor = async (data: CompetitorData) => {
+    setIsSubmitting(true)
+    setModalError(null)
+    try {
+      await competitorsApi.create(projectSlug, data, token)
+      setShowAddCompetitor(false)
+      await fetchCompetitors() // Refresh the list
+    } catch (error) {
+      console.error('Error creating competitor:', error)
+      if (error instanceof ApiError && error.status === 401) {
+        setModalError('Authentication failed. Please sign out and sign in again.')
+      } else {
+        setModalError('Failed to create competitor. Please try again.')
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleAddProduct = async (data: ProductData) => {
+    if (!selectedCompetitor) return
+
+    setIsSubmitting(true)
+    setModalError(null)
+    try {
+      await competitorsApi.addProduct(selectedCompetitor.id, data, token)
+      setShowAddProduct(false)
+      setSelectedCompetitor(null)
+      await fetchCompetitors() // Refresh the list
+    } catch (error) {
+      console.error('Error adding product:', error)
+      if (error instanceof ApiError && error.status === 401) {
+        setModalError('Authentication failed. Please sign out and sign in again.')
+      } else {
+        setModalError('Failed to add product. Please try again.')
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const openAddProductModal = (competitor: Competitor) => {
+    setSelectedCompetitor(competitor)
+    setShowAddProduct(true)
+    setModalError(null)
+  }
+
   const formatPrice = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -154,6 +208,30 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
 
   return (
     <div className="space-y-6">
+      <AddCompetitorModal
+        open={showAddCompetitor}
+        onClose={() => {
+          setShowAddCompetitor(false)
+          setModalError(null)
+        }}
+        onSubmit={handleAddCompetitor}
+        isSubmitting={isSubmitting}
+        error={modalError}
+      />
+
+      <AddProductModal
+        open={showAddProduct}
+        competitorName={selectedCompetitor?.name || ''}
+        onClose={() => {
+          setShowAddProduct(false)
+          setSelectedCompetitor(null)
+          setModalError(null)
+        }}
+        onSubmit={handleAddProduct}
+        isSubmitting={isSubmitting}
+        error={modalError}
+      />
+
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Competitor Monitoring</h2>
@@ -161,20 +239,30 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
             Monitor competitor prices and track market positioning
           </p>
         </div>
-        <Button
-          onClick={startMonitoring}
-          disabled={isMonitoring}
-          className="flex items-center gap-2"
-        >
-          {isMonitoring ? (
-            <>
-              <Clock className="h-4 w-4 animate-spin" />
-              Monitoring...
-            </>
-          ) : (
-            'Start Monitoring'
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setShowAddCompetitor(true)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add Competitor
+          </Button>
+          <Button
+            onClick={startMonitoring}
+            disabled={isMonitoring || competitors.length === 0}
+            className="flex items-center gap-2"
+          >
+            {isMonitoring ? (
+              <>
+                <Clock className="h-4 w-4 animate-spin" />
+                Monitoring...
+              </>
+            ) : (
+              'Start Monitoring'
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Monitoring Results */}
@@ -238,22 +326,21 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
                 <p className="text-sm text-gray-600 mb-4">
                   Add competitors to start monitoring their prices and market positioning.
                 </p>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-                  <p className="text-xs font-semibold text-blue-900 mb-2">How to add competitors:</p>
+                <Button
+                  onClick={() => setShowAddCompetitor(true)}
+                  className="flex items-center gap-2 mx-auto"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Your First Competitor
+                </Button>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left mt-6">
+                  <p className="text-xs font-semibold text-blue-900 mb-2">What you can do:</p>
                   <ol className="text-xs text-gray-700 space-y-1 list-decimal list-inside">
-                    <li>Use the API endpoint: <code className="bg-white px-1 py-0.5 rounded text-blue-600">POST /api/v1/competitors</code></li>
-                    <li>Provide competitor details (name, domain, channel)</li>
+                    <li>Add competitor details (name, website, sales channel)</li>
                     <li>Map competitor products to your SKUs</li>
+                    <li>Set up automated monitoring rules</li>
+                    <li>Track competitor prices over time</li>
                   </ol>
-                  <a
-                    href="https://docs.calibr.lat"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-3 text-xs font-medium text-blue-600 hover:text-blue-800"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    View API Documentation
-                  </a>
                 </div>
               </div>
             </div>
@@ -294,9 +381,24 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm">
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openAddProductModal(competitor)}
+                          title="Add product to track"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(`https://${competitor.domain}`, '_blank')}
+                          title="Visit website"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
