@@ -45,7 +45,7 @@ export default function RootLayout({
               <a href="/" className="flex items-center">
                 <Image src="/logo.png" alt="Calibrate" width={120} height={32} className="h-8 w-auto" priority />
               </a>
-              <span className="hidden sm:inline text-xs text-[color:var(--mute)] whitespace-nowrap">Enterprise pricing ops</span>
+              <span className="hidden sm:inline text-xs text-[color:var(--brand)] whitespace-nowrap font-semibold">Calibrate</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               <a

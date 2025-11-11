@@ -62,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
             <a href="/" className="flex items-center gap-2">
               <Image src="/logo.png" alt="Calibrate" width={120} height={32} className="h-8 w-auto" priority />
+              <span className="text-lg font-semibold" style={{ color: 'var(--brand)' }}>Calibrate</span>
             </a>
             <nav className="hidden md:flex items-center gap-6 text-sm text-[color:var(--mute)]">
               <a href="#features" className="hover:text-[color:var(--fg)] transition-colors">Features</a>
