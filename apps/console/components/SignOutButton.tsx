@@ -7,7 +7,22 @@ export default function SignOutButton() {
     <button
       type="button"
       onClick={() => signOut({ callbackUrl: '/login' })}
-      className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded hover:bg-gray-100 transition"
+      className="text-sm px-3 py-1.5 rounded transition font-medium border"
+      style={{
+        color: 'var(--text-strong)',
+        borderColor: 'var(--border)',
+        backgroundColor: 'var(--surface)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = 'var(--bg)'
+        e.currentTarget.style.borderColor = 'var(--brand)'
+        e.currentTarget.style.color = 'var(--brand)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = 'var(--surface)'
+        e.currentTarget.style.borderColor = 'var(--border)'
+        e.currentTarget.style.color = 'var(--text-strong)'
+      }}
     >
       Sign Out
     </button>

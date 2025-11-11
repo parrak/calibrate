@@ -16,16 +16,30 @@ export async function UserMenu() {
   }
 
   return (
-    <div className="flex items-center gap-2 sm:gap-4">
-      <div className="text-right hidden sm:block">
-        <div className="text-sm font-medium" style={{ color: 'var(--text-strong)' }}>
-          {session.user.name || session.user.email}
+    <div className="flex items-center gap-3 sm:gap-4">
+      {/* Desktop view - full user info */}
+      <div className="hidden md:flex items-center gap-3">
+        <div className="text-right">
+          <div className="text-sm font-semibold leading-tight" style={{ color: 'var(--text-strong)' }}>
+            {session.user.name || session.user.email}
+          </div>
+          <div className="text-xs capitalize leading-tight" style={{ color: 'var(--mute)' }}>
+            {session.user.role}
+          </div>
         </div>
-        <div className="text-xs" style={{ color: 'var(--mute)' }}>{session.user.role}</div>
       </div>
-      <div className="text-right sm:hidden">
-        <div className="text-xs font-medium truncate max-w-[80px]" style={{ color: 'var(--text-strong)' }}>
+
+      {/* Tablet view - shorter name */}
+      <div className="hidden sm:flex md:hidden items-center">
+        <div className="text-sm font-semibold" style={{ color: 'var(--text-strong)' }}>
           {session.user.name?.split(' ')[0] || session.user.email?.split('@')[0]}
+        </div>
+      </div>
+
+      {/* Mobile view - initial only */}
+      <div className="flex sm:hidden items-center">
+        <div className="text-sm font-semibold" style={{ color: 'var(--text-strong)' }}>
+          {(session.user.name?.[0] || session.user.email?.[0] || '').toUpperCase()}
         </div>
       </div>
 
