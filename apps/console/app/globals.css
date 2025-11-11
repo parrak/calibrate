@@ -4,18 +4,20 @@
 
 @layer base {
   :root {
-    /* Stripe-like color palette - clean, light, professional */
-    --bg: #F6F9FC;           /* Very light blue-gray page background */
+    /* Calibrate Brand Colors */
+    --bg: #F8FAFF;           /* Off-white background */
     --surface: #FFFFFF;      /* Pure white for cards and inputs */
     --border: #E3E8EE;       /* Clear, visible borders */
-    --fg: #0A2540;           /* Dark blue-gray for text */
+    --fg: #001845;           /* Navy text */
     --mute: #697386;         /* Medium gray for secondary text */
-    --brand: #00A3A3;        /* Teal brand color */
-    --accent: #0074D9;       /* Blue accent */
+    --brand: #377BFF;        /* Mid Blue (L2) - primary brand */
+    --brand-light: #67C8FF;  /* Light Blue (L1) */
+    --brand-dark: #0E3AFF;   /* Deep Blue (L3) */
+    --accent: #0E3AFF;       /* Deep Blue accent */
 
     /* Card specific colors */
     --card: #FFFFFF;
-    --card-foreground: #0A2540;
+    --card-foreground: #001845;
 
     /* Border radius */
     --radius-xl: 0.75rem;

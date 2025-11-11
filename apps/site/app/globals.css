@@ -4,13 +4,16 @@
 
 @layer base {
   :root {
-    --bg: #f9f9fb;
-    --surface: #ffffff;
-    --border: #e5e7eb;
-    --fg: #1a1a1a;
-    --mute: #6b7280;
-    --brand: #00a3a3;
-    --accent: #2563eb;
+    /* Calibrate Brand Colors */
+    --bg: #F8FAFF;           /* Off-white background */
+    --surface: #ffffff;      /* Pure white for cards */
+    --border: #E3E8EE;       /* Light border */
+    --fg: #001845;           /* Navy text */
+    --mute: #697386;         /* Muted text */
+    --brand: #377BFF;        /* Mid Blue (L2) - primary brand */
+    --brand-light: #67C8FF;  /* Light Blue (L1) */
+    --brand-dark: #0E3AFF;   /* Deep Blue (L3) */
+    --accent: #0E3AFF;       /* Deep Blue accent */
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
   }
@@ -21,7 +24,9 @@
     --border: #1f2023;
     --fg: #e5e7eb;
     --mute: #9ca3af;
-    --brand: #00c2a8;
+    --brand: #377BFF;
+    --brand-light: #67C8FF;
+    --brand-dark: #0E3AFF;
   }
 
   body {
