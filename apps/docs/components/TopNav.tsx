@@ -13,9 +13,10 @@ export function TopNav() {
         <div className="flex items-center gap-8">
           <Link
             href="/"
-            className="flex items-center"
+            className="flex items-center gap-2"
           >
             <Image src="/logo.png" alt="Calibrate" width={120} height={32} className="h-8 w-auto" priority />
+            <span className="text-lg font-semibold" style={{ color: 'var(--brand)' }}>Calibrate</span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
             <Link
