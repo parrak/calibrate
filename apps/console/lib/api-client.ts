@@ -166,6 +166,43 @@ export const competitorsApi = {
     })
     return res.rule
   },
+
+  create: async (projectSlug: string, competitor: { name: string; domain: string; channel: string; isActive?: boolean }, token?: string): Promise<Record<string, unknown>> => {
+    const res = await fetchApi<{ competitor: Record<string, unknown> }>(`/api/v1/competitors`, {
+      method: 'POST',
+      body: JSON.stringify({
+        projectSlug,
+        ...competitor
+      }),
+      token,
+    })
+    return res.competitor
+  },
+
+  addProduct: async (competitorId: string, product: { name: string; url: string; skuCode?: string; imageUrl?: string }, token?: string): Promise<Record<string, unknown>> => {
+    const res = await fetchApi<{ product: Record<string, unknown> }>(`/api/v1/competitors/${competitorId}/products`, {
+      method: 'POST',
+      body: JSON.stringify(product),
+      token,
+    })
+    return res.product
+  },
+
+  update: async (id: string, updates: { name?: string; domain?: string; channel?: string; isActive?: boolean }, token?: string): Promise<Record<string, unknown>> => {
+    const res = await fetchApi<{ competitor: Record<string, unknown> }>(`/api/v1/competitors/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+      token,
+    })
+    return res.competitor
+  },
+
+  delete: async (id: string, token?: string): Promise<void> => {
+    await fetchApi<void>(`/api/v1/competitors/${id}`, {
+      method: 'DELETE',
+      token,
+    })
+  },
 }
 
 // Platforms API
