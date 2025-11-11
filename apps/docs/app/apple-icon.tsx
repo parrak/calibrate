@@ -52,7 +52,7 @@ export default async function AppleIcon() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'linear-gradient(90deg, #67C8FF 0%, #377BFF 50%, #0E3AFF 100%)',
+              background: 'linear-gradient(90deg, #80D9D9 0%, #00A3A3 50%, #008080 100%)',
               borderRadius: 28,
             }}
           >

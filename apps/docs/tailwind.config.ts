@@ -37,12 +37,12 @@ const config: Config = {
         danger: '#EF4444',
         warning: '#F59E0B',
         success: '#10B981',
-        // Calibrate brand colors
-        'cb-blue-100': '#67C8FF',
-        'cb-blue-500': '#377BFF',
-        'cb-blue-800': '#0E3AFF',
-        'cb-navy': '#001845',
-        'cb-bg': '#F8FAFF',
+        // Calibrate brand colors (Teal)
+        'cb-teal-100': '#80D9D9',  // Light Teal (L1)
+        'cb-teal-500': '#00A3A3',  // Mid Teal (L2) - Primary
+        'cb-teal-800': '#008080',  // Deep Teal (L3)
+        'cb-navy': '#001845',      // Navy text
+        'cb-bg': '#F8FAFF',        // Off-white background
       },
       borderColor: {
         DEFAULT: 'var(--border)',
@@ -64,9 +64,9 @@ const config: Config = {
         mono: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
       },
       gradientColorStops: {
-        'cb-start': '#67C8FF',
-        'cb-mid': '#377BFF',
-        'cb-end': '#0E3AFF',
+        'cb-start': '#80D9D9',  // Light Teal (L1)
+        'cb-mid': '#00A3A3',   // Mid Teal (L2)
+        'cb-end': '#008080',   // Deep Teal (L3)
       },
     },
   },

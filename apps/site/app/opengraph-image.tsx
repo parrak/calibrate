@@ -22,7 +22,7 @@ export default function OpenGraphImage() {
             position: 'absolute',
             inset: 0,
             backgroundImage:
-              'radial-gradient(circle at 15% 10%, rgba(55,123,255,0.25) 0%, transparent 60%), radial-gradient(circle at 85% 90%, rgba(14,58,255,0.25) 0%, transparent 60%)',
+              'radial-gradient(circle at 15% 10%, rgba(0,163,163,0.25) 0%, transparent 60%), radial-gradient(circle at 85% 90%, rgba(0,128,128,0.25) 0%, transparent 60%)',
           }}
         />
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
@@ -34,7 +34,7 @@ export default function OpenGraphImage() {
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: 24,
-              background: 'linear-gradient(90deg, #67C8FF 0%, #377BFF 50%, #0E3AFF 100%)',
+              background: 'linear-gradient(90deg, #80D9D9 0%, #00A3A3 50%, #008080 100%)',
             }}
           >
             <svg width="54" height="54" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">

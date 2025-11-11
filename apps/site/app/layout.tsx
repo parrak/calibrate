@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://calibr.lat'),
   keywords: ['dynamic pricing', 'price automation', 'AI pricing', 'pricing guardrails', 'e-commerce pricing', 'Shopify pricing'],
   authors: [{ name: 'Porter Labs' }],
-  themeColor: '#0E3AFF',
+  themeColor: '#008080',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },

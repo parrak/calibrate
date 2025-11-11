@@ -10,10 +10,10 @@
     --border: #E3E8EE;       /* Light border */
     --fg: #001845;           /* Navy text */
     --mute: #697386;         /* Muted text */
-    --brand: #00A3A3;        /* Teal - primary brand color */
-    --brand-light: #67C8FF;  /* Light Blue (L1) */
-    --brand-dark: #0E3AFF;   /* Deep Blue (L3) */
-    --accent: #0E3AFF;       /* Deep Blue accent */
+    --brand: #00A3A3;        /* Teal - primary brand color (L2) */
+    --brand-light: #80D9D9;  /* Light Teal (L1) */
+    --brand-dark: #008080;   /* Deep Teal (L3) */
+    --accent: #008080;       /* Deep Teal accent */
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
   }
@@ -25,8 +25,8 @@
     --fg: #e5e7eb;
     --mute: #9ca3af;
     --brand: #00A3A3;
-    --brand-light: #67C8FF;
-    --brand-dark: #0E3AFF;
+    --brand-light: #80D9D9;
+    --brand-dark: #008080;
   }
 
   body {

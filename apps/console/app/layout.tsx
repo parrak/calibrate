@@ -7,7 +7,7 @@ import Providers from './providers'
 export const metadata: Metadata = {
   title: 'Calibrate Console',
   description: 'The AI-native pricing control plane for commerce.',
-  themeColor: '#0E3AFF',
+  themeColor: '#008080',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },

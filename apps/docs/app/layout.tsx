@@ -7,7 +7,7 @@ import { TopNav } from '../components/TopNav'
 export const metadata: Metadata = {
   title: 'Calibrate Documentation',
   description: 'The AI-native pricing control plane for commerce. API documentation and guides for Calibrate pricing platform.',
-  themeColor: '#0E3AFF',
+  themeColor: '#008080',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
