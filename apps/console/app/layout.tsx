@@ -36,7 +36,10 @@ export default function RootLayout({
         <header className="topnav border-b border-[color:var(--border)] bg-[color:var(--surface)] sticky top-0 z-50">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <span className="text-base sm:text-lg font-semibold whitespace-nowrap" style={{ color: 'var(--text-strong)' }}>Calibrate Console</span>
+              <span className="text-base sm:text-lg font-semibold whitespace-nowrap">
+                <span style={{ color: 'var(--brand)' }}>Calibrate</span>{' '}
+                <span style={{ color: 'var(--text-strong)' }}>Console</span>
+              </span>
               <span className="hidden sm:inline text-xs text-[color:var(--mute)] whitespace-nowrap">Enterprise pricing ops</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">

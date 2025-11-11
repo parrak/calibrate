@@ -55,7 +55,7 @@ export default function RootLayout({
                       <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
                       <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--accent)]" />
                     </svg>
-                    <span className="font-semibold text-[color:var(--fg)]">Calibrate</span>
+                    <span className="font-semibold text-[color:var(--brand)]">Calibrate</span>
                   </div>
                   <p className="text-sm text-[color:var(--mute)] max-w-md">
                     Complete guide to using the Calibrate pricing management platform. Learn how to manage your product catalog, automate pricing, and integrate with your systems.

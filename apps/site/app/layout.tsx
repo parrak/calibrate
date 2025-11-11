@@ -54,7 +54,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-[color:var(--bg)] text-[color:var(--fg)]">
         <header className="border-b border-[color:var(--border)] bg-white">
           <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
-            <a href="/" className="font-semibold tracking-tight">Calibr<span className="text-[color:var(--brand)]">.lat</span></a>
+            <a href="/" className="font-semibold tracking-tight">
+              <span className="text-[color:var(--brand)]">Calibrate</span><span className="text-[color:var(--brand)]">.lat</span>
+            </a>
             <nav className="hidden md:flex items-center gap-6 text-sm text-[color:var(--mute)]">
               <a href="#features" className="hover:text-[color:var(--fg)] transition-colors">Features</a>
               <a href="#how" className="hover:text-[color:var(--fg)] transition-colors">How it works</a>

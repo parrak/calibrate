@@ -6,7 +6,7 @@ export HOSTNAME="${HOSTNAME:-0.0.0.0}"
 export PORT="${PORT:-8080}"
 export NODE_ENV="${NODE_ENV:-production}"
 
-echo "=== Calibr API Startup ==="
+echo "=== Calibrate API Startup ==="
 echo "NODE_ENV: ${NODE_ENV}"
 echo "PORT: ${PORT}"
 echo "HOSTNAME: ${HOSTNAME}"

@@ -46,7 +46,9 @@ export function GuidedTour({ projectSlug }: GuidedTourProps) {
         <div className="p-8">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-fg">Welcome to Calibrate</h2>
+              <h2 className="text-2xl font-bold text-fg">
+                Welcome to <span style={{ color: 'var(--brand)' }}>Calibrate</span>
+              </h2>
               <p className="text-sm text-mute mt-2">Your intelligent pricing automation platform</p>
             </div>
             <button

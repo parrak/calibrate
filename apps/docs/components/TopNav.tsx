@@ -21,7 +21,7 @@ export function TopNav() {
               <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" style={{ color: 'var(--brand)', opacity: 0.6 }} />
               <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" style={{ color: 'var(--accent)' }} />
             </svg>
-            <span className="text-lg">Calibrate</span>
+            <span className="text-lg" style={{ color: 'var(--brand)' }}>Calibrate</span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
             <Link

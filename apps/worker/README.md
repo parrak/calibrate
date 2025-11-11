@@ -1,4 +1,4 @@
-# Calibr Outbox Worker
+# Calibrate Outbox Worker
 
 Standalone service for processing outbox events with retry/backoff logic.
 
