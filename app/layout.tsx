@@ -6,18 +6,20 @@ import { TopNav } from '../components/TopNav'
 
 export const metadata: Metadata = {
   title: 'Calibrate Documentation',
-  description: 'API documentation and guides for Calibrate pricing platform',
+  description: 'The AI-native pricing control plane for commerce. API documentation and guides for Calibrate pricing platform.',
+  themeColor: '#008080',
   icons: {
     icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
     ],
-    apple: '/apple-touch-icon.png',
+    apple: [{ url: '/icon-512.png' }],
   },
+  manifest: '/manifest.webmanifest',
   openGraph: {
     title: 'Calibrate Documentation',
-    description: 'API documentation and guides for Calibrate pricing platform',
-    images: '/og-image.png',
+    description: 'The AI-native pricing control plane for commerce. API documentation and guides for Calibrate pricing platform.',
+    type: 'website',
   },
 }
 
@@ -31,7 +33,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-screen bg-[color:var(--bg)] text-[color:var(--fg)]">
         <div className="flex flex-col min-h-screen">
@@ -58,7 +60,7 @@ export default function RootLayout({
                       <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
                       <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--accent)]" />
                     </svg>
-                    <span className="font-semibold text-[color:var(--fg)]">Calibrate</span>
+                    <span className="font-semibold text-[color:var(--brand)]">Calibrate</span>
                   </div>
                   <p className="text-sm text-[color:var(--mute)] max-w-md">
                     Complete guide to using the Calibrate pricing management platform. Learn how to manage your product catalog, automate pricing, and integrate with your systems.
