@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
@@ -108,10 +109,7 @@ export function Sidebar() {
                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="font-semibold text-lg">
-                <span style={{ color: 'var(--brand)' }}>Calibrate</span>{' '}
-                <span>Docs</span>
-              </span>
+              <Image src="/logo.png" alt="Calibrate" width={120} height={32} className="h-8 w-auto" priority />
             </Link>
           </div>
 

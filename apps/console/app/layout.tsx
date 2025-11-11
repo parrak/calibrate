@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import Image from 'next/image'
 import { UserMenu } from '@/components/UserMenu'
 import Providers from './providers'
 
@@ -36,10 +37,9 @@ export default function RootLayout({
         <header className="topnav border-b border-[color:var(--border)] bg-[color:var(--surface)] sticky top-0 z-50">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <span className="text-base sm:text-lg font-semibold whitespace-nowrap">
-                <span style={{ color: 'var(--brand)' }}>Calibrate</span>{' '}
-                <span style={{ color: 'var(--text-strong)' }}>Console</span>
-              </span>
+              <a href="/" className="flex items-center">
+                <Image src="/logo.png" alt="Calibrate" width={120} height={32} className="h-8 w-auto" priority />
+              </a>
               <span className="hidden sm:inline text-xs text-[color:var(--mute)] whitespace-nowrap">Enterprise pricing ops</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">

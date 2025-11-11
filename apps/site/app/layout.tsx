@@ -1,5 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import Image from 'next/image'
 
 export const metadata: Metadata = {
   title: 'Calibrate — the AI-native pricing control plane',
@@ -54,8 +55,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-[color:var(--bg)] text-[color:var(--fg)]">
         <header className="border-b border-[color:var(--border)] bg-white">
           <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
-            <a href="/" className="font-semibold tracking-tight">
-              <span className="text-[color:var(--brand)]">Calibrate</span><span className="text-[color:var(--brand)]">.lat</span>
+            <a href="/" className="flex items-center gap-2">
+              <Image src="/logo.png" alt="Calibrate" width={120} height={32} className="h-8 w-auto" priority />
             </a>
             <nav className="hidden md:flex items-center gap-6 text-sm text-[color:var(--mute)]">
               <a href="#features" className="hover:text-[color:var(--fg)] transition-colors">Features</a>
