@@ -16,7 +16,7 @@ describe('Sidebar', () => {
   it('renders navigation links', () => {
     render(<Sidebar />)
 
-    expect(screen.getByText('Calibrate Docs')).toBeInTheDocument()
+    expect(screen.getByAltText('Calibrate')).toBeInTheDocument()
     expect(screen.getByText('Overview')).toBeInTheDocument()
     expect(screen.getByText('Getting Started')).toBeInTheDocument()
     expect(screen.getByText('Product Catalog')).toBeInTheDocument()
