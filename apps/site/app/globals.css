@@ -10,7 +10,7 @@
     --border: #E3E8EE;       /* Light border */
     --fg: #001845;           /* Navy text */
     --mute: #697386;         /* Muted text */
-    --brand: #377BFF;        /* Mid Blue (L2) - primary brand */
+    --brand: #00A3A3;        /* Teal - primary brand color */
     --brand-light: #67C8FF;  /* Light Blue (L1) */
     --brand-dark: #0E3AFF;   /* Deep Blue (L3) */
     --accent: #0E3AFF;       /* Deep Blue accent */
@@ -24,7 +24,7 @@
     --border: #1f2023;
     --fg: #e5e7eb;
     --mute: #9ca3af;
-    --brand: #377BFF;
+    --brand: #00A3A3;
     --brand-light: #67C8FF;
     --brand-dark: #0E3AFF;
   }

@@ -16,8 +16,8 @@
     --text: #001845;         /* Navy text (alias) */
     --mute: #697386;         /* Medium gray for secondary text */
 
-    --brand: #377BFF;        /* Mid Blue (L2) - primary brand */
-    --brand-hover: #0E3AFF;  /* Deep Blue (L3) on hover */
+    --brand: #00A3A3;        /* Teal - primary brand color */
+    --brand-hover: #008c8c;  /* Darker teal on hover */
     --brand-light: #67C8FF;  /* Light Blue (L1) */
     --brand-dark: #0E3AFF;   /* Deep Blue (L3) */
     --accent: #0E3AFF;       /* Deep Blue accent */
