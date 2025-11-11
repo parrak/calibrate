@@ -9,16 +9,16 @@ export default async function AppleIcon() {
   // Read the logo image from public folder
   const logoPath = join(process.cwd(), 'public', 'favicon.ico')
   let logoData: Buffer | null = null
-  
+
   try {
     logoData = await readFile(logoPath)
-  } catch (error) {
+  } catch (_error) {
     // Fallback if file not found
     console.warn('Logo file not found, using fallback')
   }
 
   // Convert to base64 data URL
-  const logoBase64 = logoData 
+  const logoBase64 = logoData
     ? `data:image/png;base64,${logoData.toString('base64')}`
     : null
 
