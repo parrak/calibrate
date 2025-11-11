@@ -31,7 +31,7 @@ interface MarketInsights {
   competitorCount: number
 }
 
-export function CompetitorAnalytics({ tenantId, projectId }: { tenantId: string; projectId: string }) {
+export function CompetitorAnalytics({ tenantId: _tenantId, projectId }: { tenantId: string; projectId: string }) {
   const { data: session } = useSession()
   const token = (session as { apiToken?: string })?.apiToken
 
