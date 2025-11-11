@@ -1,9 +1,27 @@
 import { ImageResponse } from 'next/og'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 
 export const size = { width: 64, height: 64 }
 export const contentType = 'image/png'
 
-export default function Icon() {
+export default async function Icon() {
+  // Read the logo image from public folder
+  const logoPath = join(process.cwd(), 'public', 'favicon.ico')
+  let logoData: Buffer | null = null
+  
+  try {
+    logoData = await readFile(logoPath)
+  } catch (error) {
+    // Fallback if file not found
+    console.warn('Logo file not found, using fallback')
+  }
+
+  // Convert to base64 data URL
+  const logoBase64 = logoData 
+    ? `data:image/png;base64,${logoData.toString('base64')}`
+    : null
+
   return new ImageResponse(
     (
       <div
@@ -13,19 +31,41 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(90deg, #67C8FF 0%, #377BFF 50%, #0E3AFF 100%)',
-          borderRadius: 14,
+          background: 'transparent',
         }}
       >
-        {/* Calibrate dial icon - simplified 3-segment dial */}
-        <svg width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="32" cy="32" r="28" stroke="#001845" strokeWidth="3" fill="none" opacity="0.3"/>
-          <path d="M32 4 L32 12" stroke="#001845" strokeWidth="3" strokeLinecap="round"/>
-          <path d="M32 52 L32 60" stroke="#001845" strokeWidth="3" strokeLinecap="round"/>
-          <circle cx="32" cy="32" r="20" fill="#001845" opacity="0.1"/>
-          <path d="M32 16 L32 28" stroke="#001845" strokeWidth="4" strokeLinecap="round"/>
-          <path d="M32 36 L32 48" stroke="#001845" strokeWidth="4" strokeLinecap="round"/>
-        </svg>
+        {logoBase64 ? (
+          <img
+            src={logoBase64}
+            alt="Calibrate"
+            width={64}
+            height={64}
+            style={{
+              objectFit: 'contain',
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'linear-gradient(90deg, #67C8FF 0%, #377BFF 50%, #0E3AFF 100%)',
+              borderRadius: 14,
+            }}
+          >
+            <svg width="36" height="36" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="28" stroke="#001845" strokeWidth="3" fill="none" opacity="0.3"/>
+              <path d="M32 4 L32 12" stroke="#001845" strokeWidth="3" strokeLinecap="round"/>
+              <path d="M32 52 L32 60" stroke="#001845" strokeWidth="3" strokeLinecap="round"/>
+              <circle cx="32" cy="32" r="20" fill="#001845" opacity="0.1"/>
+              <path d="M32 16 L32 28" stroke="#001845" strokeWidth="4" strokeLinecap="round"/>
+              <path d="M32 36 L32 48" stroke="#001845" strokeWidth="4" strokeLinecap="round"/>
+            </svg>
+          </div>
+        )}
       </div>
     ),
     size
