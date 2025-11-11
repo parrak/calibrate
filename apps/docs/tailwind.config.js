@@ -1,31 +1,43 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
     './index.html',
     './**/*.html',
   ],
   theme: {
     extend: {
       colors: {
-        bg: '#0B0B0C',
-        surface: '#141416',
-        border: '#1F2023',
-        fg: '#E5E7EB',
-        mute: '#9CA3AF',
-        brand: '#00C2A8',
-        'brand-700': '#00A693',
-        accent: '#7A6FF0',
-        danger: '#EF4444',
-        warning: '#F59E0B',
-        success: '#10B981'
+        bg: '#ffffff',           // Pure white page background
+        'bg-subtle': '#f6f9fc',  // Very light gray for code/panels
+        panel: '#ffffff',        // Pure white for cards
+        surface: '#ffffff',      // Pure white for surfaces
+        border: '#e0e6ed',       // Clear, visible borders
+        'text-strong': '#0a2540', // Dark blue-gray for headings
+        fg: '#425466',           // Medium gray for body text
+        text: '#425466',         // Medium gray for body text
+        mute: '#6b7a90',         // Lighter gray for secondary text
+        brand: '#635bff',        // Purple brand color (Stripe-like)
+        'brand-hover': '#4b45e5', // Darker purple on hover
+        'brand-light': '#f0efff', // Very light purple background
+        accent: '#0074D9',       // Blue accent
+        code: '#f6f9fc',         // Light gray for code blocks
       },
       borderRadius: {
-        md: '12px',
-        xl: '20px'
+        DEFAULT: '8px',
+        md: '8px',
+        xl: '12px'
+      },
+      boxShadow: {
+        '100': '0 1px 2px rgba(0,0,0,0.05)',
+      },
+      maxWidth: {
+        'docs': '880px'
       },
       fontFamily: {
-        sans: "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'",
-        mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+        sans: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'",
+        mono: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
       }
     },
   },

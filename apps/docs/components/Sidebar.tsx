@@ -57,7 +57,7 @@ export function Sidebar() {
         aria-label="Toggle menu"
       >
         <svg
-          className="w-6 h-6"
+          className="icon"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -83,7 +83,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-64 bg-[color:var(--surface)] border-r border-[color:var(--border)] z-40
+          sidebar fixed top-0 left-0 h-full w-64 z-40
           transform transition-transform duration-200 ease-in-out
           lg:translate-x-0 lg:static lg:z-auto
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -96,7 +96,7 @@ export function Sidebar() {
               className="flex items-center gap-2 text-[color:var(--fg)] hover:text-[color:var(--brand)] transition-colors"
             >
               <svg
-                className="w-6 h-6"
+                className="icon-16"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -115,14 +115,7 @@ export function Sidebar() {
           <nav className="space-y-1">
             <Link
               href="/console"
-              className={`
-                block px-3 py-2 rounded-md text-sm font-medium transition-colors
-                ${
-                  isActive('/console') && pathname === '/console'
-                    ? 'bg-[color:var(--brand-light)] text-[color:var(--brand)]'
-                    : 'text-[color:var(--fg)] hover:bg-[color:var(--bg)] hover:text-[color:var(--brand)]'
-                }
-              `}
+              className={isActive('/console') && pathname === '/console' ? 'active' : ''}
             >
               Overview
             </Link>
@@ -132,34 +125,20 @@ export function Sidebar() {
                 {section.href ? (
                   <Link
                     href={section.href}
-                    className={`
-                      block px-3 py-2 rounded-md text-sm font-medium transition-colors
-                      ${
-                        isActive(section.href)
-                          ? 'bg-[color:var(--brand-light)] text-[color:var(--brand)]'
-                          : 'text-[color:var(--fg)] hover:bg-[color:var(--bg)] hover:text-[color:var(--brand)]'
-                      }
-                    `}
+                    className={isActive(section.href) ? 'active' : ''}
                   >
                     {section.title}
                   </Link>
                 ) : (
                   <>
-                    <div className="px-3 py-2 text-xs font-semibold text-[color:var(--mute)] uppercase tracking-wider">
+                    <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--mute)' }}>
                       {section.title}
                     </div>
                     {section.items?.map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`
-                          block px-3 py-2 ml-2 rounded-md text-sm transition-colors
-                          ${
-                            isActive(item.href)
-                              ? 'bg-[color:var(--brand-light)] text-[color:var(--brand)] font-medium'
-                              : 'text-[color:var(--mute)] hover:bg-[color:var(--bg)] hover:text-[color:var(--brand)]'
-                          }
-                        `}
+                        className={isActive(item.href) ? 'active' : ''}
                       >
                         {item.title}
                       </Link>
