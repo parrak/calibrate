@@ -6,30 +6,83 @@
   :root {
     /* Calibrate Brand Colors */
     --bg: #F8FAFF;           /* Off-white background */
+    --bg-subtle: #F6F9FC;    /* Very light gray for code/panels */
+    --panel: #FFFFFF;        /* Pure white for cards */
     --surface: #FFFFFF;      /* Pure white for cards and inputs */
     --border: #E3E8EE;       /* Clear, visible borders */
+
+    --text-strong: #001845;  /* Navy for headings */
     --fg: #001845;           /* Navy text */
+    --text: #001845;         /* Navy text (alias) */
     --mute: #697386;         /* Medium gray for secondary text */
+
     --brand: #377BFF;        /* Mid Blue (L2) - primary brand */
+    --brand-hover: #0E3AFF;  /* Deep Blue (L3) on hover */
     --brand-light: #67C8FF;  /* Light Blue (L1) */
     --brand-dark: #0E3AFF;   /* Deep Blue (L3) */
     --accent: #0E3AFF;       /* Deep Blue accent */
+
+    --code-bg: #F6F9FC;      /* Light gray for code blocks */
+    --code-border: #E3E8EE;  /* Border for code blocks */
 
     /* Card specific colors */
     --card: #FFFFFF;
     --card-foreground: #001845;
 
-    /* Border radius */
+    /* Typography - Inter font family */
+    --font-sans: 'Inter', system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+    /* Radius & shadow */
+    --radius: 8px;
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
+    --shadow-100: 0 1px 2px rgba(0,0,0,0.05);
+
+    /* Spacing scale */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 24px;
+    --sp-6: 32px;
+    --sp-7: 48px;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  /* Base styles */
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     @apply bg-bg text-fg antialiased;
   }
 
-  * {
-    @apply border-border;
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus styles */
+  *:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-strong);
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
 
   /* Accessibility utilities */
@@ -45,25 +98,111 @@
     border-width: 0;
   }
 
-  /* Focus visible styles for keyboard navigation */
-  *:focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
+  /* Icons: keep them small - 16-20px (max 32px in heroes) */
+  .icon, .sidebar .icon, .nav .icon, .navbar .icon, .header .icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    flex: 0 0 20px;
   }
 
-  /* Skip to content link */
-  .skip-to-content {
-    position: absolute;
-    top: -40px;
-    left: 0;
-    background: var(--brand);
-    color: white;
-    padding: 8px 16px;
-    text-decoration: none;
-    z-index: 100;
+  .icon-16 {
+    width: 16px;
+    height: 16px;
   }
 
-  .skip-to-content:focus {
+  .icon-32 {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Top header - sticky with subtle shadow on scroll */
+  header.topnav {
+    position: sticky;
     top: 0;
+    z-index: 50;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    transition: box-shadow 0.2s ease;
+  }
+
+  header.topnav.is-stuck {
+    box-shadow: var(--shadow-100);
+  }
+
+  /* Sidebar navigation - with 3px brand left border for active state */
+  .sidebar-nav a,
+  nav[role="navigation"] a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-left: 3px solid transparent;
+    color: var(--text);
+    border-radius: 6px;
+    transition: all 0.15s ease;
+  }
+
+  .sidebar-nav a[aria-current="page"],
+  nav[role="navigation"] a[aria-current="page"] {
+    background: var(--bg-subtle);
+    border-left-color: var(--brand);
+    color: var(--text-strong);
+    font-weight: 500;
+  }
+
+  .sidebar-nav a:hover:not([aria-current="page"]),
+  nav[role="navigation"] a:hover:not([aria-current="page"]) {
+    background: var(--bg-subtle);
+    color: var(--brand);
+  }
+
+  /* Code blocks - light gray, rounded, scrollable */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: var(--radius);
+    padding: var(--sp-4) var(--sp-5);
+    overflow: auto;
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+
+  pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  th, td {
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    text-align: left;
+  }
+
+  thead th {
+    background: var(--bg-subtle);
+    color: var(--text-strong);
+    font-weight: 600;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
   }
 }
