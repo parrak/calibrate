@@ -13,13 +13,20 @@ The competitor monitoring system allows you to:
 ## Features Implemented
 
 ### 1. Competitor Management
-- **Add Competitors**: Track competitors by name, domain, and channel *(API only - no UI form yet)*
-- **Product Mapping**: Map competitor products to your SKUs *(API only)*
-- **Channel Support**: Support for Shopify, Amazon, and Google Shopping
-- **Status Management**: Enable/disable competitor monitoring *(API only)*
-- **UI**: Monitoring dashboard displays configured competitors and price updates
-  - **Current Limitation**: Competitors must be added via API. The UI provides a monitoring view with empty state guidance for API usage.
-  - **Planned**: UI forms for adding/editing competitors, Analytics tab, and Rules tab are not yet implemented.
+- **Add Competitors**: Track competitors by name, domain, and channel
+  - **UI**: "Add Competitor" button opens modal form for entering competitor details
+  - **API**: Full CRUD support via REST API endpoints
+- **Product Mapping**: Map competitor products to your SKUs
+  - **UI**: "Add Product" button on each competitor row opens modal for product mapping
+  - **API**: Add products via `/api/v1/competitors/{id}/products`
+- **Channel Support**: Support for Online, Retail, Wholesale, and Marketplace channels
+- **Status Management**: Enable/disable competitor monitoring when creating/editing
+- **UI Features**:
+  - Monitoring dashboard displays configured competitors with price updates
+  - Empty state with quick-start guide for adding first competitor
+  - In-line product addition for each competitor
+  - Real-time validation for competitor and product forms
+  - **Planned**: Analytics tab is partially implemented with mock data
 
 ### 2. Price Monitoring
 - **Automated Scraping**: Monitor competitor prices automatically with channel-specific scrapers
