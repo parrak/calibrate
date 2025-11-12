@@ -174,22 +174,20 @@ Schema + Event Bus stable.
 
 ## 🖥️ Interface Team (Console / Site / Docs)
 
-### Milestone M1.2 — Console MVP
+### Milestone M1.2 — Console MVP ✅ COMPLETE
 
-- [ ] Create Catalog Table (filters, pagination, variant grouping)
-- [ ] Build Rule Builder (selector + transform UI)
-- [ ] Add Diff Preview Drawer (before/after + audit trail)
-- [ ] Implement action buttons (Approve, Apply, Reject, Rollback)
-- [ ] Add optimistic UI updates + status badges
-- [ ] Integrate with `/api/v1/price-changes` + `/audit`
-- [ ] Test via React Testing Library; snapshot diff coverage ≥ 80%
+- [x] Create Catalog Table (filters, pagination, variant grouping)
+- [x] Build Rule Builder (selector + transform UI)
+- [x] Add Diff Preview Drawer (before/after + audit trail)
+- [x] Implement action buttons (Approve, Apply, Reject, Rollback)
+- [x] Add optimistic UI updates + status badges
+- [x] Integrate with `/api/v1/price-changes` + `/audit`
+- [x] Test via React Testing Library; snapshot diff coverage ≥ 80%
+- [x] **Branding Update**: Calibrate branding v1 with teal palette across all apps
+- [x] **Light Theme**: Stripe-like light UI design with WCAG AA compliance
+- [x] **Accessibility**: Comprehensive ARIA labels, keyboard navigation, focus management
 
-### M1.2 Console MVP (In Progress)
-- [ ] Catalog Table (filters, pagination, variant grouping)
-- [ ] Rule Builder (selector + transform UI)
-- [ ] Diff Preview Drawer (before/after + audit)
-- [ ] Action buttons (Approve, Apply, Reject, Rollback)
-- [ ] Optimistic updates + status badges + audit drawer
+### M1.2 Console MVP ✅ Complete (PR #53, Enhanced in PRs #91, #98)
 
 ### M1.7 — Automation Runner UI Enhancements NEW
 - [ ] Add "Retry Failed" control in Runs table
@@ -198,11 +196,14 @@ Schema + Event Bus stable.
 - [ ] Toasts reflect server statuses (queued/applied/failed)
 - [ ] Snapshot test coverage ≥ 85%
 
-### UI Theming & Usability
+### UI Theming & Usability ✅
 
-- [ ] Light theme rolled out (all apps)
-- [ ] WCAG AA contrast / Lighthouse ≥ 90
-- [ ] Guided tour for first-time users
+- [x] Light theme rolled out (all apps) — Completed November 2025
+- [x] WCAG AA contrast / Lighthouse ≥ 90 — All apps passing accessibility standards
+- [x] Guided tour for first-time users — Implemented with localStorage-based tracking
+- [x] **Calibrate Branding v1**: Teal color system, logo, typography (Inter/IBM Plex Mono)
+- [x] **Design System**: Unified CSS theme tokens, responsive components
+- [x] **Documentation**: Comprehensive user guides and accessibility docs
 
 ### Site / Docs / SaaS Validation
 
@@ -217,17 +218,20 @@ Schema + Event Bus stable.
 
 ## 🧠 Copilot & Analytics Team (Read-Only → Simulation)
 
-### Milestone M1.4 — Copilot (Read-Only)
+### Milestone M1.4 — Copilot (Read-Only) ✅ COMPLETE
 
-- [ ] Build `/copilot/query` endpoint
-- [ ] Add schema-aware NL→SQL/GraphQL generation
-- [ ] Implement RBAC enforcement & SQL injection guard
-- [ ] Log queries + resolved schemas + tenant scope
-- [ ] Integrate with Console → "Ask Copilot" drawer
-- [ ] Add analytics digest cron job → daily summary
-- [ ] Add anomaly detection (price spike/drop, margin compression, etc.)
+- [x] Build `/copilot/query` endpoint
+- [x] Add schema-aware NL→SQL/GraphQL generation with GPT-4
+- [x] Implement RBAC enforcement & SQL injection guard
+- [x] Log queries + resolved schemas + tenant scope (CopilotQueryLog table)
+- [x] Integrate with Console → "Ask Copilot" drawer (CopilotDrawer component)
+- [x] Add analytics digest cron job → daily summary
+- [x] Add anomaly detection (price spike/drop, margin compression, volatility, volume)
+- [x] **Console UI**: Floating action button, suggested queries, result viewer
+- [x] **Test Coverage**: 18+ comprehensive tests (RBAC, logging, anomaly detection)
+- [x] **Pattern Matching**: Fallback for offline operation
 
-### M1.4 Copilot Read-Only ✅ Baseline Complete
+### M1.4 Copilot Read-Only ✅ Complete (PR #57, January 2025)
 
 ### M1.8 — Copilot Simulation NEW
 - [ ] Build `POST /api/v1/copilot/simulate` (read-only, schema validated)
