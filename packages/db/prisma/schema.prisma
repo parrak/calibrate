@@ -632,7 +632,7 @@ enum RuleRunStatus {
   QUEUED
   APPLYING
   APPLIED
-  PARTIAL  // M0.5: Some targets succeeded, some failed
+  PARTIAL // M0.5: Some targets succeeded, some failed
   FAILED
   ROLLED_BACK
 }
@@ -640,7 +640,7 @@ enum RuleRunStatus {
 enum RuleTargetStatus {
   PREVIEW
   QUEUED
-  APPLYING  // M0.5: Currently being applied
+  APPLYING // M0.5: Currently being applied
   APPLIED
   FAILED
   ROLLED_BACK

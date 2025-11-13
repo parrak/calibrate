@@ -341,7 +341,7 @@ describe('retryWithBackoff', () => {
       .mockResolvedValue('success')
 
     const promise = retryWithBackoff(fn, 3)
-    vi.runAllTimers()
+    await vi.runAllTimersAsync()
     const result = await promise
 
     expect(result).toBe('success')
@@ -376,7 +376,7 @@ describe('retryWithBackoff', () => {
     const fn = vi.fn().mockRejectedValue(error)
 
     const promise = retryWithBackoff(fn, 3)
-    vi.runAllTimers()
+    await vi.runAllTimersAsync()
 
     await expect(promise).rejects.toThrow('Connection failed')
     expect(fn).toHaveBeenCalledTimes(4) // Initial + 3 retries
@@ -393,7 +393,7 @@ describe('retryWithBackoff', () => {
     const fn = vi.fn().mockRejectedValueOnce(error).mockResolvedValue('success')
 
     const promise = retryWithBackoff(fn, 3)
-    vi.runAllTimers()
+    await vi.runAllTimersAsync()
     const result = await promise
 
     expect(result).toBe('success')
@@ -416,7 +416,7 @@ describe('retryWithBackoff', () => {
       jitter: 0
     })
 
-    vi.runAllTimers()
+    await vi.runAllTimersAsync()
     const result = await promise
 
     expect(result).toBe('success')
@@ -485,7 +485,7 @@ describe('Backoff Integration Tests', () => {
     })
 
     const promise = retryWithBackoff(fn, 3)
-    vi.runAllTimers()
+    await vi.runAllTimersAsync()
     const result = await promise
 
     expect(result).toBe('success')
@@ -514,7 +514,7 @@ describe('Backoff Integration Tests', () => {
     })
 
     const promise = retryWithBackoff(fn, 3)
-    vi.runAllTimers()
+    await vi.runAllTimersAsync()
     const result = await promise
 
     expect(result).toBe('success')
