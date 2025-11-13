@@ -166,18 +166,29 @@ Schema + Event Bus stable.
 
 ### M1.1 Pricing Engine ✅ Complete  
 
-### Milestone M1.3 — Explainability & Audit
+### Milestone M1.3 — Explainability & Audit ✅ COMPLETE (November 13, 2025)
 
-- [ ] Ensure all actions write Audit + ExplainTrace
-- [ ] Add `/api/audit` endpoint for Console
-- [ ] Integrate correlation IDs with `@calibr/monitor`
-- [ ] Verify replay can fully reconstruct historical price change
-- [ ] Generate sample audit reports for QA (2 tenants)
+- [x] Ensure all actions write Audit + ExplainTrace
+- [x] Add `/api/audit` endpoint for Console
+- [x] Integrate correlation IDs with `@calibr/monitor`
+- [x] Verify replay can fully reconstruct historical price change
+- [x] Generate sample audit reports for QA (2 tenants)
 
-### M1.3 Explainability & Audit (Extend)
-- [ ] Verify every apply writes Audit + ExplainTrace  
-- [ ] `/api/audit` endpoint wired with pagination + filters  
-- [ ] Sample audit report for 2 tenants generated  
+### M1.3 Explainability & Audit (Extend) ✅ COMPLETE (November 13, 2025)
+- [x] Verify every apply writes Audit + ExplainTrace
+  - ✅ Apply endpoint: Creates both Audit + ExplainTrace with correlation IDs
+  - ✅ Rollback endpoint: Creates both Audit + ExplainTrace with correlation IDs
+  - ✅ Approve endpoint: Creates Audit records with correlation IDs (already done)
+  - ✅ Reject endpoint: Creates Audit records with correlation IDs (already done)
+- [x] `/api/audit` endpoint wired with pagination + filters
+  - ✅ Pagination with cursor-based navigation (50 items per page)
+  - ✅ Filters: entity, entityId, action, actor, date range
+  - ✅ Authenticated access with project-level security
+- [x] Sample audit report for 2 tenants generated
+  - ✅ Script created: `scripts/audit-reports/generate-sample-reports.ts`
+  - ✅ Generates JSON reports with comprehensive audit data
+  - ✅ Generates markdown summaries with statistics
+  - ✅ Tracks correlation chains for tracing operations  
 
 ### M1.6 — Automation Runner Execution Layer NEW
 - [ ] Implement `job.rule.materialize`, `job.rule.apply.batch`, `job.rule.reconcile`
