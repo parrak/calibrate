@@ -96,7 +96,6 @@ const formatDate = (dateStr: string | null) => {
   return new Date(dateStr).toLocaleString()
 }
 
-
 export default function AutomationRunsPage({ params }: { params: { slug: string } }) {
   const slug = params.slug
   const { data: session } = useSession()
@@ -237,10 +236,10 @@ export default function AutomationRunsPage({ params }: { params: { slug: string 
 
       const data = await response.json()
       setMsg(`Retried ${data.retriedCount} failed targets`)
-      
+
       // Refresh runs list
       await fetchRuns(true)
-      
+
       // Start polling progress
       pollProgress(runId)
     } catch (err) {
@@ -253,8 +252,7 @@ export default function AutomationRunsPage({ params }: { params: { slug: string 
   // Initial fetch
   useEffect(() => {
     fetchRuns(true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status])
+  }, [status, fetchRuns])
 
   // Start polling for active runs
   useEffect(() => {

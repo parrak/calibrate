@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@calibr/db';
+import { RuleRunStatus } from '@prisma/client';
 import { trackPerformance } from '@/lib/performance-middleware';
 import { withSecurity } from '@/lib/security-headers';
 
@@ -79,15 +80,15 @@ export const GET = withSecurity(
     const where: {
       projectId: string;
       tenantId: string;
-      status?: string;
+      status?: RuleRunStatus;
       ruleId?: string;
     } = {
       projectId: access.project.id,
       tenantId: access.tenantId,
     };
 
-    if (statusParam && ['PREVIEW', 'QUEUED', 'APPLYING', 'APPLIED', 'FAILED', 'ROLLED_BACK'].includes(statusParam)) {
-      where.status = statusParam;
+    if (statusParam && ['PREVIEW', 'QUEUED', 'APPLYING', 'APPLIED', 'PARTIAL', 'FAILED', 'ROLLED_BACK'].includes(statusParam)) {
+      where.status = statusParam as RuleRunStatus;
     }
 
     if (ruleIdParam) {
@@ -166,10 +167,13 @@ export const GET = withSecurity(
             }
           });
 
+          // Type assertion needed because Prisma's _count type inference is incomplete
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const runWithCount = run as any;
           return {
             ...run,
             targetCounts: counts,
-            totalTargets: run._count.RuleTarget,
+            totalTargets: runWithCount._count?.RuleTarget ?? 0,
           };
         })
       );

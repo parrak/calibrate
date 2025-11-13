@@ -18,11 +18,11 @@ const jsonResponse = (data: unknown, status = 200) =>
   })
 
 describe('AutomationRunsPage', () => {
-  let fetchMock: ReturnType<typeof vi.fn>
+  let fetchMock: ReturnType<typeof vi.fn<[RequestInfo | URL, RequestInit?], Promise<Response>>>
 
   beforeEach(() => {
-    fetchMock = vi.fn()
-    global.fetch = fetchMock
+    fetchMock = vi.fn<[RequestInfo | URL, RequestInit?], Promise<Response>>()
+    global.fetch = fetchMock as typeof fetch
 
     const initialRuns = [
       {
@@ -292,7 +292,7 @@ describe('AutomationRunsPage', () => {
     )
 
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Rule 1')).toBeInTheDocument()
     })
@@ -373,7 +373,7 @@ describe('AutomationRunsPage', () => {
     )
 
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Rule 1')).toBeInTheDocument()
     })
