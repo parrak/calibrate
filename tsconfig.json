@@ -28,7 +28,8 @@
     "@calibr/platform-connector/*": ["packages/platform-connector/src/*"],
     "@calibr/ui/*": ["packages/ui/*"],
     "@calibr/monitor/*": ["packages/monitor/src/*"],
-    "@calibr/types/*": ["packages/types/*"]
+    "@calibr/types/*": ["packages/types/*"],
+    "@calibr/automation-runner/*": ["packages/automation-runner/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

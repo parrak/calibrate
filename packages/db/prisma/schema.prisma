@@ -301,6 +301,7 @@ model PricingRule {
 
 /// RuleRun — Execution record for pricing rules
 /// Tracks preview and apply operations with status and results
+/// M0.5: Extended for automation runner with state machine and retry tracking
 model RuleRun {
   id           String        @id @default(cuid())
   tenantId     String
@@ -308,10 +309,12 @@ model RuleRun {
   ruleId       String
   status       RuleRunStatus @default(PREVIEW)
   scheduledFor DateTime?     @db.Timestamptz(6)
+  queuedAt     DateTime?     @db.Timestamptz(6) // M0.5: When queued for processing
   startedAt    DateTime?     @db.Timestamptz(6)
   finishedAt   DateTime?     @db.Timestamptz(6)
   explainJson  Json? // Aggregate rationale and scope
   errorMessage String?       @db.Text
+  metadata     Json? // M0.5: Additional context (actor, correlation ID, etc.)
   createdAt    DateTime      @default(now()) @db.Timestamptz(6)
   updatedAt    DateTime      @updatedAt @db.Timestamptz(6)
   Tenant       Tenant        @relation(fields: [tenantId], references: [id])
@@ -322,11 +325,13 @@ model RuleRun {
   @@index([tenantId, projectId, status])
   @@index([ruleId, status])
   @@index([scheduledFor])
+  @@index([queuedAt])
   @@index([createdAt])
 }
 
 /// RuleTarget — Individual product/variant targeted by a rule run
 /// Stores before/after snapshots for determinism and auditability
+/// M0.5: Extended for automation runner with retry tracking and timestamps
 model RuleTarget {
   id           String           @id @default(cuid())
   tenantId     String
@@ -334,9 +339,13 @@ model RuleTarget {
   ruleRunId    String
   productId    String
   variantId    String? // Shopify variant ID if applicable
+  skuId        String? // M0.5: SKU reference for price lookups
   beforeJson   Json // Snapshot before transform (e.g., {"currency":"USD","unit_amount":1299})
   afterJson    Json // Snapshot after transform
   status       RuleTargetStatus @default(PREVIEW)
+  attempts     Int              @default(0) // M0.5: Retry attempt count
+  lastAttempt  DateTime?        @db.Timestamptz(6) // M0.5: Last retry timestamp
+  appliedAt    DateTime?        @db.Timestamptz(6) // M0.5: When successfully applied
   errorMessage String?          @db.Text
   createdAt    DateTime         @default(now()) @db.Timestamptz(6)
   updatedAt    DateTime         @updatedAt @db.Timestamptz(6)
@@ -346,8 +355,10 @@ model RuleTarget {
 
   @@index([tenantId, projectId, status])
   @@index([ruleRunId, status])
+  @@index([status, lastAttempt])
   @@index([productId])
   @@index([variantId])
+  @@index([skuId])
 }
 
 model Price {
@@ -621,6 +632,7 @@ enum RuleRunStatus {
   QUEUED
   APPLYING
   APPLIED
+  PARTIAL // M0.5: Some targets succeeded, some failed
   FAILED
   ROLLED_BACK
 }
@@ -628,6 +640,7 @@ enum RuleRunStatus {
 enum RuleTargetStatus {
   PREVIEW
   QUEUED
+  APPLYING // M0.5: Currently being applied
   APPLIED
   FAILED
   ROLLED_BACK
