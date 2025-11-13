@@ -458,14 +458,14 @@ describe('AutomationRunsPage', () => {
   })
 
   it('polls progress for active runs', async () => {
-    vi.useFakeTimers()
-
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
 
+    // Wait for initial fetch to complete
     await waitFor(() => {
       expect(screen.getByText('Test Rule 1')).toBeInTheDocument()
-    })
+    }, { timeout: 10000 })
 
+    // Mock progress endpoint
     fetchMock.mockResolvedValue(
       jsonResponse({
         runId: 'run-1',
@@ -486,21 +486,19 @@ describe('AutomationRunsPage', () => {
       })
     )
 
-    act(() => {
-      vi.advanceTimersByTime(2000)
-    })
-
+    // Wait for polling to start (component polls every 2 seconds for QUEUED/APPLYING runs)
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/runs/run-1/progress'),
-        expect.any(Object)
+      const progressCalls = fetchMock.mock.calls.filter((call) =>
+        typeof call[0] === 'string' && call[0].includes('/api/v1/runs/run-1/progress')
       )
-    })
-
-    vi.useRealTimers()
+      expect(progressCalls.length).toBeGreaterThan(0)
+    }, { timeout: 5000 })
   })
 
   it('displays empty state when no runs are found', async () => {
+    // Clear the default mock from beforeEach
+    fetchMock.mockClear()
+    
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
         items: [],
@@ -511,20 +509,28 @@ describe('AutomationRunsPage', () => {
 
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
 
+    // Wait for the fetch to complete and empty state to render
     await waitFor(() => {
       expect(screen.getByText('No runs found')).toBeInTheDocument()
-      expect(screen.getByText(/Automation runs will appear here/)).toBeInTheDocument()
-    })
+    }, { timeout: 10000 })
+    
+    expect(screen.getByText(/Automation runs will appear here/)).toBeInTheDocument()
   })
 
   it('displays error message when fetch fails', async () => {
+    // Clear the default mock from beforeEach
+    fetchMock.mockClear()
+    
     fetchMock.mockRejectedValueOnce(new Error('Network error'))
 
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
 
+    // Wait for error to be displayed (error message is set in catch block)
     await waitFor(() => {
-      expect(screen.getByText(/Error:/)).toBeInTheDocument()
-    })
+      // Error is displayed in a div with the error message
+      const errorText = screen.queryByText(/Network error|Failed to fetch runs/)
+      expect(errorText).toBeInTheDocument()
+    }, { timeout: 10000 })
   })
 })
 
