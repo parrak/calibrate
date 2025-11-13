@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import AutomationRunsPage from './page'
 
@@ -498,7 +498,7 @@ describe('AutomationRunsPage', () => {
   it('displays empty state when no runs are found', async () => {
     // Clear the default mock from beforeEach
     fetchMock.mockClear()
-    
+
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
         items: [],
@@ -513,14 +513,14 @@ describe('AutomationRunsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('No runs found')).toBeInTheDocument()
     }, { timeout: 10000 })
-    
+
     expect(screen.getByText(/Automation runs will appear here/)).toBeInTheDocument()
   })
 
   it('displays error message when fetch fails', async () => {
     // Clear the default mock from beforeEach
     fetchMock.mockClear()
-    
+
     fetchMock.mockRejectedValueOnce(new Error('Network error'))
 
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
