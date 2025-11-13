@@ -439,7 +439,7 @@ importers:
         specifier: ^5.3.3
         version: 5.9.3
       vitest:
-        specifier: ^1.0.4
+        specifier: ^1.0.0
         version: 1.6.1(@types/node@20.19.22)(@vitest/ui@4.0.4)(jsdom@22.1.0)
 
   packages/competitor-monitoring:
@@ -5504,7 +5504,7 @@ snapshots:
 
   '@vitest/snapshot@1.6.1':
     dependencies:
-      magic-string: 0.30.19
+      magic-string: 0.30.21
       pathe: 1.1.2
       pretty-format: 29.7.0
 
@@ -8167,7 +8167,7 @@ snapshots:
       debug: 4.4.3(supports-color@10.2.2)
       execa: 8.0.1
       local-pkg: 0.5.1
-      magic-string: 0.30.19
+      magic-string: 0.30.21
       pathe: 1.1.2
       picocolors: 1.1.1
       std-env: 3.10.0
