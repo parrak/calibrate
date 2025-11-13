@@ -11,7 +11,7 @@
       "dependsOn": ["@calibr/db#generate"]
     },
     "typecheck": {
-      "dependsOn": ["@calibr/types#generate", "@calibr/db#generate"]
+      "dependsOn": ["^build", "@calibr/types#generate", "@calibr/db#generate"]
     },
     "generate": {
       "cache": false,
