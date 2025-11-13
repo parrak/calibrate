@@ -336,6 +336,87 @@ export const DEFAULT_ALERT_POLICIES: AlertPolicy[] = [
     },
     cooldownMs: 30 * 60 * 1000, // 30 minutes
     enabled: true
+  },
+
+  // Automation Runner Alerts (M1.6)
+  {
+    id: 'automation_success_rate_low',
+    name: 'Automation Success Rate Below 97%',
+    description: 'Rule application success rate is below 97% threshold',
+    severity: 'warning',
+    channels: ['slack', 'email'],
+    condition: (metrics) =>
+      metrics.automation?.successRate !== undefined && metrics.automation.successRate < 97,
+    message: (metrics) =>
+      `Rule application success rate is ${metrics.automation.successRate.toFixed(2)}% (threshold: 97%)`,
+    cooldownMs: 15 * 60 * 1000, // 15 minutes
+    enabled: true
+  },
+  {
+    id: 'automation_success_rate_critical',
+    name: 'Automation Success Rate Critical',
+    description: 'Rule application success rate is below 90%',
+    severity: 'critical',
+    channels: ['slack', 'pagerduty'],
+    condition: (metrics) =>
+      metrics.automation?.successRate !== undefined && metrics.automation.successRate < 90,
+    message: (metrics) =>
+      `🚨 CRITICAL: Rule application success rate is ${metrics.automation.successRate.toFixed(2)}% (threshold: 90%)`,
+    cooldownMs: 10 * 60 * 1000, // 10 minutes
+    enabled: true
+  },
+  {
+    id: 'automation_dlq_size_high',
+    name: 'Automation DLQ Size High',
+    description: 'Failed targets in DLQ exceeds 50',
+    severity: 'warning',
+    channels: ['slack'],
+    condition: (metrics) =>
+      metrics.automation?.dlqSize !== undefined && metrics.automation.dlqSize > 50,
+    message: (metrics) =>
+      `Automation DLQ has ${metrics.automation.dlqSize} failed targets (threshold: 50)`,
+    cooldownMs: 20 * 60 * 1000, // 20 minutes
+    enabled: true
+  },
+  {
+    id: 'automation_dlq_size_critical',
+    name: 'Automation DLQ Size Critical',
+    description: 'Failed targets in DLQ exceeds 100',
+    severity: 'critical',
+    channels: ['slack', 'pagerduty'],
+    condition: (metrics) =>
+      metrics.automation?.dlqSize !== undefined && metrics.automation.dlqSize > 100,
+    message: (metrics) =>
+      `🚨 CRITICAL: Automation DLQ has ${metrics.automation.dlqSize} failed targets (threshold: 100). Immediate action required!`,
+    cooldownMs: 15 * 60 * 1000, // 15 minutes
+    enabled: true
+  },
+  {
+    id: 'automation_429_burst',
+    name: 'Shopify 429 Rate Limit Burst',
+    description: 'More than 3 rate limit errors in 5 minutes',
+    severity: 'warning',
+    channels: ['slack'],
+    condition: (metrics) =>
+      metrics.automation?.rateLimitErrors !== undefined && metrics.automation.rateLimitErrors > 3,
+    message: (metrics) =>
+      `Shopify rate limit burst detected: ${metrics.automation.rateLimitErrors} 429 errors in last 5 minutes`,
+    cooldownMs: 10 * 60 * 1000, // 10 minutes
+    enabled: true
+  },
+  {
+    id: 'automation_run_duration_high',
+    name: 'Automation Run Duration High',
+    description: 'Rule run duration exceeds 10 minutes for 100-SKU runs',
+    severity: 'warning',
+    channels: ['slack'],
+    condition: (metrics) =>
+      metrics.automation?.averageDuration !== undefined &&
+      metrics.automation.averageDuration > 10 * 60 * 1000, // 10 minutes in ms
+    message: (metrics) =>
+      `Automation run duration is ${(metrics.automation.averageDuration / 1000 / 60).toFixed(1)} minutes (threshold: 10 minutes for 100 SKUs)`,
+    cooldownMs: 30 * 60 * 1000, // 30 minutes
+    enabled: true
   }
 ]
 
