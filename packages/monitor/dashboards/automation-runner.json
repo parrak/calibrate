@@ -1,0 +1,473 @@
+{
+  "dashboard": {
+    "title": "Automation Runner - Pricing Rules Execution",
+    "tags": ["automation", "pricing", "rules"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "type": "graph",
+        "title": "Rule Runs per Hour",
+        "targets": [
+          {
+            "expr": "sum(rate(rules_apply_count[1h])) by (projectId)",
+            "legendFormat": "{{projectId}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "short", "label": "Runs/hour" },
+          { "format": "short" }
+        ],
+        "xaxis": { "mode": "time" },
+        "lines": true,
+        "fill": 1,
+        "linewidth": 2,
+        "points": false,
+        "pointradius": 2,
+        "bars": false,
+        "stack": false,
+        "percentage": false,
+        "legend": {
+          "show": true,
+          "values": true,
+          "alignAsTable": true,
+          "avg": false,
+          "current": true,
+          "max": true,
+          "min": false,
+          "rightSide": false,
+          "total": false
+        },
+        "nullPointMode": "null",
+        "steppedLine": false,
+        "tooltip": { "shared": true, "sort": 0, "value_type": "individual" },
+        "aliasColors": {},
+        "seriesOverrides": [],
+        "thresholds": []
+      },
+      {
+        "id": 2,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "type": "graph",
+        "title": "Success Rate (%)",
+        "targets": [
+          {
+            "expr": "avg(rules_apply_success_rate) by (projectId)",
+            "legendFormat": "{{projectId}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "percent", "label": "Success Rate", "min": 0, "max": 100 },
+          { "format": "short" }
+        ],
+        "xaxis": { "mode": "time" },
+        "lines": true,
+        "fill": 1,
+        "linewidth": 2,
+        "points": false,
+        "bars": false,
+        "stack": false,
+        "legend": {
+          "show": true,
+          "values": true,
+          "alignAsTable": true,
+          "current": true,
+          "avg": true,
+          "min": true
+        },
+        "alert": {
+          "alertRuleTags": {},
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [97],
+                "type": "lt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "5m",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "Automation success rate below 97%",
+          "name": "Success Rate Alert",
+          "noDataState": "no_data",
+          "notifications": []
+        },
+        "thresholds": [
+          {
+            "value": 97,
+            "colorMode": "critical",
+            "op": "lt",
+            "fill": true,
+            "line": true,
+            "yaxis": "left"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "type": "graph",
+        "title": "Run Duration (p50, p95, p99)",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(rules_apply_duration_ms_bucket[5m])) by (le, projectId))",
+            "legendFormat": "p50 - {{projectId}}",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(rules_apply_duration_ms_bucket[5m])) by (le, projectId))",
+            "legendFormat": "p95 - {{projectId}}",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(rules_apply_duration_ms_bucket[5m])) by (le, projectId))",
+            "legendFormat": "p99 - {{projectId}}",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          { "format": "ms", "label": "Duration" },
+          { "format": "short" }
+        ],
+        "xaxis": { "mode": "time" },
+        "lines": true,
+        "fill": 1,
+        "linewidth": 2,
+        "points": false,
+        "bars": false,
+        "stack": false,
+        "legend": {
+          "show": true,
+          "values": true,
+          "alignAsTable": true,
+          "current": true,
+          "avg": true,
+          "max": true
+        },
+        "thresholds": [
+          {
+            "value": 300000,
+            "colorMode": "warning",
+            "op": "gt",
+            "fill": false,
+            "line": true,
+            "yaxis": "left"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "type": "graph",
+        "title": "DLQ Size Over Time",
+        "targets": [
+          {
+            "expr": "sum(rules_dlq_size) by (projectId)",
+            "legendFormat": "{{projectId}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "short", "label": "Failed Targets" },
+          { "format": "short" }
+        ],
+        "xaxis": { "mode": "time" },
+        "lines": true,
+        "fill": 1,
+        "linewidth": 2,
+        "points": false,
+        "bars": false,
+        "stack": true,
+        "legend": {
+          "show": true,
+          "values": true,
+          "alignAsTable": true,
+          "current": true,
+          "total": true,
+          "max": true
+        },
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [50],
+                "type": "gt"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "10m",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "DLQ size exceeds 50 failed targets",
+          "name": "DLQ Size Alert",
+          "noDataState": "no_data"
+        },
+        "thresholds": [
+          {
+            "value": 50,
+            "colorMode": "warning",
+            "op": "gt",
+            "fill": true,
+            "line": true,
+            "yaxis": "left"
+          },
+          {
+            "value": 100,
+            "colorMode": "critical",
+            "op": "gt",
+            "fill": true,
+            "line": true,
+            "yaxis": "left"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+        "type": "piechart",
+        "title": "Error Breakdown by Type",
+        "targets": [
+          {
+            "expr": "sum(rate(rules_apply_errors[1h])) by (errorType)",
+            "legendFormat": "{{errorType}}",
+            "refId": "A"
+          }
+        ],
+        "pieType": "pie",
+        "legend": {
+          "show": true,
+          "values": true,
+          "alignAsTable": true,
+          "percentage": true
+        },
+        "valueName": "current"
+      },
+      {
+        "id": 6,
+        "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+        "type": "table",
+        "title": "Top Failed SKUs",
+        "targets": [
+          {
+            "expr": "topk(10, sum(rate(rules_apply_target_failed[1h])) by (skuId))",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "styles": [
+          {
+            "type": "string",
+            "pattern": "skuId",
+            "alias": "SKU ID"
+          },
+          {
+            "type": "number",
+            "pattern": "Value",
+            "alias": "Failures/hour",
+            "unit": "short",
+            "decimals": 2,
+            "colorMode": "cell",
+            "colors": ["rgba(50, 172, 45, 0.97)", "rgba(237, 129, 40, 0.89)", "rgba(245, 54, 54, 0.9)"],
+            "thresholds": ["1", "5"]
+          }
+        ],
+        "transform": "table"
+      },
+      {
+        "id": 7,
+        "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+        "type": "stat",
+        "title": "Current Metrics",
+        "targets": [
+          {
+            "expr": "sum(rules_apply_count)",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rules_apply_targets_applied)",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rules_dlq_size)",
+            "refId": "C"
+          },
+          {
+            "expr": "sum(rules_429_errors)",
+            "refId": "D"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value",
+          "justifyMode": "auto",
+          "orientation": "horizontal",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 50 },
+                { "color": "red", "value": 100 }
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "A" },
+              "properties": [{ "id": "displayName", "value": "Total Runs" }]
+            },
+            {
+              "matcher": { "id": "byName", "options": "B" },
+              "properties": [{ "id": "displayName", "value": "Targets Applied" }]
+            },
+            {
+              "matcher": { "id": "byName", "options": "C" },
+              "properties": [{ "id": "displayName", "value": "DLQ Size" }]
+            },
+            {
+              "matcher": { "id": "byName", "options": "D" },
+              "properties": [{ "id": "displayName", "value": "429 Errors" }]
+            }
+          ]
+        }
+      },
+      {
+        "id": 8,
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+        "type": "graph",
+        "title": "429 Rate Limit Errors Timeline",
+        "targets": [
+          {
+            "expr": "sum(rate(rules_429_errors[5m])) by (projectId)",
+            "legendFormat": "{{projectId}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          { "format": "short", "label": "429 Errors/5min" },
+          { "format": "short" }
+        ],
+        "xaxis": { "mode": "time" },
+        "lines": true,
+        "fill": 1,
+        "linewidth": 2,
+        "points": false,
+        "bars": false,
+        "stack": false,
+        "legend": {
+          "show": true,
+          "values": true,
+          "alignAsTable": true,
+          "current": true,
+          "max": true,
+          "total": true
+        },
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [3],
+                "type": "gt"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "sum"
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "5m",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "Rate limit burst: >3 errors in 5 minutes",
+          "name": "429 Burst Alert",
+          "noDataState": "no_data"
+        },
+        "thresholds": [
+          {
+            "value": 3,
+            "colorMode": "critical",
+            "op": "gt",
+            "fill": true,
+            "line": true,
+            "yaxis": "left"
+          }
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "projectId",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(rules_apply_count, projectId)",
+          "multi": true,
+          "includeAll": true,
+          "allValue": ".*",
+          "refresh": 1
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertname=~\"automation.*\"}",
+          "iconColor": "red",
+          "name": "Automation Alerts",
+          "step": "60s",
+          "tagKeys": "alertname,severity",
+          "textFormat": "{{alertname}}: {{message}}",
+          "titleFormat": "Alert"
+        }
+      ]
+    }
+  },
+  "overwrite": true
+}
