@@ -98,7 +98,7 @@ export class ReconciliationService {
       return null
     }
 
-    const channelRefs = product.channelRefs as any
+    const channelRefs = product.channelRefs as Record<string, unknown>
     const channel = channelRefs?.channel || 'shopify'
     const connector = this.connectors.get(channel)
 
@@ -118,7 +118,7 @@ export class ReconciliationService {
       const externalPrice = await connector.fetchPrice(externalId)
 
       // Get expected price from target
-      const afterData = target.afterJson as any
+      const afterData = target.afterJson as Record<string, unknown>
       const expectedPrice = afterData.unit_amount || afterData.price
 
       // Check if prices match (allow small difference for rounding)

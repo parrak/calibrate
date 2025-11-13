@@ -240,10 +240,10 @@ export async function check429Burst(projectId: string): Promise<boolean> {
  * Get aggregate worker metrics
  */
 export async function getWorkerMetrics(projectId?: string): Promise<RuleWorkerMetrics> {
-  const where: any = projectId ? { projectId } : {}
+  const where: Record<string, unknown> = projectId ? { projectId } : {}
 
   // Get run statistics
-  const [totalRuns, successfulRuns, failedRuns, partialRuns] = await Promise.all([
+  const [totalRuns, _successfulRuns, _failedRuns, _partialRuns] = await Promise.all([
     prisma().ruleRun.count({ where }),
     prisma().ruleRun.count({ where: { ...where, status: 'APPLIED' } }),
     prisma().ruleRun.count({ where: { ...where, status: 'FAILED' } }),

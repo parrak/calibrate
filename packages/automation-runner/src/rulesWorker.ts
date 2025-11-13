@@ -4,73 +4,15 @@
  */
 
 import { prisma, EventWriter, OutboxWorker } from '@calibr/db'
-import { applyPriceChangeEnhanced } from '@calibr/pricing-engine'
-import type { EventPayload } from '@calibr/db/eventing/types'
-import type { RuleRun, RuleTarget, PricingRule } from '@calibr/db'
+import type { EventPayload } from '@calibr/db/src/eventing/types'
+import type { EventPayload } from '@calibr/db/src/eventing/types'
+import type { EventPayload } from '@calibr/db/src/eventing/types'
 import { logger } from '@calibr/monitor'
 import {
   calculateBackoff,
   handle429Error,
   isRetryableError,
   sleep
-} from './backoff'
-import { getWorkerConfig, DEFAULT_WORKER_CONFIG } from './config'
-import type {
-  RulesWorkerConfig,
-  RuleRunContext,
-  TargetApplicationResult,
-  RunResult,
-  WorkerEvent,
-  WorkerEventPayload,
-  PriceConnector
-} from './types'
-import { createId } from '@paralleldrive/cuid2'
-
-export class RulesWorker {
-  private config: RulesWorkerConfig
-  private outboxWorker?: OutboxWorker
-  private isRunning: boolean = false
-  private connectors: Map<string, PriceConnector> = new Map()
-  private eventEmitter?: (event: WorkerEventPayload) => void
-
-  constructor(config?: Partial<RulesWorkerConfig>) {
-    this.config = { ...DEFAULT_WORKER_CONFIG, ...config }
-  }
-
-  /**
-   * Register a connector for a specific channel
-   */
-  registerConnector(channel: string, connector: PriceConnector) {
-    this.connectors.set(channel, connector)
-    logger.info(`[RulesWorker] Registered connector: ${channel}`)
-  }
-
-  /**
-   * Set event emitter for worker events
-   */
-  setEventEmitter(emitter: (event: WorkerEventPayload) => void) {
-    this.eventEmitter = emitter
-  }
-
-  /**
-   * Emit worker event
-   */
-  private emitEvent(eventType: WorkerEvent, data?: unknown, runId?: string, targetId?: string) {
-    if (this.eventEmitter) {
-      this.eventEmitter({
-        eventType,
-        timestamp: new Date(),
-        runId,
-        targetId,
-        data
-      })
-    }
-  }
-
-  /**
-   * Start the worker
-   */
-  async start() {
     if (this.isRunning) {
       logger.warn('[RulesWorker] Worker already running')
       return
@@ -319,7 +261,7 @@ export class RulesWorker {
         }
 
         // Get the appropriate connector
-        const channelRefs = product.channelRefs as any
+        const channelRefs = product.channelRefs as Record<string, unknown>
         const channel = channelRefs?.channel || 'shopify'
         const connector = this.connectors.get(channel)
 
@@ -469,7 +411,7 @@ export class RulesWorker {
     })
 
     // Create targets for each product
-    const transform = rule.transformJson as any
+    const transform = rule.transformJson as Record<string, unknown>
     const targets = []
 
     for (const product of products) {
