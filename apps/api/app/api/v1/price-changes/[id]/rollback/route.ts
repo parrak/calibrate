@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma, Prisma } from '@calibr/db'
 import { withSecurity } from '@/lib/security-headers'
 import { trackPerformance } from '@/lib/performance-middleware'
+import { getCorrelationId } from '@/lib/correlation-middleware'
 import {
   errorJson,
   getActiveShopifyIntegration,
@@ -201,6 +202,73 @@ export const POST = withSecurity(
               skuId: pc.skuId,
               restoredAmount: pc.fromAmount,
             },
+          },
+        })
+
+        // Get correlation ID for audit trail
+        const correlationId = getCorrelationId(req)
+        const actor = access.session.userId ?? 'system'
+        const now = new Date()
+
+        // Create audit record with correlation ID
+        await tx.audit.create({
+          data: {
+            tenantId: pc.tenantId,
+            projectId: pc.projectId,
+            entity: 'PriceChange',
+            entityId: pc.id,
+            action: 'rolled_back',
+            actor,
+            explain: {
+              status: 'ROLLED_BACK',
+              rolledBackAt: now.toISOString(),
+              restoredAmount: pc.fromAmount,
+              previousAmount: pc.toAmount,
+              currency: pc.currency,
+              connectorTarget: connectorTarget,
+              connectorStatus: connectorStatusPayload,
+              correlationId,
+            } as Prisma.InputJsonValue,
+          },
+        })
+
+        // Create explain trace for full auditability
+        await tx.explainTrace.create({
+          data: {
+            tenantId: pc.tenantId,
+            projectId: pc.projectId,
+            priceChangeId: pc.id,
+            entity: 'PriceChange',
+            entityId: pc.id,
+            action: 'rollback',
+            actor,
+            trace: {
+              operation: 'rollback',
+              timestamp: now.toISOString(),
+              priceChange: {
+                id: pc.id,
+                originalFromAmount: pc.fromAmount,
+                originalToAmount: pc.toAmount,
+                restoredAmount: pc.fromAmount,
+                currency: pc.currency,
+                skuId: pc.skuId,
+              },
+              connector: {
+                target: connectorTarget,
+                status: connectorStatusPayload,
+              },
+              reasoning: {
+                why: 'Price change rolled back by admin action',
+                restoredTo: 'Original price before change',
+                delta: pc.fromAmount - pc.toAmount,
+                deltaPercent: ((pc.fromAmount - pc.toAmount) / pc.toAmount * 100).toFixed(2) + '%',
+              },
+            } as Prisma.InputJsonValue,
+            metadata: {
+              correlationId,
+              connectorTarget,
+              rolledBackBy: actor,
+            } as Prisma.InputJsonValue,
           },
         })
 

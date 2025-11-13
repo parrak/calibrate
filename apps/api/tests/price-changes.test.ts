@@ -75,6 +75,19 @@ type StoreState = {
     explain: Record<string, any> | null
     createdAt: Date
   }>
+  explainTrace: Array<{
+    id: string
+    tenantId: string
+    projectId: string | null
+    priceChangeId: string | null
+    entity: string
+    entityId: string
+    action: string
+    actor: string
+    trace: Record<string, any>
+    metadata: Record<string, any> | null
+    createdAt: Date
+  }>
 }
 
 const uid = () => Math.random().toString(36).slice(2)
@@ -194,6 +207,7 @@ const initialState = (): StoreState => ({
     },
   ],
   audit: [],
+  explainTrace: [],
 })
 
 const store = (() => {
@@ -333,6 +347,13 @@ const store = (() => {
       create: async ({ data }: any) => {
         const record = { id: `audit_${uid()}`, createdAt: new Date(), ...data }
         state.audit.push(record)
+        return clone(record)
+      },
+    },
+    explainTrace: {
+      create: async ({ data }: any) => {
+        const record = { id: `trace_${uid()}`, createdAt: new Date(), ...data }
+        state.explainTrace.push(record)
         return clone(record)
       },
     },
