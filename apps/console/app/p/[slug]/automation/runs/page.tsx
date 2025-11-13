@@ -8,7 +8,6 @@ import { JSONView } from '@/lib/components/JSONView'
 import { AuditTrail } from '@/lib/components/AuditTrail'
 
 type RuleRunStatus = 'PREVIEW' | 'QUEUED' | 'APPLYING' | 'APPLIED' | 'FAILED' | 'ROLLED_BACK'
-type ProjectRole = 'VIEWER' | 'EDITOR' | 'ADMIN' | 'OWNER'
 
 type RuleRunDTO = {
   id: string
@@ -36,6 +35,11 @@ type RuleRunDTO = {
 }
 
 type RunDetailDTO = RuleRunDTO & {
+  PricingRule: {
+    id: string
+    name: string
+    transformJson: Record<string, unknown>
+  }
   RuleTarget: Array<{
     id: string
     productId: string
@@ -92,17 +96,6 @@ const formatDate = (dateStr: string | null) => {
   return new Date(dateStr).toLocaleString()
 }
 
-const getStatusColor = (status: RuleRunStatus): string => {
-  const statusMap: Record<RuleRunStatus, string> = {
-    PREVIEW: 'bg-gray-100 text-gray-800',
-    QUEUED: 'bg-yellow-100 text-yellow-800',
-    APPLYING: 'bg-blue-100 text-blue-800',
-    APPLIED: 'bg-emerald-100 text-emerald-800',
-    FAILED: 'bg-red-100 text-red-800',
-    ROLLED_BACK: 'bg-orange-100 text-orange-800',
-  }
-  return statusMap[status] || 'bg-gray-100 text-gray-800'
-}
 
 export default function AutomationRunsPage({ params }: { params: { slug: string } }) {
   const slug = params.slug
@@ -260,7 +253,8 @@ export default function AutomationRunsPage({ params }: { params: { slug: string 
   // Initial fetch
   useEffect(() => {
     fetchRuns(true)
-  }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status])
 
   // Start polling for active runs
   useEffect(() => {
@@ -393,7 +387,7 @@ export default function AutomationRunsPage({ params }: { params: { slug: string 
         {STATUS_OPTIONS.map((option) => (
           <Button
             key={option.value}
-            variant={status === option.value ? 'default' : 'outline'}
+            variant={status === option.value ? 'primary' : 'outline'}
             size="sm"
             onClick={() => {
               setStatus(option.value)
@@ -416,7 +410,7 @@ export default function AutomationRunsPage({ params }: { params: { slug: string 
       {items.length === 0 && !loading ? (
         <EmptyState
           title="No runs found"
-          description="Automation runs will appear here when rules are executed"
+          desc="Automation runs will appear here when rules are executed"
         />
       ) : (
         <>
@@ -550,7 +544,16 @@ export default function AutomationRunsPage({ params }: { params: { slug: string 
               </TabsContent>
 
               <TabsContent value="audit" className="space-y-4">
-                <AuditTrail events={selectedRun.auditEvents} showDetails />
+                <AuditTrail
+                  events={selectedRun.auditEvents.map((event) => ({
+                    id: event.id,
+                    timestamp: event.createdAt,
+                    action: event.action,
+                    actor: event.actor,
+                    details: event.explain,
+                  }))}
+                  showDetails
+                />
               </TabsContent>
             </Tabs>
           </div>

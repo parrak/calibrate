@@ -131,7 +131,7 @@ describe('AutomationRunsPage', () => {
 
   it('fetches and displays runs on mount', async () => {
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Rule 1')).toBeInTheDocument()
       expect(screen.getByText('Test Rule 2')).toBeInTheDocument()
@@ -146,7 +146,7 @@ describe('AutomationRunsPage', () => {
 
   it('filters runs by status when status button is clicked', async () => {
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Rule 1')).toBeInTheDocument()
     })
@@ -198,7 +198,7 @@ describe('AutomationRunsPage', () => {
 
   it('shows "Retry Failed" button for runs with failed targets', async () => {
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Rule 3')).toBeInTheDocument()
     })
@@ -398,7 +398,7 @@ describe('AutomationRunsPage', () => {
 
   it('calls retry-failed API when Retry Failed button is clicked', async () => {
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Rule 3')).toBeInTheDocument()
     })
@@ -461,7 +461,7 @@ describe('AutomationRunsPage', () => {
     vi.useFakeTimers()
 
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Rule 1')).toBeInTheDocument()
     })
@@ -510,7 +510,7 @@ describe('AutomationRunsPage', () => {
     )
 
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
-    
+
     await waitFor(() => {
       expect(screen.getByText('No runs found')).toBeInTheDocument()
       expect(screen.getByText(/Automation runs will appear here/)).toBeInTheDocument()
@@ -521,7 +521,7 @@ describe('AutomationRunsPage', () => {
     fetchMock.mockRejectedValueOnce(new Error('Network error'))
 
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
-    
+
     await waitFor(() => {
       expect(screen.getByText(/Error:/)).toBeInTheDocument()
     })

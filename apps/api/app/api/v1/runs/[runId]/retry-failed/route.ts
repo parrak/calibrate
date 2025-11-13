@@ -16,7 +16,7 @@ function errorJson(error: ErrorResponse) {
   );
 }
 
-async function requireProjectAccess(req: NextRequest, projectSlug: string, minRole: string) {
+async function requireProjectAccess(req: NextRequest, projectSlug: string, _minRole: string) {
   const project = await prisma().project.findUnique({
     where: { slug: projectSlug },
   });
