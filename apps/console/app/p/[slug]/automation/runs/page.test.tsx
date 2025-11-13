@@ -102,13 +102,24 @@ describe('AutomationRunsPage', () => {
       },
     ]
 
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse({
-        items: initialRuns,
-        nextCursor: null,
-        count: 3,
-      })
-    )
+    // Default mock implementation handles both runs and progress endpoints
+    fetchMock.mockImplementation((url) => {
+      if (typeof url === 'string') {
+        if (url.includes('/progress')) {
+          // Return 404 for progress polling to stop it immediately
+          return Promise.resolve(new Response('Not Found', { status: 404 }))
+        }
+        if (url.includes('/api/v1/runs?')) {
+          // Return initial runs for the main endpoint
+          return Promise.resolve(jsonResponse({
+            items: initialRuns,
+            nextCursor: null,
+            count: 3,
+          }))
+        }
+      }
+      return Promise.resolve(new Response('Not Found', { status: 404 }))
+    })
   })
 
   afterEach(() => {
@@ -134,9 +145,9 @@ describe('AutomationRunsPage', () => {
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
 
     await waitFor(() => {
-      expect(screen.getByText('Test Rule 1')).toBeInTheDocument()
-      expect(screen.getByText('Test Rule 2')).toBeInTheDocument()
-      expect(screen.getByText('Test Rule 3')).toBeInTheDocument()
+      expect(screen.getAllByText('Test Rule 1')[0]).toBeInTheDocument()
+      expect(screen.getAllByText('Test Rule 2')[0]).toBeInTheDocument()
+      expect(screen.getAllByText('Test Rule 3')[0]).toBeInTheDocument()
     })
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -149,42 +160,51 @@ describe('AutomationRunsPage', () => {
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
 
     await waitFor(() => {
-      expect(screen.getByText('Test Rule 1')).toBeInTheDocument()
+      expect(screen.getAllByText('Test Rule 1')[0]).toBeInTheDocument()
     })
 
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse({
-        items: [
-          {
-            id: 'run-2',
-            status: 'APPLIED',
-            ruleId: 'rule-2',
-            scheduledFor: null,
-            startedAt: '2025-01-01T01:00:00Z',
-            finishedAt: '2025-01-01T01:05:00Z',
-            explainJson: { matchedProducts: 20 },
-            errorMessage: null,
-            createdAt: '2025-01-01T01:00:00Z',
-            updatedAt: '2025-01-01T01:05:00Z',
-            PricingRule: {
-              id: 'rule-2',
-              name: 'Test Rule 2',
-            },
-            targetCounts: {
-              QUEUED: 0,
-              APPLIED: 20,
-              FAILED: 0,
-              PREVIEW: 0,
-              ROLLED_BACK: 0,
-            },
-            totalTargets: 20,
-            _count: { RuleTarget: 20 },
-          },
-        ],
-        nextCursor: null,
-        count: 1,
-      })
-    )
+    // Mock the filtered runs response
+    fetchMock.mockImplementationOnce((url) => {
+      if (typeof url === 'string') {
+        if (url.includes('/progress')) {
+          return Promise.resolve(new Response('Not Found', { status: 404 }))
+        }
+        if (url.includes('status=APPLIED')) {
+          return Promise.resolve(jsonResponse({
+            items: [
+              {
+                id: 'run-2',
+                status: 'APPLIED',
+                ruleId: 'rule-2',
+                scheduledFor: null,
+                startedAt: '2025-01-01T01:00:00Z',
+                finishedAt: '2025-01-01T01:05:00Z',
+                explainJson: { matchedProducts: 20 },
+                errorMessage: null,
+                createdAt: '2025-01-01T01:00:00Z',
+                updatedAt: '2025-01-01T01:05:00Z',
+                PricingRule: {
+                  id: 'rule-2',
+                  name: 'Test Rule 2',
+                },
+                targetCounts: {
+                  QUEUED: 0,
+                  APPLIED: 20,
+                  FAILED: 0,
+                  PREVIEW: 0,
+                  ROLLED_BACK: 0,
+                },
+                totalTargets: 20,
+                _count: { RuleTarget: 20 },
+              },
+            ],
+            nextCursor: null,
+            count: 1,
+          }))
+        }
+      }
+      return Promise.resolve(new Response('Not Found', { status: 404 }))
+    })
 
     const appliedButton = screen.getByText('Applied')
     fireEvent.click(appliedButton)
@@ -201,7 +221,7 @@ describe('AutomationRunsPage', () => {
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
 
     await waitFor(() => {
-      expect(screen.getByText('Test Rule 3')).toBeInTheDocument()
+      expect(screen.getAllByText('Test Rule 3')[0]).toBeInTheDocument()
     })
 
     const retryButtons = screen.getAllByText('Retry Failed')
@@ -258,47 +278,19 @@ describe('AutomationRunsPage', () => {
       ],
     }
 
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse({
-        items: [
-          {
-            id: 'run-1',
-            status: 'QUEUED',
-            ruleId: 'rule-1',
-            scheduledFor: null,
-            startedAt: null,
-            finishedAt: null,
-            explainJson: { matchedProducts: 10 },
-            errorMessage: null,
-            createdAt: '2025-01-01T00:00:00Z',
-            updatedAt: '2025-01-01T00:00:00Z',
-            PricingRule: {
-              id: 'rule-1',
-              name: 'Test Rule 1',
-            },
-            targetCounts: {
-              QUEUED: 5,
-              APPLIED: 0,
-              FAILED: 0,
-              PREVIEW: 0,
-              ROLLED_BACK: 0,
-            },
-            totalTargets: 5,
-            _count: { RuleTarget: 5 },
-          },
-        ],
-        nextCursor: null,
-        count: 1,
-      })
-    )
-
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
 
     await waitFor(() => {
-      expect(screen.getByText('Test Rule 1')).toBeInTheDocument()
+      expect(screen.getAllByText('Test Rule 1')[0]).toBeInTheDocument()
     })
 
-    fetchMock.mockResolvedValueOnce(jsonResponse(runDetail))
+    // Mock the run details endpoint
+    fetchMock.mockImplementationOnce((url) => {
+      if (typeof url === 'string' && url.includes('/api/v1/runs/run-1')) {
+        return Promise.resolve(jsonResponse(runDetail))
+      }
+      return Promise.resolve(new Response('Not Found', { status: 404 }))
+    })
 
     const viewButtons = screen.getAllByText('View')
     fireEvent.click(viewButtons[0])
@@ -339,47 +331,19 @@ describe('AutomationRunsPage', () => {
       auditEvents: [],
     }
 
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse({
-        items: [
-          {
-            id: 'run-1',
-            status: 'APPLIED',
-            ruleId: 'rule-1',
-            scheduledFor: null,
-            startedAt: '2025-01-01T00:00:00Z',
-            finishedAt: '2025-01-01T00:05:00Z',
-            explainJson: { matchedProducts: 10 },
-            errorMessage: null,
-            createdAt: '2025-01-01T00:00:00Z',
-            updatedAt: '2025-01-01T00:05:00Z',
-            PricingRule: {
-              id: 'rule-1',
-              name: 'Test Rule 1',
-            },
-            targetCounts: {
-              QUEUED: 0,
-              APPLIED: 5,
-              FAILED: 0,
-              PREVIEW: 0,
-              ROLLED_BACK: 0,
-            },
-            totalTargets: 5,
-            _count: { RuleTarget: 5 },
-          },
-        ],
-        nextCursor: null,
-        count: 1,
-      })
-    )
-
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
 
     await waitFor(() => {
-      expect(screen.getByText('Test Rule 1')).toBeInTheDocument()
+      expect(screen.getAllByText('Test Rule 1')[0]).toBeInTheDocument()
     })
 
-    fetchMock.mockResolvedValueOnce(jsonResponse(runDetail))
+    // Mock the run details endpoint
+    fetchMock.mockImplementationOnce((url) => {
+      if (typeof url === 'string' && url.includes('/api/v1/runs/run-1')) {
+        return Promise.resolve(jsonResponse(runDetail))
+      }
+      return Promise.resolve(new Response('Not Found', { status: 404 }))
+    })
 
     const viewButtons = screen.getAllByText('View')
     fireEvent.click(viewButtons[0])
@@ -401,49 +365,62 @@ describe('AutomationRunsPage', () => {
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
 
     await waitFor(() => {
-      expect(screen.getByText('Test Rule 3')).toBeInTheDocument()
+      expect(screen.getAllByText('Test Rule 3')[0]).toBeInTheDocument()
     })
 
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse({
-        message: 'Retried 10 failed targets',
-        retriedCount: 10,
-      })
-    )
+    let retryCallCount = 0
+    let refreshCallCount = 0
 
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse({
-        items: [
-          {
-            id: 'run-3',
-            status: 'QUEUED',
-            ruleId: 'rule-3',
-            scheduledFor: null,
-            startedAt: null,
-            finishedAt: null,
-            explainJson: { matchedProducts: 15 },
-            errorMessage: null,
-            createdAt: '2025-01-01T02:00:00Z',
-            updatedAt: '2025-01-01T02:00:00Z',
-            PricingRule: {
-              id: 'rule-3',
-              name: 'Test Rule 3',
-            },
-            targetCounts: {
-              QUEUED: 10,
-              APPLIED: 5,
-              FAILED: 0,
-              PREVIEW: 0,
-              ROLLED_BACK: 0,
-            },
-            totalTargets: 15,
-            _count: { RuleTarget: 15 },
-          },
-        ],
-        nextCursor: null,
-        count: 1,
-      })
-    )
+    // Mock retry-failed endpoint and refresh
+    fetchMock.mockImplementation((url, options) => {
+      if (typeof url === 'string') {
+        if (url.includes('/progress')) {
+          return Promise.resolve(new Response('Not Found', { status: 404 }))
+        }
+        if (url.includes('/retry-failed') && options?.method === 'POST') {
+          retryCallCount++
+          return Promise.resolve(jsonResponse({
+            message: 'Retried 10 failed targets',
+            retriedCount: 10,
+          }))
+        }
+        if (url.includes('/api/v1/runs?') && retryCallCount > 0) {
+          refreshCallCount++
+          return Promise.resolve(jsonResponse({
+            items: [
+              {
+                id: 'run-3',
+                status: 'QUEUED',
+                ruleId: 'rule-3',
+                scheduledFor: null,
+                startedAt: null,
+                finishedAt: null,
+                explainJson: { matchedProducts: 15 },
+                errorMessage: null,
+                createdAt: '2025-01-01T02:00:00Z',
+                updatedAt: '2025-01-01T02:00:00Z',
+                PricingRule: {
+                  id: 'rule-3',
+                  name: 'Test Rule 3',
+                },
+                targetCounts: {
+                  QUEUED: 10,
+                  APPLIED: 5,
+                  FAILED: 0,
+                  PREVIEW: 0,
+                  ROLLED_BACK: 0,
+                },
+                totalTargets: 15,
+                _count: { RuleTarget: 15 },
+              },
+            ],
+            nextCursor: null,
+            count: 1,
+          }))
+        }
+      }
+      return Promise.resolve(new Response('Not Found', { status: 404 }))
+    })
 
     const retryButtons = screen.getAllByText('Retry Failed')
     fireEvent.click(retryButtons[0])
@@ -463,7 +440,7 @@ describe('AutomationRunsPage', () => {
 
     // Wait for initial fetch to complete
     await waitFor(() => {
-      expect(screen.getByText('Test Rule 1')).toBeInTheDocument()
+      expect(screen.getAllByText('Test Rule 1')[0]).toBeInTheDocument()
     }, { timeout: 10000 })
 
     // Mock progress endpoint
@@ -500,13 +477,22 @@ describe('AutomationRunsPage', () => {
     // Clear the default mock from beforeEach
     fetchMock.mockClear()
 
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse({
-        items: [],
-        nextCursor: null,
-        count: 0,
-      })
-    )
+    // Mock empty runs response
+    fetchMock.mockImplementation((url) => {
+      if (typeof url === 'string') {
+        if (url.includes('/progress')) {
+          return Promise.resolve(new Response('Not Found', { status: 404 }))
+        }
+        if (url.includes('/api/v1/runs?')) {
+          return Promise.resolve(jsonResponse({
+            items: [],
+            nextCursor: null,
+            count: 0,
+          }))
+        }
+      }
+      return Promise.resolve(new Response('Not Found', { status: 404 }))
+    })
 
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
 
@@ -522,7 +508,10 @@ describe('AutomationRunsPage', () => {
     // Clear the default mock from beforeEach
     fetchMock.mockClear()
 
-    fetchMock.mockRejectedValueOnce(new Error('Network error'))
+    // Mock fetch rejection
+    fetchMock.mockImplementation(() => {
+      return Promise.reject(new Error('Network error'))
+    })
 
     render(<AutomationRunsPage params={{ slug: 'test-project' }} />)
 
