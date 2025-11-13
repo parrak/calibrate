@@ -9,6 +9,7 @@
     "dev": "tsc --watch",
     "test": "vitest",
     "test:watch": "vitest --watch",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
