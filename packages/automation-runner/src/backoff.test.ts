@@ -376,9 +376,17 @@ describe('retryWithBackoff', () => {
     const fn = vi.fn().mockRejectedValue(error)
 
     const promise = retryWithBackoff(fn, 3)
-    await vi.runAllTimersAsync()
 
-    await expect(promise).rejects.toThrow('Connection failed')
+    // Handle promise rejection and timer advancement together
+    const [result] = await Promise.allSettled([
+      promise,
+      vi.runAllTimersAsync()
+    ])
+
+    expect(result.status).toBe('rejected')
+    if (result.status === 'rejected') {
+      expect(result.reason.message).toBe('Connection failed')
+    }
     expect(fn).toHaveBeenCalledTimes(4) // Initial + 3 retries
   })
 
