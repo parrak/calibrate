@@ -138,3 +138,8 @@ export const GET = withSecurity(async (req: NextRequest, ...args: unknown[]) => 
   }
 });
 
+// Handle OPTIONS preflight requests
+export const OPTIONS = withSecurity(async (_req: NextRequest) => {
+  return new NextResponse(null, { status: 204 })
+})
+

@@ -148,3 +148,8 @@ export const GET = withSecurity(
   })
 );
 
+// Handle OPTIONS preflight requests
+export const OPTIONS = withSecurity(async (_req: NextRequest) => {
+  return new NextResponse(null, { status: 204 })
+})
+
