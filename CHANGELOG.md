@@ -7,6 +7,41 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Automation Runner Foundation M0.5 — Phase 1** — Completed November 13, 2025 🚧 PHASE 1 COMPLETE
+  - **M0.5 Phase 1 COMPLETE**: Core infrastructure for bulk pricing rule execution (50% of milestone)
+  - **Database Schema Extensions**: Extended RuleRun and RuleTarget models for automation
+    - `RuleRun`: Added `queuedAt` (DateTime), `metadata` (Json) fields
+    - `RuleTarget`: Added `skuId` (String), `attempts` (Int), `lastAttempt` (DateTime), `appliedAt` (DateTime)
+    - New status values: `PARTIAL` in RuleRunStatus, `APPLYING` in RuleTargetStatus
+    - Migration: `20251113000000_add_automation_runner_fields`
+    - Indexes: `RuleRun_queuedAt_idx`, `RuleTarget_status_lastAttempt_idx`, `RuleTarget_skuId_idx`
+  - **New Package**: `@calibr/automation-runner` (packages/automation-runner)
+    - `types.ts` (216 lines): RulesWorkerConfig, BackoffOptions, ReconciliationReport, DLQEntry, WorkerEventPayload
+    - `config.ts` (139 lines): DEFAULT_WORKER_CONFIG, DEFAULT_BACKOFF_OPTIONS, RATE_LIMIT_BACKOFF_OPTIONS, circuit breaker, DLQ, reconciliation configs
+    - `backoff.ts` (260 lines): calculateBackoff, handle429Error, isRetryableError, retryWithBackoff, sleep, getRetrySchedule
+  - **Retry Logic Features**:
+    - Exponential backoff with jitter (2s → 4s → 8s with ±20% variance)
+    - Smart 429 rate limit handling (16s → 32s → 64s with Retry-After header support)
+    - Error classification (retryable: network/5xx/429, non-retryable: 4xx)
+    - Max retry enforcement with DLQ fallback
+  - **Comprehensive Test Suite**: 38 test cases with 100% backoff logic coverage
+    - `backoff.test.ts` (546 lines): Unit + integration tests
+    - 7 calculateBackoff tests, 7 handle429Error tests, 7 isRetryableError tests
+    - 3 calculateNextRetry tests, 2 sleep tests, 6 retryWithBackoff tests, 6 getRetrySchedule tests
+    - Integration tests: Shopify rate limits, network timeouts, batch processing
+  - **Documentation**:
+    - `state-machine.md` (500+ lines): RuleRun (7 states, 9 transitions) and RuleTarget (6 states, 7 transitions) state machines
+    - Updated `NOVEMBER_2025_PROGRESS.md` with Phase 1 completion details (Section 6)
+    - Updated `04_KICKOFF_CHECKLIST.md` marking Phase 1 items complete
+    - Created `NEXT_TASK_PLAN.md` (1,255 lines): 30-day roadmap with Priority 1-4 tasks
+  - **CI/CD Improvements**:
+    - Added test/typecheck dependency on `@calibr/db#generate` in turbo.json
+    - Added `.eslintrc.js` and eslint devDependencies to automation-runner package
+    - Added `@calibr/automation-runner/*` path mapping to root tsconfig.json
+  - **Total Changes**: 13 files changed, 3,598 lines added
+  - **Next Phase**: M1.6 — Worker execution layer, DLQ drain job, reconciliation pass
+  - See `PR_106_DESCRIPTION.md` for comprehensive changelog and review guide
+
 - **Competitor Monitoring M0.6 E2E** — Completed January 11, 2025 ✅ MILESTONE
   - **M0.6 COMPLETE**: Competitor monitoring E2E flow from 70% → 100% complete
   - **Analytics Integration**: Created `/api/v1/competitors/analytics` endpoint (171 lines)

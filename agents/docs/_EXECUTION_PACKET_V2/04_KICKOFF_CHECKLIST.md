@@ -37,19 +37,36 @@
 ### Milestone M0.1 → M0.2 ✅ COMPLETE
 Schema + Event Bus stable.
 
-### Milestone M0.5 — Automation Runner Foundation 🚀 NEW
-- [ ] Extend `RuleRun` + `RuleTarget` models → state machine (`queued → applying → applied | failed`)
+### Milestone M0.5 — Automation Runner Foundation 🚧 Phase 1 Complete
+
+**Phase 1: Core Infrastructure** ✅ COMPLETE (November 13, 2025)
+- [x] Extend `RuleRun` + `RuleTarget` models → state machine (`queued → applying → applied | failed`)
+  - [x] Database schema extensions (queuedAt, metadata, skuId, attempts, lastAttempt, appliedAt)
+  - [x] Migration: `20251113000000_add_automation_runner_fields`
+  - [x] Added `PARTIAL` status to `RuleRunStatus`, `APPLYING` status to `RuleTargetStatus`
+- [x] Implement exponential backoff / jitter / 429 handling
+  - [x] `backoff.ts`: 280+ lines with retry logic (calculateBackoff, handle429Error, retryWithBackoff)
+  - [x] Smart 429 handling with Retry-After header support
+  - [x] Comprehensive test suite: 400+ lines, 38 test cases, 100% coverage
+- [x] Core types and configuration (`types.ts`, `config.ts`)
+  - [x] RulesWorkerConfig, BackoffOptions, ReconciliationReport, DLQEntry interfaces
+  - [x] DEFAULT_WORKER_CONFIG, DEFAULT_BACKOFF_OPTIONS, RATE_LIMIT_BACKOFF_OPTIONS
+- [x] Documentation: `state-machine.md` (500+ lines)
+  - [x] RuleRun state machine (7 states, 9 transitions)
+  - [x] RuleTarget state machine (6 states, 7 transitions)
+  - [x] Retry strategies, DLQ handling, reconciliation schedules
+
+**Phase 2: Worker Execution** 📋 PENDING (M1.6)
 - [ ] Add worker queue (`rulesWorker.ts`) consuming outbox `job.rules.apply`
-- [ ] Implement exponential backoff / jitter / 429 handling
 - [ ] Reconciliation pass verifying external price = intended price
 - [ ] DLQ drain job + aggregate report → `audit_event`
 - [ ] Add metrics: `rules.apply.count`, `duration_ms`, `success_rate`, `dlq.size`
 - [ ] Alert policies: success < 97% / DLQ > threshold / Shopify 429 burst
 - [ ] Publish Grafana dashboard panel → `/api/metrics`
 
-### Acceptance
-- [ ] 100-SKU rule runs < 5 min p95 end-to-end  
-- [ ] Partial failures recoverable via "Retry Failed" API  
+### Acceptance (Phase 2)
+- [ ] 100-SKU rule runs < 5 min p95 end-to-end
+- [ ] Partial failures recoverable via "Retry Failed" API
 - [ ] All apply events audited + idempotent
 
 ### Monitoring & Observability
