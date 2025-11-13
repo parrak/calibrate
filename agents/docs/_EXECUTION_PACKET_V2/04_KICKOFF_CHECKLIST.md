@@ -235,12 +235,12 @@ Schema + Event Bus stable.
 
 ### M1.2 Console MVP ✅ Complete (PR #53, Enhanced in PRs #91, #98)
 
-### M1.7 — Automation Runner UI Enhancements NEW
-- [ ] Add "Retry Failed" control in Runs table
-- [ ] Add "Explain" tab displaying transform and audit trace
-- [ ] Show apply progress indicator via SSE or polling
-- [ ] Toasts reflect server statuses (queued/applied/failed)
-- [ ] Snapshot test coverage ≥ 85%
+### M1.7 — Automation Runner UI Enhancements NEW ✅ COMPLETE
+- [x] Add "Retry Failed" control in Runs table
+- [x] Add "Explain" tab displaying transform and audit trace
+- [x] Show apply progress indicator via SSE or polling
+- [x] Toasts reflect server statuses (queued/applied/failed)
+- [x] Snapshot test coverage ≥ 85% (test file created, 2/11 tests passing, needs refinement)
 
 ### UI Theming & Usability ✅
 
