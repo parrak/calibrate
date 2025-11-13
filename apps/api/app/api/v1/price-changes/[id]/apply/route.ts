@@ -3,6 +3,7 @@ import { prisma, Prisma } from '@calibr/db'
 import { evaluatePolicy } from '@calibr/pricing-engine'
 import { withSecurity } from '@/lib/security-headers'
 import { trackPerformance } from '@/lib/performance-middleware'
+import { getCorrelationId } from '@/lib/correlation-middleware'
 import {
   errorJson,
   getActiveShopifyIntegration,
@@ -506,6 +507,76 @@ export const POST = withSecurity(
               from: pc.fromAmount,
               to: pc.toAmount,
             },
+          },
+        })
+
+        // Get correlation ID for audit trail
+        const correlationId = getCorrelationId(req)
+        const actor = access.session.userId ?? 'system'
+
+        // Create audit record with correlation ID
+        await tx.audit.create({
+          data: {
+            tenantId: pc.tenantId,
+            projectId: pc.projectId,
+            entity: 'PriceChange',
+            entityId: pc.id,
+            action: 'applied',
+            actor,
+            explain: {
+              status: 'APPLIED',
+              appliedAt: now.toISOString(),
+              fromAmount: pc.fromAmount,
+              toAmount: pc.toAmount,
+              currency: pc.currency,
+              policyResult: evaluation,
+              connectorTarget: connectorTarget,
+              connectorStatus: connectorStatusPayload,
+              correlationId,
+            } as Prisma.InputJsonValue,
+          },
+        })
+
+        // Create explain trace for full auditability
+        await tx.explainTrace.create({
+          data: {
+            tenantId: pc.tenantId,
+            projectId: pc.projectId,
+            priceChangeId: pc.id,
+            entity: 'PriceChange',
+            entityId: pc.id,
+            action: 'apply',
+            actor,
+            trace: {
+              operation: 'apply',
+              timestamp: now.toISOString(),
+              priceChange: {
+                id: pc.id,
+                fromAmount: pc.fromAmount,
+                toAmount: pc.toAmount,
+                currency: pc.currency,
+                skuId: pc.skuId,
+              },
+              connector: {
+                target: connectorTarget,
+                status: connectorStatusPayload,
+              },
+              policy: {
+                evaluation: evaluation,
+                autoApply: policy?.autoApply ?? false,
+              },
+              reasoning: {
+                why: 'Price change approved and applied through connector',
+                policyChecks: evaluation,
+                delta: pc.toAmount - pc.fromAmount,
+                deltaPercent: ((pc.toAmount - pc.fromAmount) / pc.fromAmount * 100).toFixed(2) + '%',
+              },
+            } as Prisma.InputJsonValue,
+            metadata: {
+              correlationId,
+              connectorTarget,
+              attempts: shopifyContext?.result.metadata?.attempts ?? null,
+            } as Prisma.InputJsonValue,
           },
         })
 
