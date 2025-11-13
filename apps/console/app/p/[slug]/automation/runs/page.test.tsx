@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import AutomationRunsPage from './page'
 
@@ -112,7 +112,6 @@ describe('AutomationRunsPage', () => {
   })
 
   afterEach(() => {
-    cleanup()
     vi.clearAllMocks()
     vi.clearAllTimers()
   })
