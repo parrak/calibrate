@@ -7,6 +7,45 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **M1.7 Automation Runner UI Enhancements** — January 2025 ✅ MILESTONE
+  - **Automation Runs Page**: New `/p/[slug]/automation/runs` page for monitoring rule executions
+    - Runs table with status filters (Preview, Queued, Applying, Applied, Failed, Rolled Back)
+    - Real-time progress monitoring via polling (updates every 2 seconds)
+    - Target status breakdown showing applied/failed/queued counts
+    - Status badges with color coding for quick visual identification
+  - **Run Detail Drawer**: Comprehensive view of individual run executions
+    - **Overview Tab**: Status, timestamps, target counts, error messages
+    - **Explain Tab**: Transform JSON and explain trace for debugging
+    - **Targets Tab**: Complete list of all product price changes with before/after snapshots
+    - **Audit Trail Tab**: Full history of actions taken on the run
+  - **Retry Failed Functionality**: Ability to retry failed price updates without re-running entire rules
+    - "Retry Failed" button in runs table and detail drawer
+    - Resets failed targets to QUEUED status for worker reprocessing
+    - Toast notifications for retry status updates
+  - **Progress Indicators**: Real-time monitoring of active runs
+    - Progress percentage and completion counts (e.g., "50% (10/20)")
+    - Automatic polling for QUEUED and APPLYING runs
+    - Toast notifications when runs complete or fail
+  - **API Endpoints**: New REST API for automation runs management
+    - `GET /api/v1/runs` - List runs with filters and pagination
+    - `GET /api/v1/runs/:runId` - Get run details with targets and audit events
+    - `POST /api/v1/runs/:runId/retry-failed` - Retry failed targets
+    - `GET /api/v1/runs/:runId/progress` - Polling endpoint for progress updates
+  - **Documentation**: User-facing documentation for Automation Runs
+    - Complete guide at `/console/automation-runs` in docs site
+    - Explains run statuses, progress monitoring, retry functionality
+    - Best practices and troubleshooting sections
+    - Added to sidebar navigation under Core Features
+  - **StatusPill Component**: Extended to support all run statuses (PREVIEW, QUEUED, APPLYING, APPLIED, FAILED, ROLLED_BACK)
+  - **Test Coverage**: Comprehensive test suite with 11 test cases covering all major functionality
+  - **Files Changed**: 8 new files, 3 modified files
+    - API: 4 new route files for runs management
+    - UI: 1 new page component with full functionality
+    - Tests: 1 comprehensive test file
+    - Docs: 1 new documentation page
+    - Components: Updated StatusPill and Sidebar
+  - See `agents/docs/_EXECUTION_PACKET_V2/04_KICKOFF_CHECKLIST.md` for milestone details
+
 - **Competitor Monitoring M0.6 E2E** — Completed January 11, 2025 ✅ MILESTONE
   - **M0.6 COMPLETE**: Competitor monitoring E2E flow from 70% → 100% complete
   - **Analytics Integration**: Created `/api/v1/competitors/analytics` endpoint (171 lines)
@@ -118,6 +157,18 @@ The format is based on Keep a Changelog and follows semantic versioning.
     - Sign-out button for auth failures
     - Graceful error handling with retry options
   - **Result**: Competitor monitoring fully functional with proper auth
+
+- **Competitor Monitoring QA Validation** (PR #105) — Completed Nov 13, 2025
+  - Documented competitor monitoring QA validation steps and outcomes
+  - Updated TODO.md with November 13, 2025 status refresh for ready-for-automation gate
+  - **Validation Steps Completed**:
+    - ✅ Executed competitor API listing + creation suites via Vitest (`GET /api/v1/competitors`, `POST /api/v1/competitors`)
+    - ✅ Verified monitoring and rule creation console flows through component test harnesses (`CompetitorMonitor`, `CompetitorRules`)
+    - ✅ Confirmed analytics tab renders competitor insights without regressions
+    - ✅ Ensured CORS preflight remains healthy via `OPTIONS` handlers on competitor endpoints
+  - **Test Artifacts**: `apps/api/tests/competitors.test.ts`, `apps/console/components/CompetitorMonitor.test.tsx`, `apps/console/components/CompetitorRules.test.tsx`, `apps/console/app/p/[slug]/rules/page.test.tsx`
+  - **Outcome**: No regressions detected in console UI or API, ready to mark competitor monitoring testing requirement complete in QA tracker
+  - Validation duration: 2 hours | Confidence: HIGH
 
 ### Fixed
 - **Docs Vitest Timeout in CI** (PR #TBD)

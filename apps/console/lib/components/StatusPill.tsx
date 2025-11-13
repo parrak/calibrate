@@ -7,7 +7,10 @@ export function StatusPill({ status }: { status: string }) {
     APPLIED: 'bg-green-600 text-green-50 border border-green-700',
     REJECTED: 'bg-gray-600 text-gray-50 border border-gray-700',
     FAILED: 'bg-red-600 text-red-50 border border-red-700',
-    ROLLED_BACK: 'bg-orange-600 text-orange-50 border border-orange-700'
+    ROLLED_BACK: 'bg-orange-600 text-orange-50 border border-orange-700',
+    PREVIEW: 'bg-gray-500 text-gray-50 border border-gray-600',
+    QUEUED: 'bg-yellow-500 text-yellow-950 border border-yellow-600',
+    APPLYING: 'bg-blue-600 text-blue-50 border border-blue-700',
   }
   return (
     <span
