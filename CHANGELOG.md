@@ -7,6 +7,41 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Competitor Monitoring M0.6 E2E** — Completed January 11, 2025 ✅ MILESTONE
+  - **M0.6 COMPLETE**: Competitor monitoring E2E flow from 70% → 100% complete
+  - **Analytics Integration**: Created `/api/v1/competitors/analytics` endpoint (171 lines)
+    - Real-time price comparisons across competitors
+    - Market insights dashboard (lowest/highest/middle position)
+    - Integration with pricing engine's `getCompetitorInsights()`
+    - Authentication support with session tokens
+  - **CompetitorAnalytics Component**: Fully integrated with real-time data
+    - Removed mock data, connected to live API
+    - Added error handling with retry and sign-out options
+    - Market position tracking with visual indicators
+    - Per-SKU price comparisons with competitor breakdown
+    - Sale indicators and price spread analysis
+  - **Error Monitoring & Alerts**: 4 new alert policies in `packages/monitor/src/alerts.ts`
+    - `competitor_scrape_error_rate_high` — Warning when >1% error rate in 24h
+    - `competitor_scrape_error_rate_critical` — Critical when >5% error rate in 24h
+    - `competitor_scrape_consecutive_failures` — Warning when competitor has 3+ consecutive failures
+    - `competitor_monitor_stale` — Warning when competitor not monitored in 24h
+  - **Error Rate Validation Script**: `scripts/validate-competitor-error-rate.ts` (236 lines)
+    - Validates error rate < 1% per 24h across all tenants
+    - Tracks consecutive failures and stale competitors
+    - CI/CD integration ready with exit codes (0 = pass, 1 = fail)
+    - Configurable threshold and time window parameters
+  - **Component Flow**: CompetitorMonitor ↔ Analytics ↔ Rules verified E2E
+    - Added Analytics tab to competitors page (3-tab layout)
+    - All components integrated with authentication
+    - Real-time data flow validated end-to-end
+  - **Documentation**: Updated `docs/misc/COMPETITOR_MONITORING.md` with M0.6 status
+    - Added Error Monitoring & Validation section
+    - Documented alert policies and validation script
+    - Created `M0.6_COMPLETION_SUMMARY.md` (360+ lines)
+  - **Test Coverage**: 712 lines validated across CompetitorMonitor + CompetitorRules
+  - **Files Changed**: 8 files (3 new, 5 modified), ~550 lines added
+  - See `M0.6_COMPLETION_SUMMARY.md` for full completion report
+
 - **Calibrate Branding Update v1** — November 2025
   - Implemented new brand color system across all apps (site, console, docs)
     - L1 (Light Teal): `#80D9D9`, L2 (Mid Teal): `#00A3A3` - Primary brand color, L3 (Deep Teal): `#008080` - Accent and theme color

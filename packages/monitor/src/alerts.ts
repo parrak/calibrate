@@ -226,6 +226,64 @@ export const DEFAULT_ALERT_POLICIES: AlertPolicy[] = [
     enabled: true
   },
 
+  // Competitor Monitoring Alerts
+  {
+    id: 'competitor_scrape_error_rate_high',
+    name: 'Competitor Scrape Error Rate High',
+    description: 'Competitor scraping error rate exceeds 1% in 24h',
+    severity: 'warning',
+    channels: ['slack', 'email'],
+    condition: (metrics) => metrics.competitorMonitor?.errorRate > 1,
+    message: (metrics) =>
+      `Competitor scraping error rate is ${metrics.competitorMonitor.errorRate.toFixed(2)}% (threshold: 1%) - ${metrics.competitorMonitor.totalErrors} errors in last 24h`,
+    cooldownMs: 30 * 60 * 1000, // 30 minutes
+    enabled: true
+  },
+  {
+    id: 'competitor_scrape_error_rate_critical',
+    name: 'Competitor Scrape Error Rate Critical',
+    description: 'Competitor scraping error rate exceeds 5% in 24h',
+    severity: 'critical',
+    channels: ['slack', 'pagerduty'],
+    condition: (metrics) => metrics.competitorMonitor?.errorRate > 5,
+    message: (metrics) =>
+      `🚨 CRITICAL: Competitor scraping error rate is ${metrics.competitorMonitor.errorRate.toFixed(2)}% (threshold: 5%) - ${metrics.competitorMonitor.totalErrors} errors in last 24h`,
+    cooldownMs: 15 * 60 * 1000, // 15 minutes
+    enabled: true
+  },
+  {
+    id: 'competitor_scrape_consecutive_failures',
+    name: 'Competitor Scrape Consecutive Failures',
+    description: 'Competitor has 3+ consecutive scrape failures',
+    severity: 'warning',
+    channels: ['slack'],
+    condition: (metrics) =>
+      metrics.competitorMonitor?.failedCompetitors && metrics.competitorMonitor.failedCompetitors.length > 0,
+    message: (metrics) => {
+      const failed = metrics.competitorMonitor.failedCompetitors
+      const competitorNames = failed.map((c: any) => `${c.name} (${c.consecutiveFailures} failures)`).join(', ')
+      return `Competitors with consecutive scrape failures: ${competitorNames}`
+    },
+    cooldownMs: 20 * 60 * 1000, // 20 minutes
+    enabled: true
+  },
+  {
+    id: 'competitor_monitor_stale',
+    name: 'Competitor Data Stale',
+    description: 'Competitor has not been successfully monitored in 24h',
+    severity: 'warning',
+    channels: ['slack', 'email'],
+    condition: (metrics) =>
+      metrics.competitorMonitor?.staleCompetitors && metrics.competitorMonitor.staleCompetitors.length > 0,
+    message: (metrics) => {
+      const stale = metrics.competitorMonitor.staleCompetitors
+      const competitorNames = stale.map((c: any) => `${c.name} (last checked: ${new Date(c.lastChecked).toLocaleString()})`).join(', ')
+      return `Competitors with stale data (>24h): ${competitorNames}`
+    },
+    cooldownMs: 60 * 60 * 1000, // 60 minutes
+    enabled: true
+  },
+
   // Cron Job Alerts
   {
     id: 'cron_job_missing',

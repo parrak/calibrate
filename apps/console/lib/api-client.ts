@@ -203,6 +203,56 @@ export const competitorsApi = {
       token,
     })
   },
+
+  getAnalytics: async (projectSlug: string, token?: string): Promise<{
+    comparisons: Array<{
+      skuId: string
+      skuName: string
+      ourPrice: number
+      competitorPrices: Array<{
+        competitorId: string
+        competitorName: string
+        price: number
+        currency: string
+        isOnSale: boolean
+      }>
+    }>
+    insights: {
+      minPrice: number
+      maxPrice: number
+      avgPrice: number
+      ourPosition: 'lowest' | 'highest' | 'middle'
+      priceSpread: number
+      competitorCount: number
+    }
+    competitorCount: number
+  }> => {
+    return fetchApi<{
+      comparisons: Array<{
+        skuId: string
+        skuName: string
+        ourPrice: number
+        competitorPrices: Array<{
+          competitorId: string
+          competitorName: string
+          price: number
+          currency: string
+          isOnSale: boolean
+        }>
+      }>
+      insights: {
+        minPrice: number
+        maxPrice: number
+        avgPrice: number
+        ourPosition: 'lowest' | 'highest' | 'middle'
+        priceSpread: number
+        competitorCount: number
+      }
+      competitorCount: number
+    }>(`/api/v1/competitors/analytics?projectSlug=${projectSlug}`, {
+      token,
+    })
+  },
 }
 
 // Platforms API
