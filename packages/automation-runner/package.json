@@ -1,0 +1,25 @@
+{
+  "name": "@calibr/automation-runner",
+  "version": "0.1.0",
+  "description": "Automation runner for bulk pricing rule execution with retry and reconciliation",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@calibr/db": "workspace:*",
+    "@calibr/monitor": "workspace:*",
+    "@calibr/pricing-engine": "workspace:*",
+    "@paralleldrive/cuid2": "^2.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.4"
+  }
+}
