@@ -5,8 +5,6 @@
 
 import { prisma, EventWriter, OutboxWorker } from '@calibr/db'
 import type { EventPayload } from '@calibr/db/src/eventing/types'
-import type { EventPayload } from '@calibr/db/src/eventing/types'
-import type { EventPayload } from '@calibr/db/src/eventing/types'
 import { logger } from '@calibr/monitor'
 import {
   calculateBackoff,
