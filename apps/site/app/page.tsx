@@ -23,7 +23,7 @@ export default function Home() {
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <a
                 href="https://console.calibr.lat/login"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-[color:var(--brand)]/90 hover:bg-[color:var(--brand)] text-white font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-[#00A3A3] hover:bg-[#008080] text-white font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
               >
                 Try the Console
                 <span className="ml-2">→</span>
