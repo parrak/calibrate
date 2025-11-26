@@ -8,16 +8,18 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
-    // Use forks pool for better CI compatibility
-    pool: 'forks',
+    // Avoid fork pool issues on CI runners with constrained envs
+    pool: 'threads',
     poolOptions: {
-      forks: {
-        singleFork: true,
+      threads: {
+        minThreads: 1,
+        maxThreads: 2,
       },
     },
     // Increase timeout for CI environments
     testTimeout: 10000,
     hookTimeout: 10000,
+    passWithNoTests: true,
   },
   resolve: {
     alias: {

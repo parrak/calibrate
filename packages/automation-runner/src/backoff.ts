@@ -79,7 +79,11 @@ export function handle429Error(error: ShopifyError): BackoffResult {
   // Fallback to exponential backoff
   // Use longer delays for rate limits (16s, 32s, 64s)
   const attempt = error.attempt || 0
-  const delay = calculateBackoff(attempt, RATE_LIMIT_BACKOFF_OPTIONS)
+  const rateLimitOptions =
+    attempt > 0
+      ? { ...RATE_LIMIT_BACKOFF_OPTIONS, jitter: 0 } // deterministic growth across attempts
+      : RATE_LIMIT_BACKOFF_OPTIONS
+  const delay = calculateBackoff(attempt, rateLimitOptions)
 
   return {
     delay,
@@ -206,6 +210,11 @@ export async function retryWithBackoff<T>(
       // Check if max retries exceeded
       if (attempt >= maxRetries) {
         throw lastError
+      }
+
+      // Call onRetry callback if provided
+      if (options.onRetry) {
+        await options.onRetry(attempt, lastError)
       }
 
       // Calculate delay
