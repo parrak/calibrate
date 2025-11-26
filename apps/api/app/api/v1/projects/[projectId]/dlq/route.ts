@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import type { RuleRun, RuleTarget } from '@calibr/db'
 
 export async function GET(
   _req: NextRequest,
@@ -26,7 +27,7 @@ export async function GET(
     }
 
     // Get all failed targets for the project
-    const failedTargets = await prisma().ruleTarget.findMany({
+    const failedTargets: Array<RuleTarget & { RuleRun: RuleRun }> = await prisma().ruleTarget.findMany({
       where: {
         projectId,
         status: 'FAILED',
@@ -43,7 +44,7 @@ export async function GET(
     return NextResponse.json({
       projectId,
       totalFailed: failedTargets.length,
-      entries: failedTargets.map((entry: any) => ({
+      entries: failedTargets.map((entry) => ({
         targetId: entry.id,
         runId: entry.ruleRunId,
         skuId: entry.skuId,
@@ -66,7 +67,7 @@ export async function GET(
   }
 }
 
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS(_req: NextRequest) {
   return NextResponse.json(
     {},
     {

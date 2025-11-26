@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import type { RuleTarget } from '@calibr/db'
 
 export async function POST(
   _req: NextRequest,
@@ -38,7 +39,7 @@ export async function POST(
     }
 
     // Get applied targets
-    const appliedTargets = run.RuleTarget.filter((t: any) => t.status === 'APPLIED')
+    const appliedTargets: RuleTarget[] = run.RuleTarget.filter((t) => t.status === 'APPLIED')
 
     // TODO: Implement full reconciliation with connector integration
     // For now, just return a simple summary
@@ -62,7 +63,7 @@ export async function POST(
   }
 }
 
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS(_req: NextRequest) {
   return NextResponse.json(
     {},
     {

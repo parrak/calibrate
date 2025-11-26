@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import type { RuleRun, RuleTarget } from '@calibr/db'
 
 export async function GET(
   req: NextRequest,
@@ -32,7 +33,7 @@ export async function GET(
     const sinceDate = sinceParam ? new Date(sinceParam) : new Date(Date.now() - 24 * 60 * 60 * 1000)
 
     // Get runs for the project
-    const runs = await prisma().ruleRun.findMany({
+    const runs: Array<RuleRun & { RuleTarget: RuleTarget[] }> = await prisma().ruleRun.findMany({
       where: {
         projectId,
         createdAt: {
@@ -45,15 +46,15 @@ export async function GET(
     })
 
     // Calculate basic metrics
-    const runsProcessed = runs.filter((r: any) =>
-      r.status === 'APPLIED' || r.status === 'PARTIAL' || r.status === 'FAILED'
+    const runsProcessed = runs.filter(
+      (r) => r.status === 'APPLIED' || r.status === 'PARTIAL' || r.status === 'FAILED'
     ).length
 
     let targetsApplied = 0
     let targetsFailed = 0
-    runs.forEach((run: any) => {
-      targetsApplied += run.RuleTarget.filter((t: any) => t.status === 'APPLIED').length
-      targetsFailed += run.RuleTarget.filter((t: any) => t.status === 'FAILED').length
+    runs.forEach((run) => {
+      targetsApplied += run.RuleTarget.filter((t) => t.status === 'APPLIED').length
+      targetsFailed += run.RuleTarget.filter((t) => t.status === 'FAILED').length
     })
 
     const totalTargets = targetsApplied + targetsFailed
@@ -90,7 +91,7 @@ export async function GET(
   }
 }
 
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS(_req: NextRequest) {
   return NextResponse.json(
     {},
     {
