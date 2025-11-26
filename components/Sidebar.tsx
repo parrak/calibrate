@@ -16,6 +16,7 @@ const navigation = [
       { title: 'Product Catalog', href: '/console/catalog' },
       { title: 'Price Changes', href: '/console/price-changes' },
       { title: 'Pricing Rules', href: '/console/pricing-rules' },
+      { title: 'Automation Runs', href: '/console/automation-runs' },
       { title: 'Platform Integrations', href: '/console/integrations' },
     ],
   },
