@@ -4,7 +4,7 @@
  */
 
 import { prisma } from '@calibr/db'
-import type { RuleTarget } from '@calibr/db'
+import type { PrismaClient, RuleTarget } from '@calibr/db'
 import type {
   ReconciliationMismatch,
   ReconciliationReport,
@@ -14,7 +14,11 @@ import { RECONCILIATION_CONFIG } from './config'
 
 export class ReconciliationService {
   private connectors: Map<string, PriceConnector> = new Map()
-  private prisma = prisma()
+  private prisma: PrismaClient
+
+  constructor(prismaClient?: PrismaClient) {
+    this.prisma = prismaClient ?? prisma()
+  }
 
   /**
    * Register a price connector for reconciliation
@@ -118,8 +122,18 @@ export class ReconciliationService {
    */
   private extractExpectedPrice(target: RuleTarget): number | null {
     try {
-      const afterData = target.afterJson as any
-      return afterData.unit_amount || afterData.amount || afterData.price || null
+      const afterData = target.afterJson as Record<string, unknown>
+      const priceCandidates = [
+        afterData.unit_amount,
+        afterData.amount,
+        afterData.price,
+      ]
+
+      const price = priceCandidates.find(
+        (value): value is number => typeof value === 'number'
+      )
+
+      return price ?? null
     } catch {
       return null
     }

@@ -3,7 +3,7 @@
  * M1.6: Metrics collection and reporting for monitoring
  */
 
-import type { RuleRun, RuleTarget } from '@calibr/db'
+import type { RuleRun } from '@calibr/db'
 import type { RuleWorkerMetrics, RunResult } from './types'
 import { prisma } from '@calibr/db'
 

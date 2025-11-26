@@ -4,10 +4,9 @@
  */
 
 import { prisma } from '@calibr/db'
-import type { RuleRun, RuleTarget, PricingRule, RuleRunStatus, RuleTargetStatus } from '@calibr/db'
+import type { PrismaClient, RuleRun, RuleTarget, PricingRule, RuleRunStatus } from '@calibr/db'
 import type {
   RulesWorkerConfig,
-  RuleRunContext,
   TargetApplicationResult,
   RunResult,
   PriceConnector,
@@ -15,12 +14,15 @@ import type {
   WorkerEventPayload,
 } from './types'
 import { getWorkerConfig, CIRCUIT_BREAKER_CONFIG } from './config'
-import {
-  calculateBackoff,
-  handle429Error,
-  isRetryableError,
-  retryWithBackoff,
-} from './backoff'
+import { isRetryableError, retryWithBackoff } from './backoff'
+
+type TargetPriceData = Partial<{
+  unit_amount: number
+  amount: number
+  price: number
+  compare_at_price: number
+  currency: string
+}>
 
 /**
  * RulesWorker - Processes queued rule runs and applies pricing changes
@@ -34,10 +36,11 @@ export class RulesWorker {
   private consecutiveFailures = 0
   private consecutive429Errors = 0
   private circuitBreakerOpen = false
-  private prisma = prisma()
+  private prisma: PrismaClient
 
-  constructor(config?: Partial<RulesWorkerConfig>) {
+  constructor(config?: Partial<RulesWorkerConfig>, prismaClient?: PrismaClient) {
     this.config = { ...getWorkerConfig(), ...config }
+    this.prisma = prismaClient ?? prisma()
   }
 
   /**
@@ -60,7 +63,7 @@ export class RulesWorker {
   /**
    * Emit worker event
    */
-  private emit(eventType: WorkerEvent, data?: unknown): void {
+  private emit(eventType: WorkerEvent, data?: Record<string, unknown>): void {
     const payload: WorkerEventPayload = {
       eventType,
       timestamp: new Date(),
@@ -82,15 +85,18 @@ export class RulesWorker {
     this.isRunning = true
     this.emit('worker.started')
 
-    // Start polling loop
-    this.pollTimer = setInterval(() => {
-      this.pollForQueuedRuns().catch(error => {
-        this.emit('worker.error', { error: error.message })
-      })
-    }, this.config.pollInterval)
+    if (!this.config.disablePolling) {
+      // Start polling loop
+      this.pollTimer = setInterval(() => {
+        this.pollForQueuedRuns().catch(error => {
+          const message = error instanceof Error ? error.message : 'Unknown error'
+          this.emit('worker.error', { error: message })
+        })
+      }, this.config.pollInterval)
 
-    // Process any queued runs immediately
-    await this.pollForQueuedRuns()
+      // Process any queued runs immediately
+      await this.pollForQueuedRuns()
+    }
   }
 
   /**
@@ -256,11 +262,10 @@ export class RulesWorker {
       this.emit('target.applying', { targetId: target.id, runId: run.id })
 
       // Extract price information from afterJson
-      const afterData = target.afterJson as any
-      const newPrice = afterData.unit_amount || afterData.amount || afterData.price
-      const compareAtPrice = afterData.compare_at_price
+      const afterData = target.afterJson as TargetPriceData
+      const newPrice = afterData.unit_amount ?? afterData.amount ?? afterData.price
 
-      if (!newPrice) {
+      if (typeof newPrice !== 'number') {
         throw new Error('No price found in afterJson')
       }
 
@@ -280,7 +285,7 @@ export class RulesWorker {
             externalId: target.variantId || target.productId,
             variantId: target.variantId || undefined,
             price: newPrice,
-            currency: afterData.currency || 'USD',
+            currency: afterData.currency ?? 'USD',
           })
         },
         this.config.maxRetries,
@@ -339,8 +344,9 @@ export class RulesWorker {
         duration: Date.now() - startTime,
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      const retryable = isRetryableError(error)
+      const normalizedError = error instanceof Error ? error : new Error('Unknown error')
+      const errorMessage = normalizedError.message
+      const retryable = isRetryableError(normalizedError)
 
       // Determine if we should retry or mark as FAILED
       if (target.attempts + 1 >= this.config.maxRetries || !retryable) {

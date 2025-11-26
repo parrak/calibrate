@@ -4,13 +4,17 @@
  */
 
 import { prisma } from '@calibr/db'
-import type { RuleTarget, RuleRun } from '@calibr/db'
+import type { PrismaClient, RuleTarget, RuleRun } from '@calibr/db'
 import type { DLQEntry, DLQReport } from './types'
 import { DLQ_CONFIG } from './config'
 import { isRetryableError } from './backoff'
 
 export class DLQService {
-  private prisma = prisma()
+  private prisma: PrismaClient
+
+  constructor(prismaClient?: PrismaClient) {
+    this.prisma = prismaClient ?? prisma()
+  }
 
   /**
    * Get all failed targets (DLQ entries) for a project
@@ -167,9 +171,7 @@ export class DLQService {
       run: target.RuleRun,
       failedAt: target.updatedAt,
       errorType: this.categorizeError(target.errorMessage || 'Unknown'),
-      retryable: isRetryableError({
-        message: target.errorMessage || 'Unknown',
-      }),
+      retryable: isRetryableError(new Error(target.errorMessage || 'Unknown')),
     }
   }
 
