@@ -204,6 +204,20 @@ jobs:
   test:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -250,6 +264,11 @@ jobs:
 
     - name: Generate Prisma client
       run: pnpm db:generate
+
+    - name: Run database migrations
+      run: pnpm --filter @calibr/db prisma migrate deploy
+      env:
+        DATABASE_URL: postgresql://test:test@localhost:5432/test_db
 
     - name: Build monitor package
       run: pnpm --filter @calibr/monitor build

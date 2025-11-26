@@ -10,9 +10,14 @@
   "scripts": {
     "prisma": "prisma",
     "migrate": "prisma migrate dev",
+    "migrate:check": "tsx scripts/check-migrations.ts",
     "generate": "prisma generate",
+    "generate:schemas": "tsx scripts/generate-schemas.ts",
+    "generate:dtos": "tsx scripts/generate-dtos.ts",
+    "generate:all": "pnpm generate && pnpm generate:schemas && pnpm generate:dtos",
     "studio": "prisma studio",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "test:db": "tsx scripts/test-db.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

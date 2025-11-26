@@ -16,6 +16,9 @@
 // Re-export generated API types
 export type { paths, operations, components } from '../api';
 
+// M0.1: Export generated DTOs from Prisma schema
+export * from './generated/m0.1-dtos';
+
 // Export a version identifier for type checking
 export const API_TYPES_VERSION = '1.0.0' as const;
 

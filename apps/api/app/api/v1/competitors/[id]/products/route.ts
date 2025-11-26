@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { withSecurity } from '@/lib/security-headers'
 import { createId } from '@paralleldrive/cuid2'
 
 const db = () => prisma()
 
-export async function GET(
+export const GET = withSecurity(async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context?: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!context?.params) {
+      return NextResponse.json({ error: 'Missing route context' }, { status: 500 })
+    }
     const { id } = await context.params
     const { searchParams } = new URL(request.url)
     const skuId = searchParams.get('skuId')
@@ -33,13 +37,16 @@ export async function GET(
     console.error('Error fetching competitor products:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function POST(
+export const POST = withSecurity(async function POST(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context?: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!context?.params) {
+      return NextResponse.json({ error: 'Missing route context' }, { status: 500 })
+    }
     const body = await request.json()
     const { skuId, name, skuCode, url, imageUrl } = body
     const { id } = await context.params
@@ -66,4 +73,11 @@ export async function POST(
     console.error('Error creating competitor product:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
+
+/**
+ * OPTIONS handler for CORS preflight
+ */
+export const OPTIONS = withSecurity(async (_req: NextRequest) => {
+  return new NextResponse(null, { status: 204 });
+})

@@ -6,10 +6,10 @@ Summary
 Tasks
 - [x] Console: ShopifyAuthButton calls install with project_id and shop domain
 - [x] Console: Show success banner on ?success=true and refresh status
-- [ ] API: Verify install/callback routes handle HMAC validation and token exchange
-- [ ] API: POST to /api/platforms/shopify after callback (if not already)
-- [ ] UI: Add Disconnect confirmation and refresh
-- [ ] Docs: Update envs and flow
+- [x] API: Verify install/callback routes handle HMAC validation and token exchange
+- [x] API: POST to /api/platforms/shopify after callback (if not already)
+- [x] UI: Add Disconnect confirmation and refresh
+- [x] Docs: Update envs and flow
 
 Refs
 - apps/api/app/api/integrations/shopify/oauth/install/route.ts:1

@@ -7,10 +7,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { ShopifyProduct, ShopifyVariant } from '@calibr/shopify-connector';
 import { prisma } from '@calibr/db';
 import { initializeShopifyConnector, getProductsClient } from '@/lib/shopify-connector';
+import { syncShopifyProducts } from '@/lib/shopify-sync';
+import { withSecurity } from '@/lib/security-headers';
 
 const DEFAULT_LIMIT = 50;
 
-export async function GET(request: NextRequest) {
+export const GET = withSecurity(async (request: NextRequest) => {
+  const db = prisma();
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get('project_id');
   const limitParam = Number.parseInt(searchParams.get('limit') ?? `${DEFAULT_LIMIT}`, 10);
@@ -26,7 +29,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const integration = await prisma().shopifyIntegration.findFirst({
+    const integration = await db.shopifyIntegration.findFirst({
       where: {
         projectId,
         isActive: true,
@@ -67,7 +70,13 @@ export async function GET(request: NextRequest) {
       updatedAt: product.updatedAt,
     }));
 
-    await prisma().shopifyIntegration.update({
+    const syncResults = await syncShopifyProducts(db, {
+      projectId,
+      shopDomain: integration.shopDomain,
+      products: productsResponse.products,
+    });
+
+    await db.shopifyIntegration.update({
       where: { id: integration.id },
       data: {
         lastSyncAt: new Date(),
@@ -84,13 +93,17 @@ export async function GET(request: NextRequest) {
         lastSyncAt: new Date(),
         syncStatus: 'success',
       },
+      sync: {
+        processed: productsResponse.products.length,
+        results: syncResults,
+      },
     });
   } catch (error) {
     console.error('Shopify products sync error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
     try {
-      await prisma().shopifyIntegration.updateMany({
+      await db.shopifyIntegration.updateMany({
         where: {
           projectId,
           isActive: true,
@@ -109,9 +122,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request: NextRequest) => {
   try {
     const body = (await request.json()) as { projectId?: string; productId?: string };
     const { projectId, productId } = body;
@@ -123,7 +136,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const integration = await prisma().shopifyIntegration.findFirst({
+    const db = prisma();
+
+    const integration = await db.shopifyIntegration.findFirst({
       where: {
         projectId,
         isActive: true,
@@ -171,4 +186,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
+
+export const OPTIONS = withSecurity(async () => new NextResponse(null, { status: 204 }));

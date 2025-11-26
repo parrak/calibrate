@@ -1,20 +1,25 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import './globals.css'
+import { Sidebar } from '../components/Sidebar'
+import { TopNav } from '../components/TopNav'
 
 export const metadata: Metadata = {
   title: 'Calibrate Documentation',
-  description: 'API documentation and guides for Calibrate pricing platform',
+  description: 'The AI-native pricing control plane for commerce. API documentation and guides for Calibrate pricing platform.',
+  themeColor: '#008080',
   icons: {
     icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
     ],
-    apple: '/apple-touch-icon.png',
+    apple: [{ url: '/icon-512.png' }],
   },
+  manifest: '/manifest.webmanifest',
   openGraph: {
     title: 'Calibrate Documentation',
-    description: 'API documentation and guides for Calibrate pricing platform',
-    images: '/og-image.png',
+    description: 'The AI-native pricing control plane for commerce. API documentation and guides for Calibrate pricing platform.',
+    type: 'website',
   },
 }
 
@@ -25,8 +30,101 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet" />
+      </head>
       <body className="min-h-screen bg-[color:var(--bg)] text-[color:var(--fg)]">
-        {children}
+        <div className="flex flex-col min-h-screen">
+          {/* Navigation Header */}
+          <TopNav />
+
+          {/* Main Content with Sidebar */}
+          <div className="flex flex-1 overflow-hidden">
+            <Sidebar />
+            <main className="flex-1 overflow-y-auto min-h-[calc(100vh-4rem)]">
+              {children}
+            </main>
+          </div>
+
+          {/* Footer */}
+          <footer className="border-t border-[color:var(--border)] bg-[color:var(--surface)]">
+            <div className="mx-auto max-w-7xl px-6 py-12">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div className="md:col-span-2">
+                  <div className="flex items-center gap-2 mb-4">
+                    <svg className="icon" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)]" />
+                      <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
+                      <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--brand)] opacity-60" />
+                      <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" className="text-[color:var(--accent)]" />
+                    </svg>
+                    <span className="font-semibold text-[color:var(--brand)]">Calibrate</span>
+                  </div>
+                  <p className="text-sm text-[color:var(--mute)] max-w-md">
+                    Complete guide to using the Calibrate pricing management platform. Learn how to manage your product catalog, automate pricing, and integrate with your systems.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[color:var(--fg)] mb-3">Documentation</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li>
+                      <Link href="/console/getting-started" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Getting Started
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/console/catalog" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Catalog
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/console/price-changes" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Price Changes
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/console/integrations" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Integrations
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[color:var(--fg)] mb-3">Resources</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li>
+                      <Link href="/api-spec" target="_blank" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        API Reference
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/console/best-practices" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Best Practices
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/console/troubleshooting" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Troubleshooting
+                      </Link>
+                    </li>
+                    <li>
+                      <a href="https://calibr.lat" className="text-[color:var(--mute)] hover:text-[color:var(--brand)] transition-colors">
+                        Main Site
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="mt-8 pt-8 border-t border-[color:var(--border)]">
+                <p className="text-xs text-[color:var(--mute)] text-center">
+                  © {new Date().getFullYear()} Calibrate. All rights reserved.
+                </p>
+              </div>
+            </div>
+          </footer>
+        </div>
       </body>
     </html>
   )

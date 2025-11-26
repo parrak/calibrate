@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://calibr.lat/schemas/pricing-rule-selector.json",
+  "title": "Pricing Rule Selector Schema",
+  "description": "Schema for defining product selection criteria in pricing rules",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/definitions/andCondition" },
+    { "$ref": "#/definitions/orCondition" },
+    { "$ref": "#/definitions/singleCondition" }
+  ],
+  "definitions": {
+    "andCondition": {
+      "type": "object",
+      "required": ["and"],
+      "properties": {
+        "and": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/condition" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "orCondition": {
+      "type": "object",
+      "required": ["or"],
+      "properties": {
+        "or": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/condition" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "singleCondition": {
+      "$ref": "#/definitions/condition"
+    },
+    "condition": {
+      "oneOf": [
+        { "$ref": "#/definitions/allCondition" },
+        { "$ref": "#/definitions/tagCondition" },
+        { "$ref": "#/definitions/skuCondition" },
+        { "$ref": "#/definitions/priceCondition" },
+        { "$ref": "#/definitions/customCondition" },
+        { "$ref": "#/definitions/andCondition" },
+        { "$ref": "#/definitions/orCondition" }
+      ]
+    },
+    "allCondition": {
+      "type": "object",
+      "required": ["all"],
+      "properties": {
+        "all": { "type": "boolean", "enum": [true] }
+      },
+      "additionalProperties": false
+    },
+    "tagCondition": {
+      "type": "object",
+      "required": ["tag"],
+      "properties": {
+        "tag": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "skuCondition": {
+      "type": "object",
+      "required": ["sku"],
+      "properties": {
+        "sku": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "priceCondition": {
+      "type": "object",
+      "required": ["price"],
+      "properties": {
+        "price": {
+          "type": "object",
+          "properties": {
+            "gt": { "type": "number", "minimum": 0 },
+            "gte": { "type": "number", "minimum": 0 },
+            "lt": { "type": "number", "minimum": 0 },
+            "lte": { "type": "number", "minimum": 0 },
+            "eq": { "type": "number", "minimum": 0 },
+            "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+          },
+          "anyOf": [
+            { "required": ["gt"] },
+            { "required": ["gte"] },
+            { "required": ["lt"] },
+            { "required": ["lte"] },
+            { "required": ["eq"] }
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "customCondition": {
+      "type": "object",
+      "required": ["field", "op", "value"],
+      "properties": {
+        "field": { "type": "string", "minLength": 1 },
+        "op": {
+          "type": "string",
+          "enum": ["eq", "ne", "gt", "gte", "lt", "lte", "in", "contains", "startsWith", "endsWith"]
+        },
+        "value": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "number" },
+            { "type": "boolean" },
+            { "type": "array", "items": {} }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

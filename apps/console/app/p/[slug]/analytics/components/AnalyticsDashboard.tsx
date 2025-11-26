@@ -22,13 +22,15 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
     setError(null)
 
     try {
-      // Get project ID from slug (simplified - in production would query API)
+      // Use API base URL from environment
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
       const response = await fetch(
-        `/api/v1/analytics/${projectSlug}?days=${days}`
+        `${apiBase}/api/v1/analytics/${projectSlug}?days=${days}`
       )
 
       if (!response.ok) {
-        throw new Error('Failed to fetch analytics')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || errorData.error || 'Failed to fetch analytics')
       }
 
       const analytics = await response.json()
@@ -151,24 +153,30 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
             <div className="bg-white rounded-lg border p-6">
               <h2 className="text-xl font-semibold mb-4">Recent Products</h2>
               <div className="space-y-3">
-                {data.topPerformers.bySales.slice(0, 5).map((item: SkuPerformance) => (
-                  <div
-                    key={item.sku}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded"
-                  >
-                    <div>
-                      <div className="font-medium">{item.sku}</div>
-                      {item.name && (
-                        <div className="text-sm text-gray-500">{item.name}</div>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        ${(item.price / 100).toFixed(2)}
+                {Array.from(
+                  new Map(
+                    data.topPerformers.bySales.map((item: SkuPerformance) => [item.sku, item])
+                  ).values()
+                )
+                  .slice(0, 5)
+                  .map((item: SkuPerformance) => (
+                    <div
+                      key={item.sku}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded"
+                    >
+                      <div>
+                        <div className="font-medium">{item.sku}</div>
+                        {item.name && (
+                          <div className="text-sm text-gray-500">{item.name}</div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">
+                          ${(item.price / 100).toFixed(2)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           )}

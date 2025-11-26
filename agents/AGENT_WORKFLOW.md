@@ -122,6 +122,9 @@ Implement the full Price Changes MVP and core pricing workflow APIs while mainta
   - Live Shopify connector now called when applying price changes
   - Records variant metadata and surfaces connector errors with tests
   - Fixed Shopify sync SSL error (PR #15)
+- ✅ **COMPLETE (Jan 3, 2025)** - Shopify OAuth (App Bridge) + catalog sync to Product/PriceVersion.
+  - Added App Bridge-aware OAuth handshake with HMAC validation and connector onboarding via `/api/platforms/shopify`.
+  - Persisted Shopify products/variants into `Product`, `Sku`, `Price`, and `PriceVersion` records with price history tracking.
 - Policy templates (max delta percent, floor or ceiling, daily limit).
 - Notifications (Slack plus email) on large deltas.
 - Connector retries plus idempotent event queue.

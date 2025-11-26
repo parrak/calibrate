@@ -14,8 +14,9 @@ export default function LoginPage({ searchParams }: { searchParams?: { callbackU
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Calibrate Console
+          <h1 className="text-3xl font-bold mb-2">
+            <span style={{ color: 'var(--brand)' }}>Calibrate</span>{' '}
+            <span className="text-gray-900">Console</span>
           </h1>
           <p className="text-gray-600">
             Smart pricing platform for enterprise
@@ -37,13 +38,15 @@ export default function LoginPage({ searchParams }: { searchParams?: { callbackU
         </div>
 
         <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="text-xs text-gray-500 space-y-1">
-            <p className="font-semibold text-gray-700 mb-2">
-              Quick access:
-            </p>
-            <p>• admin@calibr.lat - Admin user</p>
-            <p>• demo@calibr.lat - Demo user</p>
-          </div>
+          <details className="text-xs text-gray-500">
+            <summary className="font-semibold text-gray-700 mb-2 cursor-pointer hover:text-blue-600 transition-colors">
+              Demo Credentials (click to show)
+            </summary>
+            <div className="mt-2 space-y-1 ml-2">
+              <p>• <span className="font-mono">admin@calibr.lat</span> / <span className="font-mono">Admin1234!</span> - Admin user</p>
+              <p>• <span className="font-mono">demo@calibr.lat</span> / <span className="font-mono">Demo1234!</span> - Demo user</p>
+            </div>
+          </details>
         </div>
       </div>
     </div>

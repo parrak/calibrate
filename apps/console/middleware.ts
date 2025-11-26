@@ -37,5 +37,16 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - _rsc (React Server Components)
+     * - files with extensions (e.g., .png, .jpg, .svg)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|_rsc|.*\\..*).*)',
+  ],
 }

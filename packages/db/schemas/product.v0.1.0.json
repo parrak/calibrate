@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://calibr.lat/schemas/product/v0.1.0",
+  "title": "Product",
+  "description": "M0.1 Product schema - catalog item with pricing",
+  "type": "object",
+  "required": [
+    "id",
+    "tenantId",
+    "projectId",
+    "sku",
+    "title",
+    "active"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier"
+    },
+    "tenantId": {
+      "type": "string",
+      "description": "Tenant ID (RLS scope)"
+    },
+    "projectId": {
+      "type": "string",
+      "description": "Project ID"
+    },
+    "sku": {
+      "type": "string",
+      "description": "Canonical SKU"
+    },
+    "title": {
+      "type": "string",
+      "description": "Product title"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Product tags for filtering"
+    },
+    "channelRefs": {
+      "type": "object",
+      "description": "Connector-specific references (Shopify ID, etc.)",
+      "additionalProperties": true
+    },
+    "active": {
+      "type": "boolean",
+      "description": "Active status"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

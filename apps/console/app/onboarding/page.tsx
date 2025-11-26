@@ -14,7 +14,7 @@ export default async function OnboardingWelcome() {
       <div className="max-w-2xl w-full">
         <div className="bg-white rounded-lg shadow-lg p-8 md:p-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Welcome to Calibrate, {session.user.name || session.user.email}!
+            Welcome to <span style={{ color: 'var(--brand)' }}>Calibrate</span>, {session.user.name || session.user.email}!
           </h1>
 
           <p className="text-lg text-gray-600 mb-8">

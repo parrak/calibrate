@@ -2,11 +2,49 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
 import { withSecurity } from '@/lib/security-headers'
 import { createId } from '@paralleldrive/cuid2'
+import { authSecurityManager, type AuthContext } from '@/lib/auth-security'
 
 const db = () => prisma()
 
+function requireAuth(request: NextRequest): { error?: NextResponse; session?: AuthContext } {
+  const authHeader = request.headers.get('authorization') || request.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return {
+      error: NextResponse.json(
+        {
+          error: 'Authentication required',
+          message: 'Valid authentication token required'
+        },
+        { status: 401 }
+      )
+    }
+  }
+
+  const token = authHeader.substring(7).trim()
+  const session = authSecurityManager.validateSessionToken(token)
+  if (!session || !session.userId) {
+    return {
+      error: NextResponse.json(
+        {
+          error: 'Authentication required',
+          message: 'Invalid session token'
+        },
+        { status: 401 }
+      )
+    }
+  }
+
+  return { session }
+}
+
 export const GET = withSecurity(async (request: NextRequest) => {
   try {
+    // Require authentication
+    const authCheck = requireAuth(request)
+    if (authCheck.error) {
+      return authCheck.error
+    }
+
     const { searchParams } = new URL(request.url)
     const projectSlug = searchParams.get('projectSlug')
 
@@ -50,6 +88,12 @@ export const GET = withSecurity(async (request: NextRequest) => {
 
 export const POST = withSecurity(async (request: NextRequest) => {
   try {
+    // Require authentication
+    const authCheck = requireAuth(request)
+    if (authCheck.error) {
+      return authCheck.error
+    }
+
     const body = await request.json()
     const { projectSlug, name, domain, channel } = body
 

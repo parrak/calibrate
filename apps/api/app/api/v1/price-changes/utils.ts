@@ -5,7 +5,7 @@ import { authSecurityManager, type AuthContext } from '@/lib/auth-security'
 // Define types that should come from Prisma but aren't exported
 type ProjectRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER'
 type Membership = { id: string; userId: string; projectId: string; role: ProjectRole }
-type Project = { id: string; slug: string }
+type Project = { id: string; slug: string; tenantId: string }
 type PriceChange = {
   id: string
   status: string
@@ -21,6 +21,7 @@ type PriceChange = {
   connectorStatus: Prisma.JsonValue | null
   projectId: string
   skuId: string
+  variantId: string | null
 }
 
 export type ConnectorState = 'QUEUED' | 'SYNCING' | 'SYNCED' | 'ERROR'
@@ -79,7 +80,7 @@ export async function requireProjectAccess(
   minRole: ProjectRole = 'VIEWER'
 ): Promise<
   | {
-      session: AuthContext
+      session: AuthContext & { userId: string }
       project: Project
       membership: Membership
     }
@@ -95,6 +96,7 @@ export async function requireProjectAccess(
   if (!session || !session.userId) {
     return { error: { status: 401, error: 'Unauthorized', message: 'Invalid session token' } }
   }
+  const sessionWithUser: AuthContext & { userId: string } = { ...session, userId: session.userId }
 
   const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
   if (!project) {
@@ -124,7 +126,7 @@ export async function requireProjectAccess(
     }
   }
 
-  return { session, project, membership }
+  return { session: sessionWithUser, project, membership }
 }
 
 export function errorJson(err: ApiErrorShape) {
@@ -231,8 +233,14 @@ export async function getPCForProject(id: string, projectSlug: string) {
   return { pc, project }
 }
 
-export function resolveShopifyVariantId(pc: PriceChange): string | null {
+export async function resolveShopifyVariantId(pc: PriceChange): Promise<string | null> {
   const tryValue = (value: unknown): string | null => extractString(value)
+
+  // First, check the direct variantId field on the PriceChange model (most reliable)
+  if (pc.variantId) {
+    const resolved = tryValue(pc.variantId)
+    if (resolved) return resolved
+  }
 
   const ctx = (pc.context ?? undefined) as Record<string, unknown> | undefined
   if (ctx) {
@@ -269,6 +277,25 @@ export function resolveShopifyVariantId(pc: PriceChange): string | null {
         tryValue((metadata as Record<string, unknown>).externalId)
       if (resolved) return resolved
     }
+  }
+
+  // If not found in context or connectorStatus, look it up from the SKU's attributes
+  try {
+    const sku = await prisma().sku.findUnique({
+      where: { id: pc.skuId },
+      select: { attributes: true },
+    })
+
+    if (sku?.attributes && typeof sku.attributes === 'object') {
+      const attributes = sku.attributes as Record<string, unknown>
+      const shopifyAttrs = attributes.shopify
+      if (shopifyAttrs && typeof shopifyAttrs === 'object') {
+        const variantId = tryValue((shopifyAttrs as Record<string, unknown>).variantId)
+        if (variantId) return variantId
+      }
+    }
+  } catch (error) {
+    console.error('Failed to look up variant ID from SKU attributes:', error)
   }
 
   return null

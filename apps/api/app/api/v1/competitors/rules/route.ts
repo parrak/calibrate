@@ -74,3 +74,10 @@ export const POST = withSecurity(async (request: NextRequest) => {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 })
+
+/**
+ * OPTIONS handler for CORS preflight
+ */
+export const OPTIONS = withSecurity(async (_req: NextRequest) => {
+  return new NextResponse(null, { status: 204 });
+})

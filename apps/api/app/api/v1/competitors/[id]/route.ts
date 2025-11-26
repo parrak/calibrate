@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
+import { withSecurity } from '@/lib/security-headers'
 
 const db = () => prisma()
 
-export async function GET(
+export const GET = withSecurity(async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context?: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!context?.params) {
+      return NextResponse.json({ error: 'Missing route context' }, { status: 500 })
+    }
     const { id } = await context.params
     const competitor = await db().competitor.findUnique({
       where: { id },
@@ -33,13 +37,16 @@ export async function GET(
     console.error('Error fetching competitor:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function PUT(
+export const PUT = withSecurity(async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context?: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!context?.params) {
+      return NextResponse.json({ error: 'Missing route context' }, { status: 500 })
+    }
     const body = await request.json()
     const { name, domain, channel, isActive } = body
     const { id } = await context.params
@@ -59,13 +66,16 @@ export async function PUT(
     console.error('Error updating competitor:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function DELETE(
+export const DELETE = withSecurity(async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context?: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!context?.params) {
+      return NextResponse.json({ error: 'Missing route context' }, { status: 500 })
+    }
     const { id } = await context.params
     await db().competitor.delete({
       where: { id }
@@ -76,4 +86,11 @@ export async function DELETE(
     console.error('Error deleting competitor:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
+
+/**
+ * OPTIONS handler for CORS preflight
+ */
+export const OPTIONS = withSecurity(async (_req: NextRequest) => {
+  return new NextResponse(null, { status: 204 });
+})

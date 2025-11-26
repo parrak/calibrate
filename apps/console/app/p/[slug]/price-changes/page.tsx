@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import clsx from 'clsx'
-import { Button, Drawer, DiffCard, EmptyState, JSONView, PolicyList, StatusPill, useToast } from '@/lib/components'
+import { Button, Drawer, DiffCard, EmptyState, PolicyList, StatusPill, useToast } from '@/lib/components'
 import { SimpleTable as Table } from '@/lib/components/SimpleTable'
 import { AIExplanation } from './components/AIExplanation'
 
@@ -61,7 +61,7 @@ const CONNECTOR_COLOR: Record<ConnectorState, string> = {
   ERROR: 'bg-red-900/60 text-red-200',
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ''
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
 
 const formatCurrency = (currency: string, amount: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount / 100)
@@ -171,7 +171,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
 
           // For auth errors, show helpful message
           if (res.status === 401) {
-            setError('Authentication failed. Please sign out and sign in again.')
+            setError('Authentication failed: API session token is missing. This feature requires CONSOLE_INTERNAL_TOKEN environment variable to be configured. Please contact your system administrator.')
             setItems([])
             setCursor(undefined)
             cursorRef.current = undefined
@@ -362,9 +362,9 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
             <button
               key={option.value}
               className={clsx(
-                'rounded-full px-3 py-1 text-sm text-white font-medium transition',
+                'rounded-full px-3 py-1 text-sm font-medium transition',
                 status === option.value
-                  ? option.color
+                  ? `${option.color} text-white`
                   : 'bg-surface/50 border border-border text-mute hover:bg-surface hover:text-fg'
               )}
               onClick={() => {
@@ -377,6 +377,20 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
           ))}
         </div>
       </header>
+
+      {/* Workflow Guidance Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="text-blue-600 text-xl shrink-0" aria-hidden="true">ℹ️</div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-blue-900 mb-1">Two-Step Approval Process</h3>
+            <p className="text-xs text-gray-700">
+              Price changes require two separate actions: <strong>Approve</strong> (review and validate) → <strong>Apply</strong> (sync to platform).
+              Approved changes are NOT automatically applied — you must explicitly click "Apply" to push changes live.
+            </p>
+          </div>
+        </div>
+      </div>
 
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -402,7 +416,7 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
         {initialized && items.length === 0 && !loading && !error && (
           <EmptyState
             title="No price changes yet"
-            desc="When Calibr generates new price suggestions you'll see them here."
+            desc="When Calibrate generates new price suggestions you'll see them here."
           />
         )}
 
@@ -410,9 +424,15 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
           <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
             <div className="font-medium mb-1">{error}</div>
             {error.includes('Authentication failed') && (
-              <div className="text-xs text-red-300 mt-2">
-                This usually means the API authentication token is missing or invalid.
-                Please ensure CONSOLE_INTERNAL_TOKEN is configured correctly in both Console and API environments.
+              <div className="text-xs text-red-300 mt-2 space-y-1">
+                <div><strong>Why is this happening?</strong> The API authentication token could not be generated.</div>
+                <div><strong>What you need:</strong></div>
+                <ul className="list-disc list-inside ml-2">
+                  <li>Environment variable <code className="bg-red-900/40 px-1 rounded">CONSOLE_INTERNAL_TOKEN</code> must be set in the Console app</li>
+                  <li>Environment variable <code className="bg-red-900/40 px-1 rounded">NEXT_PUBLIC_API_BASE</code> or <code className="bg-red-900/40 px-1 rounded">API_BASE_URL</code> must be set</li>
+                  <li>The API must be accessible and configured to accept the internal token</li>
+                </ul>
+                <div className="mt-2"><strong>Next steps:</strong> Contact your system administrator to configure these environment variables, then sign out and sign back in.</div>
               </div>
             )}
           </div>
@@ -573,7 +593,24 @@ export default function PriceChangesPage({ params }: { params: { slug: string } 
 
             <div>
               <div className="mb-2 text-sm font-medium">Context</div>
-              <JSONView value={active.context} />
+              <div className="rounded-xl border border-border bg-surface p-4 space-y-2 text-sm">
+                {active.context && Object.keys(active.context).length > 0 ? (
+                  Object.entries(active.context).map(([key, value]) => (
+                    <div key={key} className="flex flex-col gap-1">
+                      <span className="text-xs text-mute capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
+                      </span>
+                      <span className="font-medium">
+                        {typeof value === 'object' && value !== null
+                          ? JSON.stringify(value)
+                          : String(value)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-mute">No context data available</span>
+                )}
+              </div>
             </div>
 
             {active.connectorStatus?.state === 'ERROR' && canApply && (

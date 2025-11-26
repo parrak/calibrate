@@ -6,13 +6,400 @@ The format is based on Keep a Changelog and follows semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **M1.7 Automation Runner UI Enhancements** — January 2025 ✅ MILESTONE
+  - **Automation Runs Page**: New `/p/[slug]/automation/runs` page for monitoring rule executions
+    - Runs table with status filters (Preview, Queued, Applying, Applied, Failed, Rolled Back)
+    - Real-time progress monitoring via polling (updates every 2 seconds)
+    - Target status breakdown showing applied/failed/queued counts
+    - Status badges with color coding for quick visual identification
+  - **Run Detail Drawer**: Comprehensive view of individual run executions
+    - **Overview Tab**: Status, timestamps, target counts, error messages
+    - **Explain Tab**: Transform JSON and explain trace for debugging
+    - **Targets Tab**: Complete list of all product price changes with before/after snapshots
+    - **Audit Trail Tab**: Full history of actions taken on the run
+  - **Retry Failed Functionality**: Ability to retry failed price updates without re-running entire rules
+    - "Retry Failed" button in runs table and detail drawer
+    - Resets failed targets to QUEUED status for worker reprocessing
+    - Toast notifications for retry status updates
+  - **Progress Indicators**: Real-time monitoring of active runs
+    - Progress percentage and completion counts (e.g., "50% (10/20)")
+    - Automatic polling for QUEUED and APPLYING runs
+    - Toast notifications when runs complete or fail
+  - **API Endpoints**: New REST API for automation runs management
+    - `GET /api/v1/runs` - List runs with filters and pagination
+    - `GET /api/v1/runs/:runId` - Get run details with targets and audit events
+    - `POST /api/v1/runs/:runId/retry-failed` - Retry failed targets
+    - `GET /api/v1/runs/:runId/progress` - Polling endpoint for progress updates
+  - **Documentation**: User-facing documentation for Automation Runs
+    - Complete guide at `/console/automation-runs` in docs site
+    - Explains run statuses, progress monitoring, retry functionality
+    - Best practices and troubleshooting sections
+    - Added to sidebar navigation under Core Features
+  - **StatusPill Component**: Extended to support all run statuses (PREVIEW, QUEUED, APPLYING, APPLIED, FAILED, ROLLED_BACK)
+  - **Test Coverage**: Comprehensive test suite with 11 test cases covering all major functionality
+  - **Files Changed**: 8 new files, 3 modified files
+    - API: 4 new route files for runs management
+    - UI: 1 new page component with full functionality
+    - Tests: 1 comprehensive test file
+    - Docs: 1 new documentation page
+    - Components: Updated StatusPill and Sidebar
+  - See `agents/docs/_EXECUTION_PACKET_V2/04_KICKOFF_CHECKLIST.md` for milestone details
+
+- **Ready-For-Automation Gate — Complete (8/8)** — Completed November 26, 2025 🏆 MILESTONE COMPLETE
+  - **GATE COMPLETE**: All 8 requirements met, platform ready for automation features
+  - **Comprehensive Staging Validation**: 350+ automated tests across 14 packages
+    - Security: 27 tests (encryption, integration)
+    - Analytics: 7 tests (aggregation)
+    - Monitor: 4 tests (logging)
+    - AI Engine: 19 tests (price suggestions)
+    - Automation Runner: 41 tests (backoff, retry logic)
+    - Pricing Engine: 36 tests (rules DSL, policy evaluation)
+    - Platform Connector: 47 tests (base functionality)
+    - Shopify Connector: 137 tests (OAuth, products, pricing, webhooks)
+    - Amazon Connector: 8 tests (SP-API auth, catalog ingest)
+    - Competitor Monitoring: 31 tests (scrapers, monitoring engine)
+    - API: Multiple test suites (endpoints, regression)
+    - Console: Multiple test suites (UI components)
+  - **Type Safety Verification**: 100% TypeScript type checking (13/13 packages)
+  - **Feature Validation**:
+    - Shopify Connector: Production ready (137 tests passing)
+    - Amazon Connector: Read-only validated (8/8 tests passing)
+    - Competitor Monitoring: Backend complete (31 tests passing)
+    - AI Copilot: Production ready (M1.4 complete)
+    - Pricing Engine: Ready (M1.1 complete)
+    - Automation Runner: Ready (41 tests passing)
+  - **Deployment Configuration Verification**:
+    - Railway API configuration validated
+    - Vercel frontend configurations validated (Console, Site, Docs)
+    - Database migrations ready
+    - Environment variables documented
+  - **New Validation Tooling**:
+    - `scripts/validate-staging.sh` — Automated staging validation script
+    - Support for both staging and production environments
+    - Health check validation for all services
+    - API endpoint testing (auth required/not required)
+    - Feature flag verification
+    - Summary reporting with pass/fail metrics
+  - **Documentation**:
+    - `docs/STAGING_VALIDATION_ACCEPTANCE_REPORT.md` (400+ lines)
+    - Complete test results and security review
+    - Deployment readiness assessment
+    - Sign-off and recommendations
+  - **Gate Requirements Met**:
+    1. ✅ Engine supports schedule + revert
+    2. ✅ Audit/explain complete
+    3. ✅ Console shows lineage
+    4. ✅ Connectors resilient (retry/backoff)
+    5. ✅ Error surfacing
+    6. ✅ Health checks
+    7. ✅ Amazon validation (M0.4)
+    8. ✅ Staging deployment validation (this milestone)
+  - **Updated Tracking Files**:
+    - `TODO.md` — Gate completion documented
+    - `agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md` — Recent progress updated
+    - `agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md` — Gate marked complete
+  - **Total Changes**: 3 files changed, 796 lines added
+  - **Next Steps**: M1.8 (Automation Runner), M1.9 (Copilot Simulation)
+  - **Status**: Platform validated and ready for automation features
+
+- **Automation Runner Foundation M0.5 — Phase 1** — Completed November 13, 2025 🚧 PHASE 1 COMPLETE
+  - **M0.5 Phase 1 COMPLETE**: Core infrastructure for bulk pricing rule execution (50% of milestone)
+  - **Database Schema Extensions**: Extended RuleRun and RuleTarget models for automation
+    - `RuleRun`: Added `queuedAt` (DateTime), `metadata` (Json) fields
+    - `RuleTarget`: Added `skuId` (String), `attempts` (Int), `lastAttempt` (DateTime), `appliedAt` (DateTime)
+    - New status values: `PARTIAL` in RuleRunStatus, `APPLYING` in RuleTargetStatus
+    - Migration: `20251113000000_add_automation_runner_fields`
+    - Indexes: `RuleRun_queuedAt_idx`, `RuleTarget_status_lastAttempt_idx`, `RuleTarget_skuId_idx`
+  - **New Package**: `@calibr/automation-runner` (packages/automation-runner)
+    - `types.ts` (216 lines): RulesWorkerConfig, BackoffOptions, ReconciliationReport, DLQEntry, WorkerEventPayload
+    - `config.ts` (139 lines): DEFAULT_WORKER_CONFIG, DEFAULT_BACKOFF_OPTIONS, RATE_LIMIT_BACKOFF_OPTIONS, circuit breaker, DLQ, reconciliation configs
+    - `backoff.ts` (260 lines): calculateBackoff, handle429Error, isRetryableError, retryWithBackoff, sleep, getRetrySchedule
+  - **Retry Logic Features**:
+    - Exponential backoff with jitter (2s → 4s → 8s with ±20% variance)
+    - Smart 429 rate limit handling (16s → 32s → 64s with Retry-After header support)
+    - Error classification (retryable: network/5xx/429, non-retryable: 4xx)
+    - Max retry enforcement with DLQ fallback
+  - **Comprehensive Test Suite**: 38 test cases with 100% backoff logic coverage
+    - `backoff.test.ts` (546 lines): Unit + integration tests
+    - 7 calculateBackoff tests, 7 handle429Error tests, 7 isRetryableError tests
+    - 3 calculateNextRetry tests, 2 sleep tests, 6 retryWithBackoff tests, 6 getRetrySchedule tests
+    - Integration tests: Shopify rate limits, network timeouts, batch processing
+  - **Documentation**:
+    - `state-machine.md` (500+ lines): RuleRun (7 states, 9 transitions) and RuleTarget (6 states, 7 transitions) state machines
+    - Updated `NOVEMBER_2025_PROGRESS.md` with Phase 1 completion details (Section 6)
+    - Updated `04_KICKOFF_CHECKLIST.md` marking Phase 1 items complete
+    - Created `NEXT_TASK_PLAN.md` (1,255 lines): 30-day roadmap with Priority 1-4 tasks
+  - **CI/CD Improvements**:
+    - Added test/typecheck dependency on `@calibr/db#generate` in turbo.json
+    - Added `.eslintrc.js` and eslint devDependencies to automation-runner package
+    - Added `@calibr/automation-runner/*` path mapping to root tsconfig.json
+  - **Total Changes**: 13 files changed, 3,598 lines added
+  - **Next Phase**: M1.6 — Worker execution layer, DLQ drain job, reconciliation pass
+  - See `PR_106_DESCRIPTION.md` for comprehensive changelog and review guide
+
+- **Competitor Monitoring M0.6 E2E** — Completed January 11, 2025 ✅ MILESTONE
+  - **M0.6 COMPLETE**: Competitor monitoring E2E flow from 70% → 100% complete
+  - **Analytics Integration**: Created `/api/v1/competitors/analytics` endpoint (171 lines)
+    - Real-time price comparisons across competitors
+    - Market insights dashboard (lowest/highest/middle position)
+    - Integration with pricing engine's `getCompetitorInsights()`
+    - Authentication support with session tokens
+  - **CompetitorAnalytics Component**: Fully integrated with real-time data
+    - Removed mock data, connected to live API
+    - Added error handling with retry and sign-out options
+    - Market position tracking with visual indicators
+    - Per-SKU price comparisons with competitor breakdown
+    - Sale indicators and price spread analysis
+  - **Error Monitoring & Alerts**: 4 new alert policies in `packages/monitor/src/alerts.ts`
+    - `competitor_scrape_error_rate_high` — Warning when >1% error rate in 24h
+    - `competitor_scrape_error_rate_critical` — Critical when >5% error rate in 24h
+    - `competitor_scrape_consecutive_failures` — Warning when competitor has 3+ consecutive failures
+    - `competitor_monitor_stale` — Warning when competitor not monitored in 24h
+  - **Error Rate Validation Script**: `scripts/validate-competitor-error-rate.ts` (236 lines)
+    - Validates error rate < 1% per 24h across all tenants
+    - Tracks consecutive failures and stale competitors
+    - CI/CD integration ready with exit codes (0 = pass, 1 = fail)
+    - Configurable threshold and time window parameters
+  - **Component Flow**: CompetitorMonitor ↔ Analytics ↔ Rules verified E2E
+    - Added Analytics tab to competitors page (3-tab layout)
+    - All components integrated with authentication
+    - Real-time data flow validated end-to-end
+  - **Documentation**: Updated `docs/misc/COMPETITOR_MONITORING.md` with M0.6 status
+    - Added Error Monitoring & Validation section
+    - Documented alert policies and validation script
+    - Created `M0.6_COMPLETION_SUMMARY.md` (360+ lines)
+  - **Test Coverage**: 712 lines validated across CompetitorMonitor + CompetitorRules
+  - **Files Changed**: 8 files (3 new, 5 modified), ~550 lines added
+  - See `M0.6_COMPLETION_SUMMARY.md` for full completion report
+
+- **Calibrate Branding Update v1** — November 2025
+  - Implemented new brand color system across all apps (site, console, docs)
+    - L1 (Light Teal): `#80D9D9`, L2 (Mid Teal): `#00A3A3` - Primary brand color, L3 (Deep Teal): `#008080` - Accent and theme color
+    - Navy: `#001845` for text, Background: `#F8FAFF`
+    - Gradient: `linear-gradient(90deg, #80D9D9 0%, #00A3A3 50%, #008080 100%)`
+  - Updated typography: Inter SemiBold (600) for headings, IBM Plex Mono for code
+  - Created dynamic icon system using Next.js App Router (`icon.tsx`, `apple-icon.tsx`)
+    - All icons use teal-colored logo image from branding assets
+    - Icons automatically generated at build time with fallback to teal gradient
+  - Updated OpenGraph images with new teal brand colors and tagline
+  - Added branding packet structure with style guide and usage examples
+  - Updated metadata across all apps with new tagline: "The AI-native pricing control plane for commerce"
+  - Theme color set to `#008080` (Deep Teal) for browser UI elements
+  - Added Tailwind color tokens for brand colors (`cb-teal-100`, `cb-teal-500`, `cb-teal-800`) and gradient stops
+  - Added logo image to all app headers (site, console, docs)
+  - Updated all "Calibr" references to "Calibrate" in visible text and documentation
+
+### Changed
+- **Branding Colors**: Migrated to teal color palette (Light Teal → Mid Teal → Deep Teal gradient)
+- **Favicon System**: Switched from static files to Next.js dynamic icon generation
+- **Typography**: Updated monospace font from JetBrains Mono to IBM Plex Mono
+- **Site Tagline**: Updated to "The AI-native pricing control plane for commerce"
+
+### Added
+- **Docs Site Modernization** (PR #91) — Completed Jan 2, 2025
+  - Modernized docs.calibr.lat with Stripe-inspired design
+  - Added sidebar navigation with hierarchical menu structure
+  - Implemented responsive mobile menu with hamburger button
+  - Updated color scheme to match console app (light theme: #F6F9FC background, #0A2540 text)
+  - Migrated from hardcoded Tailwind colors to CSS variables for consistency
+  - Added vitest test setup and Sidebar component tests (3 tests, all passing)
+  - Improved typography, spacing, and overall UX
+  - All PR checks passing (lint, typecheck, build, tests)
+
+- **Amazon M0.4 Connector Validation** (PR #85) — Completed Nov 10, 2025 ✅ MILESTONE
+  - **M0.4 COMPLETE**: Amazon connector validated and ready for automation gate
+  - Created comprehensive 812-line acceptance report (`M0.4_ACCEPTANCE_REPORT.md`)
+  - **Test Results**: 8/8 tests passing (100% pass rate)
+    - ✅ Configuration loading and dry-run mode
+    - ✅ Price change operations without credentials
+    - ✅ Connector registry interface compliance
+    - ✅ Feed status polling and parsing
+    - ✅ Competitive pricing data retrieval
+  - **Feature Flag System**: `AMAZON_CONNECTOR_ENABLED` implemented
+    - Added to `.env.example` with documentation
+    - Protected API endpoints (`/api/platforms/amazon/catalog`, `/api/platforms/amazon/catalog/cron`)
+    - Feature flag checked in staging config
+  - **Database Schema Validation**: Multi-connector architecture confirmed
+    - Product model supports flexible `channelRefs` JSON for platform-specific metadata
+    - Unique constraints prevent duplicate products across channels
+    - SKU model handles variant-level data with proper relationships
+    - Price/PriceVersion tables support cross-connector price history
+  - **Dry-Run Mode**: Fully functional without real credentials for safe testing
+  - **Catalog Ingest**: Complete implementation with database persistence
+  - **Ready-For-Automation Gate**: 7/8 requirements now met (87.5% complete)
+  - Validation duration: 4 hours | Confidence: HIGH
+  - See `M0.4_ACCEPTANCE_REPORT.md` for full validation details
+
+- **Competitor Monitoring E2E Testing** (PR #83) — Completed Nov 10, 2025 ✅
+  - Created comprehensive E2E test results document (`COMPETITOR_MONITORING_E2E_TEST_RESULTS.md`)
+  - **Authentication Fixes**: Components now properly pass API tokens
+    - Fixed `CompetitorMonitor` component to use `useSession()` hook
+    - Fixed `CompetitorRules` component authentication
+    - Updated `competitorsApi` client to accept optional `token` parameter
+  - **Test Coverage**: 433+ lines of new tests
+    - 207 lines: `CompetitorMonitor.test.tsx` (auth scenarios, error handling)
+    - 226 lines: `CompetitorRules.test.tsx` (rule creation, auth, errors)
+  - **API Validation**: Manual browser testing completed
+    - ✅ CORS working correctly (no preflight errors)
+    - ✅ OPTIONS handlers functional
+    - ✅ Authentication properly enforced
+  - **UI Improvements**: Better error messages
+    - Clear "Sign in required" messages for 401 errors
+    - Sign-out button for auth failures
+    - Graceful error handling with retry options
+  - **Result**: Competitor monitoring fully functional with proper auth
+
+- **Competitor Monitoring QA Validation** (PR #105) — Completed Nov 13, 2025
+  - Documented competitor monitoring QA validation steps and outcomes
+  - Updated TODO.md with November 13, 2025 status refresh for ready-for-automation gate
+  - **Validation Steps Completed**:
+    - ✅ Executed competitor API listing + creation suites via Vitest (`GET /api/v1/competitors`, `POST /api/v1/competitors`)
+    - ✅ Verified monitoring and rule creation console flows through component test harnesses (`CompetitorMonitor`, `CompetitorRules`)
+    - ✅ Confirmed analytics tab renders competitor insights without regressions
+    - ✅ Ensured CORS preflight remains healthy via `OPTIONS` handlers on competitor endpoints
+  - **Test Artifacts**: `apps/api/tests/competitors.test.ts`, `apps/console/components/CompetitorMonitor.test.tsx`, `apps/console/components/CompetitorRules.test.tsx`, `apps/console/app/p/[slug]/rules/page.test.tsx`
+  - **Outcome**: No regressions detected in console UI or API, ready to mark competitor monitoring testing requirement complete in QA tracker
+  - Validation duration: 2 hours | Confidence: HIGH
+
 ### Fixed
+- **Docs Vitest Timeout in CI** (PR #TBD)
+  - Fixed Vitest timeout error when starting forks runner in CI environments
+  - Updated `apps/docs/vitest.config.ts` to use threads pool instead of forks pool
+  - Threads pool starts faster and is more reliable in resource-constrained CI environments
+  - All tests passing locally (3/3 tests in Sidebar.test.tsx)
+  - Resolves "[vitest-pool]: Timeout starting forks runner" error in GitHub Actions
+
+- **Price Change Shopify Variant ID Resolution** (PR #TBD)
+  - Fixed 422 "MissingVariant" error when applying price changes that have `variantId` stored directly on the PriceChange model
+  - Updated `resolveShopifyVariantId` function to check `pc.variantId` field first (most reliable source) before falling back to context JSON, connectorStatus, or SKU attributes
+  - Added `variantId` field to PriceChange type definition to match database schema
+  - Resolves issue where price changes created with direct `variantId` field could not be applied to Shopify
+  - All existing tests passing (18/18)
+
+- **Competitor Monitoring Authentication & Error Handling** (PR #83)
+  - Fixed authentication token not being passed to competitor API calls in CompetitorMonitor and CompetitorRules components
+  - Added clear error messages and sign-out button for authentication failures (401 errors)
+  - Updated `competitorsApi` methods to accept optional `token` parameter for all endpoints
+  - Improved error handling: distinguishes between auth errors (with sign-out option) and generic errors
+  - Added comprehensive test coverage for authentication scenarios and error handling
+  - Components now properly use `useSession()` hook to get and pass API tokens
+
+### Added
+- **Accessibility Improvements (QA Recommendations)**
+  - Comprehensive ARIA labels for all interactive elements (Drawer, Button, StatusPill, AI Assistant)
+  - Mobile-optimized ResponsiveTable component that switches to card layout on mobile devices
+  - Enhanced keyboard navigation with Escape key support, focus management, and proper tab order
+  - WCAG AA compliant color contrast for StatusPill component (all statuses meet 4.5:1 minimum)
+  - User-facing documentation: comprehensive console user guide covering all major features
+  - Screen reader support with `.sr-only` utility class and proper ARIA live regions
+  - Focus indicators with ring-offset for better visibility on all backgrounds
+  - Regression tests for accessibility features (Drawer, Button, StatusPill, ResponsiveTable, AI Assistant)
+  - Accessibility documentation: `ACCESSIBILITY_IMPROVEMENTS.md` and `COLOR_CONTRAST_AUDIT.md`
+
+- **Copilot Read-Only (M1.4) — Intelligence Layer**
+  - Implemented `/api/v1/copilot` endpoint with schema-aware NL→SQL/GraphQL generation using GPT-4
+  - RBAC enforcement: checks user project membership and role (VIEWER, EDITOR, ADMIN, OWNER)
+  - SQL injection guards: validates read-only queries, blocks INSERT/UPDATE/DELETE/DROP operations
+  - Query logging with audit trail: new `CopilotQueryLog` table tracks all queries with resolved schemas and tenant scope
+  - Schema versioning: tracks schema version (1.4.0) for query generation compatibility
+  - Dual query modes: AI-powered (GPT-4) and pattern-based fallback for offline operation
+  - Pattern matching: supports common queries (price explanations, what-if simulations, margin analysis, trend queries)
+  - Cross-tenant isolation: enforces projectId filtering to prevent data leakage
+  - Query metadata: tracks execution time, result counts, user roles, and query types (read/aggregate/explain)
+  - Console UI: new `CopilotDrawer` and `CopilotButton` components for natural language pricing queries
+  - Floating action button: easily accessible copilot interface on all console pages
+  - Suggested queries: context-aware query suggestions to guide users
+  - Analytics digest cron job: daily digest generation with anomaly detection
+  - New `AnalyticsDigest` table: stores daily snapshots with detected anomalies and top performers
+  - Anomaly detection:
+    - Price spikes: detects >20% price increases in 24 hours (severity: medium/high/critical)
+    - Margin compression: flags products with <15% margin after price changes
+    - High volatility: identifies SKUs with >3 price changes in 7 days
+    - Unusual volume: alerts on abnormally high price change counts (>50 in 24h)
+  - Vercel cron integration: scheduled daily at 1:00 AM UTC via `/api/v1/analytics-digest`
+  - Comprehensive test coverage: 18+ tests for copilot queries, RBAC, logging, and anomaly detection
+  - See `agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md` (M1.4) for specification
+
+- **Competitor Monitoring: API Testing & Authentication** (Agent A — Cursor)
+  - Fixed CompetitorMonitor component to use projectSlug for monitoring
+  - Added createRule API method to competitorsApi client
+  - Added security headers (withSecurity wrapper) to all competitor endpoints
+  - Created manual API test script (`scripts/test-competitor-api.ps1`) for endpoint verification
+  - **Added authentication requirement** to GET and POST `/api/v1/competitors` endpoints
+  - **Comprehensive automated test suite** (`apps/api/tests/competitors.test.ts`):
+    - 12 tests covering GET and POST endpoints
+    - Validation tests (missing parameters, project not found, required fields)
+    - Authentication tests (401 without Bearer token, invalid token handling)
+    - Success cases (listing competitors with products/prices, creating competitors)
+  - All tests passing and integrated into PR checks via Turborepo pipeline
+  - Updated 04_kickoff_checklist.md with competitor monitoring testing progress
+
+- **Pricing Engine: Rules DSL and MVP Implementation** (M1.1 — Engine Team)
+  - Implemented complete rules DSL with selector, transform, and schedule definitions
+  - Selector predicates: match by SKU, tags, price range, or custom fields with AND/OR operators
+  - Transform operations: percentage, absolute, set, and multiply with constraint support (floor, ceiling, maxPctDelta)
+  - Preview/dry-run functionality: `previewRule()` to see rule effects without applying changes
+  - Rule simulation mode: `simulateRule()` for "what-if" analysis without creating records
+  - Rule application engine: `applyRule()` creates price changes with explain traces and event emission
+  - Enhanced apply/rollback: `applyPriceChangeEnhanced()` and `rollbackPriceChangeEnhanced()` with full traceability
+  - Explain trace storage: New `ExplainTrace` table stores detailed reasoning for all price change actions
+  - Event emission: All actions emit to `EventLog` with types `pricechange.applied`, `pricechange.rolled_back`, `pricechange.rule.applied`
+  - Comprehensive test coverage: 20+ unit tests for DSL, 8+ integration tests for complete flow
+  - New files: `rules-dsl.ts`, `preview.ts`, `apply-rule.ts`, `apply-price-change-enhanced.ts`, test files
+  - Database schema: Added `ExplainTrace` model with relationships to `PriceChange`, `Project`, and `Tenant`
+  - See `agents/docs/_EXECUTION_PACKET_V2/M1.1_COMPLETION_SUMMARY.md` for complete documentation
+
+### Fixed
+- **Competitor Monitoring: CORS Preflight Issues** (PR #60) — Completed Nov 9, 2025
+  - Added OPTIONS handlers to all competitor API endpoints for CORS preflight requests
+  - Fixed "Failed to fetch" errors when calling competitor endpoints from console
+  - Endpoints updated:
+    - `/api/v1/competitors/monitor` (POST)
+    - `/api/v1/competitors/[id]` (PUT, DELETE)
+    - `/api/v1/competitors/[id]/products` (POST)
+    - `/api/v1/competitors/rules` (POST)
+  - All OPTIONS handlers wrapped with `withSecurity` middleware for consistent CORS headers
+  - Fixes net::ERR_FAILED browser errors during competitor monitoring operations
+
+- **Console & API: Test Failures and Schema Mismatches** (PR #58) — Completed Nov 9, 2025
+  - Fixed mock hoisting issue in regression-schema-mismatch.test.ts by using path alias `@/lib/auth-security`
+  - Fixed status parameter validation test to account for case-insensitive API behavior
+  - Fixed RSC route handling test to check query string for `_rsc` parameter
+  - Fixed M0.1 fields test to check fields after adding them to mock object
+  - All 26 regression tests now passing (8 in regression-schema-mismatch, 18 in regression-console-errors)
+
+- **Shopify Connector: Connection Error Handling** (PR #59) — Completed Nov 9, 2025
+  - Improved Shopify sync connection error handling and diagnostics
+  - Enhanced error messages for better debugging of connection issues
+  - Better handling of rate limits and API failures
+
+- **Competitor Monitoring: Component & API Fixes**
+  - Fixed CompetitorMonitor component to pass projectSlug to monitor API endpoint
+  - Fixed CompetitorRules component to properly create rules via API
+  - Added missing security headers to competitor [id] and [id]/products] routes
+  - Fixed API client to include createRule method for competitor rules
 - **Console: Drawer Component Blocking Interactions**
   - Fixed Drawer component rendering invisible elements when closed that could block page interactions
   - Drawer now returns null when closed, completely removing from DOM instead of just hiding with CSS
   - Eliminates pointer-events-none elements interfering with click targets on pages like price-changes
+- **Console: API Error Fixes** (PR #51)
+  - Fixed price-changes API 400 errors by setting proper API_BASE defaults (`'https://api.calibr.lat'`) in console components
+  - Fixed catalog API 500 errors by adding proper error handling with try-catch blocks
+  - Fixed analytics API 404 errors by supporting both projectId and project slug parameters
+  - Made SHOPIFY_WEBHOOK_SECRET optional in Shopify connector config to prevent sync failures
+  - Added regression test suite to prevent reintroduction of these errors
 
 ### Added
+- **Connectors: Shopify health telemetry** (Agent B — Codex)
+  - Introduced `/api/integrations/shopify/health` endpoint to surface connection status, rate-limit posture, and sync metadata for each project.
+  - Validates query parameters with Zod, reusing shared rate-limit serialization helpers.
+  - Returns a minimized shop summary (name, domains, plan, locale) to avoid exposing sensitive Shopify profile data while still powering Console health views.
+  - Standardized Shopify integration routes to apply security headers and CORS preflight responses.
+- **Connectors: Shopify OAuth + catalog ingestion** (Agent B — Codex)
+  - Added App Bridge-aware OAuth flow with encoded state metadata, HMAC verification, and persistence via `/api/platforms/shopify`.
+  - Console install experience now loads Shopify App Bridge when available and falls back to top-level redirects when embedded.
+  - `/api/integrations/shopify/products` persists Shopify products and variants into `Product`, `Sku`, `Price`, and `PriceVersion` tables with price history tracking.
 - **Infrastructure: @calibr/types Package for API Type Generation**
   - Created `@calibr/types` package that generates TypeScript types from OpenAPI specification
   - Automatically generates type-safe API definitions for frontend consumption
@@ -78,6 +465,14 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Smart warnings for edge cases (large changes, low confidence, missing data)
   - New API: `explainSuggestion(suggestion, input)` in `@calibr/ai-engine`
   - Supports merchant-friendly language and clear formatting
+
+### Changed
+
+- **Connectors: Shopify price apply resilience** (Agent B — Codex)
+  - Added idempotent retry/backoff loop with rate-limit guarding when applying Shopify price changes, recording attempt details in events and connector status metadata.
+  - Centralized rate-limit serialization for reuse across apply and health endpoints.
+  - Persisted structured attempt summaries (delay, retryable state, serialized rate limit) for Console surfaces and analytics.
+  - Surfaced connector failures back to price change records and event log to power Console notifications with actionable context.
 
 ### Changed
 

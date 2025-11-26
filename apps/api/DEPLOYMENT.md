@@ -374,7 +374,7 @@ docker run -p 8080:8080 \
 
 **Expected Success Logs:**
 ```
-=== Calibr API Startup ===
+=== Calibrate API Startup ===
 NODE_ENV: production
 PORT: 8080
 HOSTNAME: 0.0.0.0

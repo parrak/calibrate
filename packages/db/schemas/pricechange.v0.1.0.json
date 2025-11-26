@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://calibr.lat/schemas/price-change/v0.1.0",
+  "title": "PriceChange",
+  "description": "M0.1 Price change - proposed or applied bulk pricing change",
+  "type": "object",
+  "required": [
+    "id",
+    "tenantId",
+    "projectId",
+    "selectorJson",
+    "transformJson",
+    "state"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "tenantId": {
+      "type": "string",
+      "description": "Tenant ID (RLS scope)"
+    },
+    "projectId": {
+      "type": "string"
+    },
+    "selectorJson": {
+      "type": "object",
+      "description": "Rule selector (which products to change)"
+    },
+    "transformJson": {
+      "type": "object",
+      "description": "Transform definition (%, absolute, floor/ceiling)"
+    },
+    "scheduleAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Optional scheduled execution time"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "APPLIED",
+        "FAILED",
+        "ROLLED_BACK"
+      ],
+      "description": "Change lifecycle state"
+    },
+    "createdBy": {
+      "type": "string",
+      "description": "Actor (user or system)"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

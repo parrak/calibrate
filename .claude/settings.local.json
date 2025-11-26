@@ -69,7 +69,18 @@
       "Bash(git log:*)",
       "Bash(pnpm list:*)",
       "Bash(ENCRYPTION_KEY=NtxoLQbx7XMqZqmqfN3Nla2DmY2vsCDmELzSNlE5N2Y= pnpm exec tsx:*)",
-      "Bash(ENCRYPTION_KEY=NtxoLQbx7XMqZqmqfN3Nla2DmY2vsCDmELzSNlE5N2Y= pnpm encrypt:credentials:dry:*)"
+      "Bash(ENCRYPTION_KEY=NtxoLQbx7XMqZqmqfN3Nla2DmY2vsCDmELzSNlE5N2Y= pnpm encrypt:credentials:dry:*)",
+      "Bash(pnpm prisma:*)",
+      "Bash($null)",
+      "Bash(pnpm exec tsx:*)",
+      "Bash(pnpm migrate:check:*)",
+      "Bash(pnpm test:db:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh run view:*)",
+      "Bash(pnpm type-check:*)",
+      "Bash(pnpm db:generate:*)",
+      "Bash(pnpm --filter @calibr/monitor build:*)"
     ],
     "deny": [],
     "ask": []

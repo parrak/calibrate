@@ -79,8 +79,8 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
     <div className="space-y-6 p-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Integrations</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-semibold text-fg">Integrations</h1>
+        <p className="mt-1 text-sm text-mute">
           Connect and manage your e-commerce platforms
         </p>
       </div>
@@ -111,24 +111,24 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
 
       {/* Platform Cards */}
       <div>
-        <h2 className="text-lg font-medium text-gray-900 mb-4">
+        <h2 className="text-lg font-medium text-fg mb-4">
           Available Platforms
         </h2>
 
         {loading && platforms.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div key={i} className="bg-surface rounded-lg shadow-sm border border-border p-6">
                 <div className="animate-pulse space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                    <div className="w-12 h-12 bg-border rounded-lg"></div>
                     <div className="flex-1">
-                      <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-32"></div>
+                      <div className="h-4 bg-border rounded w-24 mb-2"></div>
+                      <div className="h-3 bg-border rounded w-32"></div>
                     </div>
                   </div>
-                  <div className="h-20 bg-gray-200 rounded"></div>
-                  <div className="h-10 bg-gray-200 rounded"></div>
+                  <div className="h-20 bg-border rounded"></div>
+                  <div className="h-10 bg-border rounded"></div>
                 </div>
               </div>
             ))}
@@ -148,12 +148,12 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
         )}
 
         {!loading && platforms.length === 0 && (
-          <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <div className="text-center py-12 bg-surface rounded-lg border-2 border-dashed border-border">
             <span className="text-4xl mb-4 block">🔌</span>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-fg mb-2">
               No platforms available
             </h3>
-            <p className="text-gray-500">
+            <p className="text-mute">
               Check back later for new platform integrations.
             </p>
           </div>
@@ -163,7 +163,7 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
       {/* Recent Sync Activity */}
       {allIntegrations.length > 0 && (
         <div>
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Sync Activity</h2>
+          <h2 className="text-lg font-medium text-fg mb-4">Recent Sync Activity</h2>
 
           {/* Show sync history for the first connected integration */}
           {allIntegrations.filter(i => i.status === 'CONNECTED').length > 0 && (
@@ -172,9 +172,9 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
                 .filter(i => i.status === 'CONNECTED')
                 .slice(0, 1)
                 .map((integration) => (
-                  <div key={integration.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <div key={integration.id} className="bg-surface rounded-lg shadow-sm border border-border p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center">
                         <span className="text-xl">
                           {integration.platform === 'shopify' && '🛍️'}
                           {integration.platform === 'amazon' && '📦'}
@@ -182,8 +182,8 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
                         </span>
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">{integration.platformName}</h3>
-                        <p className="text-sm text-gray-500">
+                        <h3 className="font-semibold text-fg">{integration.platformName}</h3>
+                        <p className="text-sm text-mute">
                           {integration.platform.charAt(0).toUpperCase() + integration.platform.slice(1)}
                         </p>
                       </div>
@@ -199,16 +199,16 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
           )}
 
           {/* Integration Status Overview */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-900 mb-4">Integration Status</h3>
+          <div className="bg-surface rounded-lg shadow-sm border border-border p-6">
+            <h3 className="text-sm font-medium text-fg mb-4">Integration Status</h3>
             <div className="space-y-3">
               {allIntegrations.map((integration) => (
                 <div
                   key={integration.id}
-                  className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                  className="flex items-center justify-between py-3 border-b border-border last:border-0"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center">
                       <span className="text-xl">
                         {integration.platform === 'shopify' && '🛍️'}
                         {integration.platform === 'amazon' && '📦'}
@@ -216,10 +216,10 @@ export default function IntegrationsPage({ params }: { params: { slug: string } 
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-fg">
                         {integration.platformName}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-mute">
                         {integration.lastSyncAt
                           ? `Last synced ${new Date(integration.lastSyncAt).toLocaleString()}`
                           : 'Never synced'}

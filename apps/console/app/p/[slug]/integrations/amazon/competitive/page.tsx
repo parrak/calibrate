@@ -144,7 +144,7 @@ export default function AmazonCompetitivePage() {
               className="border px-2 py-1 text-sm"
             />
             <button
-              className={`text-sm px-2 py-1 rounded border ${cardView ? 'bg-gray-900 text-white' : ''}`}
+              className={`text-sm px-2 py-1 rounded border ${cardView ? 'bg-brand text-white' : ''}`}
               onClick={() => setCardView(!cardView)}
             >{cardView ? 'Table' : 'Cards'}</button>
           </div>
@@ -152,7 +152,7 @@ export default function AmazonCompetitivePage() {
         {!cardView ? (
         <div className="overflow-auto border rounded">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface">
               <tr>
                 <th className="px-3 py-2 text-left">ASIN</th>
                 <th className="px-3 py-2 text-left">Lowest</th>
@@ -205,7 +205,7 @@ export default function AmazonCompetitivePage() {
                 </tr>
               ))}
               {recent.length === 0 && (
-                <tr><td className="px-3 py-2 text-gray-500" colSpan={6}>No data yet</td></tr>
+                <tr><td className="px-3 py-2 text-mute" colSpan={6}>No data yet</td></tr>
               )}
             </tbody>
           </table>
@@ -218,7 +218,7 @@ export default function AmazonCompetitivePage() {
                   <div className="font-mono text-sm">{row.asin}</div>
                   <TrendBadge asin={row.asin} base={base} token={token} />
                 </div>
-                <div className="mt-2 text-sm text-gray-700">
+                <div className="mt-2 text-sm text-fg">
                   <div>Buy Box: {row.buyBoxPriceCents != null ? `$ ${(row.buyBoxPriceCents/100).toFixed(2)}` : '-'}</div>
                   <div>Lowest: {row.lowestPriceCents != null ? `$ ${(row.lowestPriceCents/100).toFixed(2)}` : '-'}</div>
                   <div>Offers: {row.offerCount}</div>
@@ -250,13 +250,13 @@ export default function AmazonCompetitivePage() {
               </div>
             ))}
             {recent.length === 0 && (
-              <div className="text-gray-500">No data yet</div>
+              <div className="text-mute">No data yet</div>
             )}
           </div>
         )}
         <div className="flex items-center justify-between mt-2">
           <button disabled={recentPage<=1} onClick={() => setRecentPage(p => Math.max(1, p-1))} className="px-2 py-1 border rounded disabled:opacity-50">Prev</button>
-          <div className="text-xs text-gray-600">Page {recentPage}</div>
+          <div className="text-xs text-mute">Page {recentPage}</div>
           <button disabled={!recentHasMore} onClick={() => setRecentPage(p => p+1)} className="px-2 py-1 border rounded disabled:opacity-50">Next</button>
         </div>
       </section>
@@ -293,7 +293,7 @@ export default function AmazonCompetitivePage() {
         {latest && (
           <div>
             <h3 className="font-medium">Latest Snapshot</h3>
-            <pre className="text-xs bg-gray-100 p-2 overflow-auto">{JSON.stringify(latest, null, 2)}</pre>
+            <pre className="text-xs bg-surface p-2 overflow-auto">{JSON.stringify(latest, null, 2)}</pre>
           </div>
         )}
         {history && history.length > 0 && (
@@ -301,7 +301,7 @@ export default function AmazonCompetitivePage() {
             <h3 className="font-medium mb-2">History</h3>
             <div className="overflow-auto border rounded">
               <table className="min-w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-surface">
                   <tr>
                     <th className="px-3 py-2 text-left">Retrieved</th>
                     <th className="px-3 py-2 text-left">Lowest</th>
@@ -336,12 +336,12 @@ export default function AmazonCompetitivePage() {
               })
               await loadRecent(); await loadWatchlist()
             }}
-            className="bg-gray-900 text-white px-3 py-1 rounded"
+            className="bg-brand text-white px-3 py-1 rounded"
           >Run Now</button>
         </div>
         <div className="overflow-auto border rounded">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface">
               <tr>
                 <th className="px-3 py-2 text-left">ASIN</th>
                 <th className="px-3 py-2 text-left">Actions</th>
@@ -365,7 +365,7 @@ export default function AmazonCompetitivePage() {
                 </tr>
               ))}
               {watchlist.length === 0 && (
-                <tr><td className="px-3 py-2 text-gray-500" colSpan={2}>Nothing here yet</td></tr>
+                <tr><td className="px-3 py-2 text-mute" colSpan={2}>Nothing here yet</td></tr>
               )}
             </tbody>
           </table>
@@ -398,7 +398,7 @@ function Sparkline({ asin, base, token }: { asin: string; base: string; token?: 
     })()
   }, [asin, base, token])
 
-  if (!points.length) return <span className="text-xs text-gray-400">—</span>
+  if (!points.length) return <span className="text-xs text-mute">—</span>
 
   const w = 80, h = 24, pad = 2
   const min = Math.min(...points), max = Math.max(...points)
@@ -421,7 +421,7 @@ function Sparkline({ asin, base, token }: { asin: string; base: string; token?: 
 
 function TrendBadge({ asin, base, token }: { asin: string; base: string; token?: string }) {
   const [dir, setDir] = useState<'up'|'down'|'flat'>('flat')
-  const color = dir === 'up' ? 'text-red-600' : dir === 'down' ? 'text-green-600' : 'text-gray-500'
+  const color = dir === 'up' ? 'text-red-600' : dir === 'down' ? 'text-green-600' : 'text-mute'
 
   useEffect(() => {
     (async () => {
@@ -468,9 +468,9 @@ function BatchInput({ value, onChange }: { value: string; onChange: (v: string) 
       />
       <div className="mt-2 flex flex-wrap gap-1">
         {chips.map(c => (
-          <span key={c} className="px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-mono">{c}</span>
+          <span key={c} className="px-2 py-0.5 rounded bg-surface text-fg text-xs font-mono">{c}</span>
         ))}
-        {chips.length === 0 && <span className="text-xs text-gray-500">No ASINs parsed</span>}
+        {chips.length === 0 && <span className="text-xs text-mute">No ASINs parsed</span>}
       </div>
     </div>
   )
@@ -505,7 +505,7 @@ function WatchToggle({ asin, base, token, watched, onChanged, small }: { asin: s
       {busy ? '...' : 'Unwatch'}
     </button>
   ) : (
-    <button onClick={add} disabled={busy} className={`${small ? 'px-2 py-1 text-xs' : 'px-3 py-1'} border rounded text-gray-700`}>
+    <button onClick={add} disabled={busy} className={`${small ? 'px-2 py-1 text-xs' : 'px-3 py-1'} border rounded text-fg`}>
       {busy ? '...' : 'Watch'}
     </button>
   )

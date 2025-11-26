@@ -15,6 +15,16 @@ const shopifyMocks = {
 vi.mock('@/lib/shopify-connector', () => ({
   initializeShopifyConnector: (...args: any[]) =>
     shopifyMocks.initializeShopifyConnector(...args),
+  serializeShopifyRateLimit: (rateLimit: any) => {
+    if (!rateLimit) return null
+    return {
+      limit: rateLimit.limit,
+      remaining: rateLimit.remaining,
+      resetTime: rateLimit.resetTime instanceof Date 
+        ? rateLimit.resetTime.toISOString() 
+        : new Date(rateLimit.resetTime).toISOString(),
+    }
+  },
 }))
 
 type PriceChangeStatus = 'PENDING' | 'APPROVED' | 'APPLIED' | 'REJECTED' | 'FAILED' | 'ROLLED_BACK'
@@ -35,6 +45,7 @@ type PriceChangeRecord = {
   appliedAt?: Date | null
   createdAt: Date
   connectorStatus?: any
+  variantId?: string | null
 }
 
 type StoreState = {
@@ -52,6 +63,30 @@ type StoreState = {
     accessToken: string
     scope: string
     isActive: boolean
+  }>
+  audit: Array<{
+    id: string
+    tenantId: string
+    projectId: string | null
+    entity: string
+    entityId: string
+    action: string
+    actor: string
+    explain: Record<string, any> | null
+    createdAt: Date
+  }>
+  explainTrace: Array<{
+    id: string
+    tenantId: string
+    projectId: string | null
+    priceChangeId: string | null
+    entity: string
+    entityId: string
+    action: string
+    actor: string
+    trace: Record<string, any>
+    metadata: Record<string, any> | null
+    createdAt: Date
   }>
 }
 
@@ -171,6 +206,8 @@ const initialState = (): StoreState => ({
       isActive: true,
     },
   ],
+  audit: [],
+  explainTrace: [],
 })
 
 const store = (() => {
@@ -306,6 +343,26 @@ const store = (() => {
         return clone(matches ?? null)
       },
     },
+    audit: {
+      create: async ({ data }: any) => {
+        const record = { id: `audit_${uid()}`, createdAt: new Date(), ...data }
+        state.audit.push(record)
+        return clone(record)
+      },
+    },
+    explainTrace: {
+      create: async ({ data }: any) => {
+        const record = { id: `trace_${uid()}`, createdAt: new Date(), ...data }
+        state.explainTrace.push(record)
+        return clone(record)
+      },
+    },
+    sku: {
+      findUnique: async ({ where, select }: any) => {
+        // Return null by default - tests can override this if needed
+        return null
+      },
+    },
     $transaction: async (cb: any) => cb(client),
   }
 
@@ -367,6 +424,15 @@ describe('price changes API', () => {
     shopifyMocks.initializeShopifyConnector.mockReset()
     shopifyMocks.initializeShopifyConnector.mockImplementation(async () => ({
       pricing: { updatePrice: shopifyMocks.updatePrice },
+      getConnectionStatus: async () => ({
+        connected: true,
+        rateLimit: {
+          limit: 40,
+          remaining: 30,
+          resetTime: new Date(),
+        },
+        shopInfo: null,
+      }),
     }))
     store.reset()
     clearSessions()
@@ -548,21 +614,51 @@ describe('price changes API', () => {
 
   it('returns 422 when Shopify variant identifier is unavailable', async () => {
     const target = store.state.priceChanges.find((pc) => pc.id === 'pc_approved')
-    if (target?.context) {
-      delete target.context.shopifyVariantId
+    if (target) {
+      // Remove variantId from all possible sources
+      if (target.context) {
+        delete target.context.shopifyVariantId
+        delete target.context.variantId
+        delete target.context.connectorVariantId
+        delete target.context.externalVariantId
+        delete target.context.shopify
+      }
+      // Clear direct variantId field
+      target.variantId = null
+      // Clear connectorStatus variantId
+      if (target.connectorStatus && typeof target.connectorStatus === 'object') {
+        const status = target.connectorStatus as Record<string, unknown>
+        delete status.variantId
+        if (status.metadata && typeof status.metadata === 'object') {
+          const metadata = status.metadata as Record<string, unknown>
+          delete metadata.variantId
+          delete metadata.externalId
+        }
+      }
     }
-    const token = makeToken('user-admin')
-    const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/apply', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'X-Calibr-Project': 'demo',
-      },
-    })
-    const res = await applyRoute(req, paramsFor('pc_approved') as any)
-    expect(res.status).toBe(422)
-    const body = await res.json()
-    expect(body.error).toBe('MissingVariant')
+    // Mock SKU to return null to prevent fallback resolution from SKU attributes
+    const originalSku = store.client.sku
+    store.client.sku = {
+      findUnique: async () => null,
+    } as any
+
+    try {
+      const token = makeToken('user-admin')
+      const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/apply', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'X-Calibr-Project': 'demo',
+        },
+      })
+      const res = await applyRoute(req, paramsFor('pc_approved') as any)
+      expect(res.status).toBe(422)
+      const body = await res.json()
+      expect(body.error).toBe('MissingVariant')
+    } finally {
+      // Restore original SKU mock
+      store.client.sku = originalSku
+    }
   })
 
   it('surfaces Shopify connector API failures', async () => {
@@ -650,5 +746,94 @@ describe('price changes API', () => {
     })
     const res = await applyRoute(req, paramsFor('pc_approved') as any)
     expect(res.status).toBe(403)
+  })
+
+  it('creates audit record when approving a price change', async () => {
+    const token = makeToken('user-editor')
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_pending/approve', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+      },
+    })
+    const initialAuditCount = store.state.audit.length
+    const res = await approveRoute(req, paramsFor('pc_pending') as any)
+    expect(res.status).toBe(200)
+
+    // Verify audit record was created
+    expect(store.state.audit.length).toBe(initialAuditCount + 1)
+    const auditRecord = store.state.audit[store.state.audit.length - 1]
+    expect(auditRecord.entity).toBe('PriceChange')
+    expect(auditRecord.entityId).toBe('pc_pending')
+    expect(auditRecord.action).toBe('approved')
+    expect(auditRecord.actor).toBe('user-editor')
+    expect(auditRecord.tenantId).toBe('tenant1')
+    expect(auditRecord.projectId).toBe('proj1')
+    expect(auditRecord.explain).toBeDefined()
+  })
+
+  it('creates audit record when rejecting a price change', async () => {
+    const token = makeToken('user-editor')
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_approved/reject', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+      },
+    })
+    const initialAuditCount = store.state.audit.length
+    const res = await rejectRoute(req, paramsFor('pc_approved') as any)
+    expect(res.status).toBe(200)
+
+    // Verify audit record was created
+    expect(store.state.audit.length).toBe(initialAuditCount + 1)
+    const auditRecord = store.state.audit[store.state.audit.length - 1]
+    expect(auditRecord.entity).toBe('PriceChange')
+    expect(auditRecord.entityId).toBe('pc_approved')
+    expect(auditRecord.action).toBe('rejected')
+    expect(auditRecord.actor).toBe('user-editor')
+    expect(auditRecord.tenantId).toBe('tenant1')
+    expect(auditRecord.projectId).toBe('proj1')
+    expect(auditRecord.explain).toBeDefined()
+  })
+
+  it('includes correlation ID in audit records when provided in headers', async () => {
+    const token = makeToken('user-editor')
+    const correlationId = 'test-correlation-id-123'
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_pending/approve', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+        'X-Correlation-ID': correlationId,
+      },
+    })
+    const res = await approveRoute(req, paramsFor('pc_pending') as any)
+    expect(res.status).toBe(200)
+
+    // Verify correlation ID is in the audit record
+    const auditRecord = store.state.audit[store.state.audit.length - 1]
+    expect(auditRecord.explain).toBeDefined()
+    expect((auditRecord.explain as any).correlationId).toBe(correlationId)
+  })
+
+  it('generates correlation ID when not provided in headers', async () => {
+    const token = makeToken('user-editor')
+    const req = makeRequest('http://localhost/api/v1/price-changes/pc_pending/approve', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Calibr-Project': 'demo',
+      },
+    })
+    const res = await approveRoute(req, paramsFor('pc_pending') as any)
+    expect(res.status).toBe(200)
+
+    // Verify correlation ID was generated
+    const auditRecord = store.state.audit[store.state.audit.length - 1]
+    expect(auditRecord.explain).toBeDefined()
+    expect((auditRecord.explain as any).correlationId).toBeDefined()
+    expect((auditRecord.explain as any).correlationId).toMatch(/^corr_/)
   })
 })

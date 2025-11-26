@@ -1,9 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../lib/components/Card'
 import { Badge } from '../lib/components/Badge'
+import { Button } from '../lib/components/Button'
 import { TrendingDown, TrendingUp, DollarSign, Target, AlertCircle } from 'lucide-react'
+import { competitorsApi, ApiError } from '@/lib/api-client'
 
 interface PriceComparison {
   skuId: string
@@ -27,69 +31,38 @@ interface MarketInsights {
   competitorCount: number
 }
 
-export function CompetitorAnalytics({ tenantId, projectId }: { tenantId: string; projectId: string }) {
+export function CompetitorAnalytics({ tenantId: _tenantId, projectId }: { tenantId: string; projectId: string }) {
+  const { data: session } = useSession()
+  const token = (session as { apiToken?: string })?.apiToken
+
   const [comparisons, setComparisons] = useState<PriceComparison[]>([])
   const [insights, setInsights] = useState<MarketInsights | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isAuthError, setIsAuthError] = useState(false)
 
   useEffect(() => {
     fetchAnalytics()
-  }, [tenantId, projectId])
+  }, [projectId, token])
 
   const fetchAnalytics = async () => {
     try {
-      // TODO: Implement API endpoint for price comparisons
-      // For now, using mock data
-      const mockComparisons: PriceComparison[] = [
-        {
-          skuId: 'sku1',
-          skuName: 'Professional Plan - Monthly',
-          ourPrice: 4900,
-          competitorPrices: [
-            { competitorId: '1', competitorName: 'Competitor A', price: 5900, currency: 'USD', isOnSale: false },
-            { competitorId: '2', competitorName: 'Competitor B', price: 4700, currency: 'USD', isOnSale: true },
-          ]
-        },
-        {
-          skuId: 'sku2',
-          skuName: 'Enterprise Plan - Monthly',
-          ourPrice: 12900,
-          competitorPrices: [
-            { competitorId: '1', competitorName: 'Competitor A', price: 14900, currency: 'USD', isOnSale: false },
-            { competitorId: '2', competitorName: 'Competitor B', price: 11900, currency: 'USD', isOnSale: false },
-          ]
-        }
-      ]
+      setError(null)
+      setIsAuthError(false)
 
-      setComparisons(mockComparisons)
-
-      // Calculate insights from comparisons
-      if (mockComparisons.length > 0) {
-        const allPrices = mockComparisons.flatMap(c => [
-          c.ourPrice,
-          ...c.competitorPrices.map(cp => cp.price)
-        ])
-
-        const minPrice = Math.min(...allPrices)
-        const maxPrice = Math.max(...allPrices)
-        const avgPrice = allPrices.reduce((sum, price) => sum + price, 0) / allPrices.length
-        const ourAvgPrice = mockComparisons.reduce((sum, c) => sum + c.ourPrice, 0) / mockComparisons.length
-
-        let ourPosition: 'lowest' | 'highest' | 'middle' = 'middle'
-        if (ourAvgPrice <= minPrice * 1.05) ourPosition = 'lowest'
-        else if (ourAvgPrice >= maxPrice * 0.95) ourPosition = 'highest'
-
-        setInsights({
-          minPrice,
-          maxPrice,
-          avgPrice,
-          ourPosition,
-          priceSpread: maxPrice - minPrice,
-          competitorCount: mockComparisons[0]?.competitorPrices.length || 0
-        })
-      }
+      // Use projectId as projectSlug (they are the same in this context)
+      const data = await competitorsApi.getAnalytics(projectId, token)
+      setComparisons(data.comparisons)
+      setInsights(data.insights)
     } catch (error) {
       console.error('Error fetching analytics:', error)
+      if (error instanceof ApiError && error.status === 401) {
+        setError('Authentication failed. Please sign out and sign in again to refresh your session.')
+        setIsAuthError(true)
+      } else {
+        setError('Failed to load analytics data')
+        setIsAuthError(false)
+      }
     } finally {
       setLoading(false)
     }
@@ -110,8 +83,64 @@ export function CompetitorAnalytics({ tenantId, projectId }: { tenantId: string;
     }
   }
 
+  const handleSignOut = () => {
+    signOut({ callbackUrl: '/login' })
+  }
+
   if (loading) {
     return <div>Loading analytics...</div>
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-8">
+            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-600" />
+            <p className="text-red-600 mb-2">{error}</p>
+            {isAuthError && (
+              <p className="text-sm text-gray-600 mb-4">
+                This usually means your authentication token has expired or is invalid.
+              </p>
+            )}
+            <div className="flex gap-2 justify-center">
+              {isAuthError ? (
+                <>
+                  <Button onClick={handleSignOut} className="mt-4" variant="primary">
+                    Sign Out
+                  </Button>
+                  <Button onClick={fetchAnalytics} className="mt-4" variant="outline">
+                    Retry
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={fetchAnalytics} className="mt-4" variant="outline">
+                  Retry
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (comparisons.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-12 px-4">
+            <div className="max-w-md mx-auto">
+              <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Analytics Data Available</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Add competitors and track their products to see competitive analytics and market insights.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

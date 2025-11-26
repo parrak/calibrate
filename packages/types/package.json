@@ -16,7 +16,7 @@
     }
   },
   "scripts": {
-    "generate": "openapi-typescript ../../apps/docs/api/openapi.yaml -o ./api.d.ts",
+    "generate": "openapi-typescript ../../apps/docs/public/api/openapi.yaml -o ./api.d.ts",
     "build": "pnpm generate && tsc",
     "typecheck": "tsc --noEmit",
     "prebuild": "pnpm generate"

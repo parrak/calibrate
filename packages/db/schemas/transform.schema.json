@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://calibr.lat/schemas/pricing-rule-transform.json",
+  "title": "Pricing Rule Transform Schema",
+  "description": "Schema for defining price transformation operations in pricing rules",
+  "type": "object",
+  "required": ["op"],
+  "properties": {
+    "op": {
+      "type": "string",
+      "enum": ["percent", "absolute", "set", "multiply"],
+      "description": "Transform operation type"
+    },
+    "value": {
+      "type": "number",
+      "description": "Value for percent, absolute, or set operations"
+    },
+    "factor": {
+      "type": "number",
+      "description": "Multiplication factor for multiply operation",
+      "exclusiveMinimum": 0
+    },
+    "floor": {
+      "type": ["number", "null"],
+      "description": "Minimum price constraint (inclusive)",
+      "minimum": 0
+    },
+    "ceil": {
+      "type": ["number", "null"],
+      "description": "Maximum price constraint (inclusive)",
+      "minimum": 0
+    },
+    "ceiling": {
+      "type": ["number", "null"],
+      "description": "Alias for ceil - maximum price constraint (inclusive)",
+      "minimum": 0
+    },
+    "round": {
+      "type": "string",
+      "enum": ["none", "up", "down", "nearest", "nearest_99"],
+      "default": "none",
+      "description": "Rounding strategy for final price"
+    },
+    "precision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4,
+      "default": 2,
+      "description": "Decimal precision for final price"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "op": { "enum": ["percent", "absolute", "set"] } }
+      },
+      "then": {
+        "required": ["value"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "op": { "const": "multiply" } }
+      },
+      "then": {
+        "required": ["factor"]
+      }
+    }
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "op": "percent",
+      "value": -10,
+      "floor": 9.99
+    },
+    {
+      "op": "absolute",
+      "value": -5,
+      "floor": 0,
+      "ceil": 999.99
+    },
+    {
+      "op": "set",
+      "value": 19.99
+    },
+    {
+      "op": "multiply",
+      "factor": 1.2,
+      "round": "nearest_99"
+    }
+  ]
+}

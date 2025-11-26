@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://calibr.lat/schemas/audit/v0.1.0",
+  "title": "Audit",
+  "description": "M0.1 Audit - explainable action log",
+  "type": "object",
+  "required": [
+    "id",
+    "tenantId",
+    "entity",
+    "entityId",
+    "action",
+    "actor",
+    "createdAt"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "tenantId": {
+      "type": "string",
+      "description": "Tenant ID (RLS scope)"
+    },
+    "projectId": {
+      "type": "string"
+    },
+    "entity": {
+      "type": "string",
+      "description": "Entity type (Product, PriceChange, etc.)"
+    },
+    "entityId": {
+      "type": "string",
+      "description": "Entity ID"
+    },
+    "action": {
+      "type": "string",
+      "description": "Action performed (create, update, apply, rollback)"
+    },
+    "actor": {
+      "type": "string",
+      "description": "User or system actor"
+    },
+    "explain": {
+      "type": "object",
+      "description": "Explainability trace (why/how)",
+      "additionalProperties": true
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

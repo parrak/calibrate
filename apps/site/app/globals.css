@@ -4,13 +4,16 @@
 
 @layer base {
   :root {
-    --bg: #f9f9fb;
-    --surface: #ffffff;
-    --border: #e5e7eb;
-    --fg: #1a1a1a;
-    --mute: #6b7280;
-    --brand: #00a3a3;
-    --accent: #2563eb;
+    /* Calibrate Brand Colors */
+    --bg: #F8FAFF;           /* Off-white background */
+    --surface: #ffffff;      /* Pure white for cards */
+    --border: #E3E8EE;       /* Light border */
+    --fg: #001845;           /* Navy text */
+    --mute: #697386;         /* Muted text */
+    --brand: #00A3A3;        /* Teal - primary brand color (L2) */
+    --brand-light: #80D9D9;  /* Light Teal (L1) */
+    --brand-dark: #008080;   /* Deep Teal (L3) */
+    --accent: #008080;       /* Deep Teal accent */
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
   }
@@ -21,7 +24,9 @@
     --border: #1f2023;
     --fg: #e5e7eb;
     --mute: #9ca3af;
-    --brand: #00c2a8;
+    --brand: #00A3A3;
+    --brand-light: #80D9D9;
+    --brand-dark: #008080;
   }
 
   body {

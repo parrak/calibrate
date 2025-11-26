@@ -20,15 +20,18 @@
     ],
     "baseUrl": ".",
     "paths": {
+      "@calibr/db": ["packages/db/index.ts"],
       "@calibr/db/*": ["packages/db/*"],
       "@calibr/pricing-engine/*": ["packages/pricing-engine/*"],
       "@calibr/security/*": ["packages/security/*"],
       "@calibr/connectors/*": ["packages/connectors/*"],
       "@calibr/amazon-connector/*": ["packages/amazon-connector/*"],
-    "@calibr/platform-connector/*": ["packages/platform-connector/src/*"],
-    "@calibr/ui/*": ["packages/ui/*"],
-    "@calibr/monitor/*": ["packages/monitor/src/*"],
-    "@calibr/types/*": ["packages/types/*"]
+      "@calibr/platform-connector/*": ["packages/platform-connector/src/*"],
+      "@calibr/ui/*": ["packages/ui/*"],
+      "@calibr/monitor": ["packages/monitor/src/index.ts"],
+      "@calibr/monitor/*": ["packages/monitor/src/*"],
+      "@calibr/types/*": ["packages/types/*"],
+      "@calibr/automation-runner/*": ["packages/automation-runner/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

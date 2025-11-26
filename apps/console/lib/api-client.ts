@@ -1,6 +1,6 @@
 /**
- * API Client for Calibr Console
- * Communicates with the Calibr API backend
+ * API Client for Calibrate Console
+ * Communicates with the Calibrate API backend
  *
  * 📚 API Documentation: https://docs.calibr.lat
  * 🔗 Base URL: https://api.calibr.lat
@@ -82,6 +82,13 @@ export const priceChangesApi = {
       token,
     })
   },
+
+  rollback: async (id: string, token?: string) => {
+    return fetchApi(`/api/v1/price-changes/${id}/rollback`, {
+      method: 'POST',
+      token,
+    })
+  },
 }
 
 // Catalog API
@@ -103,22 +110,28 @@ export const catalogApi = {
 
 // Competitors API
 export const competitorsApi = {
-  list: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
-    const res = await fetchApi<{ competitors: Array<Record<string, unknown>> }>(`/api/v1/competitors?projectSlug=${projectSlug}`)
+  list: async (projectSlug: string, token?: string): Promise<Array<Record<string, unknown>>> => {
+    const res = await fetchApi<{ competitors: Array<Record<string, unknown>> }>(`/api/v1/competitors?projectSlug=${projectSlug}`, {
+      token,
+    })
     return res.competitors || []
   },
 
-  get: async (id: string) => {
-    const res = await fetchApi<{ competitor: Record<string, unknown> }>(`/api/v1/competitors/${id}`)
+  get: async (id: string, token?: string) => {
+    const res = await fetchApi<{ competitor: Record<string, unknown> }>(`/api/v1/competitors/${id}`, {
+      token,
+    })
     return res.competitor
   },
 
-  getProducts: async (id: string) => {
-    const res = await fetchApi<{ products: Array<Record<string, unknown>> }>(`/api/v1/competitors/${id}/products`)
+  getProducts: async (id: string, token?: string) => {
+    const res = await fetchApi<{ products: Array<Record<string, unknown>> }>(`/api/v1/competitors/${id}/products`, {
+      token,
+    })
     return res.products || []
   },
 
-  monitor: async (id: string, projectSlug?: string): Promise<Record<string, unknown>> => {
+  monitor: async (id: string, projectSlug?: string, token?: string): Promise<Record<string, unknown>> => {
     const body: Record<string, string> = {}
     if (id) {
       body.competitorId = id
@@ -130,13 +143,115 @@ export const competitorsApi = {
     const res = await fetchApi<{ results: Array<Record<string, unknown>> }>(`/api/v1/competitors/monitor`, {
       method: 'POST',
       body: JSON.stringify(body),
+      token,
     })
     return { results: res.results || [] }
   },
 
-  getRules: async (projectSlug: string): Promise<Array<Record<string, unknown>>> => {
-    const res = await fetchApi<{ rules: Array<Record<string, unknown>> }>(`/api/v1/competitors/rules?projectSlug=${projectSlug}`)
+  getRules: async (projectSlug: string, token?: string): Promise<Array<Record<string, unknown>>> => {
+    const res = await fetchApi<{ rules: Array<Record<string, unknown>> }>(`/api/v1/competitors/rules?projectSlug=${projectSlug}`, {
+      token,
+    })
     return res.rules || []
+  },
+
+  createRule: async (projectSlug: string, rule: { name: string; description?: string; rules: Record<string, unknown>; isActive?: boolean }, token?: string): Promise<Record<string, unknown>> => {
+    const res = await fetchApi<{ rule: Record<string, unknown> }>(`/api/v1/competitors/rules`, {
+      method: 'POST',
+      body: JSON.stringify({
+        projectSlug,
+        ...rule
+      }),
+      token,
+    })
+    return res.rule
+  },
+
+  create: async (projectSlug: string, competitor: { name: string; domain: string; channel: string; isActive?: boolean }, token?: string): Promise<Record<string, unknown>> => {
+    const res = await fetchApi<{ competitor: Record<string, unknown> }>(`/api/v1/competitors`, {
+      method: 'POST',
+      body: JSON.stringify({
+        projectSlug,
+        ...competitor
+      }),
+      token,
+    })
+    return res.competitor
+  },
+
+  addProduct: async (competitorId: string, product: { name: string; url: string; skuCode?: string; imageUrl?: string }, token?: string): Promise<Record<string, unknown>> => {
+    const res = await fetchApi<{ product: Record<string, unknown> }>(`/api/v1/competitors/${competitorId}/products`, {
+      method: 'POST',
+      body: JSON.stringify(product),
+      token,
+    })
+    return res.product
+  },
+
+  update: async (id: string, updates: { name?: string; domain?: string; channel?: string; isActive?: boolean }, token?: string): Promise<Record<string, unknown>> => {
+    const res = await fetchApi<{ competitor: Record<string, unknown> }>(`/api/v1/competitors/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+      token,
+    })
+    return res.competitor
+  },
+
+  delete: async (id: string, token?: string): Promise<void> => {
+    await fetchApi<void>(`/api/v1/competitors/${id}`, {
+      method: 'DELETE',
+      token,
+    })
+  },
+
+  getAnalytics: async (projectSlug: string, token?: string): Promise<{
+    comparisons: Array<{
+      skuId: string
+      skuName: string
+      ourPrice: number
+      competitorPrices: Array<{
+        competitorId: string
+        competitorName: string
+        price: number
+        currency: string
+        isOnSale: boolean
+      }>
+    }>
+    insights: {
+      minPrice: number
+      maxPrice: number
+      avgPrice: number
+      ourPosition: 'lowest' | 'highest' | 'middle'
+      priceSpread: number
+      competitorCount: number
+    }
+    competitorCount: number
+  }> => {
+    return fetchApi<{
+      comparisons: Array<{
+        skuId: string
+        skuName: string
+        ourPrice: number
+        competitorPrices: Array<{
+          competitorId: string
+          competitorName: string
+          price: number
+          currency: string
+          isOnSale: boolean
+        }>
+      }>
+      insights: {
+        minPrice: number
+        maxPrice: number
+        avgPrice: number
+        ourPosition: 'lowest' | 'highest' | 'middle'
+        priceSpread: number
+        competitorCount: number
+      }
+      competitorCount: number
+    }>(`/api/v1/competitors/analytics?projectSlug=${projectSlug}`, {
+      token,
+    })
   },
 }
 
@@ -171,8 +286,12 @@ export const platformsApi = {
     })
   },
 
-  triggerSync: async (platform: string, projectSlug: string, syncType: string = 'full') => {
-    return fetchApi(`/api/platforms/${platform}/sync`, {
+  triggerSync: async <T = Record<string, unknown>>(
+    platform: string,
+    projectSlug: string,
+    syncType: string = 'full',
+  ) => {
+    return fetchApi<T>(`/api/platforms/${platform}/sync`, {
       method: 'POST',
       body: JSON.stringify({ projectSlug, syncType }),
     })

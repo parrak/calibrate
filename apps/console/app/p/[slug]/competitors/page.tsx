@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/lib/components/Tabs'
 import { CompetitorMonitor } from '@/components/CompetitorMonitor'
 import { CompetitorRules } from '@/components/CompetitorRules'
+import { CompetitorAnalytics } from '@/components/CompetitorAnalytics'
 
 export default function CompetitorsPage({ params }: { params: { slug: string } }) {
   return (
@@ -15,13 +16,18 @@ export default function CompetitorsPage({ params }: { params: { slug: string } }
       </div>
 
       <Tabs defaultValue="monitor" className="w-full" aria-label="Competitor tools">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="monitor">Monitor</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="rules">Rules</TabsTrigger>
         </TabsList>
 
         <TabsContent value="monitor">
           <CompetitorMonitor projectSlug={params.slug} />
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <CompetitorAnalytics tenantId="" projectId={params.slug} />
         </TabsContent>
 
         <TabsContent value="rules">

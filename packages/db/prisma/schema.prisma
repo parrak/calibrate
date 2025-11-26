@@ -135,15 +135,120 @@ model Customer {
   Quote     Quote[]
 }
 
+model DiscountPolicy {
+  id        String   @id @default(cuid())
+  tenantId  String
+  projectId String
+  type      String // M0.1: policy type (percentage, absolute, tiered, etc.)
+  ruleJson  Json // M0.1: rule definition
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  Project   Project  @relation(fields: [projectId], references: [id])
+
+  @@index([tenantId, projectId, enabled])
+}
+
+model Audit {
+  id        String   @id @default(cuid())
+  tenantId  String
+  projectId String?
+  entity    String // M0.1: entity type (Product, PriceChange, etc.)
+  entityId  String // M0.1: entity ID
+  action    String // M0.1: action (create, update, apply, rollback, etc.)
+  actor     String // M0.1: user/system actor
+  explain   Json? // M0.1: explainability trace
+  createdAt DateTime @default(now())
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  Project   Project? @relation(fields: [projectId], references: [id])
+
+  @@index([tenantId, entity, entityId])
+  @@index([createdAt])
+  @@index([actor])
+}
+
 model Event {
   id        String   @id @default(cuid())
   tenantId  String?
   projectId String?
-  kind      String
+  kind      String // Legacy field - kept for backward compat
+  // type      String? // M0.1: renamed from 'kind' - TODO: Add migration to create this column
   payload   Json
   createdAt DateTime @default(now())
   Project   Project? @relation(fields: [projectId], references: [id])
   Tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+
+  @@index([kind])
+  // @@index([type]) // TODO: Add after migration creates the column
+  @@index([createdAt])
+}
+
+/// Event Log — Append-only event store for audit and replay
+/// Supports idempotent dedupe via eventKey + tenantId
+model EventLog {
+  id            String   @id @default(cuid())
+  eventKey      String // Idempotency key (tenant scoped)
+  tenantId      String
+  projectId     String?
+  eventType     String // e.g., "shopify.sync.product", "pricechange.applied"
+  payload       Json
+  metadata      Json? // Additional context (correlationId, userId, etc.)
+  correlationId String? // For tracing across services
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  version       Int      @default(1)
+
+  @@unique([eventKey, tenantId], name: "EventLog_eventKey_tenantId_unique")
+  @@index([tenantId, eventType, createdAt])
+  @@index([correlationId])
+  @@index([createdAt])
+}
+
+/// Outbox — Transactional outbox pattern for reliable event delivery
+/// Events are inserted here in the same transaction as domain changes
+model Outbox {
+  id          String       @id @default(cuid())
+  eventLogId  String // Reference to EventLog
+  tenantId    String
+  eventType   String
+  payload     Json
+  status      OutboxStatus @default(PENDING)
+  retryCount  Int          @default(0)
+  maxRetries  Int          @default(5)
+  nextRetryAt DateTime?    @db.Timestamptz(6)
+  lastError   String?
+  processedAt DateTime?    @db.Timestamptz(6)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(6)
+
+  @@index([status, nextRetryAt])
+  @@index([tenantId, status])
+  @@index([createdAt])
+}
+
+/// Dead Letter Queue — Failed events after max retries exceeded
+model DlqEventLog {
+  id            String   @id @default(cuid())
+  originalId    String // Original outbox or event ID
+  eventKey      String
+  tenantId      String
+  projectId     String?
+  eventType     String
+  payload       Json
+  metadata      Json?
+  failureReason String
+  retryCount    Int
+  failedAt      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([tenantId, eventType])
+  @@index([failedAt])
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }
 
 model Membership {
@@ -169,6 +274,93 @@ model Policy {
   Tenant    Tenant   @relation(fields: [tenantId], references: [id])
 }
 
+/// PricingRule — Automated pricing rules engine
+/// Stores selector criteria and transform logic for automated price changes
+model PricingRule {
+  id            String    @id @default(cuid())
+  tenantId      String
+  projectId     String
+  name          String
+  description   String?   @db.Text
+  selectorJson  Json // Selector criteria (e.g., {"and":[{"tag":"Summer"},{"price":{"gt":100}}]})
+  transformJson Json // Transform definition (e.g., {"op":"percent","value":-10,"floor":9.99})
+  scheduleAt    DateTime? @db.Timestamptz(6) // Optional one-shot schedule
+  enabled       Boolean   @default(true)
+  createdBy     String
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
+  deletedAt     DateTime? @db.Timestamptz(6) // Soft delete
+  Tenant        Tenant    @relation(fields: [tenantId], references: [id])
+  Project       Project   @relation(fields: [projectId], references: [id])
+  RuleRun       RuleRun[]
+
+  @@index([tenantId, projectId, enabled])
+  @@index([scheduleAt])
+  @@index([deletedAt])
+}
+
+/// RuleRun — Execution record for pricing rules
+/// Tracks preview and apply operations with status and results
+/// M0.5: Extended for automation runner with state machine and retry tracking
+model RuleRun {
+  id           String        @id @default(cuid())
+  tenantId     String
+  projectId    String
+  ruleId       String
+  status       RuleRunStatus @default(PREVIEW)
+  scheduledFor DateTime?     @db.Timestamptz(6)
+  queuedAt     DateTime?     @db.Timestamptz(6) // M0.5: When queued for processing
+  startedAt    DateTime?     @db.Timestamptz(6)
+  finishedAt   DateTime?     @db.Timestamptz(6)
+  explainJson  Json? // Aggregate rationale and scope
+  errorMessage String?       @db.Text
+  metadata     Json? // M0.5: Additional context (actor, correlation ID, etc.)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(6)
+  Tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  Project      Project       @relation(fields: [projectId], references: [id])
+  PricingRule  PricingRule   @relation(fields: [ruleId], references: [id])
+  RuleTarget   RuleTarget[]
+
+  @@index([tenantId, projectId, status])
+  @@index([ruleId, status])
+  @@index([scheduledFor])
+  @@index([queuedAt])
+  @@index([createdAt])
+}
+
+/// RuleTarget — Individual product/variant targeted by a rule run
+/// Stores before/after snapshots for determinism and auditability
+/// M0.5: Extended for automation runner with retry tracking and timestamps
+model RuleTarget {
+  id           String           @id @default(cuid())
+  tenantId     String
+  projectId    String
+  ruleRunId    String
+  productId    String
+  variantId    String? // Shopify variant ID if applicable
+  skuId        String? // M0.5: SKU reference for price lookups
+  beforeJson   Json // Snapshot before transform (e.g., {"currency":"USD","unit_amount":1299})
+  afterJson    Json // Snapshot after transform
+  status       RuleTargetStatus @default(PREVIEW)
+  attempts     Int              @default(0) // M0.5: Retry attempt count
+  lastAttempt  DateTime?        @db.Timestamptz(6) // M0.5: Last retry timestamp
+  appliedAt    DateTime?        @db.Timestamptz(6) // M0.5: When successfully applied
+  errorMessage String?          @db.Text
+  createdAt    DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @db.Timestamptz(6)
+  Tenant       Tenant           @relation(fields: [tenantId], references: [id])
+  Project      Project          @relation(fields: [projectId], references: [id])
+  RuleRun      RuleRun          @relation(fields: [ruleRunId], references: [id])
+
+  @@index([tenantId, projectId, status])
+  @@index([ruleRunId, status])
+  @@index([status, lastAttempt])
+  @@index([productId])
+  @@index([variantId])
+  @@index([skuId])
+}
+
 model Price {
   id           String         @id @default(cuid())
   skuId        String
@@ -185,7 +377,7 @@ model Price {
 }
 
 model PriceChange {
-  id              String            @id @default(cuid())
+  id              String             @id @default(cuid())
   tenantId        String
   projectId       String
   skuId           String
@@ -194,38 +386,103 @@ model PriceChange {
   toAmount        Int
   currency        String
   context         Json?
-  status          PriceChangeStatus @default(PENDING)
+  status          PriceChangeStatus  @default(PENDING) // Legacy field - kept for backward compat
   policyResult    Json?
   approvedBy      String?
   appliedAt       DateTime?
   connectorStatus Json?
-  createdAt       DateTime          @default(now())
+  createdAt       DateTime           @default(now())
+  // M0.1 fields (optional for now to maintain compatibility)
+  selectorJson    Json? // M0.1: rule selector predicate
+  transformJson   Json? // M0.1: transform (%, absolute, floor/ceiling)
+  scheduleAt      DateTime? // M0.1: optional scheduling
+  state           PriceChangeStatus? // M0.1: renamed from status
+  createdBy       String? // M0.1: actor tracking
+  // Pricing Rules integration
+  productId       String? // Product ID for rule-based changes
+  variantId       String? // Variant ID (e.g., Shopify variant)
+  ruleRunId       String? // Link to RuleRun if source is rule-based
+  compareAtOld    Int? // Previous compare-at price
+  compareAtNew    Int? // New compare-at price
+  Project         Project            @relation(fields: [projectId], references: [id])
+  Tenant          Tenant             @relation(fields: [tenantId], references: [id])
+  ExplainTrace    ExplainTrace[] // M1.1: explainability traces
 
   @@index([tenantId, projectId, status])
+  @@index([scheduleAt])
+  @@index([ruleRunId])
+  @@index([productId])
+  @@index([variantId])
+}
+
+/// Explain Trace — M1.1: Explainability traces for price changes
+/// Stores detailed reasoning for previews, applies, and rollbacks
+model ExplainTrace {
+  id            String       @id @default(cuid())
+  tenantId      String
+  projectId     String?
+  priceChangeId String? // Optional: link to specific price change
+  entity        String // Entity type (PriceChange, Rule, etc.)
+  entityId      String // Entity ID
+  action        String // Action (preview, apply, rollback, simulate)
+  actor         String // User or system actor
+  trace         Json // M1.1: explainability trace (why/how)
+  metadata      Json? // Additional context
+  createdAt     DateTime     @default(now())
+  Tenant        Tenant       @relation(fields: [tenantId], references: [id])
+  Project       Project?     @relation(fields: [projectId], references: [id])
+  PriceChange   PriceChange? @relation(fields: [priceChangeId], references: [id])
+
+  @@index([tenantId, entity, entityId])
+  @@index([priceChangeId])
+  @@index([createdAt])
+  @@index([actor])
 }
 
 model PriceVersion {
-  id        String   @id @default(cuid())
-  priceId   String
-  amount    Int
-  note      String?
-  createdAt DateTime @default(now())
-  Price     Price    @relation(fields: [priceId], references: [id])
+  id         String    @id @default(cuid())
+  priceId    String
+  amount     Int
+  note       String?
+  createdAt  DateTime  @default(now())
+  Price      Price     @relation(fields: [priceId], references: [id])
+  // M0.1 fields (optional for now)
+  productId  String? // M0.1: direct product link
+  currency   String? // M0.1: currency code
+  unitAmount Int? // M0.1: price in smallest currency unit
+  compareAt  Int? // M0.1: optional compare-at price
+  validFrom  DateTime? // M0.1: version validity start
+  validTo    DateTime? // M0.1: optional validity end
+  Product    Product?  @relation(fields: [productId], references: [id])
+
+  @@index([priceId])
+  @@index([productId, validFrom, validTo])
+  @@index([currency])
 }
 
 model Product {
-  id        String   @id @default(cuid())
-  tenantId  String
-  projectId String
-  name      String
-  code      String
-  status    Status   @default(DRAFT)
-  createdAt DateTime @default(now())
-  Project   Project  @relation(fields: [projectId], references: [id])
-  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  Sku       Sku[]
+  id           String         @id @default(cuid())
+  tenantId     String
+  projectId    String
+  name         String
+  code         String
+  status       Status         @default(DRAFT)
+  createdAt    DateTime       @default(now())
+  // M0.1 fields (optional for backward compat)
+  sku          String? // M0.1: canonical SKU
+  title        String? // M0.1: product title
+  tags         String[]       @default([]) // M0.1: array of tags
+  channelRefs  Json? // M0.1: connector-specific refs
+  active       Boolean?       @default(true) // M0.1: active status
+  Project      Project        @relation(fields: [projectId], references: [id])
+  Tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  Sku          Sku[]
+  PriceVersion PriceVersion[]
 
   @@unique([tenantId, projectId, code], map: "tenantId_projectId_code")
+  @@unique([tenantId, projectId, sku], map: "tenantId_projectId_sku")
+  @@index([tenantId, active])
+  @@index([tags])
 }
 
 model Project {
@@ -245,6 +502,14 @@ model Project {
   Product            Product[]
   Tenant             Tenant               @relation(fields: [tenantId], references: [id])
   ShopifyIntegration ShopifyIntegration[]
+  Audit              Audit[] // M0.1
+  DiscountPolicy     DiscountPolicy[] // M0.1
+  PriceChange        PriceChange[] // M0.1
+  ExplainTrace       ExplainTrace[] // M1.1
+  CopilotQueryLog    CopilotQueryLog[] // M1.4
+  PricingRule        PricingRule[] // Pricing rules
+  RuleRun            RuleRun[] // Rule executions
+  RuleTarget         RuleTarget[] // Rule targets
 }
 
 model Quote {
@@ -320,17 +585,25 @@ model Sku {
 }
 
 model Tenant {
-  id             String           @id @default(cuid())
-  name           String
-  createdAt      DateTime         @default(now())
-  Competitor     Competitor[]
-  CompetitorRule CompetitorRule[]
-  Customer       Customer[]
-  Event          Event[]
-  Policy         Policy[]
-  Product        Product[]
-  Project        Project[]
-  User           User[]
+  id              String            @id @default(cuid())
+  name            String
+  createdAt       DateTime          @default(now())
+  Competitor      Competitor[]
+  CompetitorRule  CompetitorRule[]
+  Customer        Customer[]
+  Event           Event[]
+  Policy          Policy[]
+  Product         Product[]
+  Project         Project[]
+  User            User[]
+  Audit           Audit[] // M0.1
+  DiscountPolicy  DiscountPolicy[] // M0.1
+  PriceChange     PriceChange[] // M0.1
+  ExplainTrace    ExplainTrace[] // M1.1
+  CopilotQueryLog CopilotQueryLog[] // M1.4
+  PricingRule     PricingRule[] // Pricing rules
+  RuleRun         RuleRun[] // Rule executions
+  RuleTarget      RuleTarget[] // Rule targets
 }
 
 model User {
@@ -349,6 +622,25 @@ enum PriceChangeStatus {
   PENDING
   APPROVED
   REJECTED
+  APPLIED
+  FAILED
+  ROLLED_BACK
+}
+
+enum RuleRunStatus {
+  PREVIEW
+  QUEUED
+  APPLYING
+  APPLIED
+  PARTIAL // M0.5: Some targets succeeded, some failed
+  FAILED
+  ROLLED_BACK
+}
+
+enum RuleTargetStatus {
+  PREVIEW
+  QUEUED
+  APPLYING // M0.5: Currently being applied
   APPLIED
   FAILED
   ROLLED_BACK
@@ -378,4 +670,52 @@ enum Status {
   DRAFT
   ACTIVE
   ARCHIVED
+}
+
+/// CopilotQueryLog — M1.4: Audit trail for copilot queries
+/// Logs all natural language queries with resolved schemas and tenant scope
+model CopilotQueryLog {
+  id            String   @id @default(cuid())
+  tenantId      String
+  projectId     String
+  userId        String? // User who made the query
+  userRole      String? // Role at time of query (VIEWER, EDITOR, ADMIN, OWNER)
+  query         String // Natural language query
+  generatedSQL  String? // Generated SQL query
+  queryType     String // Type: 'read', 'aggregate', 'explain'
+  resultCount   Int? // Number of results returned
+  executionTime Int? // Execution time in ms
+  schemaVersion String? // Schema version used for query generation
+  method        String? // 'ai' or 'pattern'
+  success       Boolean  @default(true)
+  error         String? // Error message if failed
+  metadata      Json? // Additional context (filters, params, etc.)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  Tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  Project       Project  @relation(fields: [projectId], references: [id])
+
+  @@index([tenantId, projectId, createdAt])
+  @@index([userId, createdAt])
+  @@index([success])
+  @@index([createdAt])
+}
+
+/// AnalyticsDigest — M1.4: Daily analytics snapshots with anomaly detection
+/// Stores aggregated metrics and detected anomalies for pricing intelligence
+model AnalyticsDigest {
+  id                String   @id @default(cuid())
+  tenantId          String
+  projectId         String
+  digestDate        DateTime @db.Date // Date of the digest
+  totalPriceChanges Int      @default(0)
+  totalRevenue      Int? // Projected revenue impact in cents
+  avgMargin         Float? // Average margin percentage
+  anomalies         Json? // Detected anomalies: price spikes, margin compression
+  topPerformers     Json? // Top performing SKUs
+  metrics           Json // Additional metrics
+  createdAt         DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([projectId, digestDate])
+  @@index([tenantId, projectId, digestDate])
+  @@index([digestDate])
 }

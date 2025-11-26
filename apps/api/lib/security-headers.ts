@@ -225,7 +225,8 @@ export const defaultCORSConfig: CORSConfig = {
     'X-Requested-With',
     'Accept',
     'Origin',
-    'User-Agent'
+    'User-Agent',
+    'Idempotency-Key'
   ],
   credentials: true,
   maxAge: 86400, // 24 hours

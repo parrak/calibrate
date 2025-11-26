@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://calibr.lat/schemas/price-version/v0.1.0",
+  "title": "PriceVersion",
+  "description": "M0.1 Price version - temporal pricing data",
+  "type": "object",
+  "required": [
+    "id",
+    "productId",
+    "currency",
+    "unitAmount",
+    "validFrom"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "productId": {
+      "type": "string",
+      "description": "Product reference"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 currency code"
+    },
+    "unitAmount": {
+      "type": "integer",
+      "description": "Price in smallest currency unit (cents)"
+    },
+    "compareAt": {
+      "type": "integer",
+      "description": "Optional compare-at price"
+    },
+    "validFrom": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Version start date"
+    },
+    "validTo": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Version end date (null = active)"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

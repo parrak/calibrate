@@ -7,6 +7,12 @@ export const runtime = 'nodejs'
 
 export const GET = withSecurity(async (req: NextRequest) => {
   try {
+    // Check feature flag
+    const isEnabled = process.env.AMAZON_CONNECTOR_ENABLED === 'true'
+    if (!isEnabled) {
+      return NextResponse.json({ error: 'Amazon connector is disabled', hint: 'Set AMAZON_CONNECTOR_ENABLED=true to enable' }, { status: 403 })
+    }
+
     const { searchParams } = new URL(req.url)
     const search = searchParams.get('search') || undefined
     const page = Number(searchParams.get('page') || '1')

@@ -50,6 +50,20 @@ export class ShopifyClient {
       const token = this.accessToken || this.config.apiKey;
       if (token) {
         config.headers['X-Shopify-Access-Token'] = token;
+        // Log auth header for debugging (mask token for security)
+        console.log('Shopify API request auth:', {
+          url: config.url,
+          method: config.method,
+          tokenLength: token.length,
+          tokenPrefix: token.substring(0, 8) + '...',
+          hasAccessToken: !!this.accessToken,
+          usingApiKey: !this.accessToken,
+        });
+      } else {
+        console.warn('Shopify API request without auth token!', {
+          url: config.url,
+          method: config.method,
+        });
       }
       return config;
     });
@@ -184,12 +198,17 @@ export class ShopifyClient {
     // Log detailed error for 400 and 401 errors
     if (statusCode === 400 || statusCode === 401) {
       const requestConfig = axiosError.config as AxiosRequestConfig | undefined;
+      const authToken = requestConfig?.headers?.['X-Shopify-Access-Token'];
       console.error(`Shopify API ${statusCode} error:`, {
         url: requestConfig?.url,
         method: requestConfig?.method,
         params: requestConfig?.params,
         statusCode,
         responseData,
+        hasAuthToken: !!authToken,
+        authTokenLength: authToken ? String(authToken).length : 0,
+        authTokenPrefix: authToken ? String(authToken).substring(0, 8) + '...' : 'none',
+        shopDomain: this.shopDomain,
       });
     }
 

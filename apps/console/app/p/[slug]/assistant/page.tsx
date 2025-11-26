@@ -21,7 +21,7 @@ type Message = {
   timestamp: Date
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ''
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
 
 const SUGGESTED_QUERIES = [
   "Why was this price changed?",
@@ -113,14 +113,20 @@ export default function AssistantPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold">AI Pricing Assistant</h1>
+        <h1 className="text-2xl font-semibold">AI Assistant</h1>
         <p className="text-sm text-mute mt-1">
           Ask questions about your pricing data in natural language
         </p>
       </header>
 
       {/* Messages */}
-      <div className="bg-surface border border-border rounded-xl min-h-[400px] max-h-[600px] overflow-y-auto p-4 space-y-4">
+      <div
+        className="bg-surface border border-border rounded-xl min-h-[400px] max-h-[600px] overflow-y-auto p-4 space-y-4"
+        role="log"
+        aria-label="AI Assistant conversation"
+        aria-live="polite"
+        aria-atomic="false"
+      >
         {messages.length === 0 && (
           <div className="text-center text-mute py-12">
             <div className="text-4xl mb-4">💬</div>
@@ -150,7 +156,7 @@ export default function AssistantPage() {
                     <summary className="cursor-pointer font-medium mb-2">
                       View Data ({message.response.method === 'ai' ? 'AI-powered' : 'Pattern-based'})
                     </summary>
-                    <pre className="bg-black/20 p-2 rounded overflow-x-auto">
+                    <pre className="bg-gray-50 border border-gray-200 p-2 rounded overflow-x-auto text-gray-800">
                       {JSON.stringify(message.response.data, null, 2)}
                     </pre>
                   </details>
@@ -164,7 +170,7 @@ export default function AssistantPage() {
                     <summary className="cursor-pointer font-medium mb-2">
                       View SQL Query
                     </summary>
-                    <pre className="bg-black/20 p-2 rounded overflow-x-auto font-mono text-xs">
+                    <pre className="bg-gray-50 border border-gray-200 p-2 rounded overflow-x-auto font-mono text-xs text-gray-800">
                       {message.response.sql}
                     </pre>
                   </details>
@@ -180,7 +186,7 @@ export default function AssistantPage() {
                       <button
                         key={idx}
                         onClick={() => handleSuggestionClick(suggestion)}
-                        className="block text-xs text-left w-full px-2 py-1 rounded hover:bg-black/20 transition"
+                        className="block text-xs text-left w-full px-2 py-1 rounded hover:bg-gray-100 transition"
                       >
                         • {suggestion}
                       </button>
@@ -210,22 +216,55 @@ export default function AssistantPage() {
       </div>
 
       {/* Input Form */}
-      <form onSubmit={handleSubmit} className="flex gap-3">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ask a question about your pricing data..."
-          className="flex-1 px-4 py-3 rounded-lg border border-border bg-surface focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-          disabled={loading || !token}
-        />
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={!query.trim() || loading || !token}
-        >
-          {loading ? 'Thinking...' : 'Ask'}
-        </Button>
+      <form onSubmit={handleSubmit} className="space-y-2">
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && query.trim() && !loading && token) {
+                handleSubmit(e)
+              }
+            }}
+            placeholder="Ask a question about your pricing data..."
+            className="flex-1 px-4 py-3 rounded-lg border border-border bg-surface focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading || !token}
+            aria-label="Ask a question about your pricing data"
+            aria-describedby="ask-input-help"
+            aria-invalid="false"
+          />
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={!query.trim() || loading || !token}
+            title={
+              !token
+                ? 'Please sign in to use the AI Assistant'
+                : !query.trim()
+                ? 'Enter a question to ask the AI Assistant'
+                : ''
+            }
+            aria-label={
+              !token
+                ? 'Ask button disabled: Please sign in to use the AI Assistant'
+                : !query.trim()
+                ? 'Ask button disabled: Enter a question first'
+                : loading
+                ? 'Processing your question'
+                : 'Ask the AI Assistant'
+            }
+            aria-describedby="ask-button-help"
+          >
+            {loading ? 'Thinking...' : 'Ask'}
+          </Button>
+        </div>
+        <div id="ask-input-help" className="text-xs text-mute">
+          {!token ? "Please sign in to use the AI Assistant" : "Type your question and press Enter or click Ask"}
+        </div>
+        <div id="ask-button-help" className="sr-only" aria-live="polite">
+          {!query.trim() ? "Button is disabled. Enter a question in the text field to enable it." : loading ? "Processing your question, please wait" : "Click to submit your question"}
+        </div>
       </form>
 
       {/* Suggested Questions */}
@@ -238,7 +277,8 @@ export default function AssistantPage() {
                 key={idx}
                 onClick={() => handleSuggestionClick(suggestion)}
                 disabled={loading || !token}
-                className="text-left text-sm px-3 py-2 rounded-lg border border-border hover:bg-muted/20 hover:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-left text-sm px-3 py-2 rounded-lg border border-border hover:bg-muted/20 hover:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                aria-label={`Suggested question: ${suggestion}`}
               >
                 💡 {suggestion}
               </button>
@@ -250,7 +290,16 @@ export default function AssistantPage() {
       {/* Warning if no token */}
       {!token && (
         <div className="bg-amber-500/10 border border-amber-500/40 rounded-lg px-4 py-3 text-sm text-amber-200">
-          Please sign in to use the AI Assistant
+          <div className="font-medium mb-2">⚠️ AI Assistant Unavailable</div>
+          <div className="text-xs space-y-1">
+            <div>The AI Assistant requires API authentication, which is not currently configured.</div>
+            <div className="mt-2"><strong>Required configuration:</strong></div>
+            <ul className="list-disc list-inside ml-2">
+              <li>Environment variable <code className="bg-amber-900/40 px-1 rounded">CONSOLE_INTERNAL_TOKEN</code> must be set</li>
+              <li>Environment variable <code className="bg-amber-900/40 px-1 rounded">NEXT_PUBLIC_API_BASE</code> or <code className="bg-amber-900/40 px-1 rounded">API_BASE_URL</code> must be set</li>
+            </ul>
+            <div className="mt-2">Please contact your system administrator to enable this feature, then sign out and sign back in.</div>
+          </div>
         </div>
       )}
 

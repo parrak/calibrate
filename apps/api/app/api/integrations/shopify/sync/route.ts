@@ -84,6 +84,17 @@ export const POST = withSecurity(async function POST(request: NextRequest) {
       );
     }
 
+    // Log integration details for debugging (mask access token)
+    console.log('Retrieved Shopify integration from database:', {
+      id: integration.id,
+      projectId: integration.projectId,
+      shopDomain: integration.shopDomain,
+      accessTokenLength: integration.accessToken?.length || 0,
+      accessTokenPrefix: integration.accessToken ? integration.accessToken.substring(0, 8) + '...' : 'none',
+      scope: integration.scope,
+      isActive: integration.isActive,
+    });
+
     const connector = await initializeShopifyConnector(integration);
 
     // Update sync status to in progress (only for non-test actions)
@@ -314,6 +325,11 @@ async function setupWebhooks(connector: ShopifyConnector, integration: ShopifyIn
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE;
   if (!baseUrl) {
     throw new Error('NEXT_PUBLIC_API_BASE is not configured');
+  }
+
+  // Webhook secret is required for setting up webhooks
+  if (!process.env.SHOPIFY_WEBHOOK_SECRET) {
+    throw new Error('SHOPIFY_WEBHOOK_SECRET is required for setting up webhooks');
   }
 
   const webhooksClient = getWebhooksClient(connector);
