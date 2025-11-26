@@ -80,7 +80,11 @@
       "Bash(gh run view:*)",
       "Bash(pnpm type-check:*)",
       "Bash(pnpm db:generate:*)",
-      "Bash(pnpm --filter @calibr/monitor build:*)"
+      "Bash(pnpm --filter @calibr/monitor build:*)",
+      "Bash(pnpm --filter @calibr/automation-runner build:*)",
+      "Bash(dir:*)",
+      "Bash(powershell:*)",
+      "Bash(Select-String -Pattern \"error TS\")"
     ],
     "deny": [],
     "ask": []
