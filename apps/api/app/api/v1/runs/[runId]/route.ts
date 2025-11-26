@@ -64,7 +64,7 @@ export const GET = withSecurity(
         where: {
           entity: 'RuleRun',
           entityId: runId,
-          tenantId: access.tenantId,
+          tenantId: access.project.tenantId,
         },
         orderBy: { createdAt: 'desc' },
       });
