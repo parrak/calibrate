@@ -37,9 +37,7 @@ export function Logos() {
 function Logo({ children }: { children: React.ReactNode }) {
   return (
     <div className="h-12 rounded-md border border-border bg-surface flex items-center justify-center px-4">
-      <div className="text-gray-600">
-        {children}
-      </div>
+      {children}
     </div>
   )
 }
