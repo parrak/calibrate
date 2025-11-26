@@ -5,17 +5,16 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
-import { DLQService } from '@calibr/automation-runner'
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { projectId: string } }
+  _req: NextRequest,
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    const projectId = params.projectId
+    const { projectId } = await params
 
     // Verify project exists
-    const project = await prisma.project.findUnique({
+    const project = await prisma().project.findUnique({
       where: { id: projectId },
     })
 
@@ -26,26 +25,33 @@ export async function GET(
       )
     }
 
-    // Generate DLQ report
-    const dlqService = new DLQService()
-    const report = await dlqService.generateDLQReport(projectId)
+    // Get all failed targets for the project
+    const failedTargets = await prisma().ruleTarget.findMany({
+      where: {
+        projectId,
+        status: 'FAILED',
+      },
+      include: {
+        RuleRun: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+      take: 100,
+    })
 
     return NextResponse.json({
       projectId,
-      totalFailed: report.totalFailed,
-      byErrorType: report.byErrorType,
-      recommendations: report.recommendations,
-      entries: report.entries.map(entry => ({
-        targetId: entry.target.id,
-        runId: entry.run.id,
-        skuId: entry.target.skuId,
-        productId: entry.target.productId,
-        variantId: entry.target.variantId,
-        errorType: entry.errorType,
-        errorMessage: entry.target.errorMessage,
-        failedAt: entry.failedAt,
-        retryable: entry.retryable,
-        attempts: entry.target.attempts,
+      totalFailed: failedTargets.length,
+      entries: failedTargets.map((entry: any) => ({
+        targetId: entry.id,
+        runId: entry.ruleRunId,
+        skuId: entry.skuId,
+        productId: entry.productId,
+        variantId: entry.variantId,
+        errorMessage: entry.errorMessage,
+        failedAt: entry.updatedAt,
+        attempts: entry.attempts,
       })),
     })
   } catch (error) {

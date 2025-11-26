@@ -5,17 +5,16 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
-import { DLQService } from '@calibr/automation-runner'
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { runId: string } }
+  _req: NextRequest,
+  { params }: { params: Promise<{ runId: string }> }
 ) {
   try {
-    const runId = params.runId
+    const { runId } = await params
 
     // Verify run exists
-    const run = await prisma.ruleRun.findUnique({
+    const run = await prisma().ruleRun.findUnique({
       where: { id: runId },
     })
 
@@ -26,23 +25,25 @@ export async function GET(
       )
     }
 
-    // Get DLQ entries for this run
-    const dlqService = new DLQService()
-    const entries = await dlqService.getFailedTargetsForRun(runId)
+    // Get failed targets for this run
+    const failedTargets = await prisma().ruleTarget.findMany({
+      where: {
+        ruleRunId: runId,
+        status: 'FAILED',
+      },
+    })
 
     return NextResponse.json({
       runId,
-      totalFailed: entries.length,
-      entries: entries.map(entry => ({
-        targetId: entry.target.id,
-        skuId: entry.target.skuId,
-        productId: entry.target.productId,
-        variantId: entry.target.variantId,
-        errorType: entry.errorType,
-        errorMessage: entry.target.errorMessage,
-        failedAt: entry.failedAt,
-        retryable: entry.retryable,
-        attempts: entry.target.attempts,
+      totalFailed: failedTargets.length,
+      entries: failedTargets.map((entry: any) => ({
+        targetId: entry.id,
+        skuId: entry.skuId,
+        productId: entry.productId,
+        variantId: entry.variantId,
+        errorMessage: entry.errorMessage,
+        failedAt: entry.updatedAt,
+        attempts: entry.attempts,
       })),
     })
   } catch (error) {

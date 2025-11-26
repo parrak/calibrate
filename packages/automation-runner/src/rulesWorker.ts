@@ -59,11 +59,11 @@ export class RulesWorker {
   /**
    * Emit worker event
    */
-  private emit(eventType: WorkerEvent, data?: unknown): void {
+  private emit(eventType: WorkerEvent, data?: Record<string, any>): void {
     const payload: WorkerEventPayload = {
       eventType,
       timestamp: new Date(),
-      ...data,
+      ...(data || {}),
     }
 
     const listeners = this.eventListeners.get(eventType) || []
@@ -115,7 +115,7 @@ export class RulesWorker {
     }
 
     try {
-      const queuedRuns = await prisma.ruleRun.findMany({
+      const queuedRuns = await prisma().ruleRun.findMany({
         where: {
           status: 'QUEUED',
         },
@@ -131,7 +131,7 @@ export class RulesWorker {
 
       // Process runs concurrently
       await Promise.all(
-        queuedRuns.map(run => this.processRun(run))
+        queuedRuns.map((run: any) => this.processRun(run))
       )
     } catch (error) {
       this.emit('worker.error', { error: error instanceof Error ? error.message : 'Unknown error' })
@@ -141,12 +141,12 @@ export class RulesWorker {
   /**
    * Process a single rule run
    */
-  private async processRun(run: RuleRun & { PricingRule: PricingRule; RuleTarget: RuleTarget[] }): Promise<RunResult> {
+  private async processRun(run: any): Promise<RunResult> {
     const startTime = Date.now()
 
     try {
       // Update status to APPLYING
-      await prisma.ruleRun.update({
+      await prisma().ruleRun.update({
         where: { id: run.id },
         data: {
           status: 'APPLYING',
@@ -173,7 +173,7 @@ export class RulesWorker {
       }
 
       // Update run with final status
-      await prisma.ruleRun.update({
+      await prisma().ruleRun.update({
         where: { id: run.id },
         data: {
           status: finalStatus,
@@ -198,7 +198,7 @@ export class RulesWorker {
       return result
     } catch (error) {
       // Critical error - mark run as FAILED
-      await prisma.ruleRun.update({
+      await prisma().ruleRun.update({
         where: { id: run.id },
         data: {
           status: 'FAILED',
@@ -219,15 +219,15 @@ export class RulesWorker {
   /**
    * Apply all targets in a run with concurrency control
    */
-  private async applyTargets(run: RuleRun & { PricingRule: PricingRule; RuleTarget: RuleTarget[] }): Promise<TargetApplicationResult[]> {
+  private async applyTargets(run: any): Promise<TargetApplicationResult[]> {
     const results: TargetApplicationResult[] = []
-    const targets = run.RuleTarget.filter(t => t.status === 'QUEUED' || t.status === 'PREVIEW')
+    const targets = run.RuleTarget.filter((t: any) => t.status === 'QUEUED' || t.status === 'PREVIEW')
 
     // Process targets with concurrency limit
     for (let i = 0; i < targets.length; i += this.config.maxConcurrency) {
       const batch = targets.slice(i, i + this.config.maxConcurrency)
       const batchResults = await Promise.all(
-        batch.map(target => this.applyTarget(run, target))
+        batch.map((target: any) => this.applyTarget(run, target))
       )
       results.push(...batchResults)
     }
@@ -238,12 +238,12 @@ export class RulesWorker {
   /**
    * Apply a single target with retry logic
    */
-  private async applyTarget(run: RuleRun & { PricingRule: PricingRule }, target: RuleTarget): Promise<TargetApplicationResult> {
+  private async applyTarget(run: any, target: any): Promise<TargetApplicationResult> {
     const startTime = Date.now()
 
     try {
       // Update status to APPLYING
-      await prisma.ruleTarget.update({
+      await prisma().ruleTarget.update({
         where: { id: target.id },
         data: {
           status: 'APPLYING',
@@ -293,7 +293,7 @@ export class RulesWorker {
             })
 
             // Update attempt count
-            await prisma.ruleTarget.update({
+            await prisma().ruleTarget.update({
               where: { id: target.id },
               data: {
                 attempts: target.attempts + attempt + 1,
@@ -318,7 +318,7 @@ export class RulesWorker {
       }
 
       // Update target status to APPLIED
-      await prisma.ruleTarget.update({
+      await prisma().ruleTarget.update({
         where: { id: target.id },
         data: {
           status: 'APPLIED',
@@ -339,12 +339,12 @@ export class RulesWorker {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      const retryable = isRetryableError(error)
+      const retryable = isRetryableError(error as Error)
 
       // Determine if we should retry or mark as FAILED
       if (target.attempts + 1 >= this.config.maxRetries || !retryable) {
         // Max retries exceeded or non-retryable error - mark as FAILED
-        await prisma.ruleTarget.update({
+        await prisma().ruleTarget.update({
           where: { id: target.id },
           data: {
             status: 'FAILED',
@@ -356,7 +356,7 @@ export class RulesWorker {
         this.emit('dlq.added', { targetId: target.id, runId: run.id, error: errorMessage })
       } else {
         // Retryable - mark back as QUEUED for next attempt
-        await prisma.ruleTarget.update({
+        await prisma().ruleTarget.update({
           where: { id: target.id },
           data: {
             status: 'QUEUED',
@@ -381,7 +381,7 @@ export class RulesWorker {
    */
   async materializeTargets(ruleId: string, tenantId: string, projectId: string): Promise<RuleRun> {
     // Get the rule
-    const rule = await prisma.pricingRule.findUnique({
+    const rule = await prisma().pricingRule.findUnique({
       where: { id: ruleId },
     })
 
@@ -390,7 +390,7 @@ export class RulesWorker {
     }
 
     // Create RuleRun
-    const run = await prisma.ruleRun.create({
+    const run = await prisma().ruleRun.create({
       data: {
         tenantId,
         projectId,
@@ -416,7 +416,7 @@ export class RulesWorker {
    * Queue a run for processing
    */
   async queueRun(runId: string): Promise<void> {
-    await prisma.ruleRun.update({
+    await prisma().ruleRun.update({
       where: { id: runId },
       data: {
         status: 'QUEUED',

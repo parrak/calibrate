@@ -81,7 +81,7 @@ export class ReconciliationService {
    * Get all applied targets from a run
    */
   private async getAppliedTargets(runId: string): Promise<RuleTarget[]> {
-    return await prisma.ruleTarget.findMany({
+    return await prisma().ruleTarget.findMany({
       where: {
         ruleRunId: runId,
         status: 'APPLIED',
@@ -134,7 +134,7 @@ export class ReconciliationService {
     difference: number
   ): Promise<void> {
     // Write to EventLog for audit trail
-    await prisma.eventLog.create({
+    await prisma().eventLog.create({
       data: {
         eventKey: `reconciliation:mismatch:${target.id}:${Date.now()}`,
         tenantId: target.tenantId,
@@ -160,13 +160,13 @@ export class ReconciliationService {
    * Write reconciliation completion event
    */
   private async writeReconciliationEvent(runId: string, report: ReconciliationReport): Promise<void> {
-    const run = await prisma.ruleRun.findUnique({
+    const run = await prisma().ruleRun.findUnique({
       where: { id: runId },
     })
 
     if (!run) return
 
-    await prisma.eventLog.create({
+    await prisma().eventLog.create({
       data: {
         eventKey: `reconciliation:complete:${runId}:${Date.now()}`,
         tenantId: run.tenantId,

@@ -1,23 +1,23 @@
 /**
  * GET /api/v1/projects/:projectId/automation-metrics
  * Get automation runner metrics for a project
+ * TODO: Implement full metrics collection with @calibr/automation-runner
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
-import { collectWorkerMetrics } from '@calibr/automation-runner'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    const projectId = params.projectId
+    const { projectId } = await params
     const { searchParams } = new URL(req.url)
     const sinceParam = searchParams.get('since')
 
     // Verify project exists
-    const project = await prisma.project.findUnique({
+    const project = await prisma().project.findUnique({
       where: { id: projectId },
     })
 
@@ -29,23 +29,53 @@ export async function GET(
     }
 
     // Parse since parameter
-    const since = sinceParam ? new Date(sinceParam) : undefined
+    const sinceDate = sinceParam ? new Date(sinceParam) : new Date(Date.now() - 24 * 60 * 60 * 1000)
 
-    // Collect metrics
-    const metrics = await collectWorkerMetrics(projectId, since)
+    // Get runs for the project
+    const runs = await prisma().ruleRun.findMany({
+      where: {
+        projectId,
+        createdAt: {
+          gte: sinceDate,
+        },
+      },
+      include: {
+        RuleTarget: true,
+      },
+    })
+
+    // Calculate basic metrics
+    const runsProcessed = runs.filter((r: any) =>
+      r.status === 'APPLIED' || r.status === 'PARTIAL' || r.status === 'FAILED'
+    ).length
+
+    let targetsApplied = 0
+    let targetsFailed = 0
+    runs.forEach((run: any) => {
+      targetsApplied += run.RuleTarget.filter((t: any) => t.status === 'APPLIED').length
+      targetsFailed += run.RuleTarget.filter((t: any) => t.status === 'FAILED').length
+    })
+
+    const totalTargets = targetsApplied + targetsFailed
+    const successRate = totalTargets > 0 ? (targetsApplied / totalTargets) * 100 : 0
+
+    // Get DLQ size
+    const dlqSize = await prisma().ruleTarget.count({
+      where: {
+        projectId,
+        status: 'FAILED',
+      },
+    })
 
     return NextResponse.json({
       projectId,
-      since: since?.toISOString() || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      since: sinceDate.toISOString(),
       metrics: {
-        runsProcessed: metrics.runsProcessed,
-        targetsApplied: metrics.targetsApplied,
-        targetsFailed: metrics.targetsFailed,
-        retriesAttempted: metrics.retriesAttempted,
-        rate429Errors: metrics.rate429Errors,
-        averageDuration: metrics.averageDuration,
-        successRate: metrics.successRate,
-        dlqSize: metrics.dlqSize,
+        runsProcessed,
+        targetsApplied,
+        targetsFailed,
+        successRate,
+        dlqSize,
       },
     })
   } catch (error) {

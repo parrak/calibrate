@@ -5,17 +5,16 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@calibr/db'
-import { RulesWorker } from '@calibr/automation-runner'
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { runId: string } }
+  { params }: { params: Promise<{ runId: string }> }
 ) {
   try {
-    const runId = params.runId
+    const { runId } = await params
 
     // Verify run exists
-    const run = await prisma.ruleRun.findUnique({
+    const run = await prisma().ruleRun.findUnique({
       where: { id: runId },
     })
 
@@ -34,9 +33,24 @@ export async function POST(
       )
     }
 
-    // Queue the run
-    const worker = new RulesWorker()
-    await worker.queueRun(runId)
+    // Queue the run by updating status
+    await prisma().ruleRun.update({
+      where: { id: runId },
+      data: {
+        status: 'QUEUED',
+        queuedAt: new Date(),
+      },
+    })
+
+    // Create event for worker to pick up
+    await prisma().event.create({
+      data: {
+        tenantId: run.tenantId,
+        projectId: run.projectId,
+        kind: 'rule.run.queued',
+        payload: { runId },
+      },
+    })
 
     return NextResponse.json({
       runId,
@@ -55,7 +69,7 @@ export async function POST(
   }
 }
 
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS(_req: NextRequest) {
   return NextResponse.json(
     {},
     {
