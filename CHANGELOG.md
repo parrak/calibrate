@@ -7,6 +7,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **M1.9 Copilot Simulation API** — Introduced `/api/v1/copilot/simulate` for EDITOR+ users with zod validation, RBAC, pricing-engine execution, and Copilot audit logging. Includes Vitest coverage for payload validation, access control, and simulation logging.
 - **M1.7 Automation Runner UI Enhancements** — January 2025 ✅ MILESTONE
   - **Automation Runs Page**: New `/p/[slug]/automation/runs` page for monitoring rule executions
     - Runs table with status filters (Preview, Queued, Applying, Applied, Failed, Rolled Back)
