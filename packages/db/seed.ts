@@ -32,6 +32,7 @@ async function main() {
       slug: 'demo',
       name: 'Demo Project',
       tenantId: tenant.id,
+      updatedAt: new Date(),
     },
   })
   console.log('âœ“ Project created:', project.name)
@@ -220,6 +221,7 @@ async function main() {
         maxPctDelta: 0.15,
         dailyChangeBudgetPct: 0.25,
       },
+      updatedAt: new Date(),
     },
   })
   console.log('âœ“ Policy created')
@@ -236,6 +238,7 @@ async function main() {
       domain: 'competitora.example.com',
       channel: 'shopify',
       isActive: true,
+      updatedAt: new Date(),
     },
   })
   console.log('âœ“ Competitor created:', competitor1.name)
@@ -251,6 +254,7 @@ async function main() {
       domain: 'competitorb.example.com',
       channel: 'shopify',
       isActive: true,
+      updatedAt: new Date(),
     },
   })
   console.log('âœ“ Competitor created:', competitor2.name)
@@ -274,6 +278,7 @@ async function main() {
         skuCode: 'COMP-PRO-M',
         url: 'https://competitora.example.com/products/pro-monthly',
         isActive: true,
+        updatedAt: new Date(),
       },
     })
 
@@ -294,6 +299,7 @@ async function main() {
         skuCode: 'B-PRO-MONTH',
         url: 'https://competitorb.example.com/products/professional-monthly',
         isActive: true,
+        updatedAt: new Date(),
       },
     })
 
@@ -318,6 +324,7 @@ async function main() {
         skuCode: 'COMP-ENT-M',
         url: 'https://competitora.example.com/products/enterprise-monthly',
         isActive: true,
+        updatedAt: new Date(),
       },
     })
 
@@ -338,6 +345,7 @@ async function main() {
         skuCode: 'B-ENT-MONTH',
         url: 'https://competitorb.example.com/products/enterprise-monthly',
         isActive: true,
+        updatedAt: new Date(),
       },
     })
 
@@ -367,6 +375,7 @@ async function main() {
         minPrice: 1000,
         minMargin: 20,
       },
+      updatedAt: new Date(),
     },
   })
   console.log('âœ“ Competitor rule created')
@@ -374,11 +383,11 @@ async function main() {
   // Create some demo price changes
   const proMonthlyUsdSku = await prisma.sku.findFirst({
     where: { code: 'PRO-MONTHLY' },
-    include: { prices: true },
+    include: { Price: true },
   })
 
   if (proMonthlyUsdSku) {
-    const usdPrice = proMonthlyUsdSku.prices.find(p => p.currency === 'USD')
+    const usdPrice = proMonthlyUsdSku.Price.find(p => p.currency === 'USD')
     if (usdPrice) {
       await prisma.priceChange.create({
         data: {
