@@ -3,9 +3,11 @@
  * M1.6: Metrics collection and reporting for monitoring
  */
 
-import type { RuleRun, RuleTarget } from '@calibr/db'
+import type { RuleRun } from '@calibr/db'
 import type { RuleWorkerMetrics, RunResult } from './types'
 import { prisma } from '@calibr/db'
+
+const db = prisma()
 
 /**
  * Collect metrics for a specific run
@@ -17,7 +19,7 @@ export async function collectRunMetrics(runId: string): Promise<{
   appliedTargets: number
   failedTargets: number
 }> {
-  const run = await prisma().ruleRun.findUnique({
+  const run = await db.ruleRun.findUnique({
     where: { id: runId },
     include: {
       RuleTarget: true,
@@ -29,8 +31,8 @@ export async function collectRunMetrics(runId: string): Promise<{
   }
 
   const totalTargets = run.RuleTarget.length
-  const appliedTargets = run.RuleTarget.filter((t: any) => t.status === 'APPLIED').length
-  const failedTargets = run.RuleTarget.filter((t: any) => t.status === 'FAILED').length
+  const appliedTargets = run.RuleTarget.filter(t => t.status === 'APPLIED').length
+  const failedTargets = run.RuleTarget.filter(t => t.status === 'FAILED').length
 
   const duration = run.finishedAt && run.startedAt
     ? run.finishedAt.getTime() - run.startedAt.getTime()
@@ -54,7 +56,7 @@ export async function collectWorkerMetrics(projectId: string, since?: Date): Pro
   const sinceDate = since || new Date(Date.now() - 24 * 60 * 60 * 1000) // Default: last 24 hours
 
   // Get all runs for the project since the given date
-  const runs = await prisma().ruleRun.findMany({
+  const runs = await db.ruleRun.findMany({
     where: {
       projectId,
       createdAt: {
@@ -67,7 +69,7 @@ export async function collectWorkerMetrics(projectId: string, since?: Date): Pro
   })
 
   // Calculate metrics
-  const runsProcessed = runs.filter((r: any) => r.status === 'APPLIED' || r.status === 'PARTIAL' || r.status === 'FAILED').length
+  const runsProcessed = runs.filter(r => r.status === 'APPLIED' || r.status === 'PARTIAL' || r.status === 'FAILED').length
 
   let totalTargets = 0
   let targetsApplied = 0
@@ -104,7 +106,7 @@ export async function collectWorkerMetrics(projectId: string, since?: Date): Pro
   const successRate = totalTargets > 0 ? (targetsApplied / totalTargets) * 100 : 0
 
   // Get DLQ size
-  const dlqSize = await prisma().ruleTarget.count({
+  const dlqSize = await db.ruleTarget.count({
     where: {
       projectId,
       status: 'FAILED',
@@ -127,7 +129,7 @@ export async function collectWorkerMetrics(projectId: string, since?: Date): Pro
  * Record run metrics to event log
  */
 export async function recordRunMetrics(run: RuleRun, result: RunResult): Promise<void> {
-  await prisma().eventLog.create({
+  await db.eventLog.create({
     data: {
       eventKey: `metrics:run:${run.id}:${Date.now()}`,
       tenantId: run.tenantId,
@@ -154,13 +156,13 @@ export async function recordRunMetrics(run: RuleRun, result: RunResult): Promise
  * Record DLQ metrics to event log
  */
 export async function recordDLQMetrics(projectId: string, dlqSize: number): Promise<void> {
-  const project = await prisma().project.findUnique({
+  const project = await db.project.findUnique({
     where: { id: projectId },
   })
 
   if (!project) return
 
-  await prisma().eventLog.create({
+  await db.eventLog.create({
     data: {
       eventKey: `metrics:dlq:${projectId}:${Date.now()}`,
       tenantId: project.tenantId,

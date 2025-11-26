@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { RulesWorker, ReconciliationService, DLQService } from '../src'
+import type { PrismaClient } from '@calibr/db'
 import type { PriceConnector } from '../src/types'
 
 // Mock connector for testing
@@ -60,30 +61,73 @@ class MockConnector implements PriceConnector {
   }
 }
 
+const createPrismaMock = (): PrismaClient => {
+  const prismaMock = {
+    ruleRun: {
+      findMany: vi.fn().mockResolvedValue([]),
+      update: vi.fn().mockResolvedValue(null),
+      create: vi.fn().mockResolvedValue({ id: 'run-id' }),
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
+    ruleTarget: {
+      update: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+      count: vi.fn().mockResolvedValue(0),
+    },
+    pricingRule: {
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
+    eventLog: {
+      create: vi.fn().mockResolvedValue(null),
+    },
+    project: {
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
+    $transaction: vi.fn(async (operations: Array<unknown>) => {
+      return Promise.all(
+        operations.map(operation => {
+          if (typeof operation === 'function') {
+            return (operation as () => unknown)()
+          }
+          return operation
+        })
+      )
+    }),
+  }
+
+  return prismaMock as unknown as PrismaClient
+}
+
 describe('Automation Runner Integration', () => {
   let worker: RulesWorker
   let mockConnector: MockConnector
   let reconciliationService: ReconciliationService
   let dlqService: DLQService
+  let prismaMock: PrismaClient
 
   beforeEach(() => {
+    prismaMock = createPrismaMock()
+
     worker = new RulesWorker({
       maxConcurrency: 3,
       pollInterval: 1000,
       maxRetries: 3,
       enableReconciliation: true,
       reconciliationDelay: 1000,
-    })
+      disablePolling: true,
+    }, prismaMock)
 
     mockConnector = new MockConnector()
     worker.registerConnector('shopify', mockConnector)
     worker.registerConnector('mock', mockConnector)
 
-    reconciliationService = new ReconciliationService()
+    reconciliationService = new ReconciliationService(prismaMock)
     reconciliationService.registerConnector('shopify', mockConnector)
     reconciliationService.registerConnector('mock', mockConnector)
 
-    dlqService = new DLQService()
+    dlqService = new DLQService(prismaMock)
   })
 
   describe('Worker Event Emissions', () => {
@@ -172,20 +216,14 @@ describe('Automation Runner Integration', () => {
 
       const recommendations = service.generateRecommendations(entries, byErrorType)
 
-      expect(recommendations).toContain(
-        expect.stringContaining('5 rate limit errors')
-      )
-      expect(recommendations).toContain(
-        expect.stringContaining('2 authentication errors')
-      )
-      expect(recommendations).toContain(
-        expect.stringContaining('10 "not found" errors')
-      )
-      expect(recommendations).toContain(
-        expect.stringContaining('3 network errors')
-      )
-      expect(recommendations).toContain(
-        expect.stringContaining('1 validation errors')
+      expect(recommendations).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('5 rate limit errors'),
+          expect.stringContaining('2 authentication errors'),
+          expect.stringContaining('10 "not found" errors'),
+          expect.stringContaining('3 network errors'),
+          expect.stringContaining('1 validation errors'),
+        ])
       )
     })
   })
@@ -241,9 +279,11 @@ describe('Automation Runner Integration', () => {
 describe('Reconciliation Service Integration', () => {
   let service: ReconciliationService
   let mockConnector: MockConnector
+  let prismaMock: PrismaClient
 
   beforeEach(() => {
-    service = new ReconciliationService()
+    prismaMock = createPrismaMock()
+    service = new ReconciliationService(prismaMock)
     mockConnector = new MockConnector()
     service.registerConnector('mock', mockConnector)
   })
@@ -271,9 +311,11 @@ describe('Reconciliation Service Integration', () => {
 
 describe('DLQ Service Integration', () => {
   let service: DLQService
+  let prismaMock: PrismaClient
 
   beforeEach(() => {
-    service = new DLQService()
+    prismaMock = createPrismaMock()
+    service = new DLQService(prismaMock)
   })
 
   it('should initialize correctly', () => {

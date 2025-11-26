@@ -4,17 +4,23 @@
  */
 
 import { prisma } from '@calibr/db'
-import type { RuleTarget, RuleRun } from '@calibr/db'
+import type { PrismaClient, RuleTarget, RuleRun } from '@calibr/db'
 import type { DLQEntry, DLQReport } from './types'
 import { DLQ_CONFIG } from './config'
 import { isRetryableError } from './backoff'
 
 export class DLQService {
+  private prisma: PrismaClient
+
+  constructor(prismaClient?: PrismaClient) {
+    this.prisma = prismaClient ?? prisma()
+  }
+
   /**
    * Get all failed targets (DLQ entries) for a project
    */
   async getFailedTargets(projectId: string, limit?: number): Promise<DLQEntry[]> {
-    const targets = await prisma().ruleTarget.findMany({
+    const targets = await this.prisma.ruleTarget.findMany({
       where: {
         projectId,
         status: 'FAILED',
@@ -35,7 +41,7 @@ export class DLQService {
    * Get failed targets for a specific run
    */
   async getFailedTargetsForRun(runId: string): Promise<DLQEntry[]> {
-    const targets = await prisma().ruleTarget.findMany({
+    const targets = await this.prisma.ruleTarget.findMany({
       where: {
         ruleRunId: runId,
         status: 'FAILED',
@@ -59,14 +65,14 @@ export class DLQService {
       : { ruleRunId: runId, status: 'FAILED' as const }
 
     // Get targets to retry
-    const targets = await prisma().ruleTarget.findMany({
+    const targets = await this.prisma.ruleTarget.findMany({
       where: query,
     })
 
     // Reset targets to QUEUED status for retry
-    const updatedTargets = await prisma().$transaction(
-      targets.map((target: any) =>
-        prisma().ruleTarget.update({
+    const updatedTargets = await this.prisma.$transaction(
+      targets.map(target =>
+        this.prisma.ruleTarget.update({
           where: { id: target.id },
           data: {
             status: 'QUEUED',
@@ -79,12 +85,12 @@ export class DLQService {
     )
 
     // Update run status to QUEUED if it was FAILED or PARTIAL
-    const run = await prisma().ruleRun.findUnique({
+    const run = await this.prisma.ruleRun.findUnique({
       where: { id: runId },
     })
 
     if (run && (run.status === 'FAILED' || run.status === 'PARTIAL')) {
-      await prisma().ruleRun.update({
+      await this.prisma.ruleRun.update({
         where: { id: runId },
         data: {
           status: 'QUEUED',
@@ -143,7 +149,7 @@ export class DLQService {
   async cleanupStale(projectId: string): Promise<number> {
     const staleThreshold = new Date(Date.now() - DLQ_CONFIG.staleThreshold)
 
-    const result = await prisma().ruleTarget.deleteMany({
+    const result = await this.prisma.ruleTarget.deleteMany({
       where: {
         projectId,
         status: 'FAILED',
@@ -159,16 +165,13 @@ export class DLQService {
   /**
    * Map RuleTarget to DLQEntry
    */
-  private mapToDLQEntry(target: any): DLQEntry {
-    const error = new Error(target.errorMessage || 'Unknown')
-    error.name = 'TargetError'
-
+  private mapToDLQEntry(target: RuleTarget & { RuleRun: RuleRun }): DLQEntry {
     return {
       target,
       run: target.RuleRun,
       failedAt: target.updatedAt,
       errorType: this.categorizeError(target.errorMessage || 'Unknown'),
-      retryable: isRetryableError(error),
+      retryable: isRetryableError(new Error(target.errorMessage || 'Unknown')),
     }
   }
 
@@ -256,13 +259,13 @@ export class DLQService {
    * Write retry event to audit log
    */
   private async writeRetryEvent(runId: string, targetCount: number): Promise<void> {
-    const run = await prisma().ruleRun.findUnique({
+    const run = await this.prisma.ruleRun.findUnique({
       where: { id: runId },
     })
 
     if (!run) return
 
-    await prisma().eventLog.create({
+    await this.prisma.eventLog.create({
       data: {
         eventKey: `dlq:retry:${runId}:${Date.now()}`,
         tenantId: run.tenantId,
@@ -281,13 +284,13 @@ export class DLQService {
    * Write DLQ report event to audit log
    */
   private async writeDLQReportEvent(projectId: string, report: DLQReport): Promise<void> {
-    const project = await prisma().project.findUnique({
+    const project = await this.prisma.project.findUnique({
       where: { id: projectId },
     })
 
     if (!project) return
 
-    await prisma().eventLog.create({
+    await this.prisma.eventLog.create({
       data: {
         eventKey: `dlq:report:${projectId}:${Date.now()}`,
         tenantId: project.tenantId,

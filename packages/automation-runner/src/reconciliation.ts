@@ -4,7 +4,7 @@
  */
 
 import { prisma } from '@calibr/db'
-import type { RuleTarget } from '@calibr/db'
+import type { PrismaClient, RuleTarget } from '@calibr/db'
 import type {
   ReconciliationMismatch,
   ReconciliationReport,
@@ -14,6 +14,11 @@ import { RECONCILIATION_CONFIG } from './config'
 
 export class ReconciliationService {
   private connectors: Map<string, PriceConnector> = new Map()
+  private prisma: PrismaClient
+
+  constructor(prismaClient?: PrismaClient) {
+    this.prisma = prismaClient ?? prisma()
+  }
 
   /**
    * Register a price connector for reconciliation
@@ -81,7 +86,7 @@ export class ReconciliationService {
    * Get all applied targets from a run
    */
   private async getAppliedTargets(runId: string): Promise<RuleTarget[]> {
-    return await prisma().ruleTarget.findMany({
+    return await this.prisma.ruleTarget.findMany({
       where: {
         ruleRunId: runId,
         status: 'APPLIED',
@@ -117,8 +122,18 @@ export class ReconciliationService {
    */
   private extractExpectedPrice(target: RuleTarget): number | null {
     try {
-      const afterData = target.afterJson as any
-      return afterData.unit_amount || afterData.amount || afterData.price || null
+      const afterData = target.afterJson as Record<string, unknown>
+      const priceCandidates = [
+        afterData.unit_amount,
+        afterData.amount,
+        afterData.price,
+      ]
+
+      const price = priceCandidates.find(
+        (value): value is number => typeof value === 'number'
+      )
+
+      return price ?? null
     } catch {
       return null
     }
@@ -134,7 +149,7 @@ export class ReconciliationService {
     difference: number
   ): Promise<void> {
     // Write to EventLog for audit trail
-    await prisma().eventLog.create({
+    await this.prisma.eventLog.create({
       data: {
         eventKey: `reconciliation:mismatch:${target.id}:${Date.now()}`,
         tenantId: target.tenantId,
@@ -160,13 +175,13 @@ export class ReconciliationService {
    * Write reconciliation completion event
    */
   private async writeReconciliationEvent(runId: string, report: ReconciliationReport): Promise<void> {
-    const run = await prisma().ruleRun.findUnique({
+    const run = await this.prisma.ruleRun.findUnique({
       where: { id: runId },
     })
 
     if (!run) return
 
-    await prisma().eventLog.create({
+    await this.prisma.eventLog.create({
       data: {
         eventKey: `reconciliation:complete:${runId}:${Date.now()}`,
         tenantId: run.tenantId,

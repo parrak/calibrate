@@ -19,6 +19,12 @@ export interface RulesWorkerConfig {
   pollInterval: number
 
   /**
+   * Disable polling loop (useful for tests)
+   * @default false
+   */
+  disablePolling?: boolean
+
+  /**
    * Maximum number of retry attempts per target
    * @default 3
    */
