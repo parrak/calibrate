@@ -191,6 +191,9 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Added logo image to all app headers (site, console, docs)
   - Updated all "Calibr" references to "Calibrate" in visible text and documentation
 
+### Fixed
+- Tightened Copilot simulation selector validation to use a discriminated union that matches `PricingRule` predicate types, resolving the typecheck mismatch for custom predicates.
+
 ### Changed
 - **Branding Colors**: Migrated to teal color palette (Light Teal → Mid Teal → Deep Teal gradient)
 - **Favicon System**: Switched from static files to Next.js dynamic icon generation
