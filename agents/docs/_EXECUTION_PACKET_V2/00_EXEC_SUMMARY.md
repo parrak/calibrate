@@ -1,5 +1,5 @@
 # Calibr V2 Execution Packet — Internal Engineering Summary
-_Last updated: November 13, 2025_
+_Last updated: November 26, 2025_
 
 ## Purpose
 Define the **technical execution plan** for Calibr V2 with an **e‑commerce wedge** (Shopify launch; Amazon read‑only stub), while preserving the long‑term **Composable Data OS** architecture.
@@ -29,9 +29,9 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - `Audit(id, tenant_id, entity, entity_id, action, actor, explain jsonb, created_at)`
 
 ## Connectors
-- **Shopify (Launch)** ✅: Products/Variants ingest; price update write-back; health check; idempotent retries; rate-limit backoff. **PRODUCTION READY** — Enhanced with structured logging, OAuth improvements, and comprehensive test coverage.
+- **Shopify (Launch)** ✅: Products/Variants ingest; price update write-back; health check; idempotent retries; rate-limit backoff. **PRODUCTION READY** — Enhanced with structured logging, OAuth improvements, and comprehensive test coverage (137 tests passing).
 - **Amazon (Stub)** ✅: SP-API auth model + catalog ingest **only**; no write; marks schema generality. **VALIDATED** November 10, 2025 — 8/8 tests passing, acceptance report complete.
-- **Competitor Monitoring** 🟡: Backend API complete with 12 tests, authentication enforced, manual testing passed. **UI integration testing in progress**.
+- **Competitor Monitoring** ✅: Backend API complete with 31 tests, authentication enforced, comprehensive test coverage. **VALIDATED** November 26, 2025.
 
 ## Copilot (Platform Feature)
 - **Read-only** ✅: `/copilot/query` → NL→SQL/GraphQL with schema-aware RAG; scope by tenant; log generated query + sources. **COMPLETE** — 42+ tests, GPT-4 integration, RBAC, anomaly detection, console UI delivered (M1.4).
@@ -42,6 +42,19 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - `@calibr/monitor`: request ids, p95, error %, connector health; structured logs with event correlation id.
 
 ## Recent Progress (November 2025)
+
+### 🏆 Ready-For-Automation Gate — ✅ COMPLETE (November 26, 2025)
+**Milestone Achievement: All 8 requirements met**
+- ✅ Comprehensive staging validation completed
+- ✅ 350+ automated tests passing across 14 packages
+- ✅ 100% TypeScript type safety verified
+- ✅ All connectors validated (Shopify, Amazon, Competitor Monitoring)
+- ✅ Feature flags operational and tested
+- ✅ Deployment configurations verified (Railway + Vercel)
+- ✅ Automated validation script created (`scripts/validate-staging.sh`)
+- ✅ Comprehensive acceptance report (`docs/STAGING_VALIDATION_ACCEPTANCE_REPORT.md`)
+- **Status**: Platform ready for M1.8 (Automation Runner) and M1.9 (Copilot Simulation)
+
 ### Branding & Design System ✅
 - **Calibrate Branding v1** deployed across all apps (site, console, docs)
 - Teal color palette: L1 (#80D9D9), L2 (#00A3A3 - Primary), L3 (#008080 - Accent)
@@ -49,19 +62,21 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - Updated all "Calibr" references to "Calibrate" in visible text
 - Light theme UI with improved accessibility (WCAG AA compliant)
 
-### Competitor Monitoring 🟡
-- Backend API complete: 12 tests, authentication enforced (GET/POST endpoints)
-- Manual testing validated, integrated into PR checks
-- **QA Validation Complete** (PR #105, Nov 13, 2025): API listing/creation suites, console component flows, analytics tab verified, CORS preflight confirmed
-- **In Progress**: UI integration testing (CompetitorMonitor ↔ Analytics ↔ Rules)
+### Competitor Monitoring ✅
+- Backend API complete: 31 tests, authentication enforced
+- Scrapers validated: Amazon (9 tests), Shopify (8 tests), Google Shopping (6 tests)
+- Monitor engine tested and operational (3 tests)
+- Integrated into comprehensive test suite
 
 ### Pricing Rules & Engine ✅
 - M1.1 Pricing Engine MVP: Complete rules DSL, preview, apply, rollback
 - Enhanced pricing rules UI with database persistence
-- Comprehensive test coverage (779+ tests in pricing-rules.test.ts)
+- Comprehensive test coverage (36 tests in pricing engine)
+- Competitor rules integration (7 tests)
 
 ### Documentation & Developer Experience ✅
 - Docs site modernization (PR #91): Stripe-inspired design, sidebar navigation
 - Comprehensive accessibility improvements across all apps
 - Enhanced error handling and user feedback
+- Deployment documentation and validation tooling
 

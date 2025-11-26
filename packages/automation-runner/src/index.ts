@@ -44,3 +44,20 @@ export {
   retryWithBackoff,
   getRetrySchedule,
 } from './backoff'
+
+// Worker
+export { RulesWorker } from './rulesWorker'
+
+// Services
+export { ReconciliationService } from './reconciliation'
+export { DLQService } from './dlq'
+
+// Metrics
+export {
+  collectRunMetrics,
+  collectWorkerMetrics,
+  recordRunMetrics,
+  recordDLQMetrics,
+  checkSuccessRateAlert,
+  checkDLQSizeAlert,
+} from './metrics'

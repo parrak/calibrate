@@ -3,48 +3,9 @@ import { prisma } from '@calibr/db';
 import { RuleRunStatus } from '@prisma/client';
 import { trackPerformance } from '@/lib/performance-middleware';
 import { withSecurity } from '@/lib/security-headers';
+import { requireProjectAccess, errorJson } from '../price-changes/utils';
 
 const PAGE_SIZE = 50;
-
-interface ErrorResponse {
-  status: number;
-  error: string;
-  message: string;
-}
-
-function errorJson(error: ErrorResponse) {
-  return NextResponse.json(
-    { error: error.error, message: error.message },
-    { status: error.status }
-  );
-}
-
-async function requireProjectAccess(req: NextRequest, projectSlug: string, _minRole: string) {
-  // TODO: Implement proper auth check
-  // For now, just find the project
-  const project = await prisma().project.findUnique({
-    where: { slug: projectSlug },
-  });
-
-  if (!project) {
-    return {
-      error: {
-        status: 404,
-        error: 'NotFound',
-        message: 'Project not found',
-      },
-    };
-  }
-
-  // TODO: Get user from session and check membership/role
-  const userId = 'system'; // Placeholder
-
-  return {
-    project,
-    tenantId: project.tenantId,
-    userId,
-  };
-}
 
 /**
  * GET /api/v1/runs - List rule runs
@@ -66,15 +27,8 @@ export const GET = withSecurity(
     const cursor = url.searchParams.get('cursor')?.trim();
 
     const access = await requireProjectAccess(req, projectSlug, 'VIEWER');
-    if ('error' in access && access.error) {
+    if ('error' in access) {
       return errorJson(access.error);
-    }
-    if (!('project' in access)) {
-      return errorJson({
-        status: 500,
-        error: 'InternalServerError',
-        message: 'Failed to validate project access',
-      });
     }
 
     const where: {
@@ -84,7 +38,7 @@ export const GET = withSecurity(
       ruleId?: string;
     } = {
       projectId: access.project.id,
-      tenantId: access.tenantId,
+      tenantId: access.project.tenantId,
     };
 
     if (statusParam && ['PREVIEW', 'QUEUED', 'APPLYING', 'APPLIED', 'PARTIAL', 'FAILED', 'ROLLED_BACK'].includes(statusParam)) {
