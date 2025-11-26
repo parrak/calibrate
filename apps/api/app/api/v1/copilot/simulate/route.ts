@@ -260,3 +260,7 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
     )
   }
 })
+
+export const OPTIONS = withSecurity(async function OPTIONS() {
+  return new NextResponse(null, { status: 204 })
+})

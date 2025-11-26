@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-import { POST as simulateRoute } from '../app/api/v1/copilot/simulate/route'
+import { POST as simulateRoute, OPTIONS as simulateOptions } from '../app/api/v1/copilot/simulate/route'
 
 type StoreState = {
   projects: Array<{ id: string; slug: string; tenantId: string; active?: boolean; tags?: string[] }>
@@ -143,6 +143,19 @@ const makeRequest = (
 describe('copilot simulation API', () => {
   beforeEach(() => {
     store.reset()
+  })
+
+  it('responds to CORS preflight', async () => {
+    const res = await simulateOptions(
+      makeRequest('http://localhost/api/v1/copilot/simulate', {
+        method: 'OPTIONS',
+        headers: { Origin: 'http://localhost:3000' },
+      })
+    )
+
+    expect(res.status).toBe(200)
+    expect(res.headers.get('access-control-allow-origin')).toBe('http://localhost:3000')
+    expect(res.headers.get('access-control-allow-methods')).toContain('OPTIONS')
   })
 
   it('validates request payloads', async () => {
