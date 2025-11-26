@@ -1,7 +1,7 @@
 /**
  * M0.1 DTOs - Auto-generated from Prisma schema
  * DO NOT EDIT MANUALLY
- * Generated: 2025-11-09T00:24:47.176Z
+ * Generated: 2025-11-26T12:59:56.096Z
  */
 
 // ============================================================================

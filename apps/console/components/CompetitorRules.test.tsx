@@ -46,14 +46,14 @@ describe('CompetitorRules', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     const { useSession } = await import('next-auth/react')
-    ;(useSession as ReturnType<typeof vi.fn>).mockReturnValue({ data: mockSession })
+      ; (useSession as ReturnType<typeof vi.fn>).mockReturnValue({ data: mockSession })
   })
 
   it('should render loading state initially', async () => {
     const { competitorsApi } = await import('@/lib/api-client')
     const mockFn = competitorsApi.getRules as ReturnType<typeof vi.fn>
     mockFn.mockClear()
-    mockFn.mockImplementation(() => new Promise(() => {}))
+    mockFn.mockImplementation(() => new Promise(() => { }))
 
     render(<CompetitorRules projectSlug="demo" />)
     expect(screen.getByText('Loading rules...')).toBeInTheDocument()
@@ -209,7 +209,7 @@ describe('CompetitorRules', () => {
 
   it('should work without authentication token', async () => {
     const { useSession } = await import('next-auth/react')
-    ;(useSession as ReturnType<typeof vi.fn>).mockReturnValue({ data: null })
+      ; (useSession as ReturnType<typeof vi.fn>).mockReturnValue({ data: null })
 
     const { competitorsApi } = await import('@/lib/api-client')
     const mockFn = competitorsApi.getRules as ReturnType<typeof vi.fn>
@@ -220,6 +220,54 @@ describe('CompetitorRules', () => {
 
     await waitFor(() => {
       expect(mockFn).toHaveBeenCalledWith('demo', undefined)
+    })
+  })
+  it('should handle "Beat Competition by X%" rule creation', async () => {
+    const { competitorsApi } = await import('@/lib/api-client')
+    const getRulesFn = competitorsApi.getRules as ReturnType<typeof vi.fn>
+    const createRuleFn = competitorsApi.createRule as ReturnType<typeof vi.fn>
+
+    getRulesFn.mockResolvedValue([])
+    createRuleFn.mockResolvedValue({ id: 'rule-3', name: 'Beat by 5%' })
+
+    render(<CompetitorRules projectSlug="demo" />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /New Rule/i })).toBeInTheDocument()
+    })
+
+    // Open form
+    fireEvent.click(screen.getByRole('button', { name: /New Rule/i }))
+
+    // Fill form
+    const nameInput = screen.getByLabelText(/Rule Name/i)
+    fireEvent.change(nameInput, { target: { value: 'Beat by 5%' } })
+
+    // Select rule type (assuming there's a select/radio for rule type, defaulting to beat_by_percent if it's the only one or selecting it)
+    // Note: Based on the component implementation, we might need to select the type.
+    // If the component defaults to 'beat_by_percent', we just need to fill the value.
+    // Let's assume we need to fill the percentage value.
+
+    // Look for percentage input.
+    const percentageInput = screen.getByLabelText(/Beat by Percentage \(%\)/i)
+    fireEvent.change(percentageInput, { target: { value: '5' } })
+
+    // Submit
+    const createButton = screen.getByRole('button', { name: /Create Rule/i })
+    fireEvent.click(createButton)
+
+    await waitFor(() => {
+      expect(createRuleFn).toHaveBeenCalledWith(
+        'demo',
+        expect.objectContaining({
+          name: 'Beat by 5%',
+          rules: expect.objectContaining({
+            type: 'beat_by_percent',
+            value: 5
+          })
+        }),
+        'mock-token'
+      )
     })
   })
 })
