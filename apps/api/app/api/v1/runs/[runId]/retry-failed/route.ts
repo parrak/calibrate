@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@calibr/db';
+import { DLQService } from '@calibr/automation-runner';
 import { trackPerformance } from '@/lib/performance-middleware';
 import { withSecurity } from '@/lib/security-headers';
 import { requireProjectAccess, errorJson } from '../../../price-changes/utils';
@@ -29,8 +30,12 @@ export const POST = withSecurity(
     }
 
     try {
+      const db = prisma();
+      const body = await req.json().catch(() => ({}));
+      const targetIds = Array.isArray(body.targetIds) ? body.targetIds : undefined;
+
       // Verify run exists and belongs to project
-      const run = await prisma().ruleRun.findFirst({
+      const run = await db.ruleRun.findFirst({
         where: {
           id: runId,
           projectId: access.project.id,
@@ -46,46 +51,20 @@ export const POST = withSecurity(
         });
       }
 
-      // Find failed targets
-      const failedTargets = await prisma().ruleTarget.findMany({
-        where: {
-          ruleRunId: runId,
-          status: 'FAILED',
-        },
-      });
-
-      if (failedTargets.length === 0) {
-        return NextResponse.json({
-          message: 'No failed targets to retry',
-          retriedCount: 0,
+      if (run.status !== 'FAILED' && run.status !== 'PARTIAL') {
+        return errorJson({
+          status: 400,
+          error: 'InvalidState',
+          message: `Cannot retry run with status: ${run.status}`,
         });
       }
 
-      // Reset failed targets to QUEUED
-      const result = await prisma().ruleTarget.updateMany({
-        where: {
-          ruleRunId: runId,
-          status: 'FAILED',
-        },
-        data: {
-          status: 'QUEUED',
-          errorMessage: null,
-        },
-      });
-
-      // Update run status back to QUEUED if it was FAILED
-      if (run.status === 'FAILED') {
-        await prisma().ruleRun.update({
-          where: { id: runId },
-          data: {
-            status: 'QUEUED',
-            errorMessage: null,
-          },
-        });
-      }
+      // Retry failed targets
+      const dlqService = new DLQService();
+      const retriedTargets = await dlqService.retryFailed(runId, targetIds);
 
       // Create audit entry
-      await prisma().audit.create({
+      await db.audit.create({
         data: {
           tenantId: access.project.tenantId,
           projectId: access.project.id,
@@ -94,28 +73,37 @@ export const POST = withSecurity(
           action: 'retry_failed',
           actor: access.session.userId,
           explain: {
-            retriedTargets: result.count,
-            totalFailed: failedTargets.length,
+            retriedTargets: retriedTargets.length,
+            totalFailed: retriedTargets.length,
+            targetIds: targetIds ?? 'all',
           },
         },
       });
 
       // Create event for worker to pick up
-      await prisma().event.create({
+      await db.event.create({
         data: {
           tenantId: access.project.tenantId,
           projectId: access.project.id,
           kind: 'rule.run.retry',
           payload: {
             runId,
-            retriedTargets: result.count,
+            retriedTargets: retriedTargets.length,
+            targetIds: targetIds ?? [],
           },
         },
       });
 
       return NextResponse.json({
-        message: `Retried ${result.count} failed targets`,
-        retriedCount: result.count,
+        message: `Retried ${retriedTargets.length} failed targets`,
+        runId,
+        retriedCount: retriedTargets.length,
+        targets: retriedTargets.map((t) => ({
+          id: t.id,
+          skuId: t.skuId,
+          status: t.status,
+          previousError: t.errorMessage,
+        })),
       });
     } catch (err) {
       console.error('Error retrying failed targets:', err);
@@ -130,6 +118,5 @@ export const POST = withSecurity(
 
 // Handle OPTIONS preflight requests
 export const OPTIONS = withSecurity(async (_req: NextRequest) => {
-  return new NextResponse(null, { status: 204 })
-})
-
+  return new NextResponse(null, { status: 204 });
+});
