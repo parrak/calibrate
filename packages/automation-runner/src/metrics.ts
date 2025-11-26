@@ -4,7 +4,6 @@
  */
 
 import { prisma } from '@calibr/db'
-import { recordPerformanceMetric, recordErrorMetric } from '@calibr/monitor'
 import { logger } from '@calibr/monitor'
 import type { RuleRun } from '@calibr/db'
 import type { RuleWorkerMetrics, RunResult } from './types'
@@ -13,85 +12,51 @@ import type { RuleWorkerMetrics, RunResult } from './types'
  * Record metrics for a rule run
  */
 export function recordRunMetrics(run: RuleRun, result?: RunResult) {
-  const tags = {
-    tenantId: run.tenantId,
-    projectId: run.projectId,
-    ruleId: run.ruleId,
-    status: run.status
-  }
-
-  // Record run count
-  recordPerformanceMetric({
-    operation: 'rules.apply.count',
-    durationMs: 0, // Counter metric
-    success: run.status === 'APPLIED',
-    tags,
-    metadata: {
-      runId: run.id,
-      status: run.status
-    }
-  })
-
-  // Record duration if completed
+  // Calculate duration if completed
+  let duration: number | undefined
   if (run.queuedAt && run.finishedAt) {
-    const duration = run.finishedAt.getTime() - run.queuedAt.getTime()
-
-    recordPerformanceMetric({
-      operation: 'rules.apply.duration_ms',
-      durationMs: duration,
-      success: run.status === 'APPLIED' || run.status === 'PARTIAL',
-      tags,
-      metadata: {
-        runId: run.id,
-        duration
-      }
-    })
+    duration = run.finishedAt.getTime() - run.queuedAt.getTime()
   }
 
-  // Record success rate
+  // Calculate success rate if result provided
+  let successRate: number | undefined
   if (result) {
-    const successRate = result.totalTargets > 0
+    successRate = result.totalTargets > 0
       ? (result.appliedTargets / result.totalTargets) * 100
       : 0
-
-    recordPerformanceMetric({
-      operation: 'rules.apply.success_rate',
-      durationMs: successRate, // Using durationMs field to store percentage
-      success: successRate >= 97, // Success if ≥ 97%
-      tags: {
-        ...tags,
-        targetCount: result.totalTargets.toString()
-      },
-      metadata: {
-        runId: run.id,
-        successRate,
-        appliedTargets: result.appliedTargets,
-        failedTargets: result.failedTargets,
-        totalTargets: result.totalTargets
-      }
-    })
-
-    // Record error if success rate is low
-    if (successRate < 97) {
-      recordErrorMetric({
-        operation: 'rules.apply',
-        errorType: 'LOW_SUCCESS_RATE',
-        errorMessage: `Success rate ${successRate.toFixed(2)}% is below threshold (97%)`,
-        tags,
-        metadata: {
-          runId: run.id,
-          successRate,
-          threshold: 97
-        }
-      })
-    }
   }
 
-  logger.info('[Metrics] Recorded run metrics', {
-    runId: run.id,
-    status: run.status,
-    tags
+  // Log metrics as structured data for export to Prometheus/Grafana
+  logger.info('[Metrics] Rule run completed', {
+    metadata: {
+      metric: 'rules.apply',
+      runId: run.id,
+      tenantId: run.tenantId,
+      projectId: run.projectId,
+      ruleId: run.ruleId,
+      status: run.status,
+      duration,
+      successRate,
+      appliedTargets: result?.appliedTargets,
+      failedTargets: result?.failedTargets,
+      totalTargets: result?.totalTargets
+    }
   })
+
+  // Warn if success rate is low
+  if (successRate !== undefined && successRate < 97) {
+    logger.warn('[Metrics] Low success rate detected', {
+      metadata: {
+        metric: 'rules.apply.low_success_rate',
+        runId: run.id,
+        successRate,
+        threshold: 97,
+        appliedTargets: result?.appliedTargets,
+        failedTargets: result?.failedTargets,
+        totalTargets: result?.totalTargets
+      }
+    })
+  }
 }
 
 /**
@@ -114,18 +79,11 @@ export async function recordDLQMetrics(projectId: string) {
     return
   }
 
-  const tags = {
-    tenantId: project.tenantId,
-    projectId
-  }
-
-  // Record DLQ size
-  recordPerformanceMetric({
-    operation: 'rules.dlq.size',
-    durationMs: dlqSize, // Using durationMs field to store count
-    success: dlqSize < 50, // Success if DLQ size is manageable
-    tags,
+  logger.info('[Metrics] DLQ size recorded', {
     metadata: {
+      metric: 'rules.dlq.size',
+      tenantId: project.tenantId,
+      projectId,
       dlqSize
     }
   })
@@ -134,51 +92,31 @@ export async function recordDLQMetrics(projectId: string) {
   if (dlqSize >= 50) {
     const severity = dlqSize >= 100 ? 'CRITICAL' : 'WARNING'
 
-    recordErrorMetric({
-      operation: 'rules.dlq',
-      errorType: 'HIGH_DLQ_SIZE',
-      errorMessage: `DLQ size ${dlqSize} exceeds threshold`,
-      tags: {
-        ...tags,
-        severity
-      },
+    logger.warn(`[Metrics] High DLQ size: ${dlqSize}`, {
       metadata: {
+        metric: 'rules.dlq.high_size',
+        tenantId: project.tenantId,
+        projectId,
         dlqSize,
-        threshold: dlqSize >= 100 ? 100 : 50
+        threshold: dlqSize >= 100 ? 100 : 50,
+        severity
       }
     })
   }
-
-  logger.debug('[Metrics] Recorded DLQ metrics', {
-    projectId,
-    dlqSize
-  })
 }
 
 /**
  * Record 429 rate limit error
  */
 export function record429Error(runId: string, targetId: string, tenantId: string, projectId: string) {
-  const tags = {
-    tenantId,
-    projectId,
-    runId
-  }
-
-  recordErrorMetric({
-    operation: 'rules.apply.target',
-    errorType: 'RATE_LIMIT_429',
-    errorMessage: 'Shopify rate limit (429) encountered',
-    tags,
+  logger.warn('[Metrics] Rate limit (429) error', {
     metadata: {
+      metric: 'rules.429.error',
+      tenantId,
+      projectId,
       runId,
       targetId
     }
-  })
-
-  logger.warn('[Metrics] Recorded 429 rate limit error', {
-    runId,
-    targetId
   })
 }
 
@@ -212,23 +150,14 @@ export async function check429Burst(projectId: string): Promise<boolean> {
     })
 
     if (project) {
-      recordErrorMetric({
-        operation: 'rules.429.burst',
-        errorType: '429_BURST',
-        errorMessage: `Rate limit burst detected: ${recentErrors} errors in 5 minutes`,
-        tags: {
-          tenantId: project.tenantId,
-          projectId
-        },
+      logger.error('[Metrics] Rate limit burst detected', new Error(`${recentErrors} 429 errors in 5 minutes`), {
         metadata: {
+          metric: 'rules.429.burst',
+          tenantId: project.tenantId,
+          projectId,
           errorCount: recentErrors,
           timeWindow: '5m'
         }
-      })
-
-      logger.warn('[Metrics] Rate limit burst detected', {
-        projectId,
-        errorCount: recentErrors
       })
     }
   }
@@ -326,37 +255,23 @@ export function recordTargetMetrics(
   duration: number,
   errorType?: string
 ) {
-  const tags = {
-    tenantId,
-    projectId,
-    runId,
-    success: success.toString()
-  }
+  const logLevel = success ? 'info' : 'warn'
+  const message = success
+    ? '[Metrics] Target applied successfully'
+    : '[Metrics] Target application failed'
 
-  recordPerformanceMetric({
-    operation: 'rules.apply.target',
-    durationMs: duration,
-    success,
-    tags,
+  logger[logLevel](message, {
     metadata: {
-      targetId,
+      metric: 'rules.apply.target',
+      tenantId,
+      projectId,
       runId,
+      targetId,
+      success,
+      duration,
       errorType
     }
   })
-
-  if (!success && errorType) {
-    recordErrorMetric({
-      operation: 'rules.apply.target',
-      errorType,
-      errorMessage: `Target application failed: ${errorType}`,
-      tags,
-      metadata: {
-        targetId,
-        runId
-      }
-    })
-  }
 }
 
 /**
@@ -371,18 +286,11 @@ export function recordReconciliationMetrics(
 ) {
   const mismatchRate = totalChecked > 0 ? (mismatchCount / totalChecked) * 100 : 0
 
-  const tags = {
-    tenantId,
-    projectId,
-    runId
-  }
-
-  recordPerformanceMetric({
-    operation: 'rules.reconciliation',
-    durationMs: mismatchRate, // Using durationMs to store percentage
-    success: mismatchCount === 0,
-    tags,
+  logger.info('[Metrics] Reconciliation completed', {
     metadata: {
+      metric: 'rules.reconciliation',
+      tenantId,
+      projectId,
       runId,
       totalChecked,
       mismatchCount,
@@ -391,12 +299,11 @@ export function recordReconciliationMetrics(
   })
 
   if (mismatchCount > 0) {
-    recordErrorMetric({
-      operation: 'rules.reconciliation',
-      errorType: 'PRICE_MISMATCH',
-      errorMessage: `${mismatchCount} price mismatches detected (${mismatchRate.toFixed(2)}%)`,
-      tags,
+    logger.warn(`[Metrics] Price mismatches detected: ${mismatchCount} of ${totalChecked}`, {
       metadata: {
+        metric: 'rules.reconciliation.mismatches',
+        tenantId,
+        projectId,
         runId,
         mismatchCount,
         totalChecked,
@@ -404,13 +311,6 @@ export function recordReconciliationMetrics(
       }
     })
   }
-
-  logger.info('[Metrics] Recorded reconciliation metrics', {
-    runId,
-    totalChecked,
-    mismatchCount,
-    mismatchRate
-  })
 }
 
 /**

@@ -54,9 +54,10 @@ export class ReconciliationService {
           mismatches.push(mismatch)
         }
       } catch (error) {
-        logger.error(`[Reconciliation] Error reconciling target ${target.id}`, {
-          error: error instanceof Error ? error.message : 'Unknown error'
-        })
+        logger.error(
+          `[Reconciliation] Error reconciling target ${target.id}`,
+          error instanceof Error ? error : undefined
+        )
       }
     }
 
@@ -74,7 +75,9 @@ export class ReconciliationService {
     // If there are mismatches, log warning
     if (mismatches.length > 0) {
       logger.warn(`[Reconciliation] Found ${mismatches.length} price mismatches for run ${runId}`, {
-        mismatchRate: ((mismatches.length / checked) * 100).toFixed(2) + '%'
+        metadata: {
+          mismatchRate: ((mismatches.length / checked) * 100).toFixed(2) + '%'
+        }
       })
     } else {
       logger.info(`[Reconciliation] All prices reconciled successfully for run ${runId}`)
@@ -99,7 +102,7 @@ export class ReconciliationService {
     }
 
     const channelRefs = product.channelRefs as Record<string, unknown>
-    const channel = channelRefs?.channel || 'shopify'
+    const channel = (channelRefs?.channel as string) || 'shopify'
     const connector = this.connectors.get(channel)
 
     if (!connector) {
@@ -108,7 +111,7 @@ export class ReconciliationService {
     }
 
     // Fetch current external price
-    const externalId = channelRefs?.external_id || channelRefs?.externalId
+    const externalId = (channelRefs?.external_id || channelRefs?.externalId) as string
     if (!externalId) {
       logger.warn(`[Reconciliation] No external ID for product ${product.id}, skipping`)
       return null
@@ -119,7 +122,7 @@ export class ReconciliationService {
 
       // Get expected price from target
       const afterData = target.afterJson as Record<string, unknown>
-      const expectedPrice = afterData.unit_amount || afterData.price
+      const expectedPrice = (afterData.unit_amount || afterData.price) as number
 
       // Check if prices match (allow small difference for rounding)
       const difference = Math.abs(externalPrice.price - expectedPrice)
@@ -142,9 +145,10 @@ export class ReconciliationService {
 
       return null // Prices match
     } catch (error) {
-      logger.error(`[Reconciliation] Failed to fetch external price for target ${target.id}`, {
-        error: error instanceof Error ? error.message : 'Unknown error'
-      })
+      logger.error(
+        `[Reconciliation] Failed to fetch external price for target ${target.id}`,
+        error instanceof Error ? error : undefined
+      )
       return null
     }
   }
@@ -186,11 +190,11 @@ export class ReconciliationService {
         entityId: run.id,
         action: 'reconcile',
         actor: 'automation-runner',
-        explain: {
+        explain: JSON.parse(JSON.stringify({
           totalChecked: report.totalChecked,
           mismatchCount: report.mismatches,
           mismatches: report.details
-        } as any
+        }))
       }
     })
   }
@@ -210,9 +214,10 @@ export class ReconciliationService {
       try {
         await this.reconcileRun(runId)
       } catch (error) {
-        logger.error(`[Reconciliation] Failed scheduled reconciliation for run ${runId}`, {
-          error: error instanceof Error ? error.message : 'Unknown error'
-        })
+        logger.error(
+          `[Reconciliation] Failed scheduled reconciliation for run ${runId}`,
+          error instanceof Error ? error : undefined
+        )
       }
     }, delay)
   }
@@ -271,7 +276,7 @@ export class ReconciliationService {
 
     return events.map(e => ({
       timestamp: e.createdAt,
-      report: e.payload as any
+      report: e.payload as Record<string, unknown>
     }))
   }
 }

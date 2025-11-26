@@ -99,7 +99,7 @@ export class RulesWorker {
     this.outboxWorker.start()
 
     this.emitEvent('worker.started')
-    logger.info('[RulesWorker] Started successfully', { config: this.config })
+    logger.info('[RulesWorker] Started successfully', { metadata: { config: this.config } })
   }
 
   /**
@@ -168,20 +168,23 @@ export class RulesWorker {
       const result = await this.executeRun(context)
 
       logger.info(`[RulesWorker] Completed rule run: ${runId}`, {
-        status: result.status,
-        appliedTargets: result.appliedTargets,
-        failedTargets: result.failedTargets,
-        duration: result.duration
+        metadata: {
+          status: result.status,
+          appliedTargets: result.appliedTargets,
+          failedTargets: result.failedTargets,
+          duration: result.duration
+        }
       })
 
       this.emitEvent('run.completed', result, runId)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
-      logger.error(`[RulesWorker] Failed to process rule run: ${runId}`, {
-        error: errorMessage,
-        correlationId: event.correlationId
-      })
+      logger.error(
+        `[RulesWorker] Failed to process rule run: ${runId}`,
+        error instanceof Error ? error : undefined,
+        { correlationId: event.correlationId }
+      )
 
       // Update run status to FAILED
       await prisma().ruleRun.update({
@@ -407,11 +410,16 @@ export class RulesWorker {
 
     this.emitEvent('target.failed', { error: errorMessage }, context.run.id, target.id)
 
-    logger.error(`[RulesWorker] Failed to apply target ${target.id}`, {
-      error: errorMessage,
-      attempts,
-      runId: context.run.id
-    })
+    logger.error(
+      `[RulesWorker] Failed to apply target ${target.id}`,
+      lastError instanceof Error ? lastError : undefined,
+      {
+        metadata: {
+          attempts,
+          runId: context.run.id
+        }
+      }
+    )
 
     return {
       targetId: target.id,
@@ -521,8 +529,10 @@ export class RulesWorker {
     }
 
     logger.info(`[RulesWorker] Materialized rule run ${run.id}`, {
-      ruleId,
-      targetCount: targets.length
+      metadata: {
+        ruleId,
+        targetCount: targets.length
+      }
     })
 
     return run
