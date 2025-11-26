@@ -369,7 +369,7 @@ describe('AutomationRunsPage', () => {
     })
 
     let retryCallCount = 0
-    let refreshCallCount = 0
+    let _refreshCallCount = 0
 
     // Mock retry-failed endpoint and refresh
     fetchMock.mockImplementation((url, options) => {
@@ -385,7 +385,7 @@ describe('AutomationRunsPage', () => {
           }))
         }
         if (url.includes('/api/v1/runs?') && retryCallCount > 0) {
-          refreshCallCount++
+          _refreshCallCount++
           return Promise.resolve(jsonResponse({
             items: [
               {

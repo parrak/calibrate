@@ -1,42 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@calibr/db';
 import { withSecurity } from '@/lib/security-headers';
-
-interface ErrorResponse {
-  status: number;
-  error: string;
-  message: string;
-}
-
-function errorJson(error: ErrorResponse) {
-  return NextResponse.json(
-    { error: error.error, message: error.message },
-    { status: error.status }
-  );
-}
-
-async function requireProjectAccess(req: NextRequest, projectSlug: string, _minRole: string) {
-  const project = await prisma().project.findUnique({
-    where: { slug: projectSlug },
-  });
-
-  if (!project) {
-    return {
-      error: {
-        status: 404,
-        error: 'NotFound',
-        message: 'Project not found',
-      },
-    };
-  }
-
-  const userId = 'system'; // Placeholder
-  return {
-    project,
-    tenantId: project.tenantId,
-    userId,
-  };
-}
+import { requireProjectAccess, errorJson } from '../../../price-changes/utils';
 
 /**
  * GET /api/v1/runs/:runId/progress - Get run progress (for polling)
@@ -57,15 +22,8 @@ export const GET = withSecurity(async (req: NextRequest, ...args: unknown[]) => 
   }
 
   const access = await requireProjectAccess(req, projectSlug, 'VIEWER');
-  if ('error' in access && access.error) {
+  if ('error' in access) {
     return errorJson(access.error);
-  }
-  if (!('project' in access)) {
-    return errorJson({
-      status: 500,
-      error: 'InternalServerError',
-      message: 'Failed to validate project access',
-    });
   }
 
   try {
@@ -73,7 +31,7 @@ export const GET = withSecurity(async (req: NextRequest, ...args: unknown[]) => 
       where: {
         id: runId,
         projectId: access.project.id,
-        tenantId: access.tenantId,
+        tenantId: access.project.tenantId,
       },
       select: {
         id: true,
