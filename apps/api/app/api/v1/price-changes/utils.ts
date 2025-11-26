@@ -5,7 +5,7 @@ import { authSecurityManager, type AuthContext } from '@/lib/auth-security'
 // Define types that should come from Prisma but aren't exported
 type ProjectRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER'
 type Membership = { id: string; userId: string; projectId: string; role: ProjectRole }
-type Project = { id: string; slug: string }
+type Project = { id: string; slug: string; tenantId: string }
 type PriceChange = {
   id: string
   status: string
@@ -80,7 +80,7 @@ export async function requireProjectAccess(
   minRole: ProjectRole = 'VIEWER'
 ): Promise<
   | {
-      session: AuthContext
+      session: AuthContext & { userId: string }
       project: Project
       membership: Membership
     }
@@ -96,6 +96,7 @@ export async function requireProjectAccess(
   if (!session || !session.userId) {
     return { error: { status: 401, error: 'Unauthorized', message: 'Invalid session token' } }
   }
+  const sessionWithUser: AuthContext & { userId: string } = { ...session, userId: session.userId }
 
   const project = await prisma().project.findUnique({ where: { slug: projectSlug } })
   if (!project) {
@@ -125,7 +126,7 @@ export async function requireProjectAccess(
     }
   }
 
-  return { session, project, membership }
+  return { session: sessionWithUser, project, membership }
 }
 
 export function errorJson(err: ApiErrorShape) {

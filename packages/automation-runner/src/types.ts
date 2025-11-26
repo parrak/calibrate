@@ -19,6 +19,12 @@ export interface RulesWorkerConfig {
   pollInterval: number
 
   /**
+   * Disable polling loop (useful for tests)
+   * @default false
+   */
+  disablePolling?: boolean
+
+  /**
    * Maximum number of retry attempts per target
    * @default 3
    */
@@ -61,6 +67,11 @@ export interface BackoffOptions {
    * @default 0.2 (±20%)
    */
   jitter: number
+
+  /**
+   * Optional callback on retry
+   */
+  onRetry?: (attempt: number, error: Error) => void | Promise<void>
 }
 
 export interface BackoffResult {

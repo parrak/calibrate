@@ -10,7 +10,8 @@ export const DEFAULT_WORKER_CONFIG: RulesWorkerConfig = {
   pollInterval: 5000, // 5 seconds
   maxRetries: 3,
   enableReconciliation: true,
-  reconciliationDelay: 300000 // 5 minutes
+  reconciliationDelay: 300000, // 5 minutes
+  disablePolling: false
 }
 
 export const DEFAULT_BACKOFF_OPTIONS: BackoffOptions = {
@@ -133,6 +134,9 @@ export function getWorkerConfig(): RulesWorkerConfig {
     enableReconciliation: process.env.WORKER_ENABLE_RECONCILIATION !== 'false',
     reconciliationDelay: parseInt(
       process.env.WORKER_RECONCILIATION_DELAY || '300000'
-    )
+    ),
+    disablePolling:
+      process.env.WORKER_DISABLE_POLLING === 'true' ||
+      process.env.NODE_ENV === 'test'
   }
 }

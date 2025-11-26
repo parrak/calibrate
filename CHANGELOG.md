@@ -7,6 +7,102 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **M1.7 Automation Runner UI Enhancements** — January 2025 ✅ MILESTONE
+  - **Automation Runs Page**: New `/p/[slug]/automation/runs` page for monitoring rule executions
+    - Runs table with status filters (Preview, Queued, Applying, Applied, Failed, Rolled Back)
+    - Real-time progress monitoring via polling (updates every 2 seconds)
+    - Target status breakdown showing applied/failed/queued counts
+    - Status badges with color coding for quick visual identification
+  - **Run Detail Drawer**: Comprehensive view of individual run executions
+    - **Overview Tab**: Status, timestamps, target counts, error messages
+    - **Explain Tab**: Transform JSON and explain trace for debugging
+    - **Targets Tab**: Complete list of all product price changes with before/after snapshots
+    - **Audit Trail Tab**: Full history of actions taken on the run
+  - **Retry Failed Functionality**: Ability to retry failed price updates without re-running entire rules
+    - "Retry Failed" button in runs table and detail drawer
+    - Resets failed targets to QUEUED status for worker reprocessing
+    - Toast notifications for retry status updates
+  - **Progress Indicators**: Real-time monitoring of active runs
+    - Progress percentage and completion counts (e.g., "50% (10/20)")
+    - Automatic polling for QUEUED and APPLYING runs
+    - Toast notifications when runs complete or fail
+  - **API Endpoints**: New REST API for automation runs management
+    - `GET /api/v1/runs` - List runs with filters and pagination
+    - `GET /api/v1/runs/:runId` - Get run details with targets and audit events
+    - `POST /api/v1/runs/:runId/retry-failed` - Retry failed targets
+    - `GET /api/v1/runs/:runId/progress` - Polling endpoint for progress updates
+  - **Documentation**: User-facing documentation for Automation Runs
+    - Complete guide at `/console/automation-runs` in docs site
+    - Explains run statuses, progress monitoring, retry functionality
+    - Best practices and troubleshooting sections
+    - Added to sidebar navigation under Core Features
+  - **StatusPill Component**: Extended to support all run statuses (PREVIEW, QUEUED, APPLYING, APPLIED, FAILED, ROLLED_BACK)
+  - **Test Coverage**: Comprehensive test suite with 11 test cases covering all major functionality
+  - **Files Changed**: 8 new files, 3 modified files
+    - API: 4 new route files for runs management
+    - UI: 1 new page component with full functionality
+    - Tests: 1 comprehensive test file
+    - Docs: 1 new documentation page
+    - Components: Updated StatusPill and Sidebar
+  - See `agents/docs/_EXECUTION_PACKET_V2/04_KICKOFF_CHECKLIST.md` for milestone details
+
+- **Ready-For-Automation Gate — Complete (8/8)** — Completed November 26, 2025 🏆 MILESTONE COMPLETE
+  - **GATE COMPLETE**: All 8 requirements met, platform ready for automation features
+  - **Comprehensive Staging Validation**: 350+ automated tests across 14 packages
+    - Security: 27 tests (encryption, integration)
+    - Analytics: 7 tests (aggregation)
+    - Monitor: 4 tests (logging)
+    - AI Engine: 19 tests (price suggestions)
+    - Automation Runner: 41 tests (backoff, retry logic)
+    - Pricing Engine: 36 tests (rules DSL, policy evaluation)
+    - Platform Connector: 47 tests (base functionality)
+    - Shopify Connector: 137 tests (OAuth, products, pricing, webhooks)
+    - Amazon Connector: 8 tests (SP-API auth, catalog ingest)
+    - Competitor Monitoring: 31 tests (scrapers, monitoring engine)
+    - API: Multiple test suites (endpoints, regression)
+    - Console: Multiple test suites (UI components)
+  - **Type Safety Verification**: 100% TypeScript type checking (13/13 packages)
+  - **Feature Validation**:
+    - Shopify Connector: Production ready (137 tests passing)
+    - Amazon Connector: Read-only validated (8/8 tests passing)
+    - Competitor Monitoring: Backend complete (31 tests passing)
+    - AI Copilot: Production ready (M1.4 complete)
+    - Pricing Engine: Ready (M1.1 complete)
+    - Automation Runner: Ready (41 tests passing)
+  - **Deployment Configuration Verification**:
+    - Railway API configuration validated
+    - Vercel frontend configurations validated (Console, Site, Docs)
+    - Database migrations ready
+    - Environment variables documented
+  - **New Validation Tooling**:
+    - `scripts/validate-staging.sh` — Automated staging validation script
+    - Support for both staging and production environments
+    - Health check validation for all services
+    - API endpoint testing (auth required/not required)
+    - Feature flag verification
+    - Summary reporting with pass/fail metrics
+  - **Documentation**:
+    - `docs/STAGING_VALIDATION_ACCEPTANCE_REPORT.md` (400+ lines)
+    - Complete test results and security review
+    - Deployment readiness assessment
+    - Sign-off and recommendations
+  - **Gate Requirements Met**:
+    1. ✅ Engine supports schedule + revert
+    2. ✅ Audit/explain complete
+    3. ✅ Console shows lineage
+    4. ✅ Connectors resilient (retry/backoff)
+    5. ✅ Error surfacing
+    6. ✅ Health checks
+    7. ✅ Amazon validation (M0.4)
+    8. ✅ Staging deployment validation (this milestone)
+  - **Updated Tracking Files**:
+    - `TODO.md` — Gate completion documented
+    - `agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md` — Recent progress updated
+    - `agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md` — Gate marked complete
+  - **Total Changes**: 3 files changed, 796 lines added
+  - **Next Steps**: M1.8 (Automation Runner), M1.9 (Copilot Simulation)
+  - **Status**: Platform validated and ready for automation features
+
 - **Automation Runner Foundation M0.5 — Phase 1** — Completed November 13, 2025 🚧 PHASE 1 COMPLETE
   - **M0.5 Phase 1 COMPLETE**: Core infrastructure for bulk pricing rule execution (50% of milestone)
   - **Database Schema Extensions**: Extended RuleRun and RuleTarget models for automation
@@ -154,7 +250,27 @@ The format is based on Keep a Changelog and follows semantic versioning.
     - Graceful error handling with retry options
   - **Result**: Competitor monitoring fully functional with proper auth
 
+- **Competitor Monitoring QA Validation** (PR #105) — Completed Nov 13, 2025
+  - Documented competitor monitoring QA validation steps and outcomes
+  - Updated TODO.md with November 13, 2025 status refresh for ready-for-automation gate
+  - **Validation Steps Completed**:
+    - ✅ Executed competitor API listing + creation suites via Vitest (`GET /api/v1/competitors`, `POST /api/v1/competitors`)
+    - ✅ Verified monitoring and rule creation console flows through component test harnesses (`CompetitorMonitor`, `CompetitorRules`)
+    - ✅ Confirmed analytics tab renders competitor insights without regressions
+    - ✅ Ensured CORS preflight remains healthy via `OPTIONS` handlers on competitor endpoints
+  - **Test Artifacts**: `apps/api/tests/competitors.test.ts`, `apps/console/components/CompetitorMonitor.test.tsx`, `apps/console/components/CompetitorRules.test.tsx`, `apps/console/app/p/[slug]/rules/page.test.tsx`
+  - **Outcome**: No regressions detected in console UI or API, ready to mark competitor monitoring testing requirement complete in QA tracker
+  - Validation duration: 2 hours | Confidence: HIGH
+
 ### Fixed
+- **Partner Logo Distortion on Homepage** (PR #116)
+  - Fixed distorted partner logos (Shopify, Stripe, Amazon) displayed on calibr.lat homepage
+  - Added `preserveAspectRatio="xMidYMid meet"` attribute to all SVG logos to maintain correct aspect ratios
+  - Added `max-w-full` class to prevent overflow and stretching
+  - Removed gray color override wrapper to display proper brand colors (#95BF47 for Shopify, #635BFF for Stripe)
+  - Updated both `apps/site/components/Logos.tsx` and `calibrate-standalone/components/Logos.tsx`
+  - Logos now render with official brand assets and proper proportions
+
 - **Docs Vitest Timeout in CI** (PR #TBD)
   - Fixed Vitest timeout error when starting forks runner in CI environments
   - Updated `apps/docs/vitest.config.ts` to use threads pool instead of forks pool
