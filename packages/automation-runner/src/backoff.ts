@@ -208,6 +208,11 @@ export async function retryWithBackoff<T>(
         throw lastError
       }
 
+      // Call onRetry callback if provided
+      if (options.onRetry) {
+        await options.onRetry(attempt, lastError)
+      }
+
       // Calculate delay
       let delay: number
 
