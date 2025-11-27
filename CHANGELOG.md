@@ -7,6 +7,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **M1.9 Copilot Simulation API** — Introduced `/api/v1/copilot/simulate` for EDITOR+ users with zod validation, RBAC, pricing-engine execution, and Copilot audit logging. Includes Vitest coverage for payload validation, access control, and simulation logging.
 - **M1.7 Automation Runner UI Enhancements** — January 2025 ✅ MILESTONE
   - **Automation Runs Page**: New `/p/[slug]/automation/runs` page for monitoring rule executions
     - Runs table with status filters (Preview, Queued, Applying, Applied, Failed, Rolled Back)
@@ -37,6 +38,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
     - Best practices and troubleshooting sections
     - Added to sidebar navigation under Core Features
   - **StatusPill Component**: Extended to support all run statuses (PREVIEW, QUEUED, APPLYING, APPLIED, FAILED, ROLLED_BACK)
+ 
   - **Test Coverage**: Comprehensive test suite with 11 test cases covering all major functionality
   - **Files Changed**: 8 new files, 3 modified files
     - API: 4 new route files for runs management
@@ -189,6 +191,9 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Added Tailwind color tokens for brand colors (`cb-teal-100`, `cb-teal-500`, `cb-teal-800`) and gradient stops
   - Added logo image to all app headers (site, console, docs)
   - Updated all "Calibr" references to "Calibrate" in visible text and documentation
+
+### Fixed
+- Tightened Copilot simulation selector validation to use a discriminated union that matches `PricingRule` predicate types, resolving the typecheck mismatch for custom predicates.
 
 ### Changed
 - **Branding Colors**: Migrated to teal color palette (Light Teal → Mid Teal → Deep Teal gradient)
@@ -663,6 +668,9 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Daily coordination log template created for team communication
   - Agent quick start guide with detailed onboarding for each workstream
   - See [PHASE3_ROADMAP.md](PHASE3_ROADMAP.md) for complete roadmap
+
+### Fixed
+- **Copilot Simulation selector validation** — Custom selector predicates now require a `value`, keeping the schema aligned with the pricing-engine `PricingRule` contract and satisfying type expectations.
 
 ## [1.1.0] - 2025-10-25
 
