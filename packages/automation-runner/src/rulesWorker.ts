@@ -286,7 +286,6 @@ export class RulesWorker {
     target: RuleTarget
   ): Promise<TargetApplicationResult> {
     const startTime = Date.now()
-    const { correlationId } = context
 
     this.emitEvent('target.applying', { targetId: target.id }, context.run.id, target.id)
 
@@ -306,6 +305,7 @@ export class RulesWorker {
         })
 
         // Extract price information from afterJson
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const afterData = target.afterJson as any
         const newPrice = afterData.unit_amount || afterData.price
         const currency = afterData.currency || 'USD'
@@ -320,6 +320,7 @@ export class RulesWorker {
         }
 
         // Get the appropriate connector
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const channelRefs = product.channelRefs as any
         const channel = channelRefs?.channel || 'shopify'
         const connector = this.connectors.get(channel)
@@ -373,7 +374,9 @@ export class RulesWorker {
         }
 
         // Handle 429 specifically
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((lastError as any).code === 429 || (lastError as any).statusCode === 429) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const backoffResult = handle429Error(lastError as any)
           if (backoffResult.retry && attempts < this.config.maxRetries) {
             logger.warn(`[RulesWorker] Rate limit hit for target ${target.id}, retrying after ${backoffResult.delay}ms`)
@@ -475,6 +478,7 @@ export class RulesWorker {
     })
 
     // Create targets for each product
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transform = rule.transformJson as any
     const targets = []
 

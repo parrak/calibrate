@@ -4,11 +4,10 @@
  */
 
 import { prisma, EventWriter } from '@calibr/db'
-import type { RuleRun, RuleTarget } from '@calibr/db'
+import type { RuleTarget } from '@calibr/db'
 import { logger } from '@calibr/monitor'
 import { DLQ_CONFIG } from './config'
 import type { DLQEntry, DLQReport } from './types'
-import { isRetryableError } from './backoff'
 
 export class DLQService {
   /**
@@ -99,6 +98,7 @@ export class DLQService {
     })
 
     // Build query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {
       ruleRunId: runId,
       status: 'FAILED'
@@ -413,6 +413,7 @@ export class DLQService {
           totalFailed: report.totalFailed,
           byErrorType: report.byErrorType,
           recommendations: report.recommendations
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any
       }
     })
