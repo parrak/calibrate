@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -17,6 +18,19 @@ async function main() {
   await prisma.sku.deleteMany()
   await prisma.product.deleteMany()
   await prisma.membership.deleteMany()
+
+  // Clean up dependencies before project
+  await prisma.ruleTarget.deleteMany()
+  await prisma.ruleRun.deleteMany()
+  await prisma.pricingRule.deleteMany()
+  await prisma.competitorPrice.deleteMany()
+  await prisma.competitorProduct.deleteMany()
+  await prisma.competitorRule.deleteMany()
+  await prisma.competitor.deleteMany()
+  await prisma.amazonIntegration.deleteMany()
+  await prisma.shopifyWebhookSubscription.deleteMany()
+  await prisma.shopifyIntegration.deleteMany()
+
   await prisma.project.deleteMany()
   await prisma.user.deleteMany()
   await prisma.tenant.deleteMany()
@@ -36,6 +50,7 @@ async function main() {
       name: 'Alice Owner',
       role: 'OWNER',
       tenantId: tenant.id,
+      passwordHash: await bcrypt.hash('password', 10),
     },
   })
 
@@ -45,6 +60,7 @@ async function main() {
       name: 'Bob Admin',
       role: 'ADMIN',
       tenantId: tenant.id,
+      passwordHash: await bcrypt.hash('password', 10),
     },
   })
 
@@ -54,6 +70,7 @@ async function main() {
       name: 'Charlie Member',
       role: 'MEMBER',
       tenantId: tenant.id,
+      passwordHash: await bcrypt.hash('password', 10),
     },
   })
   console.log('✅ Created 3 users')
@@ -64,6 +81,7 @@ async function main() {
       name: 'SaaS Platform',
       slug: 'demo',
       tenantId: tenant.id,
+      updatedAt: new Date(),
     },
   })
   console.log('✅ Created project:', project.name)
@@ -229,6 +247,7 @@ async function main() {
           'ENTERPRISE-MONTHLY': 29900, // $299 maximum
         },
       },
+      updatedAt: new Date(),
     },
   })
   console.log('✅ Created policy with guardrails')

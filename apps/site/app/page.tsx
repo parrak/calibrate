@@ -48,18 +48,11 @@ export default function Home() {
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-[color:var(--brand)]/20 to-purple-500/20 rounded-2xl blur-3xl"></div>
             <div className="relative bg-white/80 backdrop-blur-sm border border-[color:var(--border)] rounded-2xl overflow-hidden shadow-2xl">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                poster="/demo-poster.png"
-                className="w-full h-auto"
-                aria-label="Calibrate console demo showing price changes and guardrails"
-              >
-                <source src="/demo.mp4" type="video/mp4" />
-                <img src="/demo.gif" alt="Calibrate demo showing price management workflow" />
-              </video>
+              <img
+                src="/calibr_walkthrough.webp"
+                alt="Calibrate console demo showing price management workflow"
+                className="w-full h-auto rounded-lg shadow-2xl"
+              />
             </div>
           </div>
         </div>
