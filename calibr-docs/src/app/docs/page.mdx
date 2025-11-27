@@ -12,6 +12,7 @@ Calibr is a composable pricing control plane for omnichannel commerce. Merchants
   - [3. Review, approve, apply](#3-review-approve-apply)
   - [4. Channel synchronization](#4-channel-synchronization)
 - [Merchant console](#merchant-console)
+- [Automation runs](#automation-runs)
 - [Analytics & copilot intelligence](#analytics--copilot-intelligence)
 - [Channel connectors](#channel-connectors)
 - [API surface](#api-surface)
@@ -116,6 +117,18 @@ Connector workers push applied price changes back to commerce channels. Shopify 
 
 The console calls the same public API endpoints shown above, using the authenticated user’s API token and `Idempotency-Key` headers for mutations.
 
+## Automation runs
+
+Automation runs handle bulk rule execution and progress monitoring for large-scale updates.
+
+- **Runs list:** `/p/[slug]/automation/runs` shows all runs with filters for `PREVIEW`, `QUEUED`, `APPLYING`, `APPLIED`, `FAILED`, and `ROLLED_BACK` statuses. Polling keeps the table fresh while runs are active.
+- **Run detail drawer:** Open any run to review targets, audit events, explain traces, and error messages without leaving the page.
+- **Progress indicators:** Each run displays completion percentages and applied/failed/queued counts so operators can see impact in real time.
+- **Retry failed:** Trigger `POST /api/v1/runs/:runId/retry-failed` from the UI to reset failed targets back to `QUEUED` for another attempt.
+- **Alerts & toasts:** Toasts notify users when runs finish or encounter errors, helping teams react quickly.
+
+API endpoints for runs are listed in the [API surface](#api-surface) section for direct integration or automation.
+
 ---
 
 ## Analytics & copilot intelligence
@@ -124,6 +137,14 @@ The console calls the same public API endpoints shown above, using the authentic
 - **Trend & anomaly helpers:** `@calibr/analytics` offers utilities for rolling aggregates, anomaly detection, and weekly insight digests.
 - **Copilot query endpoint:** `/api/v1/copilot` turns natural-language prompts into tenant-scoped SQL, enforces RBAC, sanitises queries, logs every execution, and redacts sensitive fields before returning results.
 - **AI price suggestions:** `@calibr/ai-engine` can generate candidate price moves with accompanying explanations that flow through the same guardrails as manual updates.
+
+### Copilot simulation API
+
+- **Endpoint:** `POST /api/v1/copilot/simulate`
+- **Purpose:** Let EDITOR+ users preview how the pricing engine would respond to a proposed change before shipping it. Simulations run through the same guardrails and log results for auditability.
+- **Inputs:** SKU identifiers, proposed prices, currencies, and optional context metadata validated with `zod` schemas.
+- **Outputs:** Policy evaluation results, rule-by-rule explanations, and copilot audit entries so teams can compare simulated vs. real outcomes.
+- **Access control:** RBAC-enforced; responses mirror console permissions and include idempotent logging for traceability.
 
 ---
 
@@ -146,11 +167,16 @@ Each connector emits event log entries and updates the price change’s `connect
 | `POST /api/v1/webhooks/price-suggestion` | Accept signed price suggestions and enqueue them for policy evaluation. |
 | `GET /api/v1/price-changes` | List price changes with filters (`status`, search `q`, cursor pagination) and role metadata. |
 | `POST /api/v1/price-changes/:id/(approve|apply|reject|rollback)` | Transition a price change through the governance workflow. |
+| `GET /api/v1/runs` | List automation runs with filters for status, pagination, and project scoping. |
+| `GET /api/v1/runs/:runId` | Retrieve run details including targets, audit events, and explain traces. |
+| `GET /api/v1/runs/:runId/progress` | Poll run progress for real-time dashboards. |
+| `POST /api/v1/runs/:runId/retry-failed` | Retry any targets in a failed state without re-running the entire rule. |
 | `GET /api/v1/catalog` | Fetch products, SKUs, prices, connectors, and policy metadata for a project. |
 | `GET /api/v1/audit` | Retrieve audit trail entries and explainability payloads for compliance reviews. |
 | `GET /api/v1/competitors` | Manage competitor watchlists and latest scraped pricing. |
 | `POST /api/v1/analytics-digest` | Generate daily digest (invoked by cron or manual trigger). |
 | `POST /api/v1/copilot` | Execute AI-assisted analytics queries (read-only). |
+| `POST /api/v1/copilot/simulate` | Preview how pricing guardrails and automation respond to proposed changes without applying them. |
 | `GET /api/health`, `GET /api/healthz`, `GET /api/metrics`, `GET /api/metrics/enhanced` | Operational health and Prometheus-style metrics. |
 | `POST /api/projects` | Create projects during onboarding; returns slug, tenant linkage, and membership. |
 | `GET /api/projects` | List a user’s projects plus attached Shopify/Amazon integrations. |
