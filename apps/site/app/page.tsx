@@ -47,7 +47,7 @@ export default function Home() {
           </div>
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-[color:var(--brand)]/20 to-purple-500/20 rounded-2xl blur-3xl"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm border border-[color:var(--border)] rounded-2xl overflow-hidden shadow-2xl">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl">
               <img
                 src="/calibr_walkthrough.webp"
                 alt="Calibrate console demo showing price management workflow"
