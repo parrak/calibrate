@@ -29,7 +29,13 @@ const selectorPredicateSchema: z.ZodType<PricingRule['selector']['predicates'][n
       type: z.literal('custom'),
       field: z.string(),
       operator: z.enum(['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'contains']),
-      value: z.unknown(),
+      value: z.union([
+        z.string(),
+        z.number(),
+        z.boolean(),
+        z.array(z.unknown()),
+        z.record(z.unknown()),
+      ]),
     }),
   ]
 )
