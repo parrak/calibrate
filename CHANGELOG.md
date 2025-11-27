@@ -7,6 +7,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **M1.9 Copilot Simulation API** — Introduced `/api/v1/copilot/simulate` for EDITOR+ users with zod validation, RBAC, pricing-engine execution, and Copilot audit logging. Includes Vitest coverage for payload validation, access control, and simulation logging.
 - **M1.7 Automation Runner UI Enhancements** — January 2025 ✅ MILESTONE
   - **Automation Runs Page**: New `/p/[slug]/automation/runs` page for monitoring rule executions
     - Runs table with status filters (Preview, Queued, Applying, Applied, Failed, Rolled Back)
@@ -189,6 +190,9 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Added Tailwind color tokens for brand colors (`cb-teal-100`, `cb-teal-500`, `cb-teal-800`) and gradient stops
   - Added logo image to all app headers (site, console, docs)
   - Updated all "Calibr" references to "Calibrate" in visible text and documentation
+
+### Fixed
+- Tightened Copilot simulation selector validation to use a discriminated union that matches `PricingRule` predicate types, resolving the typecheck mismatch for custom predicates.
 
 ### Changed
 - **Branding Colors**: Migrated to teal color palette (Light Teal → Mid Teal → Deep Teal gradient)
