@@ -7,6 +7,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **M1.9 Copilot Simulation API** — Introduced `/api/v1/copilot/simulate` for EDITOR+ users with zod validation, RBAC, pricing-engine execution, and Copilot audit logging. Includes Vitest coverage for payload validation, access control, and simulation logging.
 - **M1.7 Automation Runner UI Enhancements** — January 2025 ✅ MILESTONE
   - **Automation Runs Page**: New `/p/[slug]/automation/runs` page for monitoring rule executions
     - Runs table with status filters (Preview, Queued, Applying, Applied, Failed, Rolled Back)
@@ -190,6 +191,9 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Added logo image to all app headers (site, console, docs)
   - Updated all "Calibr" references to "Calibrate" in visible text and documentation
 
+### Fixed
+- Tightened Copilot simulation selector validation to use a discriminated union that matches `PricingRule` predicate types, resolving the typecheck mismatch for custom predicates.
+
 ### Changed
 - **Branding Colors**: Migrated to teal color palette (Light Teal → Mid Teal → Deep Teal gradient)
 - **Favicon System**: Switched from static files to Next.js dynamic icon generation
@@ -263,6 +267,14 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Validation duration: 2 hours | Confidence: HIGH
 
 ### Fixed
+- **Partner Logo Distortion on Homepage** (PR #116)
+  - Fixed distorted partner logos (Shopify, Stripe, Amazon) displayed on calibr.lat homepage
+  - Added `preserveAspectRatio="xMidYMid meet"` attribute to all SVG logos to maintain correct aspect ratios
+  - Added `max-w-full` class to prevent overflow and stretching
+  - Removed gray color override wrapper to display proper brand colors (#95BF47 for Shopify, #635BFF for Stripe)
+  - Updated both `apps/site/components/Logos.tsx` and `calibrate-standalone/components/Logos.tsx`
+  - Logos now render with official brand assets and proper proportions
+
 - **Docs Vitest Timeout in CI** (PR #TBD)
   - Fixed Vitest timeout error when starting forks runner in CI environments
   - Updated `apps/docs/vitest.config.ts` to use threads pool instead of forks pool
