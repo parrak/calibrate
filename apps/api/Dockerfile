@@ -29,6 +29,9 @@ RUN cd packages/db && pnpm exec prisma generate
 # Build monitor package (required dependency for API)
 RUN pnpm --filter @calibr/monitor build
 
+# Build automation-runner package (required dependency for API)
+RUN pnpm --filter @calibr/automation-runner build
+
 # Build the API
 RUN cd apps/api && pnpm run build
 
