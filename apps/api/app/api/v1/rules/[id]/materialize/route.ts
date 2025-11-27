@@ -58,7 +58,7 @@ export async function POST(
   } catch (error) {
     logger.error('[API] Error materializing rule run', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      ruleId: params.ruleId
+      ruleId: params.id
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
