@@ -25,10 +25,9 @@ export async function POST(
       // No body or invalid JSON - retry all failed targets
     }
 
-    // @ts-ignore - logger metadata format
     logger.info(`[API] Retrying failed targets for run: ${runId}`, {
       targetCount: targetIds?.length || 'all'
-    })
+    } as any)
 
     // Check if run exists
     const run = await prisma().ruleRun.findUnique({
@@ -83,11 +82,10 @@ export async function POST(
       }
     })
   } catch (error) {
-    // @ts-ignore - logger metadata format
     logger.error('[API] Error retrying failed targets', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId
-    })
+    } as any)
 
     return NextResponse.json(
       {
@@ -144,11 +142,10 @@ export async function GET(
       }
     })
   } catch (error) {
-    // @ts-ignore - logger metadata format
     logger.error('[API] Error getting failed targets', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId
-    })
+    } as any)
 
     return NextResponse.json(
       {

@@ -35,12 +35,11 @@ export async function POST(
       ? Math.ceil((targetCount.totalTargets * 1000) / 5)
       : 0
 
-    // @ts-ignore - logger metadata format
     logger.info(`[API] Materialized rule run: ${run.id}`, {
       ruleId,
       runId: run.id,
       targetCount: targetCount?.totalTargets
-    })
+    } as any)
 
     return NextResponse.json({
       success: true,
@@ -54,11 +53,10 @@ export async function POST(
       }
     })
   } catch (error) {
-    // @ts-ignore - logger metadata format
     logger.error('[API] Error materializing rule run', {
       error: error instanceof Error ? error.message : 'Unknown error',
       ruleId: params.ruleId
-    })
+    } as any)
 
     return NextResponse.json(
       {

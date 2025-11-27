@@ -57,11 +57,10 @@ export async function POST(
     // Get queue position (simplified - would need proper queue implementation)
     const queuePosition = await getQueuePosition(runId)
 
-    // @ts-ignore - logger metadata format
     logger.info(`[API] Queued rule run: ${runId}`, {
       queuePosition,
       targetCount: run.RuleTarget.length
-    })
+    } as any)
 
     return NextResponse.json({
       success: true,
@@ -74,11 +73,10 @@ export async function POST(
       }
     })
   } catch (error) {
-    // @ts-ignore - logger metadata format
     logger.error('[API] Error queuing rule run', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId
-    })
+    } as any)
 
     return NextResponse.json(
       {
@@ -145,11 +143,10 @@ export async function GET(
       data: status
     })
   } catch (error) {
-    // @ts-ignore - logger metadata format
     logger.error('[API] Error getting run status', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId
-    })
+    } as any)
 
     return NextResponse.json(
       {

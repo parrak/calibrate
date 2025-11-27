@@ -50,11 +50,10 @@ export async function POST(
     // Perform reconciliation
     const report = await reconciliation.reconcileRun(runId)
 
-    // @ts-ignore - logger metadata format
     logger.info(`[API] Reconciliation completed for run: ${runId}`, {
       totalChecked: report.totalChecked,
       mismatches: report.mismatches
-    })
+    } as any)
 
     return NextResponse.json({
       success: true,
@@ -70,11 +69,10 @@ export async function POST(
       }
     })
   } catch (error) {
-    // @ts-ignore - logger metadata format
     logger.error('[API] Error reconciling rule run', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId
-    })
+    } as any)
 
     return NextResponse.json(
       {
@@ -108,11 +106,10 @@ export async function GET(
       }
     })
   } catch (error) {
-    // @ts-ignore - logger metadata format
     logger.error('[API] Error getting reconciliation history', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId
-    })
+    } as any)
 
     return NextResponse.json(
       {
