@@ -10,10 +10,10 @@ import { logger } from '@calibr/monitor'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { ruleId: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { ruleId } = params
+    const ruleId = params.id
 
     // Get actor from request (would be from auth in production)
     const actor = request.headers.get('x-actor') || 'api'

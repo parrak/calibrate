@@ -87,7 +87,9 @@
       "Bash(Select-String -Pattern \"error TS\")",
       "Bash(pnpm --filter @calibr/automation-runner lint:*)",
       "Bash(git mv:*)",
-      "Bash(pnpm --filter @calibr/api lint:*)"
+      "Bash(pnpm --filter @calibr/api lint:*)",
+      "Bash(Select-String -Pattern \"error\" -Context 2)",
+      "Bash(pnpm --filter @calibr/api build)"
     ],
     "deny": [],
     "ask": []
