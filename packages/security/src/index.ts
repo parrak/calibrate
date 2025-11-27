@@ -9,7 +9,7 @@ export {
   getEncryptionService,
   encryptCredentials,
   decryptCredentials,
-} from './encryption.js'
+} from './encryption'
 
-export { verifyHmac } from './verifyHmac.js'
-export { ensureIdempotent } from './idempotency.js'
+export { verifyHmac } from './verifyHmac'
+export { ensureIdempotent } from './idempotency'
