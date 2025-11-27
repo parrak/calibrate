@@ -18,8 +18,10 @@ export async function POST(
     // Get actor from request (would be from auth in production)
     const actor = request.headers.get('x-actor') || 'api'
 
-    // @ts-ignore - logger metadata format
-    logger.info(`[API] Materializing rule run for rule: ${ruleId}`, { actor })
+    logger.info(`[API] Materializing rule run for rule: ${ruleId}`, {
+      actor
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
 
     // Get worker instance
     const worker = getRulesWorker()
@@ -39,6 +41,7 @@ export async function POST(
       ruleId,
       runId: run.id,
       targetCount: targetCount?.totalTargets
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     return NextResponse.json({
@@ -56,6 +59,7 @@ export async function POST(
     logger.error('[API] Error materializing rule run', {
       error: error instanceof Error ? error.message : 'Unknown error',
       ruleId: params.ruleId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     return NextResponse.json(

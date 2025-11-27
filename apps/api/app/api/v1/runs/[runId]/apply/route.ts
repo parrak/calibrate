@@ -60,6 +60,7 @@ export async function POST(
     logger.info(`[API] Queued rule run: ${runId}`, {
       queuePosition,
       targetCount: run.RuleTarget.length
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     return NextResponse.json({
@@ -76,6 +77,7 @@ export async function POST(
     logger.error('[API] Error queuing rule run', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     return NextResponse.json(
@@ -146,6 +148,7 @@ export async function GET(
     logger.error('[API] Error getting run status', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     return NextResponse.json(

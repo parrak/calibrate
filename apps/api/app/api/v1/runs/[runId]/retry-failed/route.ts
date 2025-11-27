@@ -27,6 +27,7 @@ export async function POST(
 
     logger.info(`[API] Retrying failed targets for run: ${runId}`, {
       targetCount: targetIds?.length || 'all'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     // Check if run exists
@@ -85,6 +86,7 @@ export async function POST(
     logger.error('[API] Error retrying failed targets', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     return NextResponse.json(
@@ -145,6 +147,7 @@ export async function GET(
     logger.error('[API] Error getting failed targets', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
 
     return NextResponse.json(

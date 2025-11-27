@@ -86,7 +86,8 @@
       "Bash(powershell:*)",
       "Bash(Select-String -Pattern \"error TS\")",
       "Bash(pnpm --filter @calibr/automation-runner lint:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(pnpm --filter @calibr/api lint:*)"
     ],
     "deny": [],
     "ask": []
