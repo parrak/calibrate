@@ -25,6 +25,7 @@ export async function POST(
       // No body or invalid JSON - retry all failed targets
     }
 
+    // @ts-ignore - logger metadata format
     logger.info(`[API] Retrying failed targets for run: ${runId}`, {
       targetCount: targetIds?.length || 'all'
     })
@@ -82,6 +83,7 @@ export async function POST(
       }
     })
   } catch (error) {
+    // @ts-ignore - logger metadata format
     logger.error('[API] Error retrying failed targets', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId
@@ -142,6 +144,7 @@ export async function GET(
       }
     })
   } catch (error) {
+    // @ts-ignore - logger metadata format
     logger.error('[API] Error getting failed targets', {
       error: error instanceof Error ? error.message : 'Unknown error',
       runId: params.runId

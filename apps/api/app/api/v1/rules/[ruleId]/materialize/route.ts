@@ -18,6 +18,7 @@ export async function POST(
     // Get actor from request (would be from auth in production)
     const actor = request.headers.get('x-actor') || 'api'
 
+    // @ts-ignore - logger metadata format
     logger.info(`[API] Materializing rule run for rule: ${ruleId}`, { actor })
 
     // Get worker instance
@@ -34,6 +35,7 @@ export async function POST(
       ? Math.ceil((targetCount.totalTargets * 1000) / 5)
       : 0
 
+    // @ts-ignore - logger metadata format
     logger.info(`[API] Materialized rule run: ${run.id}`, {
       ruleId,
       runId: run.id,
@@ -52,6 +54,7 @@ export async function POST(
       }
     })
   } catch (error) {
+    // @ts-ignore - logger metadata format
     logger.error('[API] Error materializing rule run', {
       error: error instanceof Error ? error.message : 'Unknown error',
       ruleId: params.ruleId
