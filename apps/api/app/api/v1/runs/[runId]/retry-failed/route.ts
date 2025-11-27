@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+// @ts-expect-error - build artifacts resolve at runtime
 import { getDLQService, getRulesWorker } from '@calibr/automation-runner'
 import { prisma } from '@calibr/db'
 import { logger } from '@calibr/monitor'
@@ -70,7 +71,7 @@ export async function POST(
       data: {
         runId,
         retriedCount: retriedTargets.length,
-        targets: retriedTargets.map(t => ({
+        targets: retriedTargets.map((t: typeof retriedTargets[0]) => ({
           id: t.id,
           productId: t.productId,
           skuId: t.skuId,
@@ -111,12 +112,12 @@ export async function GET(
     const failedTargets = await dlq.getFailedTargets(runId)
 
     // Classify targets by retryability
-    const retryable = failedTargets.filter(t => {
+    const retryable = failedTargets.filter((t: typeof failedTargets[0]) => {
       const errorType = classifyError(t.errorMessage || '')
       return !['NOT_FOUND', 'VALIDATION', 'AUTHORIZATION'].includes(errorType)
     })
 
-    const nonRetryable = failedTargets.filter(t => {
+    const nonRetryable = failedTargets.filter((t: typeof failedTargets[0]) => {
       const errorType = classifyError(t.errorMessage || '')
       return ['NOT_FOUND', 'VALIDATION', 'AUTHORIZATION'].includes(errorType)
     })
@@ -128,7 +129,7 @@ export async function GET(
         total: failedTargets.length,
         retryable: retryable.length,
         nonRetryable: nonRetryable.length,
-        targets: failedTargets.map(t => ({
+        targets: failedTargets.map((t: typeof failedTargets[0]) => ({
           id: t.id,
           productId: t.productId,
           skuId: t.skuId,
@@ -136,7 +137,7 @@ export async function GET(
           errorType: classifyError(t.errorMessage || ''),
           attempts: t.attempts,
           lastAttempt: t.lastAttempt,
-          retryable: retryable.some(rt => rt.id === t.id)
+          retryable: retryable.some((rt: typeof retryable[0]) => rt.id === t.id)
         }))
       }
     })

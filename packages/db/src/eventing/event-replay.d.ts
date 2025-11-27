@@ -46,15 +46,15 @@ export declare class EventReplay {
      * Useful for tracing a complete operation across multiple events
      */
     getEventsByCorrelation(correlationId: string): Promise<{
-        id: string;
-        tenantId: string;
         projectId: string | null;
-        createdAt: Date;
-        metadata: import("@prisma/client/runtime/library").JsonValue | null;
-        correlationId: string | null;
+        id: string;
         eventKey: string;
+        tenantId: string;
         eventType: string;
         payload: import("@prisma/client/runtime/library").JsonValue;
+        metadata: import("@prisma/client/runtime/library").JsonValue | null;
+        correlationId: string | null;
+        createdAt: Date;
         version: number;
     }[]>;
 }

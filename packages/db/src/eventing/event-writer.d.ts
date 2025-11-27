@@ -40,15 +40,15 @@ export declare class EventWriter {
         correlationId?: string;
         limit?: number;
     }): Promise<{
-        id: string;
-        tenantId: string;
         projectId: string | null;
-        createdAt: Date;
-        metadata: Prisma.JsonValue | null;
-        correlationId: string | null;
+        id: string;
         eventKey: string;
+        tenantId: string;
         eventType: string;
         payload: Prisma.JsonValue;
+        metadata: Prisma.JsonValue | null;
+        correlationId: string | null;
+        createdAt: Date;
         version: number;
     }[]>;
     /**

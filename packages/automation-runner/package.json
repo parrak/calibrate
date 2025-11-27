@@ -1,9 +1,16 @@
 {
   "name": "@calibr/automation-runner",
   "version": "0.1.0",
+  "type": "module",
   "description": "Automation runner for bulk pricing rule execution with retry and reconciliation",
-  "main": "dist/automation-runner/src/index.js",
-  "types": "dist/automation-runner/src/index.d.ts",
+  "main": "./dist/automation-runner/src/index.js",
+  "types": "./dist/automation-runner/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/automation-runner/src/index.d.ts",
+      "import": "./dist/automation-runner/src/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
