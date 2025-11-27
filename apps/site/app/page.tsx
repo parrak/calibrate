@@ -46,11 +46,11 @@ export default function Home() {
             </p>
           </div>
           <div className="relative">
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl">
+            <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl">
               <img
                 src="/calibr_walkthrough.webp"
                 alt="Calibrate console demo showing price management workflow"
-                className="w-full h-auto rounded-lg shadow-2xl"
+                className="w-full h-auto rounded-lg"
               />
             </div>
           </div>
