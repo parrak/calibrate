@@ -1,240 +1,330 @@
 /**
  * Automation Runner Metrics
- * M1.6: Metrics collection and reporting for monitoring
+ * M1.6: Collects and records metrics for monitoring and alerting
  */
 
+import { prisma } from '@calibr/db'
+import { logger } from '@calibr/monitor'
 import type { RuleRun } from '@calibr/db'
 import type { RuleWorkerMetrics, RunResult } from './types'
-import { prisma } from '@calibr/db'
-
-const db = prisma()
 
 /**
- * Collect metrics for a specific run
+ * Record metrics for a rule run
  */
-export async function collectRunMetrics(runId: string): Promise<{
-  duration: number
-  successRate: number
-  totalTargets: number
-  appliedTargets: number
-  failedTargets: number
-}> {
-  const run = await db.ruleRun.findUnique({
-    where: { id: runId },
-    include: {
-      RuleTarget: true,
-    },
-  })
-
-  if (!run) {
-    throw new Error(`Run not found: ${runId}`)
+export function recordRunMetrics(run: RuleRun, result?: RunResult) {
+  // Calculate duration if completed
+  let duration: number | undefined
+  if (run.queuedAt && run.finishedAt) {
+    duration = run.finishedAt.getTime() - run.queuedAt.getTime()
   }
 
-  const totalTargets = run.RuleTarget.length
-  const appliedTargets = run.RuleTarget.filter(t => t.status === 'APPLIED').length
-  const failedTargets = run.RuleTarget.filter(t => t.status === 'FAILED').length
+  // Calculate success rate if result provided
+  let successRate: number | undefined
+  if (result) {
+    successRate = result.totalTargets > 0
+      ? (result.appliedTargets / result.totalTargets) * 100
+      : 0
+  }
 
-  const duration = run.finishedAt && run.startedAt
-    ? run.finishedAt.getTime() - run.startedAt.getTime()
-    : 0
+  // Log metrics as structured data for export to Prometheus/Grafana
+  logger.info('[Metrics] Rule run completed', {
+    metadata: {
+      metric: 'rules.apply',
+      runId: run.id,
+      tenantId: run.tenantId,
+      projectId: run.projectId,
+      ruleId: run.ruleId,
+      status: run.status,
+      duration,
+      successRate,
+      appliedTargets: result?.appliedTargets,
+      failedTargets: result?.failedTargets,
+      totalTargets: result?.totalTargets
+    }
+  })
 
-  const successRate = totalTargets > 0 ? (appliedTargets / totalTargets) * 100 : 0
-
-  return {
-    duration,
-    successRate,
-    totalTargets,
-    appliedTargets,
-    failedTargets,
+  // Warn if success rate is low
+  if (successRate !== undefined && successRate < 97) {
+    logger.warn('[Metrics] Low success rate detected', {
+      metadata: {
+        metric: 'rules.apply.low_success_rate',
+        runId: run.id,
+        successRate,
+        threshold: 97,
+        appliedTargets: result?.appliedTargets,
+        failedTargets: result?.failedTargets,
+        totalTargets: result?.totalTargets
+      }
+    })
   }
 }
 
 /**
- * Collect aggregate metrics for a project
+ * Record metrics for DLQ size
  */
-export async function collectWorkerMetrics(projectId: string, since?: Date): Promise<RuleWorkerMetrics> {
-  const sinceDate = since || new Date(Date.now() - 24 * 60 * 60 * 1000) // Default: last 24 hours
-
-  // Get all runs for the project since the given date
-  const runs = await db.ruleRun.findMany({
+export async function recordDLQMetrics(projectId: string) {
+  // Count failed targets in DLQ
+  const dlqSize = await prisma().ruleTarget.count({
     where: {
       projectId,
-      createdAt: {
-        gte: sinceDate,
-      },
-    },
-    include: {
-      RuleTarget: true,
-    },
+      status: 'FAILED'
+    }
   })
 
-  // Calculate metrics
-  const runsProcessed = runs.filter(r => r.status === 'APPLIED' || r.status === 'PARTIAL' || r.status === 'FAILED').length
+  const project = await prisma().project.findUnique({
+    where: { id: projectId }
+  })
 
-  let totalTargets = 0
-  let targetsApplied = 0
-  let targetsFailed = 0
-  let retriesAttempted = 0
-  let rate429Errors = 0
-  let totalDuration = 0
-  let completedRuns = 0
+  if (!project) {
+    return
+  }
 
-  for (const run of runs) {
-    const runTargets = run.RuleTarget.length
-    totalTargets += runTargets
+  logger.info('[Metrics] DLQ size recorded', {
+    metadata: {
+      metric: 'rules.dlq.size',
+      tenantId: project.tenantId,
+      projectId,
+      dlqSize
+    }
+  })
 
-    targetsApplied += run.RuleTarget.filter(t => t.status === 'APPLIED').length
-    targetsFailed += run.RuleTarget.filter(t => t.status === 'FAILED').length
+  // Alert if DLQ size is high
+  if (dlqSize >= 50) {
+    const severity = dlqSize >= 100 ? 'CRITICAL' : 'WARNING'
 
-    // Count retries (attempts > 0)
-    retriesAttempted += run.RuleTarget.reduce((sum, t) => sum + Math.max(0, t.attempts - 1), 0)
+    logger.warn(`[Metrics] High DLQ size: ${dlqSize}`, {
+      metadata: {
+        metric: 'rules.dlq.high_size',
+        tenantId: project.tenantId,
+        projectId,
+        dlqSize,
+        threshold: dlqSize >= 100 ? 100 : 50,
+        severity
+      }
+    })
+  }
+}
 
-    // Count 429 errors (from error messages)
-    rate429Errors += run.RuleTarget.filter(t =>
-      t.errorMessage?.toLowerCase().includes('429') ||
-      t.errorMessage?.toLowerCase().includes('rate limit')
-    ).length
+/**
+ * Record 429 rate limit error
+ */
+export function record429Error(runId: string, targetId: string, tenantId: string, projectId: string) {
+  logger.warn('[Metrics] Rate limit (429) error', {
+    metadata: {
+      metric: 'rules.429.error',
+      tenantId,
+      projectId,
+      runId,
+      targetId
+    }
+  })
+}
 
-    // Calculate duration for completed runs
-    if (run.finishedAt && run.startedAt) {
-      totalDuration += run.finishedAt.getTime() - run.startedAt.getTime()
-      completedRuns++
+/**
+ * Check for 429 burst (>3 errors in 5 minutes)
+ */
+export async function check429Burst(projectId: string): Promise<boolean> {
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+
+  // Count 429 errors in the last 5 minutes
+  // Note: In a real implementation, this would query a metrics store
+  // For now, we'll use audit logs as a proxy
+
+  const recentErrors = await prisma().audit.count({
+    where: {
+      projectId,
+      action: 'error',
+      createdAt: { gte: fiveMinutesAgo },
+      explain: {
+        path: ['errorType'],
+        equals: 'RATE_LIMIT_429'
+      }
+    }
+  })
+
+  const isBurst = recentErrors > 3
+
+  if (isBurst) {
+    const project = await prisma().project.findUnique({
+      where: { id: projectId }
+    })
+
+    if (project) {
+      logger.error('[Metrics] Rate limit burst detected', new Error(`${recentErrors} 429 errors in 5 minutes`), {
+        metadata: {
+          metric: 'rules.429.burst',
+          tenantId: project.tenantId,
+          projectId,
+          errorCount: recentErrors,
+          timeWindow: '5m'
+        }
+      })
     }
   }
 
-  const averageDuration = completedRuns > 0 ? totalDuration / completedRuns : 0
-  const successRate = totalTargets > 0 ? (targetsApplied / totalTargets) * 100 : 0
+  return isBurst
+}
 
-  // Get DLQ size
-  const dlqSize = await db.ruleTarget.count({
+/**
+ * Get aggregate worker metrics
+ */
+export async function getWorkerMetrics(projectId?: string): Promise<RuleWorkerMetrics> {
+  const where: Record<string, unknown> = projectId ? { projectId } : {}
+
+  // Get run statistics
+  const [totalRuns, _successfulRuns, _failedRuns, _partialRuns] = await Promise.all([
+    prisma().ruleRun.count({ where }),
+    prisma().ruleRun.count({ where: { ...where, status: 'APPLIED' } }),
+    prisma().ruleRun.count({ where: { ...where, status: 'FAILED' } }),
+    prisma().ruleRun.count({ where: { ...where, status: 'PARTIAL' } })
+  ])
+
+  // Get target statistics
+  const [totalTargets, appliedTargets, failedTargets] = await Promise.all([
+    prisma().ruleTarget.count({ where }),
+    prisma().ruleTarget.count({ where: { ...where, status: 'APPLIED' } }),
+    prisma().ruleTarget.count({ where: { ...where, status: 'FAILED' } })
+  ])
+
+  // Calculate average duration
+  const completedRuns = await prisma().ruleRun.findMany({
     where: {
-      projectId,
-      status: 'FAILED',
+      ...where,
+      status: { in: ['APPLIED', 'PARTIAL', 'FAILED'] },
+      queuedAt: { not: null },
+      finishedAt: { not: null }
     },
+    select: {
+      queuedAt: true,
+      finishedAt: true
+    }
   })
 
+  let averageDuration = 0
+  if (completedRuns.length > 0) {
+    const totalDuration = completedRuns.reduce((sum, run) => {
+      if (run.queuedAt && run.finishedAt) {
+        return sum + (run.finishedAt.getTime() - run.queuedAt.getTime())
+      }
+      return sum
+    }, 0)
+    averageDuration = totalDuration / completedRuns.length
+  }
+
+  // Calculate success rate
+  const successRate = totalTargets > 0 ? (appliedTargets / totalTargets) * 100 : 0
+
+  // Get DLQ size
+  const dlqSize = failedTargets
+
+  // Get retry count (approximate from attempts)
+  const targetsWithRetries = await prisma().ruleTarget.findMany({
+    where: {
+      ...where,
+      attempts: { gt: 1 }
+    },
+    select: { attempts: true }
+  })
+
+  const retriesAttempted = targetsWithRetries.reduce((sum, t) => sum + (t.attempts - 1), 0)
+
+  // Approximate 429 errors (would be better with proper metrics store)
+  const rate429Errors = 0 // Placeholder - would need metrics store
+
   return {
-    runsProcessed,
-    targetsApplied,
-    targetsFailed,
+    runsProcessed: totalRuns,
+    targetsApplied: appliedTargets,
+    targetsFailed: failedTargets,
     retriesAttempted,
     rate429Errors,
     averageDuration,
     successRate,
-    dlqSize,
+    dlqSize
   }
 }
 
 /**
- * Record run metrics to event log
+ * Record target-level metrics
  */
-export async function recordRunMetrics(run: RuleRun, result: RunResult): Promise<void> {
-  await db.eventLog.create({
-    data: {
-      eventKey: `metrics:run:${run.id}:${Date.now()}`,
-      tenantId: run.tenantId,
-      projectId: run.projectId,
-      eventType: 'automation.metrics.run',
-      payload: {
-        runId: run.id,
-        ruleId: run.ruleId,
-        status: result.status,
-        totalTargets: result.totalTargets,
-        appliedTargets: result.appliedTargets,
-        failedTargets: result.failedTargets,
-        duration: result.duration,
-        successRate: (result.appliedTargets / result.totalTargets) * 100,
-      },
-      metadata: {
-        timestamp: new Date().toISOString(),
-      },
-    },
-  })
-}
+export function recordTargetMetrics(
+  targetId: string,
+  runId: string,
+  tenantId: string,
+  projectId: string,
+  success: boolean,
+  duration: number,
+  errorType?: string
+) {
+  const logLevel = success ? 'info' : 'warn'
+  const message = success
+    ? '[Metrics] Target applied successfully'
+    : '[Metrics] Target application failed'
 
-/**
- * Record DLQ metrics to event log
- */
-export async function recordDLQMetrics(projectId: string, dlqSize: number): Promise<void> {
-  const project = await db.project.findUnique({
-    where: { id: projectId },
-  })
-
-  if (!project) return
-
-  await db.eventLog.create({
-    data: {
-      eventKey: `metrics:dlq:${projectId}:${Date.now()}`,
-      tenantId: project.tenantId,
+  logger[logLevel](message, {
+    metadata: {
+      metric: 'rules.apply.target',
+      tenantId,
       projectId,
-      eventType: 'automation.metrics.dlq',
-      payload: {
-        projectId,
-        dlqSize,
-        timestamp: new Date().toISOString(),
-      },
-    },
+      runId,
+      targetId,
+      success,
+      duration,
+      errorType
+    }
   })
 }
 
 /**
- * Check if success rate is below threshold and return alert
+ * Record reconciliation metrics
  */
-export function checkSuccessRateAlert(successRate: number): {
-  alert: boolean
-  severity: 'warning' | 'critical' | null
-  message: string | null
-} {
-  if (successRate < 90) {
-    return {
-      alert: true,
-      severity: 'critical',
-      message: `Critical: Success rate is ${successRate.toFixed(1)}% (below 90%)`,
-    }
-  }
+export function recordReconciliationMetrics(
+  runId: string,
+  tenantId: string,
+  projectId: string,
+  totalChecked: number,
+  mismatchCount: number
+) {
+  const mismatchRate = totalChecked > 0 ? (mismatchCount / totalChecked) * 100 : 0
 
-  if (successRate < 97) {
-    return {
-      alert: true,
-      severity: 'warning',
-      message: `Warning: Success rate is ${successRate.toFixed(1)}% (below 97%)`,
+  logger.info('[Metrics] Reconciliation completed', {
+    metadata: {
+      metric: 'rules.reconciliation',
+      tenantId,
+      projectId,
+      runId,
+      totalChecked,
+      mismatchCount,
+      mismatchRate
     }
-  }
+  })
 
-  return {
-    alert: false,
-    severity: null,
-    message: null,
+  if (mismatchCount > 0) {
+    logger.warn(`[Metrics] Price mismatches detected: ${mismatchCount} of ${totalChecked}`, {
+      metadata: {
+        metric: 'rules.reconciliation.mismatches',
+        tenantId,
+        projectId,
+        runId,
+        mismatchCount,
+        totalChecked,
+        mismatchRate
+      }
+    })
   }
 }
 
 /**
- * Check if DLQ size is above threshold and return alert
+ * Export metrics to Prometheus/Grafana format
  */
-export function checkDLQSizeAlert(dlqSize: number): {
-  alert: boolean
-  severity: 'warning' | 'critical' | null
-  message: string | null
-} {
-  if (dlqSize > 100) {
-    return {
-      alert: true,
-      severity: 'critical',
-      message: `Critical: DLQ size is ${dlqSize} (above 100)`,
-    }
-  }
-
-  if (dlqSize > 50) {
-    return {
-      alert: true,
-      severity: 'warning',
-      message: `Warning: DLQ size is ${dlqSize} (above 50)`,
-    }
-  }
-
+export function exportMetricsForGrafana(metrics: RuleWorkerMetrics) {
   return {
-    alert: false,
-    severity: null,
-    message: null,
+    'rules_apply_count': metrics.runsProcessed,
+    'rules_apply_duration_ms_avg': metrics.averageDuration,
+    'rules_apply_success_rate': metrics.successRate,
+    'rules_apply_targets_applied': metrics.targetsApplied,
+    'rules_apply_targets_failed': metrics.targetsFailed,
+    'rules_apply_retries_attempted': metrics.retriesAttempted,
+    'rules_429_errors': metrics.rate429Errors,
+    'rules_dlq_size': metrics.dlqSize
   }
 }

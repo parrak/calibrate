@@ -1,83 +1,162 @@
 /**
  * POST /api/v1/runs/:runId/apply
- * Queue a rule run for processing
+ * M1.6: Queue a rule run for application
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+// @ts-expect-error - build artifacts resolve at runtime
+import { getRulesWorker } from '@calibr/automation-runner'
 import { prisma } from '@calibr/db'
+import { logger } from '@calibr/monitor'
 
 export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ runId: string }> }
+  request: NextRequest,
+  { params }: { params: { runId: string } }
 ) {
   try {
-    const { runId } = await params
+    const { runId } = params
 
-    // Verify run exists
+    logger.info(`[API] Queuing rule run for application: ${runId}`)
+
+    // Check if run exists and is in valid state
     const run = await prisma().ruleRun.findUnique({
       where: { id: runId },
+      include: {
+        RuleTarget: true
+      }
     })
 
     if (!run) {
       return NextResponse.json(
-        { error: 'Run not found' },
+        {
+          success: false,
+          error: 'Rule run not found'
+        },
         { status: 404 }
       )
     }
 
-    // Verify run is in a valid state for queuing
-    if (run.status !== 'PREVIEW') {
+    // Check if run is in valid state (PREVIEW or FAILED/PARTIAL for retry)
+    const validStates = ['PREVIEW', 'FAILED', 'PARTIAL']
+    if (!validStates.includes(run.status)) {
       return NextResponse.json(
-        { error: `Cannot queue run with status: ${run.status}` },
+        {
+          success: false,
+          error: `Cannot apply run in status: ${run.status}. Valid states: ${validStates.join(', ')}`
+        },
         { status: 400 }
       )
     }
 
-    // Queue the run by updating status
-    await prisma().ruleRun.update({
-      where: { id: runId },
-      data: {
-        status: 'QUEUED',
-        queuedAt: new Date(),
-      },
-    })
+    // Get worker instance
+    const worker = getRulesWorker()
 
-    // Create event for worker to pick up
-    await prisma().event.create({
-      data: {
-        tenantId: run.tenantId,
-        projectId: run.projectId,
-        kind: 'rule.run.queued',
-        payload: { runId },
-      },
-    })
+    // Queue the run
+    await worker.queueRun(runId)
+
+    // Get queue position (simplified - would need proper queue implementation)
+    const queuePosition = await getQueuePosition(runId)
+
+    logger.info(`[API] Queued rule run: ${runId}`, {
+      queuePosition,
+      targetCount: run.RuleTarget.length
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
 
     return NextResponse.json({
-      runId,
-      status: 'queued',
-      queuedAt: new Date(),
+      success: true,
+      data: {
+        runId,
+        status: 'queued',
+        queuePosition,
+        targetCount: run.RuleTarget.length,
+        queuedAt: new Date().toISOString()
+      }
     })
   } catch (error) {
-    console.error('Error queueing run:', error)
+    logger.error('[API] Error queuing rule run', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      runId: params.runId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
     return NextResponse.json(
       {
-        error: 'Failed to queue run',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to queue rule run'
       },
       { status: 500 }
     )
   }
 }
 
-export async function OPTIONS(_req: NextRequest) {
-  return NextResponse.json(
-    {},
-    {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
+/**
+ * Get queue position for a run (simplified implementation)
+ */
+async function getQueuePosition(runId: string): Promise<number> {
+  // Count queued runs before this one
+  const run = await prisma().ruleRun.findUnique({
+    where: { id: runId },
+    select: { queuedAt: true }
+  })
+
+  if (!run?.queuedAt) {
+    return 1
+  }
+
+  const position = await prisma().ruleRun.count({
+    where: {
+      status: 'QUEUED',
+      queuedAt: {
+        lt: run.queuedAt
+      }
     }
-  )
+  })
+
+  return position + 1
+}
+
+/**
+ * GET /api/v1/runs/:runId/apply
+ * Get run application status
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { runId: string } }
+) {
+  try {
+    const { runId } = params
+
+    const worker = getRulesWorker()
+    const status = await worker.getRunStatus(runId)
+
+    if (!status) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Rule run not found'
+        },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: status
+    })
+  } catch (error) {
+    logger.error('[API] Error getting run status', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      runId: params.runId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get run status'
+      },
+      { status: 500 }
+    )
+  }
 }

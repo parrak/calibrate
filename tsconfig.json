@@ -31,7 +31,8 @@
       "@calibr/monitor": ["packages/monitor/src/index.ts"],
       "@calibr/monitor/*": ["packages/monitor/src/*"],
       "@calibr/types/*": ["packages/types/*"],
-      "@calibr/automation-runner/*": ["packages/automation-runner/src/*"]
+      "@calibr/automation-runner": ["packages/automation-runner/src/index.ts"],
+    "@calibr/automation-runner/*": ["packages/automation-runner/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
