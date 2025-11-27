@@ -67,7 +67,58 @@ export function CompetitorMonitor({ projectSlug }: { projectSlug: string }) {
       setError(null)
       setIsAuthError(false)
       const data = await competitorsApi.list(projectSlug, token)
-      setCompetitors(Array.isArray(data) ? (data as unknown as Competitor[]) : [])
+
+      // Map API response (Prisma relations) to frontend interface
+      interface ApiCompetitorPrice {
+        amount: number
+        currency: string
+        isOnSale: boolean
+        createdAt: string
+      }
+
+      interface ApiCompetitorProduct {
+        id: string
+        name: string
+        skuCode?: string
+        url: string
+        CompetitorPrice: ApiCompetitorPrice[]
+      }
+
+      interface ApiCompetitor {
+        id: string
+        name: string
+        domain: string
+        channel: string
+        isActive: boolean
+        lastChecked?: string
+        CompetitorProduct: ApiCompetitorProduct[]
+      }
+
+      // ... inside component ...
+
+      // Map API response (Prisma relations) to frontend interface
+      const mappedCompetitors = Array.isArray(data) ? (data as unknown as ApiCompetitor[]).map((item) => ({
+        id: item.id,
+        name: item.name,
+        domain: item.domain,
+        channel: item.channel,
+        isActive: item.isActive,
+        lastChecked: item.lastChecked,
+        products: (item.CompetitorProduct || []).map((prod) => ({
+          id: prod.id,
+          name: prod.name,
+          skuCode: prod.skuCode,
+          url: prod.url,
+          prices: (prod.CompetitorPrice || []).map((price) => ({
+            amount: price.amount,
+            currency: price.currency,
+            isOnSale: price.isOnSale,
+            createdAt: price.createdAt
+          }))
+        }))
+      })) : []
+
+      setCompetitors(mappedCompetitors as Competitor[])
     } catch (error) {
       console.error('Error fetching competitors:', error)
       if (error instanceof ApiError && error.status === 401) {

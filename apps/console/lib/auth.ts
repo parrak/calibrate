@@ -65,7 +65,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role
-        ;(token as { tenantId?: string }).tenantId = (user as { tenantId?: string }).tenantId
+          ; (token as { tenantId?: string }).tenantId = (user as { tenantId?: string }).tenantId
         try {
           const apiBase = process.env.NEXT_PUBLIC_API_BASE || process.env.API_BASE_URL
           const internal = process.env.CONSOLE_INTERNAL_TOKEN
@@ -74,14 +74,16 @@ export const authOptions: NextAuthOptions = {
             const roleLower =
               typeof user.role === 'string' ? user.role.toLowerCase() : undefined
             const roles = Array.from(new Set([user.role, roleLower].filter(Boolean)))
+
             const res = await fetch(`${apiBase}/api/auth/session`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-console-auth': internal },
               body: JSON.stringify({ userId: token.sub, roles, tenantId }),
             })
+
             if (res.ok) {
               const data = await res.json() as { token: string }
-              ;(token as { apiToken?: string }).apiToken = data.token
+                ; (token as { apiToken?: string }).apiToken = data.token
             } else {
               console.error('Failed to fetch API token:', res.status, await res.text().catch(() => ''))
             }
