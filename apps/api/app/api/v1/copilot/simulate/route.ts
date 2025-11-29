@@ -34,32 +34,7 @@ const selectorPredicateSchema = z.discriminatedUnion('type', [
   }),
   customSelectorPredicateSchema,
 ]) as unknown as z.ZodType<PricingRule['selector']['predicates'][number]>
-const selectorPredicateSchema: z.ZodType<PricingRule['selector']['predicates'][number]> = z.discriminatedUnion(
-  'type',
-  [
-    z.object({ type: z.literal('all') }),
-    z.object({ type: z.literal('sku'), skuCodes: z.array(z.string()) }),
-    z.object({ type: z.literal('tag'), tags: z.array(z.string()) }),
-    z.object({
-      type: z.literal('priceRange'),
-      min: z.number().optional(),
-      max: z.number().optional(),
-      currency: z.string().optional(),
-    }),
-    z.object({
-      type: z.literal('custom'),
-      field: z.string(),
-      operator: z.enum(['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'contains']),
-      value: z.union([
-        z.string(),
-        z.number(),
-        z.boolean(),
-        z.array(z.unknown()),
-        z.record(z.unknown()),
-      ]),
-    }),
-  ]
-)
+
 
 const pricingRuleSchema: z.ZodType<PricingRule> = z.object({
   id: z.string().optional(),
