@@ -38,6 +38,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
     - Best practices and troubleshooting sections
     - Added to sidebar navigation under Core Features
   - **StatusPill Component**: Extended to support all run statuses (PREVIEW, QUEUED, APPLYING, APPLIED, FAILED, ROLLED_BACK)
+ 
   - **Test Coverage**: Comprehensive test suite with 11 test cases covering all major functionality
   - **Files Changed**: 8 new files, 3 modified files
     - API: 4 new route files for runs management
@@ -675,6 +676,9 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Daily coordination log template created for team communication
   - Agent quick start guide with detailed onboarding for each workstream
   - See [PHASE3_ROADMAP.md](PHASE3_ROADMAP.md) for complete roadmap
+
+### Fixed
+- **Copilot Simulation selector validation** — Custom selector predicates now require a `value`, keeping the schema aligned with the pricing-engine `PricingRule` contract and satisfying type expectations.
 
 ## [1.1.0] - 2025-10-25
 

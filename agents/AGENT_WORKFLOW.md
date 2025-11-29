@@ -210,6 +210,7 @@ Build Calibrate's intelligence layer including AI pricing suggestions, analytics
   - Captured simulation runs in `CopilotQueryLog` with schema versioning and metadata for auditing
   - Documented milestone M1.9 and expanded Vitest coverage for validation, access control, execution, and logging
   - Hardened selector predicate validation with a discriminated union to align with the pricing-engine `PricingRule` contract and restore typecheck parity
+  - Enforced `custom` selector predicates to require a `value`, eliminating TypeScript shape mismatches for the Copilot simulation schema
 
 **January 6, 2025:**
 - Analytics & AI improvements (Agent C - Claude Code)
