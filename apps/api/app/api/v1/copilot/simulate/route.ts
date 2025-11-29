@@ -35,7 +35,6 @@ const selectorPredicateSchema = z.discriminatedUnion('type', [
   customSelectorPredicateSchema,
 ]) as unknown as z.ZodType<PricingRule['selector']['predicates'][number]>
 
-
 const pricingRuleSchema: z.ZodType<PricingRule> = z.object({
   id: z.string().optional(),
   name: z.string(),
@@ -98,9 +97,9 @@ async function requireProjectAccess(
       include: {
         Membership: userId
           ? {
-              where: { userId },
-              select: { role: true },
-            }
+            where: { userId },
+            select: { role: true },
+          }
           : false,
       },
     })
