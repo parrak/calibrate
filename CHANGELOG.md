@@ -268,6 +268,14 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - Validation duration: 2 hours | Confidence: HIGH
 
 ### Fixed
+- **Partner Logo Distortion on Homepage** (PR #116)
+  - Fixed distorted partner logos (Shopify, Stripe, Amazon) displayed on calibr.lat homepage
+  - Added `preserveAspectRatio="xMidYMid meet"` attribute to all SVG logos to maintain correct aspect ratios
+  - Added `max-w-full` class to prevent overflow and stretching
+  - Removed gray color override wrapper to display proper brand colors (#95BF47 for Shopify, #635BFF for Stripe)
+  - Updated both `apps/site/components/Logos.tsx` and `calibrate-standalone/components/Logos.tsx`
+  - Logos now render with official brand assets and proper proportions
+
 - **Docs Vitest Timeout in CI** (PR #TBD)
   - Fixed Vitest timeout error when starting forks runner in CI environments
   - Updated `apps/docs/vitest.config.ts` to use threads pool instead of forks pool

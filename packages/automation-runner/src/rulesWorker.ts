@@ -1,240 +1,276 @@
 /**
- * Rules Worker - Core automation runner for processing pricing rule applications
- * M1.6: Worker execution layer with retry logic, DLQ, and reconciliation
+ * Rules Worker — Core worker for bulk pricing rule execution
+ * M1.6: Consumes outbox events and applies pricing rules
  */
 
-import { prisma } from '@calibr/db'
-import type { PrismaClient, RuleRun, RuleTarget, PricingRule, RuleRunStatus } from '@calibr/db'
+import { prisma, EventWriter, OutboxWorker } from '@calibr/db'
+import type { EventPayload, RuleRun, RuleTarget } from '@calibr/db'
+import { logger } from '@calibr/monitor'
+import {
+  calculateBackoff,
+  handle429Error,
+  isRetryableError,
+  sleep
+} from './backoff'
+import { DEFAULT_WORKER_CONFIG } from './config'
 import type {
   RulesWorkerConfig,
+  RuleRunContext,
   TargetApplicationResult,
   RunResult,
-  PriceConnector,
   WorkerEvent,
   WorkerEventPayload,
+  PriceConnector
 } from './types'
-import { getWorkerConfig, CIRCUIT_BREAKER_CONFIG } from './config'
-import { isRetryableError, retryWithBackoff } from './backoff'
+import { createId } from '@paralleldrive/cuid2'
 
-type TargetPriceData = Partial<{
-  unit_amount: number
-  amount: number
-  price: number
-  compare_at_price: number
-  currency: string
-}>
-
-/**
- * RulesWorker - Processes queued rule runs and applies pricing changes
- */
 export class RulesWorker {
   private config: RulesWorkerConfig
-  private isRunning = false
-  private pollTimer?: NodeJS.Timeout
+  private outboxWorker?: OutboxWorker
+  private isRunning: boolean = false
   private connectors: Map<string, PriceConnector> = new Map()
-  private eventListeners: Map<WorkerEvent, Array<(payload: WorkerEventPayload) => void>> = new Map()
-  private consecutiveFailures = 0
-  private consecutive429Errors = 0
-  private circuitBreakerOpen = false
-  private prisma: PrismaClient
+  private eventEmitter?: (event: WorkerEventPayload) => void
 
-  constructor(config?: Partial<RulesWorkerConfig>, prismaClient?: PrismaClient) {
-    this.config = { ...getWorkerConfig(), ...config }
-    this.prisma = prismaClient ?? prisma()
+  constructor(config?: Partial<RulesWorkerConfig>) {
+    this.config = { ...DEFAULT_WORKER_CONFIG, ...config }
   }
 
   /**
-   * Register a price connector (Shopify, Amazon, etc.)
+   * Register a connector for a specific channel
    */
-  registerConnector(name: string, connector: PriceConnector): void {
-    this.connectors.set(name.toLowerCase(), connector)
+  registerConnector(channel: string, connector: PriceConnector) {
+    this.connectors.set(channel, connector)
+    logger.info(`[RulesWorker] Registered connector: ${channel}`)
   }
 
   /**
-   * Listen to worker events
+   * Set event emitter for worker events
    */
-  on(event: WorkerEvent, listener: (payload: WorkerEventPayload) => void): void {
-    if (!this.eventListeners.has(event)) {
-      this.eventListeners.set(event, [])
-    }
-    this.eventListeners.get(event)!.push(listener)
+  setEventEmitter(emitter: (event: WorkerEventPayload) => void) {
+    this.eventEmitter = emitter
   }
 
   /**
    * Emit worker event
    */
-  private emit(eventType: WorkerEvent, data?: Record<string, unknown>): void {
-    const payload: WorkerEventPayload = {
-      eventType,
-      timestamp: new Date(),
-      ...data,
+  private emitEvent(eventType: WorkerEvent, data?: unknown, runId?: string, targetId?: string) {
+    if (this.eventEmitter) {
+      this.eventEmitter({
+        eventType,
+        timestamp: new Date(),
+        runId,
+        targetId,
+        data
+      })
     }
-
-    const listeners = this.eventListeners.get(eventType) || []
-    listeners.forEach(listener => listener(payload))
   }
 
   /**
-   * Start the worker (polling for queued runs)
+   * Start the worker
    */
-  async start(): Promise<void> {
+  async start() {
     if (this.isRunning) {
-      throw new Error('Worker already running')
+      logger.warn('[RulesWorker] Worker already running')
+      return
     }
 
     this.isRunning = true
-    this.emit('worker.started')
 
-    if (!this.config.disablePolling) {
-      // Start polling loop
-      this.pollTimer = setInterval(() => {
-        this.pollForQueuedRuns().catch(error => {
-          const message = error instanceof Error ? error.message : 'Unknown error'
-          this.emit('worker.error', { error: message })
-        })
-      }, this.config.pollInterval)
+    // Initialize outbox worker
+    this.outboxWorker = new OutboxWorker(prisma(), {
+      pollIntervalMs: this.config.pollInterval,
+      retryConfig: {
+        maxRetries: this.config.maxRetries,
+        initialDelayMs: 2000,
+        maxDelayMs: 64000,
+        backoffMultiplier: 2
+      }
+    })
 
-      // Process any queued runs immediately
-      await this.pollForQueuedRuns()
-    }
+    // Subscribe to job.rules.apply events
+    this.outboxWorker.subscribe({
+      eventTypes: ['job.rules.apply'],
+      handler: async (event) => {
+        await this.handleApplyJob(event)
+      }
+    })
+
+    // Start the outbox worker
+    this.outboxWorker.start()
+
+    this.emitEvent('worker.started')
+    logger.info('[RulesWorker] Started successfully', { metadata: { config: this.config } })
   }
 
   /**
    * Stop the worker
    */
-  async stop(): Promise<void> {
+  async stop() {
+    if (!this.isRunning) {
+      return
+    }
+
     this.isRunning = false
 
-    if (this.pollTimer) {
-      clearInterval(this.pollTimer)
-      this.pollTimer = undefined
+    if (this.outboxWorker) {
+      this.outboxWorker.stop()
     }
 
-    this.emit('worker.stopped')
+    this.emitEvent('worker.stopped')
+    logger.info('[RulesWorker] Stopped successfully')
   }
 
   /**
-   * Poll database for queued runs and process them
+   * Handle job.rules.apply event from outbox
    */
-  private async pollForQueuedRuns(): Promise<void> {
-    if (this.circuitBreakerOpen) {
-      return // Skip polling if circuit breaker is open
-    }
+  private async handleApplyJob(event: EventPayload) {
+    const { runId } = event.payload as { runId: string }
+
+    logger.info(`[RulesWorker] Processing rule run: ${runId}`, {
+      correlationId: event.correlationId
+    })
 
     try {
-      const queuedRuns = await this.prisma.ruleRun.findMany({
-        where: {
-          status: 'QUEUED',
-        },
+      // Load the rule run
+      const run = await prisma().ruleRun.findUnique({
+        where: { id: runId },
         include: {
           PricingRule: true,
-          RuleTarget: true,
-        },
-        orderBy: {
-          queuedAt: 'asc',
-        },
-        take: 5, // Process max 5 runs concurrently
+          RuleTarget: {
+            where: {
+              OR: [
+                { status: 'QUEUED' },
+                { status: 'PREVIEW' }
+              ]
+            }
+          }
+        }
       })
 
-      // Process runs concurrently
-      await Promise.all(
-        queuedRuns.map(run => this.processRun(run))
+      if (!run) {
+        throw new Error(`Rule run ${runId} not found`)
+      }
+
+      if (!run.PricingRule) {
+        throw new Error(`Pricing rule not found for run ${runId}`)
+      }
+
+      // Create context
+      const context: RuleRunContext = {
+        run,
+        rule: run.PricingRule,
+        targets: run.RuleTarget,
+        actor: 'automation-runner',
+        correlationId: event.correlationId
+      }
+
+      // Execute the run
+      const result = await this.executeRun(context)
+
+      logger.info(`[RulesWorker] Completed rule run: ${runId}`, {
+        metadata: {
+          status: result.status,
+          appliedTargets: result.appliedTargets,
+          failedTargets: result.failedTargets,
+          duration: result.duration
+        }
+      })
+
+      this.emitEvent('run.completed', result, runId)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+      logger.error(
+        `[RulesWorker] Failed to process rule run: ${runId}`,
+        error instanceof Error ? error : undefined,
+        { correlationId: event.correlationId }
       )
-    } catch (error) {
-      this.emit('worker.error', { error: error instanceof Error ? error.message : 'Unknown error' })
-    }
-  }
 
-  /**
-   * Process a single rule run
-   */
-  private async processRun(run: RuleRun & { PricingRule: PricingRule; RuleTarget: RuleTarget[] }): Promise<RunResult> {
-    const startTime = Date.now()
-
-    try {
-      // Update status to APPLYING
-      await this.prisma.ruleRun.update({
-        where: { id: run.id },
-        data: {
-          status: 'APPLYING',
-          startedAt: new Date(),
-        },
-      })
-
-      this.emit('run.started', { runId: run.id })
-
-      // Process all targets
-      const results = await this.applyTargets(run)
-
-      // Determine final status
-      const failedCount = results.filter(r => !r.success).length
-      const successCount = results.filter(r => r.success).length
-
-      let finalStatus: RuleRunStatus
-      if (failedCount === 0) {
-        finalStatus = 'APPLIED'
-      } else if (successCount === 0) {
-        finalStatus = 'FAILED'
-      } else {
-        finalStatus = 'PARTIAL'
-      }
-
-      // Update run with final status
-      await this.prisma.ruleRun.update({
-        where: { id: run.id },
-        data: {
-          status: finalStatus,
-          finishedAt: new Date(),
-        },
-      })
-
-      const duration = Date.now() - startTime
-      const result: RunResult = {
-        runId: run.id,
-        status: finalStatus,
-        totalTargets: run.RuleTarget.length,
-        appliedTargets: successCount,
-        failedTargets: failedCount,
-        duration,
-        results,
-      }
-
-      this.emit('run.completed', { runId: run.id, result })
-      this.consecutiveFailures = 0 // Reset on success
-
-      return result
-    } catch (error) {
-      // Critical error - mark run as FAILED
-      await this.prisma.ruleRun.update({
-        where: { id: run.id },
+      // Update run status to FAILED
+      await prisma().ruleRun.update({
+        where: { id: runId },
         data: {
           status: 'FAILED',
           finishedAt: new Date(),
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        },
+          errorMessage
+        }
       })
 
-      this.consecutiveFailures++
-      this.checkCircuitBreaker()
-
-      this.emit('run.failed', { runId: run.id, error: error instanceof Error ? error.message : 'Unknown error' })
-
-      throw error
+      this.emitEvent('run.failed', { error: errorMessage }, runId)
+      this.emitEvent('worker.error', { error: errorMessage, runId })
     }
   }
 
   /**
-   * Apply all targets in a run with concurrency control
+   * Execute a rule run
    */
-  private async applyTargets(run: RuleRun & { PricingRule: PricingRule; RuleTarget: RuleTarget[] }): Promise<TargetApplicationResult[]> {
-    const results: TargetApplicationResult[] = []
-    const targets = run.RuleTarget.filter(t => t.status === 'QUEUED' || t.status === 'PREVIEW')
+  private async executeRun(context: RuleRunContext): Promise<RunResult> {
+    const { run, targets } = context
+    const startTime = Date.now()
 
-    // Process targets with concurrency limit
-    for (let i = 0; i < targets.length; i += this.config.maxConcurrency) {
-      const batch = targets.slice(i, i + this.config.maxConcurrency)
+    this.emitEvent('run.started', { targetCount: targets.length }, run.id)
+
+    // Update run status to APPLYING
+    await prisma().ruleRun.update({
+      where: { id: run.id },
+      data: {
+        status: 'APPLYING',
+        startedAt: new Date()
+      }
+    })
+
+    // Apply targets with concurrency control
+    const results = await this.applyTargetsConcurrently(context)
+
+    // Calculate final status
+    const appliedTargets = results.filter(r => r.success).length
+    const failedTargets = results.filter(r => !r.success).length
+    const duration = Date.now() - startTime
+
+    let finalStatus: 'APPLIED' | 'PARTIAL' | 'FAILED'
+    if (failedTargets === 0) {
+      finalStatus = 'APPLIED'
+    } else if (appliedTargets > 0) {
+      finalStatus = 'PARTIAL'
+    } else {
+      finalStatus = 'FAILED'
+    }
+
+    // Update run status
+    await prisma().ruleRun.update({
+      where: { id: run.id },
+      data: {
+        status: finalStatus,
+        finishedAt: new Date()
+      }
+    })
+
+    const result: RunResult = {
+      runId: run.id,
+      status: finalStatus,
+      totalTargets: targets.length,
+      appliedTargets,
+      failedTargets,
+      duration,
+      results
+    }
+
+    return result
+  }
+
+  /**
+   * Apply targets with concurrency control
+   */
+  private async applyTargetsConcurrently(context: RuleRunContext): Promise<TargetApplicationResult[]> {
+    const { targets } = context
+    const results: TargetApplicationResult[] = []
+    const maxConcurrency = this.config.maxConcurrency
+
+    // Process in batches with concurrency limit
+    for (let i = 0; i < targets.length; i += maxConcurrency) {
+      const batch = targets.slice(i, i + maxConcurrency)
       const batchResults = await Promise.all(
-        batch.map(target => this.applyTarget(run, target))
+        batch.map(target => this.applyTarget(context, target))
       )
       results.push(...batchResults)
     }
@@ -245,216 +281,355 @@ export class RulesWorker {
   /**
    * Apply a single target with retry logic
    */
-  private async applyTarget(run: RuleRun & { PricingRule: PricingRule }, target: RuleTarget): Promise<TargetApplicationResult> {
+  private async applyTarget(
+    context: RuleRunContext,
+    target: RuleTarget
+  ): Promise<TargetApplicationResult> {
     const startTime = Date.now()
 
-    try {
-      // Update status to APPLYING
-      await this.prisma.ruleTarget.update({
-        where: { id: target.id },
-        data: {
-          status: 'APPLYING',
-          lastAttempt: new Date(),
-          attempts: target.attempts + 1,
-        },
-      })
+    this.emitEvent('target.applying', { targetId: target.id }, context.run.id, target.id)
 
-      this.emit('target.applying', { targetId: target.id, runId: run.id })
+    let attempts = target.attempts
+    let lastError: Error | undefined
 
-      // Extract price information from afterJson
-      const afterData = target.afterJson as TargetPriceData
-      const newPrice = afterData.unit_amount ?? afterData.amount ?? afterData.price
+    while (attempts < this.config.maxRetries) {
+      try {
+        // Update target status to APPLYING
+        await prisma().ruleTarget.update({
+          where: { id: target.id },
+          data: {
+            status: 'APPLYING',
+            lastAttempt: new Date(),
+            attempts: attempts + 1
+          }
+        })
 
-      if (typeof newPrice !== 'number') {
-        throw new Error('No price found in afterJson')
-      }
+        // Extract price information from afterJson
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const afterData = target.afterJson as any
+        const newPrice = afterData.unit_amount || afterData.price
+        const currency = afterData.currency || 'USD'
 
-      // Determine connector based on product channel
-      // For now, we'll use 'shopify' as default, but this should come from product metadata
-      const connectorName = 'shopify' // TODO: Get from product.channelRefs or similar
-      const connector = this.connectors.get(connectorName)
+        // Get product/variant information
+        const product = await prisma().product.findUnique({
+          where: { id: target.productId }
+        })
 
-      if (!connector) {
-        throw new Error(`Connector not found: ${connectorName}`)
-      }
-
-      // Apply price change with retry
-      const result = await retryWithBackoff(
-        async () => {
-          return await connector.applyPrice({
-            externalId: target.variantId || target.productId,
-            variantId: target.variantId || undefined,
-            price: newPrice,
-            currency: afterData.currency ?? 'USD',
-          })
-        },
-        this.config.maxRetries,
-        {
-          onRetry: async (attempt, error) => {
-            this.emit('target.retry', {
-              targetId: target.id,
-              runId: run.id,
-              attempt,
-              error: error instanceof Error ? error.message : 'Unknown error',
-            })
-
-            // Update attempt count
-            await this.prisma.ruleTarget.update({
-              where: { id: target.id },
-              data: {
-                attempts: target.attempts + attempt + 1,
-                lastAttempt: new Date(),
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-              },
-            })
-
-            // Handle 429 errors specially
-            if (error && typeof error === 'object' && 'code' in error && error.code === 429) {
-              this.consecutive429Errors++
-              if (this.consecutive429Errors >= CIRCUIT_BREAKER_CONFIG.rateLimitThreshold) {
-                await this.openCircuitBreaker()
-              }
-            }
-          },
+        if (!product) {
+          throw new Error(`Product ${target.productId} not found`)
         }
-      )
 
-      if (!result.success) {
-        throw new Error(result.error || 'Price application failed')
-      }
+        // Get the appropriate connector
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const channelRefs = product.channelRefs as any
+        const channel = channelRefs?.channel || 'shopify'
+        const connector = this.connectors.get(channel)
 
-      // Update target status to APPLIED
-      await this.prisma.ruleTarget.update({
-        where: { id: target.id },
-        data: {
-          status: 'APPLIED',
-          appliedAt: new Date(),
-          errorMessage: null,
-        },
-      })
+        if (!connector) {
+          throw new Error(`No connector registered for channel: ${channel}`)
+        }
 
-      this.emit('target.applied', { targetId: target.id, runId: run.id })
-      this.consecutive429Errors = 0 // Reset on success
+        // Apply the price change via connector
+        const externalId = channelRefs?.external_id || channelRefs?.externalId
+        const variantId = target.variantId || undefined
 
-      return {
-        targetId: target.id,
-        success: true,
-        externalId: result.externalId,
-        appliedPrice: newPrice,
-        duration: Date.now() - startTime,
-      }
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error('Unknown error')
-      const errorMessage = normalizedError.message
-      const retryable = isRetryableError(normalizedError)
-
-      // Determine if we should retry or mark as FAILED
-      if (target.attempts + 1 >= this.config.maxRetries || !retryable) {
-        // Max retries exceeded or non-retryable error - mark as FAILED
-        await this.prisma.ruleTarget.update({
-          where: { id: target.id },
-          data: {
-            status: 'FAILED',
-            errorMessage,
-          },
+        const applyResult = await connector.applyPrice({
+          externalId,
+          variantId,
+          price: newPrice,
+          currency
         })
 
-        this.emit('target.failed', { targetId: target.id, runId: run.id, error: errorMessage })
-        this.emit('dlq.added', { targetId: target.id, runId: run.id, error: errorMessage })
-      } else {
-        // Retryable - mark back as QUEUED for next attempt
-        await this.prisma.ruleTarget.update({
+        if (!applyResult.success) {
+          throw new Error(applyResult.error || 'Failed to apply price')
+        }
+
+        // Update target status to APPLIED
+        await prisma().ruleTarget.update({
           where: { id: target.id },
           data: {
-            status: 'QUEUED',
-            errorMessage,
-          },
+            status: 'APPLIED',
+            appliedAt: new Date()
+          }
         })
 
-        this.emit('target.retry', { targetId: target.id, runId: run.id, error: errorMessage })
-      }
+        const duration = Date.now() - startTime
 
-      return {
-        targetId: target.id,
-        success: false,
-        error: errorMessage,
-        duration: Date.now() - startTime,
+        this.emitEvent('target.applied', { duration }, context.run.id, target.id)
+
+        return {
+          targetId: target.id,
+          success: true,
+          externalId: applyResult.externalId,
+          appliedPrice: newPrice,
+          duration
+        }
+      } catch (error) {
+        lastError = error as Error
+        attempts++
+
+        // Check if error is retryable
+        if (!isRetryableError(lastError)) {
+          break
+        }
+
+        // Handle 429 specifically
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((lastError as any).code === 429 || (lastError as any).statusCode === 429) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const backoffResult = handle429Error(lastError as any)
+          if (backoffResult.retry && attempts < this.config.maxRetries) {
+            logger.warn(`[RulesWorker] Rate limit hit for target ${target.id}, retrying after ${backoffResult.delay}ms`)
+            await sleep(backoffResult.delay)
+            continue
+          }
+        }
+
+        // Regular retry with backoff
+        if (attempts < this.config.maxRetries) {
+          const delay = calculateBackoff(attempts)
+          logger.warn(`[RulesWorker] Retrying target ${target.id} after ${delay}ms (attempt ${attempts}/${this.config.maxRetries})`)
+
+          this.emitEvent('target.retry', { attempt: attempts, delay }, context.run.id, target.id)
+
+          await sleep(delay)
+        }
       }
+    }
+
+    // Max retries exceeded or non-retryable error
+    const errorMessage = lastError?.message || 'Unknown error'
+
+    await prisma().ruleTarget.update({
+      where: { id: target.id },
+      data: {
+        status: 'FAILED',
+        errorMessage,
+        attempts
+      }
+    })
+
+    const duration = Date.now() - startTime
+
+    this.emitEvent('target.failed', { error: errorMessage }, context.run.id, target.id)
+
+    logger.error(
+      `[RulesWorker] Failed to apply target ${target.id}`,
+      lastError instanceof Error ? lastError : undefined,
+      {
+        metadata: {
+          attempts,
+          runId: context.run.id
+        }
+      }
+    )
+
+    return {
+      targetId: target.id,
+      success: false,
+      error: errorMessage,
+      duration
     }
   }
 
   /**
-   * Materialize targets for a rule (create RuleTarget records without applying)
+   * Materialize a rule run (create targets without applying)
    */
-  async materializeTargets(ruleId: string, tenantId: string, projectId: string): Promise<RuleRun> {
-    // Get the rule
-    const rule = await this.prisma.pricingRule.findUnique({
-      where: { id: ruleId },
+  async materialize(ruleId: string, actor: string = 'automation-runner'): Promise<RuleRun> {
+    const rule = await prisma().pricingRule.findUnique({
+      where: { id: ruleId }
     })
 
     if (!rule) {
-      throw new Error(`Rule not found: ${ruleId}`)
+      throw new Error(`Pricing rule ${ruleId} not found`)
     }
 
-    // Create RuleRun
-    const run = await this.prisma.ruleRun.create({
-      data: {
-        tenantId,
-        projectId,
-        ruleId,
-        status: 'PREVIEW',
+    // Get matching products based on selector
+    // For now, simplified - get all active products in the project
+    const products = await prisma().product.findMany({
+      where: {
+        tenantId: rule.tenantId,
+        projectId: rule.projectId,
+        active: true
       },
+      include: {
+        Sku: {
+          include: {
+            Price: true
+          }
+        }
+      }
     })
 
-    // TODO: Implement selector evaluation to find matching products/SKUs
-    // For now, this is a placeholder that would need to integrate with
-    // the selector engine to find matching products
+    // Create rule run
+    const run = await prisma().ruleRun.create({
+      data: {
+        id: createId(),
+        tenantId: rule.tenantId,
+        projectId: rule.projectId,
+        ruleId: rule.id,
+        status: 'PREVIEW',
+        queuedAt: null,
+        metadata: {
+          actor,
+          createdBy: actor
+        }
+      }
+    })
 
-    // This would typically:
-    // 1. Parse rule.selectorJson to find matching criteria
-    // 2. Query products/SKUs that match the selector
-    // 3. Apply transform from rule.transformJson to calculate new prices
-    // 4. Create RuleTarget records for each match
+    // Create targets for each product
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transform = rule.transformJson as any
+    const targets = []
+
+    for (const product of products) {
+      for (const sku of product.Sku) {
+        for (const price of sku.Price) {
+          const beforePrice = price.amount
+          let afterPrice = beforePrice
+
+          // Apply transform
+          if (transform.op === 'percent') {
+            afterPrice = Math.round(beforePrice * (1 + transform.value / 100))
+          } else if (transform.op === 'absolute') {
+            afterPrice = beforePrice + transform.value
+          }
+
+          // Apply floor/ceiling
+          if (transform.floor && afterPrice < transform.floor) {
+            afterPrice = transform.floor
+          }
+          if (transform.ceiling && afterPrice > transform.ceiling) {
+            afterPrice = transform.ceiling
+          }
+
+          const target = await prisma().ruleTarget.create({
+            data: {
+              id: createId(),
+              tenantId: rule.tenantId,
+              projectId: rule.projectId,
+              ruleRunId: run.id,
+              productId: product.id,
+              variantId: null,
+              skuId: sku.id,
+              beforeJson: {
+                currency: price.currency,
+                unit_amount: beforePrice,
+                price: beforePrice
+              },
+              afterJson: {
+                currency: price.currency,
+                unit_amount: afterPrice,
+                price: afterPrice
+              },
+              status: 'PREVIEW',
+              attempts: 0
+            }
+          })
+
+          targets.push(target)
+        }
+      }
+    }
+
+    logger.info(`[RulesWorker] Materialized rule run ${run.id}`, {
+      metadata: {
+        ruleId,
+        targetCount: targets.length
+      }
+    })
 
     return run
   }
 
   /**
-   * Queue a run for processing
+   * Queue a rule run for application
    */
   async queueRun(runId: string): Promise<void> {
-    await this.prisma.ruleRun.update({
+    // Update run status to QUEUED
+    await prisma().ruleRun.update({
       where: { id: runId },
       data: {
         status: 'QUEUED',
-        queuedAt: new Date(),
-      },
+        queuedAt: new Date()
+      }
     })
 
-    this.emit('run.queued', { runId })
+    // Update all targets to QUEUED
+    await prisma().ruleTarget.updateMany({
+      where: { ruleRunId: runId, status: 'PREVIEW' },
+      data: { status: 'QUEUED' }
+    })
+
+    // Emit event to outbox
+    const run = await prisma().ruleRun.findUnique({
+      where: { id: runId }
+    })
+
+    if (!run) {
+      throw new Error(`Rule run ${runId} not found`)
+    }
+
+    const eventWriter = new EventWriter(prisma())
+    await eventWriter.writeEventWithOutbox({
+      eventKey: `job-rules-apply-${runId}`,
+      tenantId: run.tenantId,
+      projectId: run.projectId || undefined,
+      eventType: 'job.rules.apply',
+      payload: { runId },
+      metadata: { queuedAt: new Date().toISOString() }
+    })
+
+    this.emitEvent('run.queued', { runId }, runId)
+
+    logger.info(`[RulesWorker] Queued rule run ${runId}`)
   }
 
   /**
-   * Open circuit breaker (pause worker)
+   * Get run status
    */
-  private async openCircuitBreaker(): Promise<void> {
-    this.circuitBreakerOpen = true
-    this.emit('worker.error', { error: 'Circuit breaker opened due to consecutive failures' })
+  async getRunStatus(runId: string) {
+    const run = await prisma().ruleRun.findUnique({
+      where: { id: runId },
+      include: {
+        RuleTarget: true
+      }
+    })
 
-    // Reset after timeout
-    setTimeout(() => {
-      this.circuitBreakerOpen = false
-      this.consecutive429Errors = 0
-      this.consecutiveFailures = 0
-    }, CIRCUIT_BREAKER_CONFIG.resetTimeout)
-  }
+    if (!run) {
+      return null
+    }
 
-  /**
-   * Check if circuit breaker should be opened
-   */
-  private checkCircuitBreaker(): void {
-    if (this.consecutiveFailures >= CIRCUIT_BREAKER_CONFIG.failureThreshold) {
-      this.openCircuitBreaker()
+    const totalTargets = run.RuleTarget.length
+    const appliedTargets = run.RuleTarget.filter(t => t.status === 'APPLIED').length
+    const failedTargets = run.RuleTarget.filter(t => t.status === 'FAILED').length
+    const pendingTargets = run.RuleTarget.filter(
+      t => t.status === 'PREVIEW' || t.status === 'QUEUED' || t.status === 'APPLYING'
+    ).length
+
+    return {
+      runId: run.id,
+      status: run.status,
+      totalTargets,
+      appliedTargets,
+      failedTargets,
+      pendingTargets,
+      queuedAt: run.queuedAt,
+      startedAt: run.startedAt,
+      finishedAt: run.finishedAt,
+      errorMessage: run.errorMessage
     }
   }
+}
+
+/**
+ * Create a singleton worker instance
+ */
+let workerInstance: RulesWorker | null = null
+
+export function getRulesWorker(config?: Partial<RulesWorkerConfig>): RulesWorker {
+  if (!workerInstance) {
+    workerInstance = new RulesWorker(config)
+  }
+  return workerInstance
 }

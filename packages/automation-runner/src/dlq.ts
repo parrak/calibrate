@@ -1,309 +1,455 @@
 /**
- * Dead Letter Queue Service - Manages failed targets and retry operations
- * M1.6: DLQ management with retry, reporting, and drain operations
+ * Dead Letter Queue (DLQ) Service
+ * M1.6: Manages failed targets and provides reporting/retry capabilities
  */
 
-import { prisma } from '@calibr/db'
-import type { PrismaClient, RuleTarget, RuleRun } from '@calibr/db'
-import type { DLQEntry, DLQReport } from './types'
+import { prisma, EventWriter } from '@calibr/db'
+import type { RuleTarget } from '@calibr/db'
+import { logger } from '@calibr/monitor'
 import { DLQ_CONFIG } from './config'
-import { isRetryableError } from './backoff'
+import type { DLQEntry, DLQReport } from './types'
 
 export class DLQService {
-  private prisma: PrismaClient
-
-  constructor(prismaClient?: PrismaClient) {
-    this.prisma = prismaClient ?? prisma()
-  }
-
   /**
-   * Get all failed targets (DLQ entries) for a project
+   * Drain the DLQ for a project
+   * Generates a comprehensive report of failed targets
    */
-  async getFailedTargets(projectId: string, limit?: number): Promise<DLQEntry[]> {
-    const targets = await this.prisma.ruleTarget.findMany({
+  async drainDLQ(projectId: string): Promise<DLQReport> {
+    logger.info(`[DLQ] Draining DLQ for project: ${projectId}`)
+
+    // Find all failed targets for the project
+    const failedTargets = await prisma().ruleTarget.findMany({
       where: {
         projectId,
-        status: 'FAILED',
+        status: 'FAILED'
       },
       include: {
-        RuleRun: true,
+        RuleRun: {
+          include: {
+            PricingRule: true
+          }
+        }
       },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-      take: limit || DLQ_CONFIG.batchSize,
+      orderBy: { lastAttempt: 'asc' },
+      take: DLQ_CONFIG.batchSize
     })
 
-    return targets.map(target => this.mapToDLQEntry(target))
-  }
+    if (failedTargets.length === 0) {
+      logger.info(`[DLQ] No failed targets found for project ${projectId}`)
+      return {
+        projectId,
+        totalFailed: 0,
+        byErrorType: {},
+        recommendations: [],
+        entries: []
+      }
+    }
 
-  /**
-   * Get failed targets for a specific run
-   */
-  async getFailedTargetsForRun(runId: string): Promise<DLQEntry[]> {
-    const targets = await this.prisma.ruleTarget.findMany({
-      where: {
-        ruleRunId: runId,
-        status: 'FAILED',
-      },
-      include: {
-        RuleRun: true,
-      },
-    })
+    // Classify errors by type
+    const byErrorType: Record<string, number> = {}
+    const entries: DLQEntry[] = []
 
-    return targets.map(target => this.mapToDLQEntry(target))
-  }
+    for (const target of failedTargets) {
+      const errorType = this.classifyError(target.errorMessage || 'Unknown error')
+      byErrorType[errorType] = (byErrorType[errorType] || 0) + 1
 
-  /**
-   * Retry failed targets
-   * @param runId - Rule run ID
-   * @param targetIds - Optional specific target IDs to retry (if not provided, retries all failed targets)
-   */
-  async retryFailed(runId: string, targetIds?: string[]): Promise<RuleTarget[]> {
-    const query = targetIds
-      ? { id: { in: targetIds }, ruleRunId: runId, status: 'FAILED' as const }
-      : { ruleRunId: runId, status: 'FAILED' as const }
-
-    // Get targets to retry
-    const targets = await this.prisma.ruleTarget.findMany({
-      where: query,
-    })
-
-    // Reset targets to QUEUED status for retry
-    const updatedTargets = await this.prisma.$transaction(
-      targets.map(target =>
-        this.prisma.ruleTarget.update({
-          where: { id: target.id },
-          data: {
-            status: 'QUEUED',
-            attempts: 0, // Reset attempts
-            errorMessage: null,
-            lastAttempt: null,
-          },
-        })
-      )
-    )
-
-    // Update run status to QUEUED if it was FAILED or PARTIAL
-    const run = await this.prisma.ruleRun.findUnique({
-      where: { id: runId },
-    })
-
-    if (run && (run.status === 'FAILED' || run.status === 'PARTIAL')) {
-      await this.prisma.ruleRun.update({
-        where: { id: runId },
-        data: {
-          status: 'QUEUED',
-          queuedAt: new Date(),
-          errorMessage: null,
-        },
+      entries.push({
+        target,
+        run: target.RuleRun,
+        failedAt: target.lastAttempt || target.updatedAt,
+        errorType,
+        retryable: this.isErrorRetryable(target.errorMessage || '')
       })
     }
 
-    // Write audit event
-    await this.writeRetryEvent(runId, updatedTargets.length)
+    // Generate recommendations based on error patterns
+    const recommendations = this.generateRecommendations(byErrorType, entries)
 
-    return updatedTargets
-  }
-
-  /**
-   * Generate DLQ report for a project
-   */
-  async generateDLQReport(projectId: string): Promise<DLQReport> {
-    const entries = await this.getFailedTargets(projectId)
-
-    // Group by error type
-    const byErrorType: Record<string, number> = {}
-    entries.forEach(entry => {
-      const errorType = this.categorizeError(entry.target.errorMessage || 'Unknown')
-      byErrorType[errorType] = (byErrorType[errorType] || 0) + 1
-    })
-
-    // Generate recommendations
-    const recommendations = this.generateRecommendations(entries, byErrorType)
-
-    return {
+    const report: DLQReport = {
       projectId,
-      totalFailed: entries.length,
+      totalFailed: failedTargets.length,
       byErrorType,
       recommendations,
-      entries,
+      entries
     }
-  }
 
-  /**
-   * Drain DLQ - process and report on failed targets
-   */
-  async drainDLQ(projectId: string): Promise<DLQReport> {
-    const report = await this.generateDLQReport(projectId)
+    // Write report to audit and event log
+    await this.logReport(projectId, report)
 
-    // Write DLQ report event
-    await this.writeDLQReportEvent(projectId, report)
+    logger.info(`[DLQ] DLQ report generated for project ${projectId}`, {
+      metadata: {
+        totalFailed: report.totalFailed,
+        errorTypes: Object.keys(byErrorType).length
+      }
+    })
 
     return report
   }
 
   /**
-   * Clean up stale DLQ entries (older than threshold)
+   * Retry failed targets
+   * Can retry all failed targets or specific ones
    */
-  async cleanupStale(projectId: string): Promise<number> {
+  async retryFailed(runId: string, targetIds?: string[]): Promise<RuleTarget[]> {
+    logger.info(`[DLQ] Retrying failed targets for run: ${runId}`, {
+      metadata: {
+        targetCount: targetIds?.length || 'all'
+      }
+    })
+
+    // Build query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {
+      ruleRunId: runId,
+      status: 'FAILED'
+    }
+
+    if (targetIds && targetIds.length > 0) {
+      where.id = { in: targetIds }
+    }
+
+    // Find failed targets
+    const failedTargets = await prisma().ruleTarget.findMany({ where })
+
+    if (failedTargets.length === 0) {
+      logger.info(`[DLQ] No failed targets found to retry for run ${runId}`)
+      return []
+    }
+
+    // Filter for retryable errors only
+    const retryableTargets = failedTargets.filter(target =>
+      this.isErrorRetryable(target.errorMessage || '')
+    )
+
+    if (retryableTargets.length === 0) {
+      logger.warn(`[DLQ] No retryable targets found for run ${runId}`)
+      return []
+    }
+
+    // Reset targets to QUEUED status
+    const retryableIds = retryableTargets.map(t => t.id)
+
+    await prisma().ruleTarget.updateMany({
+      where: { id: { in: retryableIds } },
+      data: {
+        status: 'QUEUED',
+        attempts: 0,
+        errorMessage: null,
+        lastAttempt: null
+      }
+    })
+
+    // Update run status if all targets were failed
+    const run = await prisma().ruleRun.findUnique({
+      where: { id: runId },
+      include: {
+        RuleTarget: true
+      }
+    })
+
+    if (run && (run.status === 'FAILED' || run.status === 'PARTIAL')) {
+      const allTargetsFailed = run.RuleTarget.every(t => t.status === 'FAILED')
+      if (allTargetsFailed || run.status === 'PARTIAL') {
+        await prisma().ruleRun.update({
+          where: { id: runId },
+          data: {
+            status: 'QUEUED',
+            errorMessage: null
+          }
+        })
+      }
+    }
+
+    logger.info(`[DLQ] Queued ${retryableIds.length} targets for retry`)
+
+    // Return the updated targets
+    return prisma().ruleTarget.findMany({
+      where: { id: { in: retryableIds } }
+    })
+  }
+
+  /**
+   * Get DLQ size for a project
+   */
+  async getDLQSize(projectId: string): Promise<number> {
+    return prisma().ruleTarget.count({
+      where: {
+        projectId,
+        status: 'FAILED'
+      }
+    })
+  }
+
+  /**
+   * Get failed targets for a specific run
+   */
+  async getFailedTargets(runId: string): Promise<RuleTarget[]> {
+    return prisma().ruleTarget.findMany({
+      where: {
+        ruleRunId: runId,
+        status: 'FAILED'
+      },
+      orderBy: { lastAttempt: 'desc' }
+    })
+  }
+
+  /**
+   * Get stale DLQ entries (failed > 24 hours ago)
+   */
+  async getStaleEntries(projectId: string): Promise<RuleTarget[]> {
     const staleThreshold = new Date(Date.now() - DLQ_CONFIG.staleThreshold)
 
-    const result = await this.prisma.ruleTarget.deleteMany({
+    return prisma().ruleTarget.findMany({
       where: {
         projectId,
         status: 'FAILED',
-        updatedAt: {
-          lt: staleThreshold,
-        },
+        lastAttempt: {
+          lt: staleThreshold
+        }
       },
+      orderBy: { lastAttempt: 'asc' }
     })
-
-    return result.count
   }
 
   /**
-   * Map RuleTarget to DLQEntry
+   * Classify error into a category
    */
-  private mapToDLQEntry(target: RuleTarget & { RuleRun: RuleRun }): DLQEntry {
-    return {
-      target,
-      run: target.RuleRun,
-      failedAt: target.updatedAt,
-      errorType: this.categorizeError(target.errorMessage || 'Unknown'),
-      retryable: isRetryableError(new Error(target.errorMessage || 'Unknown')),
+  private classifyError(errorMessage: string): string {
+    const msg = errorMessage.toLowerCase()
+
+    if (msg.includes('rate limit') || msg.includes('429') || msg.includes('throttle')) {
+      return 'RATE_LIMIT'
     }
+
+    if (msg.includes('timeout') || msg.includes('timed out')) {
+      return 'TIMEOUT'
+    }
+
+    if (msg.includes('not found') || msg.includes('404')) {
+      return 'NOT_FOUND'
+    }
+
+    if (msg.includes('unauthorized') || msg.includes('401') || msg.includes('403')) {
+      return 'AUTHORIZATION'
+    }
+
+    if (msg.includes('network') || msg.includes('connection') || msg.includes('econnreset')) {
+      return 'NETWORK'
+    }
+
+    if (msg.includes('validation') || msg.includes('invalid')) {
+      return 'VALIDATION'
+    }
+
+    if (msg.includes('500') || msg.includes('internal server')) {
+      return 'SERVER_ERROR'
+    }
+
+    return 'UNKNOWN'
   }
 
   /**
-   * Categorize error into type
+   * Determine if an error is retryable
    */
-  private categorizeError(errorMessage: string): string {
-    const lowerMessage = errorMessage.toLowerCase()
+  private isErrorRetryable(errorMessage: string): boolean {
+    const errorType = this.classifyError(errorMessage)
 
-    if (lowerMessage.includes('rate limit') || lowerMessage.includes('429')) {
-      return 'rate_limit'
-    }
-    if (lowerMessage.includes('auth') || lowerMessage.includes('401') || lowerMessage.includes('403')) {
-      return 'authentication'
-    }
-    if (lowerMessage.includes('not found') || lowerMessage.includes('404')) {
-      return 'not_found'
-    }
-    if (lowerMessage.includes('network') || lowerMessage.includes('timeout')) {
-      return 'network'
-    }
-    if (lowerMessage.includes('validation') || lowerMessage.includes('invalid')) {
-      return 'validation'
-    }
-    if (lowerMessage.includes('connector')) {
-      return 'connector_error'
+    // Non-retryable error types
+    const nonRetryable = ['NOT_FOUND', 'VALIDATION', 'AUTHORIZATION']
+
+    if (nonRetryable.includes(errorType)) {
+      return false
     }
 
-    return 'unknown'
+    // All other errors are potentially retryable
+    return true
   }
 
   /**
-   * Generate recommendations based on DLQ analysis
+   * Generate recommendations based on error patterns
    */
-  private generateRecommendations(entries: DLQEntry[], byErrorType: Record<string, number>): string[] {
+  private generateRecommendations(
+    byErrorType: Record<string, number>,
+    entries: DLQEntry[]
+  ): string[] {
     const recommendations: string[] = []
+    const total = entries.length
 
     // Rate limit recommendations
-    if (byErrorType.rate_limit > 0) {
-      recommendations.push(
-        `${byErrorType.rate_limit} rate limit errors detected. Consider reducing concurrency or adding delays between requests.`
-      )
+    const rateLimitCount = byErrorType['RATE_LIMIT'] || 0
+    if (rateLimitCount > 0) {
+      const percentage = (rateLimitCount / total) * 100
+      if (percentage > 20) {
+        recommendations.push(
+          `High rate limit errors (${percentage.toFixed(1)}%). Consider: ` +
+          `1) Reducing worker concurrency, 2) Increasing backoff delays, 3) Implementing request batching.`
+        )
+      } else {
+        recommendations.push(
+          `${rateLimitCount} rate limit errors detected. ` +
+          `These are retryable and should resolve with exponential backoff.`
+        )
+      }
     }
 
-    // Authentication recommendations
-    if (byErrorType.authentication > 0) {
+    // Network error recommendations
+    const networkCount = byErrorType['NETWORK'] || 0
+    if (networkCount > 0) {
+      const percentage = (networkCount / total) * 100
+      if (percentage > 10) {
+        recommendations.push(
+          `Significant network errors (${percentage.toFixed(1)}%). ` +
+          `Check: 1) Connector health, 2) Network connectivity, 3) DNS resolution.`
+        )
+      }
+    }
+
+    // Authorization recommendations
+    const authCount = byErrorType['AUTHORIZATION'] || 0
+    if (authCount > 0) {
       recommendations.push(
-        `${byErrorType.authentication} authentication errors detected. Verify connector credentials and refresh tokens.`
+        `${authCount} authorization errors (non-retryable). ` +
+        `Action required: Verify connector credentials and access tokens.`
       )
     }
 
     // Not found recommendations
-    if (byErrorType.not_found > 5) {
+    const notFoundCount = byErrorType['NOT_FOUND'] || 0
+    if (notFoundCount > 0) {
       recommendations.push(
-        `${byErrorType.not_found} "not found" errors detected. Verify product/variant IDs are correct and products still exist in external system.`
-      )
-    }
-
-    // Network recommendations
-    if (byErrorType.network > 0) {
-      recommendations.push(
-        `${byErrorType.network} network errors detected. Check network connectivity and consider increasing timeout values.`
+        `${notFoundCount} not found errors (non-retryable). ` +
+        `Products may have been deleted. Consider removing these targets.`
       )
     }
 
     // Validation recommendations
-    if (byErrorType.validation > 0) {
+    const validationCount = byErrorType['VALIDATION'] || 0
+    if (validationCount > 0) {
       recommendations.push(
-        `${byErrorType.validation} validation errors detected. Review pricing rules and ensure price values are within valid ranges.`
+        `${validationCount} validation errors (non-retryable). ` +
+        `Review pricing rules and target configurations.`
       )
     }
 
-    // General retry recommendation
+    // Server error recommendations
+    const serverErrorCount = byErrorType['SERVER_ERROR'] || 0
+    if (serverErrorCount > 0) {
+      recommendations.push(
+        `${serverErrorCount} server errors detected. ` +
+        `These are retryable. Monitor connector service health.`
+      )
+    }
+
+    // Stale entries
+    const staleCount = entries.filter(
+      e => Date.now() - e.failedAt.getTime() > DLQ_CONFIG.staleThreshold
+    ).length
+    if (staleCount > 0) {
+      recommendations.push(
+        `${staleCount} stale entries (>24h old). ` +
+        `Consider manual review or archival.`
+      )
+    }
+
+    // Retryable entries
     const retryableCount = entries.filter(e => e.retryable).length
     if (retryableCount > 0) {
       recommendations.push(
-        `${retryableCount} failed targets are retryable. Use the retry API to attempt reprocessing.`
+        `${retryableCount} entries are retryable. ` +
+        `Use the retry API to requeue these targets.`
       )
+    }
+
+    if (recommendations.length === 0) {
+      recommendations.push('No specific recommendations. All errors appear to be edge cases.')
     }
 
     return recommendations
   }
 
   /**
-   * Write retry event to audit log
+   * Log DLQ report to event log and audit
    */
-  private async writeRetryEvent(runId: string, targetCount: number): Promise<void> {
-    const run = await this.prisma.ruleRun.findUnique({
-      where: { id: runId },
+  private async logReport(projectId: string, report: DLQReport) {
+    const project = await prisma().project.findUnique({
+      where: { id: projectId }
     })
 
-    if (!run) return
+    if (!project) {
+      logger.warn(`[DLQ] Project ${projectId} not found for logging`)
+      return
+    }
 
-    await this.prisma.eventLog.create({
-      data: {
-        eventKey: `dlq:retry:${runId}:${Date.now()}`,
-        tenantId: run.tenantId,
-        projectId: run.projectId,
-        eventType: 'automation.dlq.retry',
-        payload: {
-          runId,
-          targetCount,
-          timestamp: new Date().toISOString(),
-        },
+    const eventWriter = new EventWriter(prisma())
+
+    // Write to event log
+    await eventWriter.writeEventWithOutbox({
+      eventKey: `dlq-report-${projectId}-${Date.now()}`,
+      tenantId: project.tenantId,
+      projectId,
+      eventType: 'automation.dlq.report',
+      payload: {
+        projectId,
+        totalFailed: report.totalFailed,
+        byErrorType: report.byErrorType,
+        recommendations: report.recommendations,
+        timestamp: new Date().toISOString()
       },
+      metadata: {
+        entryCount: report.entries.length
+      }
+    })
+
+    // Write to audit log
+    await prisma().audit.create({
+      data: {
+        tenantId: project.tenantId,
+        projectId,
+        entity: 'DLQ',
+        entityId: projectId,
+        action: 'drain',
+        actor: 'automation-runner',
+        explain: {
+          totalFailed: report.totalFailed,
+          byErrorType: report.byErrorType,
+          recommendations: report.recommendations
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any
+      }
     })
   }
 
   /**
-   * Write DLQ report event to audit log
+   * Purge old failed targets
+   * Removes targets that have been in DLQ for > retention period
    */
-  private async writeDLQReportEvent(projectId: string, report: DLQReport): Promise<void> {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-    })
+  async purgeOldEntries(projectId: string, olderThanMs: number = 7 * 24 * 60 * 60 * 1000) {
+    const threshold = new Date(Date.now() - olderThanMs)
 
-    if (!project) return
-
-    await this.prisma.eventLog.create({
-      data: {
-        eventKey: `dlq:report:${projectId}:${Date.now()}`,
-        tenantId: project.tenantId,
+    const result = await prisma().ruleTarget.deleteMany({
+      where: {
         projectId,
-        eventType: 'automation.dlq.report',
-        payload: {
-          projectId,
-          totalFailed: report.totalFailed,
-          byErrorType: report.byErrorType,
-          recommendations: report.recommendations,
-          timestamp: new Date().toISOString(),
-        },
-      },
+        status: 'FAILED',
+        lastAttempt: {
+          lt: threshold
+        }
+      }
     })
+
+    logger.info(`[DLQ] Purged ${result.count} old failed targets from project ${projectId}`)
+
+    return result.count
   }
+}
+
+/**
+ * Create a singleton DLQ service
+ */
+let dlqInstance: DLQService | null = null
+
+export function getDLQService(): DLQService {
+  if (!dlqInstance) {
+    dlqInstance = new DLQService()
+  }
+  return dlqInstance
 }

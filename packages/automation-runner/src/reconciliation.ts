@@ -1,228 +1,294 @@
 /**
- * Reconciliation Service - Validates applied prices match external systems
- * M1.6: Price reconciliation with mismatch detection and reporting
+ * Reconciliation Service
+ * M1.6: Verifies that external prices match intended prices after application
  */
 
-import { prisma } from '@calibr/db'
-import type { PrismaClient, RuleTarget } from '@calibr/db'
-import type {
-  ReconciliationMismatch,
-  ReconciliationReport,
-  PriceConnector,
-} from './types'
+import { prisma, EventWriter } from '@calibr/db'
+import type { RuleRun, RuleTarget } from '@calibr/db'
+import { logger } from '@calibr/monitor'
 import { RECONCILIATION_CONFIG } from './config'
+import type { ReconciliationMismatch, ReconciliationReport, PriceConnector } from './types'
 
 export class ReconciliationService {
   private connectors: Map<string, PriceConnector> = new Map()
-  private prisma: PrismaClient
-
-  constructor(prismaClient?: PrismaClient) {
-    this.prisma = prismaClient ?? prisma()
-  }
 
   /**
-   * Register a price connector for reconciliation
+   * Register a connector for reconciliation
    */
-  registerConnector(name: string, connector: PriceConnector): void {
-    this.connectors.set(name.toLowerCase(), connector)
+  registerConnector(channel: string, connector: PriceConnector) {
+    this.connectors.set(channel, connector)
+    logger.info(`[Reconciliation] Registered connector: ${channel}`)
   }
 
   /**
-   * Reconcile a completed rule run
-   * Verifies that applied prices in database match external systems
+   * Reconcile a rule run
+   * Verifies that external prices match intended prices
    */
   async reconcileRun(runId: string): Promise<ReconciliationReport> {
-    const targets = await this.getAppliedTargets(runId)
-    const mismatches: ReconciliationMismatch[] = []
+    logger.info(`[Reconciliation] Starting reconciliation for run: ${runId}`)
 
+    const run = await prisma().ruleRun.findUnique({
+      where: { id: runId },
+      include: {
+        RuleTarget: {
+          where: { status: 'APPLIED' }
+        }
+      }
+    })
+
+    if (!run) {
+      throw new Error(`Rule run ${runId} not found`)
+    }
+
+    const targets = run.RuleTarget
+    const mismatches: ReconciliationMismatch[] = []
+    let checked = 0
+
+    // Check each applied target
     for (const target of targets) {
       try {
-        const externalPrice = await this.fetchExternalPrice(target)
-        const expectedPrice = this.extractExpectedPrice(target)
+        const mismatch = await this.reconcileTarget(target)
+        checked++
 
-        if (externalPrice !== null && expectedPrice !== null) {
-          const difference = externalPrice - expectedPrice
-          const percentageDiff = (difference / expectedPrice) * 100
-
-          // Check if mismatch exceeds threshold
-          if (
-            Math.abs(difference) > RECONCILIATION_CONFIG.maxDifferenceCents ||
-            Math.abs(percentageDiff) > RECONCILIATION_CONFIG.maxDifferencePercent * 100
-          ) {
-            mismatches.push({
-              targetId: target.id,
-              skuId: target.skuId || '',
-              expectedPrice,
-              actualPrice: externalPrice,
-              difference,
-              percentageDiff,
-            })
-
-            // Write audit event for mismatch
-            await this.reportMismatch(target, externalPrice, expectedPrice, difference)
-          }
+        if (mismatch) {
+          mismatches.push(mismatch)
         }
       } catch (error) {
-        // Log error but continue reconciliation
-        console.error(`Reconciliation error for target ${target.id}:`, error)
+        logger.error(
+          `[Reconciliation] Error reconciling target ${target.id}`,
+          error instanceof Error ? error : undefined
+        )
       }
     }
 
     const report: ReconciliationReport = {
       runId,
-      totalChecked: targets.length,
+      totalChecked: checked,
       mismatches: mismatches.length,
       details: mismatches,
-      timestamp: new Date(),
+      timestamp: new Date()
     }
 
-    // Emit reconciliation event
-    await this.writeReconciliationEvent(runId, report)
+    // Log report to event log
+    await this.logReport(run, report)
+
+    // If there are mismatches, log warning
+    if (mismatches.length > 0) {
+      logger.warn(`[Reconciliation] Found ${mismatches.length} price mismatches for run ${runId}`, {
+        metadata: {
+          mismatchRate: ((mismatches.length / checked) * 100).toFixed(2) + '%'
+        }
+      })
+    } else {
+      logger.info(`[Reconciliation] All prices reconciled successfully for run ${runId}`)
+    }
 
     return report
   }
 
   /**
-   * Get all applied targets from a run
+   * Reconcile a single target
+   * Returns mismatch details if prices don't match
    */
-  private async getAppliedTargets(runId: string): Promise<RuleTarget[]> {
-    return await this.prisma.ruleTarget.findMany({
-      where: {
-        ruleRunId: runId,
-        status: 'APPLIED',
-      },
+  private async reconcileTarget(target: RuleTarget): Promise<ReconciliationMismatch | null> {
+    // Get product and connector info
+    const product = await prisma().product.findUnique({
+      where: { id: target.productId }
     })
-  }
 
-  /**
-   * Fetch current price from external system
-   */
-  private async fetchExternalPrice(target: RuleTarget): Promise<number | null> {
-    // Determine connector (for now, defaulting to shopify)
-    // TODO: Get connector type from product metadata
-    const connectorName = 'shopify'
-    const connector = this.connectors.get(connectorName)
+    if (!product) {
+      logger.warn(`[Reconciliation] Product ${target.productId} not found for target ${target.id}`)
+      return null
+    }
+
+    const channelRefs = product.channelRefs as Record<string, unknown>
+    const channel = (channelRefs?.channel as string) || 'shopify'
+    const connector = this.connectors.get(channel)
 
     if (!connector) {
-      throw new Error(`Connector not found: ${connectorName}`)
-    }
-
-    try {
-      const externalId = target.variantId || target.productId
-      const priceData = await connector.fetchPrice(externalId)
-      return priceData.price
-    } catch (error) {
-      console.error(`Failed to fetch price for target ${target.id}:`, error)
+      logger.warn(`[Reconciliation] No connector for channel ${channel}, skipping target ${target.id}`)
       return null
     }
-  }
 
-  /**
-   * Extract expected price from target's afterJson
-   */
-  private extractExpectedPrice(target: RuleTarget): number | null {
+    // Fetch current external price
+    const externalId = (channelRefs?.external_id || channelRefs?.externalId) as string
+    if (!externalId) {
+      logger.warn(`[Reconciliation] No external ID for product ${product.id}, skipping`)
+      return null
+    }
+
     try {
+      const externalPrice = await connector.fetchPrice(externalId)
+
+      // Get expected price from target
       const afterData = target.afterJson as Record<string, unknown>
-      const priceCandidates = [
-        afterData.unit_amount,
-        afterData.amount,
-        afterData.price,
-      ]
+      const expectedPrice = (afterData.unit_amount || afterData.price) as number
 
-      const price = priceCandidates.find(
-        (value): value is number => typeof value === 'number'
+      // Check if prices match (allow small difference for rounding)
+      const difference = Math.abs(externalPrice.price - expectedPrice)
+      const percentageDiff = (difference / expectedPrice) * 100
+
+      const maxDiffCents = RECONCILIATION_CONFIG.maxDifferenceCents
+      const maxDiffPercent = RECONCILIATION_CONFIG.maxDifferencePercent * 100
+
+      if (difference > maxDiffCents && percentageDiff > maxDiffPercent) {
+        // Price mismatch detected
+        return {
+          targetId: target.id,
+          skuId: target.skuId || '',
+          expectedPrice,
+          actualPrice: externalPrice.price,
+          difference,
+          percentageDiff
+        }
+      }
+
+      return null // Prices match
+    } catch (error) {
+      logger.error(
+        `[Reconciliation] Failed to fetch external price for target ${target.id}`,
+        error instanceof Error ? error : undefined
       )
-
-      return price ?? null
-    } catch {
       return null
     }
   }
 
   /**
-   * Report reconciliation mismatch to audit log
+   * Log reconciliation report to event log
    */
-  private async reportMismatch(
-    target: RuleTarget,
-    actualPrice: number,
-    expectedPrice: number,
-    difference: number
-  ): Promise<void> {
-    // Write to EventLog for audit trail
-    await this.prisma.eventLog.create({
-      data: {
-        eventKey: `reconciliation:mismatch:${target.id}:${Date.now()}`,
-        tenantId: target.tenantId,
-        projectId: target.projectId,
-        eventType: 'automation.reconciliation.mismatch',
-        payload: {
-          targetId: target.id,
-          ruleRunId: target.ruleRunId,
-          expectedPrice,
-          actualPrice,
-          difference,
-          percentageDiff: (difference / expectedPrice) * 100,
-        },
-        metadata: {
-          severity: 'warning',
-          timestamp: new Date().toISOString(),
-        },
+  private async logReport(run: RuleRun, report: ReconciliationReport) {
+    const eventWriter = new EventWriter(prisma())
+
+    await eventWriter.writeEventWithOutbox({
+      eventKey: `reconciliation-${run.id}-${Date.now()}`,
+      tenantId: run.tenantId,
+      projectId: run.projectId || undefined,
+      eventType: 'automation.reconciliation.completed',
+      payload: {
+        runId: run.id,
+        totalChecked: report.totalChecked,
+        mismatchCount: report.mismatches,
+        mismatchRate: (report.mismatches / report.totalChecked) * 100,
+        timestamp: report.timestamp.toISOString()
       },
+      metadata: {
+        mismatches: report.details.map(m => ({
+          targetId: m.targetId,
+          skuId: m.skuId,
+          difference: m.difference,
+          percentageDiff: m.percentageDiff
+        }))
+      }
     })
-  }
 
-  /**
-   * Write reconciliation completion event
-   */
-  private async writeReconciliationEvent(runId: string, report: ReconciliationReport): Promise<void> {
-    const run = await this.prisma.ruleRun.findUnique({
-      where: { id: runId },
-    })
-
-    if (!run) return
-
-    await this.prisma.eventLog.create({
+    // Also write to audit log
+    await prisma().audit.create({
       data: {
-        eventKey: `reconciliation:complete:${runId}:${Date.now()}`,
         tenantId: run.tenantId,
-        projectId: run.projectId,
-        eventType: 'automation.reconciliation.completed',
-        payload: {
-          runId,
+        projectId: run.projectId || undefined,
+        entity: 'RuleRun',
+        entityId: run.id,
+        action: 'reconcile',
+        actor: 'automation-runner',
+        explain: JSON.parse(JSON.stringify({
           totalChecked: report.totalChecked,
-          mismatches: report.mismatches,
-          timestamp: report.timestamp.toISOString(),
-        },
-        metadata: {
           mismatchCount: report.mismatches,
-          accuracy: ((report.totalChecked - report.mismatches) / report.totalChecked) * 100,
-        },
-      },
+          mismatches: report.details
+        }))
+      }
     })
   }
 
   /**
    * Schedule reconciliation for a run
-   * Immediate: 5 minutes after completion
-   * Delayed: 1 hour after completion
+   * Called after run completes successfully
    */
-  async scheduleReconciliation(runId: string): Promise<void> {
-    // Immediate reconciliation
-    setTimeout(async () => {
-      try {
-        await this.reconcileRun(runId)
-      } catch (error) {
-        console.error(`Immediate reconciliation failed for run ${runId}:`, error)
-      }
-    }, RECONCILIATION_CONFIG.immediateDelay)
+  async scheduleReconciliation(runId: string, delayMs?: number) {
+    const delay = delayMs ?? RECONCILIATION_CONFIG.immediateDelay
 
-    // Delayed reconciliation
+    logger.info(`[Reconciliation] Scheduling reconciliation for run ${runId} in ${delay}ms`)
+
+    // In a real implementation, this would use a job queue or cron
+    // For now, we'll use setTimeout as a simple implementation
     setTimeout(async () => {
       try {
         await this.reconcileRun(runId)
       } catch (error) {
-        console.error(`Delayed reconciliation failed for run ${runId}:`, error)
+        logger.error(
+          `[Reconciliation] Failed scheduled reconciliation for run ${runId}`,
+          error instanceof Error ? error : undefined
+        )
       }
-    }, RECONCILIATION_CONFIG.delayedCheck)
+    }, delay)
   }
+
+  /**
+   * Retry failed targets that had reconciliation mismatches
+   * Optionally auto-retry if configured
+   */
+  async retryMismatches(runId: string, autoRetry: boolean = false): Promise<number> {
+    if (!autoRetry && !RECONCILIATION_CONFIG.autoRetryOnMismatch) {
+      logger.info(`[Reconciliation] Auto-retry disabled for run ${runId}`)
+      return 0
+    }
+
+    const report = await this.reconcileRun(runId)
+
+    if (report.mismatches === 0) {
+      return 0
+    }
+
+    // Get the mismatched targets
+    const targetIds = report.details.map(m => m.targetId)
+
+    // Update targets back to QUEUED for retry
+    await prisma().ruleTarget.updateMany({
+      where: {
+        id: { in: targetIds },
+        ruleRunId: runId
+      },
+      data: {
+        status: 'QUEUED',
+        attempts: 0,
+        errorMessage: 'Reconciliation mismatch - retrying'
+      }
+    })
+
+    logger.info(`[Reconciliation] Queued ${targetIds.length} targets for retry due to reconciliation mismatches`)
+
+    return targetIds.length
+  }
+
+  /**
+   * Get reconciliation history for a run
+   */
+  async getReconciliationHistory(runId: string) {
+    const events = await prisma().eventLog.findMany({
+      where: {
+        eventType: 'automation.reconciliation.completed',
+        payload: {
+          path: ['runId'],
+          equals: runId
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return events.map(e => ({
+      timestamp: e.createdAt,
+      report: e.payload as Record<string, unknown>
+    }))
+  }
+}
+
+/**
+ * Create a singleton reconciliation service
+ */
+let reconciliationInstance: ReconciliationService | null = null
+
+export function getReconciliationService(): ReconciliationService {
+  if (!reconciliationInstance) {
+    reconciliationInstance = new ReconciliationService()
+  }
+  return reconciliationInstance
 }

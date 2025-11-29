@@ -1,6 +1,7 @@
 /**
  * Automation Runner - Public API
  * M0.5: Core infrastructure for bulk pricing rule execution
+ * M1.6: Worker queue execution with reconciliation and DLQ
  */
 
 // Configuration
@@ -45,19 +46,32 @@ export {
   getRetrySchedule,
 } from './backoff'
 
-// Worker
-export { RulesWorker } from './rulesWorker'
+// Core worker
+export {
+  RulesWorker,
+  getRulesWorker,
+} from './rulesWorker'
 
-// Services
-export { ReconciliationService } from './reconciliation'
-export { DLQService } from './dlq'
+// Reconciliation service
+export {
+  ReconciliationService,
+  getReconciliationService,
+} from './reconciliation'
+
+// DLQ service
+export {
+  DLQService,
+  getDLQService,
+} from './dlq'
 
 // Metrics
 export {
-  collectRunMetrics,
-  collectWorkerMetrics,
   recordRunMetrics,
   recordDLQMetrics,
-  checkSuccessRateAlert,
-  checkDLQSizeAlert,
+  record429Error,
+  check429Burst,
+  getWorkerMetrics,
+  recordTargetMetrics,
+  recordReconciliationMetrics,
+  exportMetricsForGrafana,
 } from './metrics'

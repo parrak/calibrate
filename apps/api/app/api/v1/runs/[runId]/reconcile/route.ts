@@ -1,77 +1,125 @@
 /**
  * POST /api/v1/runs/:runId/reconcile
- * Reconcile a completed run (verify applied prices match external systems)
- * TODO: Implement full reconciliation service integration
+ * M1.6: Reconcile a rule run (verify external prices match intended prices)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+// @ts-expect-error - build artifacts resolve at runtime
+import { getReconciliationService } from '@calibr/automation-runner'
 import { prisma } from '@calibr/db'
-import type { RuleTarget } from '@calibr/db'
+import { logger } from '@calibr/monitor'
 
 export async function POST(
-  _req: NextRequest,
-  { params }: { params: Promise<{ runId: string }> }
+  request: NextRequest,
+  { params }: { params: { runId: string } }
 ) {
   try {
-    const { runId } = await params
+    const { runId } = params
 
-    // Verify run exists
+    logger.info(`[API] Reconciling rule run: ${runId}`)
+
+    // Check if run exists and is in valid state
     const run = await prisma().ruleRun.findUnique({
-      where: { id: runId },
-      include: {
-        RuleTarget: true,
-      },
+      where: { id: runId }
     })
 
     if (!run) {
       return NextResponse.json(
-        { error: 'Run not found' },
+        {
+          success: false,
+          error: 'Rule run not found'
+        },
         { status: 404 }
       )
     }
 
-    // Verify run is completed
+    // Check if run is completed
     if (run.status !== 'APPLIED' && run.status !== 'PARTIAL') {
       return NextResponse.json(
-        { error: `Cannot reconcile run with status: ${run.status}` },
+        {
+          success: false,
+          error: `Cannot reconcile run in status: ${run.status}. Run must be APPLIED or PARTIAL.`
+        },
         { status: 400 }
       )
     }
 
-    // Get applied targets
-    const appliedTargets: RuleTarget[] = run.RuleTarget.filter((t) => t.status === 'APPLIED')
+    // Get reconciliation service
+    const reconciliation = getReconciliationService()
 
-    // TODO: Implement full reconciliation with connector integration
-    // For now, just return a simple summary
+    // Perform reconciliation
+    const report = await reconciliation.reconcileRun(runId)
+
+    logger.info(`[API] Reconciliation completed for run: ${runId}`, {
+      totalChecked: report.totalChecked,
+      mismatches: report.mismatches
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
     return NextResponse.json({
-      runId,
-      totalChecked: appliedTargets.length,
-      mismatches: 0,
-      details: [],
-      timestamp: new Date(),
-      note: 'Full reconciliation service integration pending',
+      success: true,
+      data: {
+        runId,
+        totalChecked: report.totalChecked,
+        mismatchCount: report.mismatches,
+        mismatchRate: report.totalChecked > 0
+          ? (report.mismatches / report.totalChecked) * 100
+          : 0,
+        mismatches: report.details,
+        timestamp: report.timestamp
+      }
     })
   } catch (error) {
-    console.error('Error reconciling run:', error)
+    logger.error('[API] Error reconciling rule run', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      runId: params.runId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
     return NextResponse.json(
       {
-        error: 'Failed to reconcile run',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to reconcile rule run'
       },
       { status: 500 }
     )
   }
 }
 
-export async function OPTIONS(_req: NextRequest) {
-  return NextResponse.json(
-    {},
-    {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+/**
+ * GET /api/v1/runs/:runId/reconcile
+ * Get reconciliation history for a run
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { runId: string } }
+) {
+  try {
+    const { runId } = params
+
+    const reconciliation = getReconciliationService()
+    const history = await reconciliation.getReconciliationHistory(runId)
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        runId,
+        history
+      }
+    })
+  } catch (error) {
+    logger.error('[API] Error getting reconciliation history', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      runId: params.runId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get reconciliation history'
       },
-    }
-  )
+      { status: 500 }
+    )
+  }
 }
