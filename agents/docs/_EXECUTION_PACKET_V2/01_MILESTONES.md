@@ -55,6 +55,22 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 ---
 
+### M0.6 — Competitor Monitoring E2E [MW] — Owners: Interface ✅ COMPLETE
+**Goals**
+- E2E competitor tracking; UI integration; analytics dashboard; error monitoring.
+
+**Success**
+- ✅ Backend API complete with 12 tests and auth enforcement
+- ✅ UI integration complete (Monitor ↔ Analytics ↔ Rules)
+- ✅ End-to-end flow verified (Ingest → Normalize → Visualize)
+- ✅ Error rate < 1% verified with validation script
+- ✅ Alert hooks integrated for scrape failures
+- ✅ Documentation updated and status marked Green
+
+**Completed:** January 11, 2025 (M0.6)
+
+---
+
 ### M1.1 — Pricing Engine MVP (Rules) [MW] — Owners: Engine
 **Goals**
 - Rule DSL: selector (predicate) + transform (%, absolute, floors/ceilings); schedule; dry‑run.
