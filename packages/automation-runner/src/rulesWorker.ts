@@ -682,7 +682,9 @@ export class RulesWorker {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     beforeData: any
   ) {
-    const currentPrice = beforeData.unit_amount || beforeData.price
+    if (!beforeData) return
+
+    const currentPrice = Number(beforeData.unit_amount || beforeData.price || 0)
 
     // 1. Price Floor (Absolute)
     if (policy.minPriceCents && newPrice < policy.minPriceCents) {
@@ -691,17 +693,21 @@ export class RulesWorker {
 
     // 2. Max Increase %
     if (policy.maxPriceIncreasePct && newPrice > currentPrice) {
-      const increasePct = ((newPrice - currentPrice) / currentPrice) * 100
-      if (increasePct > policy.maxPriceIncreasePct) {
-        throw new Error(`Guardrail violation: Price increase ${increasePct.toFixed(2)}% exceeds limit ${policy.maxPriceIncreasePct}%`)
+      if (currentPrice > 0) {
+        const increasePct = ((newPrice - currentPrice) / currentPrice) * 100
+        if (increasePct > policy.maxPriceIncreasePct) {
+          throw new Error(`Guardrail violation: Price increase ${increasePct.toFixed(2)}% exceeds limit ${policy.maxPriceIncreasePct}%`)
+        }
       }
     }
 
     // 3. Max Decrease %
     if (policy.maxPriceDecreasePct && newPrice < currentPrice) {
-      const decreasePct = ((currentPrice - newPrice) / currentPrice) * 100
-      if (decreasePct > policy.maxPriceDecreasePct) {
-        throw new Error(`Guardrail violation: Price decrease ${decreasePct.toFixed(2)}% exceeds limit ${policy.maxPriceDecreasePct}%`)
+      if (currentPrice > 0) {
+        const decreasePct = ((currentPrice - newPrice) / currentPrice) * 100
+        if (decreasePct > policy.maxPriceDecreasePct) {
+          throw new Error(`Guardrail violation: Price decrease ${decreasePct.toFixed(2)}% exceeds limit ${policy.maxPriceDecreasePct}%`)
+        }
       }
     }
   }

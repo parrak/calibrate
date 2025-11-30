@@ -70,5 +70,12 @@ describe('RulesWorker Guardrails', () => {
             // Try decreasing to $8.00 (20%)
             expect(() => checkGuardrails(policy, mockTarget, 800, mockBeforeData)).toThrow(/Price decrease 20.00% exceeds limit/)
         })
+        it('should pass when current price is 0 (cannot calculate % increase)', () => {
+            const policy = {
+                maxPriceIncreasePct: 10
+            }
+            // 0 -> 100
+            expect(() => checkGuardrails(policy, mockTarget, 100, { unit_amount: 0 })).not.toThrow()
+        })
     })
 })
