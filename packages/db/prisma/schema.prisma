@@ -274,6 +274,27 @@ model Policy {
   Tenant    Tenant   @relation(fields: [tenantId], references: [id])
 }
 
+/// GuardrailPolicy — Safety guardrails for automation
+/// Enforces price floors, delta limits, and velocity controls
+model GuardrailPolicy {
+  id                       String   @id @default(cuid())
+  tenantId                 String
+  projectId                String   @unique
+  minMarginPct             Float? // Price floor: cost + margin %
+  minPriceCents            Int? // Price floor: absolute minimum
+  maxPriceIncreasePct      Float? // Max delta: increase limit
+  maxPriceDecreasePct      Float? // Max delta: decrease limit
+  maxChangesPerDay         Int? // Velocity: max automated changes/day
+  minChangeIntervalMinutes Int? // Debounce: min time between changes
+  enabled                  Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  Project                  Project  @relation(fields: [projectId], references: [id])
+  Tenant                   Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, projectId])
+}
+
 /// PricingRule — Automated pricing rules engine
 /// Stores selector criteria and transform logic for automated price changes
 model PricingRule {
@@ -499,6 +520,7 @@ model Project {
   Event              Event[]
   Membership         Membership[]
   Policy             Policy?
+  GuardrailPolicy    GuardrailPolicy?
   Product            Product[]
   Tenant             Tenant               @relation(fields: [tenantId], references: [id])
   ShopifyIntegration ShopifyIntegration[]
@@ -593,6 +615,7 @@ model Tenant {
   Customer        Customer[]
   Event           Event[]
   Policy          Policy[]
+  GuardrailPolicy GuardrailPolicy[]
   Product         Product[]
   Project         Project[]
   User            User[]
