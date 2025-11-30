@@ -199,6 +199,8 @@ Schema + Event Bus stable.
 - [ ] Add metrics: sync latency, error %, backlog size
 - [x] Add feature flag `STRIPE_CONNECT_ENABLED`
 
+### M1.5 Stripe Connector ✅ Complete (PR #124)
+
 ---
 
 ## ⚙️ Engine Team (Rules DSL / Apply / Rollback / Automation Runner)

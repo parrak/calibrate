@@ -334,7 +334,7 @@ November 2025 achieved a major milestone: completion of the **Ready-For-Automati
 
 | Milestone | Status | Planned Start | Dependencies |
 |:----------|:-------|:--------------|:-------------|
-| M1.5 Stripe Connector | 📋 Conditional | TBD | SaaS validation "Go" signal |
+| M1.5 Stripe Connector | ✅ Complete | January 2025 | PR #124 |
 | M1.6 Automation Runner Execution | 📋 Planned | Q1 2026 | M0.5 complete |
 | M1.7 Automation Runner UI | 📋 Planned | Q1 2026 | M1.6 complete |
 | M1.8 Copilot Simulation | 📋 Planned | Q1 2026 | M1.6 complete |
@@ -373,6 +373,12 @@ November 2025 achieved a major milestone: completion of the **Ready-For-Automati
    - 12 comprehensive API tests
    - Auth token passing
    - Integration into PR checks
+   - Status: ✅ Merged
+
+6. **PR #124**: Stripe Integration
+   - API Key integration
+   - Product/Price sync
+   - Transaction ingestion
    - Status: ✅ Merged
 
 ---

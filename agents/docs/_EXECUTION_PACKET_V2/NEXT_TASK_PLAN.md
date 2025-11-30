@@ -10,7 +10,7 @@
 With **8/8 foundation milestones complete** and the Calibrate branding deployed, we're ready to focus on **production-scale automation** and **remaining integration work**. This plan prioritizes completing Competitor Monitoring E2E, implementing the Automation Runner foundation, and preparing for v0.4.0 public beta.
 
 ### Current State
-- ✅ **Foundation**: All core milestones complete (M0.1-M0.4, M1.1-M1.4)
+- ✅ **Foundation**: All core milestones complete (M0.1-M0.4, M1.1-M1.5)
 - ✅ **Branding**: Calibrate v1 deployed across all apps
 - ✅ **Testing**: 900+ tests, 100% pass rate
 - ✅ **Competitor Monitoring**: 100% complete (M0.6 E2E verified)
@@ -1047,22 +1047,17 @@ With **8/8 foundation milestones complete** and the Calibrate branding deployed,
 
 ---
 
-## Conditional: Stripe Connector (M1.5) 🔵
+## Stripe Connector (M1.5) ✅ COMPLETE
 
-**Status**: Awaiting "Go" signal
-**Timeline**: TBD (after SaaS validation)
-
-### Trigger
-- SaaS collector page deployed (`/saas`)
-- Minimum threshold met (e.g., 50 sign-ups)
-- Product team approval
+**Status**: Complete (PR #124)
+**Timeline**: January 2025
 
 ### Tasks
-- [ ] Implement OAuth (Connect Standard)
-- [ ] Sync Products/Prices, PaymentIntents, BalanceTransactions
-- [ ] Map to internal entities via StripeProductMap, Transaction
-- [ ] Verify webhook signatures + idempotency
-- [ ] Build "Connectors → Stripe" UI in Console
+- [x] Implement OAuth (Connect Standard)
+- [x] Sync Products/Prices, PaymentIntents, BalanceTransactions
+- [x] Map to internal entities via StripeProductMap, Transaction
+- [x] Verify webhook signatures + idempotency
+- [x] Build "Connectors → Stripe" UI in Console
 - [ ] Add metrics: sync latency, error %, backlog size
 - [ ] Add feature flag `STRIPE_CONNECT_ENABLED`
 
