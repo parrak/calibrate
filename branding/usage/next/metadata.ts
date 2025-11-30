@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Calibrate — Composable Pricing Data OS',
   description: 'The AI‑native pricing control plane for commerce.',
-  themeColor: '#0E3AFF',
+  themeColor: '#008080',
   icons: {
     icon: [
       { url: '/branding/assets/favicon.ico' },

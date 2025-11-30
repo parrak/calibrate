@@ -111,6 +111,9 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - **Next Steps**: M1.8 (Automation Runner), M1.9 (Copilot Simulation)
   - **Status**: Platform validated and ready for automation features
 
+### Changed
+- Updated branding guidance to align all public assets with the teal palette and metadata `themeColor` (`#008080`); refreshed AGENTS/PROTOCOLS docs and sample Next.js metadata.
+
 - **Automation Runner Foundation M0.5 — Phase 1** — Completed November 13, 2025 🚧 PHASE 1 COMPLETE
   - **M0.5 Phase 1 COMPLETE**: Core infrastructure for bulk pricing rule execution (50% of milestone)
   - **Database Schema Extensions**: Extended RuleRun and RuleTarget models for automation
@@ -890,4 +893,3 @@ See [COMPETITOR_MONITORING.md](COMPETITOR_MONITORING.md) for detailed feature do
 
 ### Fixes
 - Vercel deployments stabilized by committing updated root pnpm-lock.yaml after sub-app dependency changes.
-
