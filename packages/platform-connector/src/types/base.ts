@@ -8,7 +8,7 @@
 /**
  * Supported e-commerce platforms
  */
-export type PlatformType = 'shopify' | 'amazon' | 'google_shopping' | 'woocommerce' | 'bigcommerce' | 'custom';
+export type PlatformType = 'shopify' | 'amazon' | 'google_shopping' | 'woocommerce' | 'bigcommerce' | 'stripe' | 'custom';
 
 /**
  * Connection status for platform integrations

@@ -151,6 +151,20 @@ export default function IntegrationsDocs() {
               ]}
               capabilities="Import product catalog and pricing data. Monitor competitor prices. No price write-back in MVP."
             />
+
+            <PlatformCard
+              name="Stripe"
+              icon="💳"
+              status="Beta Integration"
+              features={[
+                "Secure API Key connection",
+                "Product and Price sync",
+                "Transaction import for margin analysis",
+                "Real-time webhooks",
+                "Unified analytics"
+              ]}
+              capabilities="Import products, prices, and transactions. Enable true margin analysis."
+            />
           </div>
         </section>
 
@@ -300,6 +314,89 @@ export default function IntegrationsDocs() {
                 <span className="font-bold text-brand shrink-0">8.</span>
                 <div>
                   If successful, catalog sync will begin automatically
+                </div>
+              </li>
+            </ol>
+          </div>
+        </section>
+
+        {/* Connecting Stripe */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Connecting Stripe</h2>
+
+          <div className="bg-surface border border-border rounded-xl p-6 mb-6">
+            <h3 className="text-xl font-semibold text-fg mb-4">Prerequisites</h3>
+            <ul className="space-y-2 text-fg">
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                Active Stripe account
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                Access to <strong>Developers {'>'} API keys</strong> in Stripe Dashboard
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-brand/10 border border-brand/20 rounded-xl p-6 mb-6">
+            <h3 className="text-lg font-semibold text-fg mb-3">🔒 Security Recommendation</h3>
+            <p className="text-fg text-sm mb-3">
+              We strongly recommend using a <strong>Restricted Key</strong> instead of a Secret Key. This ensures Calibrate only has access to the data it needs.
+            </p>
+            <div className="bg-surface border border-border p-4 rounded-lg">
+              <div className="text-sm font-semibold text-fg mb-2">Required Permissions:</div>
+              <ul className="grid grid-cols-2 gap-2 text-sm text-fg">
+                <li className="flex items-center gap-2"><span className="text-brand">✓</span> Products: <strong>Read</strong></li>
+                <li className="flex items-center gap-2"><span className="text-brand">✓</span> Prices: <strong>Read</strong></li>
+                <li className="flex items-center gap-2"><span className="text-brand">✓</span> Charges: <strong>Read</strong></li>
+                <li className="flex items-center gap-2"><span className="text-brand">✓</span> PaymentIntents: <strong>Read</strong></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="bg-surface border border-border rounded-xl p-6">
+            <h3 className="text-xl font-semibold text-fg mb-4">Setup Process</h3>
+            <ol className="space-y-4 text-fg">
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">1.</span>
+                <div>
+                  Go to your Stripe Dashboard: <strong>Developers → API keys</strong>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">2.</span>
+                <div>
+                  Click <strong>"Create restricted key"</strong>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">3.</span>
+                <div>
+                  Name the key (e.g., "Calibrate Integration") and select <strong>Read</strong> for the resources listed above
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">4.</span>
+                <div>
+                  Copy the generated key (starts with <code>rk_...</code>)
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">5.</span>
+                <div>
+                  In Calibrate, go to <strong>Integrations → Stripe</strong> and click <strong>Connect</strong>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">6.</span>
+                <div>
+                  Paste your key and click <strong>Connect</strong>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">7.</span>
+                <div>
+                  Initial sync of products, prices, and transactions will begin immediately
                 </div>
               </li>
             </ol>
@@ -591,8 +688,8 @@ export default function IntegrationsDocs() {
             />
           </div>
         </section>
-      </div>
-    </div>
+      </div >
+    </div >
   )
 }
 

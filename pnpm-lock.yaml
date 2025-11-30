@@ -460,7 +460,20 @@ importers:
 
   packages/config: {}
 
-  packages/connectors: {}
+  packages/connectors:
+    dependencies:
+      '@calibr/db':
+        specifier: workspace:*
+        version: link:../db
+      '@calibr/platform-connector':
+        specifier: workspace:*
+        version: link:../platform-connector
+      '@calibr/security':
+        specifier: workspace:*
+        version: link:../security
+      stripe:
+        specifier: ^14.10.0
+        version: 14.25.0
 
   packages/db:
     dependencies:
@@ -3696,6 +3709,10 @@ packages:
 
   strip-literal@2.1.1:
     resolution: {integrity: sha512-631UJ6O00eNGfMiWG78ck80dfBab8X6IVFB51jZK5Icd7XAs60Z5y7QdSd/wGIklnWvRbUNloVzhOKKmutxQ6Q==}
+
+  stripe@14.25.0:
+    resolution: {integrity: sha512-wQS3GNMofCXwH8TSje8E1SE8zr6ODiGtHQgPtO95p9Mb4FhKC9jvXR2NUTpZ9ZINlckJcFidCmaTFV4P6vsb9g==}
+    engines: {node: '>=12.*'}
 
   styled-jsx@5.1.1:
     resolution: {integrity: sha512-pW7uC1l4mBZ8ugbiZrcIsiIvVx1UmTfw7UkC3Um2tmfUq9Bhk8IiyEIPl6F8agHgjzku6j0xQEZbfA5uSgSaCw==}
@@ -7551,6 +7568,11 @@ snapshots:
   strip-literal@2.1.1:
     dependencies:
       js-tokens: 9.0.1
+
+  stripe@14.25.0:
+    dependencies:
+      '@types/node': 20.19.22
+      qs: 6.14.0
 
   styled-jsx@5.1.1(@babel/core@7.28.5)(react@18.3.1):
     dependencies:
