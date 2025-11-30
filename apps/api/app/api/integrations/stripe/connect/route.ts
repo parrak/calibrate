@@ -36,7 +36,7 @@ export const POST = withSecurity(async (request: NextRequest) => {
                 },
                 create: {
                     projectId,
-                    tenantId: (await prisma().project.findUnique({ where: { id: projectId } }))?.tenantId!,
+                    tenantId: (await prisma().project.findUnique({ where: { id: projectId } }))?.tenantId || '',
                     stripeAccountId: account.id,
                     secretKey: encryptedKey,
                     livemode: apiKey.startsWith('sk_live'),
@@ -46,7 +46,7 @@ export const POST = withSecurity(async (request: NextRequest) => {
 
             return NextResponse.json({ success: true, accountId: account.id });
 
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error('Stripe validation error:', e);
             return NextResponse.json({ error: 'Invalid API Key or connection failed' }, { status: 400 });
         }

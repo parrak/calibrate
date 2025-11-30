@@ -2147,4 +2147,34 @@ stdout | tests/integrations/stripe.e2e.test.ts > Stripe Integration E2E (API Key
  PASS  Waiting for file changes...
        press h to show help, press q to quit
        rerun x31
+[2K[1A[2K[G[3Jc
+ RERUN  app/api/integrations/stripe/connect/route.ts x32
+
+stdout | tests/integrations/stripe.e2e.test.ts > Stripe Integration E2E (API Key) > Connection Flow > connects with valid API key
+{"timestamp":"2025-11-30T08:09:01.041Z","level":"info","service":"calibr-api","message":"Request started: POST /api/integrations/stripe/connect","requestId":"req_xilhnm20jbat6k02yk0p","correlationId":"corr_lveim4a0j1vzyc31ytgt8","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/connect","userAgent":null,"ip":null,"query":{},"headers":{"content-type":"application/json","accept":null}}}
+{"timestamp":"2025-11-30T08:09:01.043Z","level":"info","service":"calibr-api","message":"Request completed: POST /api/integrations/stripe/connect - 200 (2ms)","requestId":"req_xilhnm20jbat6k02yk0p","correlationId":"corr_lveim4a0j1vzyc31ytgt8","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/connect","userAgent":null,"ip":null,"statusCode":200,"responseTime":2}}
+
+stdout | tests/integrations/stripe.e2e.test.ts > Stripe Integration E2E (API Key) > Connection Flow > fails with missing params
+{"timestamp":"2025-11-30T08:09:01.046Z","level":"info","service":"calibr-api","message":"Request started: POST /api/integrations/stripe/connect","requestId":"req_qge7w0n5tf3f6bp6ww50y","correlationId":"corr_fklzf2yhdt82sdprnvoys","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/connect","userAgent":null,"ip":null,"query":{},"headers":{"content-type":"application/json","accept":null}}}
+{"timestamp":"2025-11-30T08:09:01.046Z","level":"warn","service":"calibr-api","message":"Request completed: POST /api/integrations/stripe/connect - 400 (0ms)","requestId":"req_qge7w0n5tf3f6bp6ww50y","correlationId":"corr_fklzf2yhdt82sdprnvoys","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/connect","userAgent":null,"ip":null,"statusCode":400,"responseTime":0}}
+
+stdout | tests/integrations/stripe.e2e.test.ts > Stripe Integration E2E (API Key) > Sync > triggers catalog sync and writes to database
+{"timestamp":"2025-11-30T08:09:01.048Z","level":"info","service":"calibr-api","message":"Request started: POST /api/integrations/stripe/sync/catalog","requestId":"req_itx5mm8dgoe7xsl8sydhm","correlationId":"corr_oxeszc30wyoj7hfv7med","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/sync/catalog","userAgent":null,"ip":null,"query":{},"headers":{"content-type":"application/json","accept":null}}}
+{"timestamp":"2025-11-30T08:09:01.049Z","level":"info","service":"calibr-api","message":"Request completed: POST /api/integrations/stripe/sync/catalog - 200 (1ms)","requestId":"req_itx5mm8dgoe7xsl8sydhm","correlationId":"corr_oxeszc30wyoj7hfv7med","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/sync/catalog","userAgent":null,"ip":null,"statusCode":200,"responseTime":1}}
+
+stdout | tests/integrations/stripe.e2e.test.ts > Stripe Integration E2E (API Key) > Sync > triggers transaction sync
+{"timestamp":"2025-11-30T08:09:01.052Z","level":"info","service":"calibr-api","message":"Request started: POST /api/integrations/stripe/sync/transactions","requestId":"req_o2fcl8l0s9hfiwjh2lry","correlationId":"corr_qoqottbo55059fg3hnk67l","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/sync/transactions","userAgent":null,"ip":null,"query":{},"headers":{"content-type":"application/json","accept":null}}}
+{"timestamp":"2025-11-30T08:09:01.053Z","level":"info","service":"calibr-api","message":"Request completed: POST /api/integrations/stripe/sync/transactions - 200 (1ms)","requestId":"req_o2fcl8l0s9hfiwjh2lry","correlationId":"corr_qoqottbo55059fg3hnk67l","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/sync/transactions","userAgent":null,"ip":null,"statusCode":200,"responseTime":1}}
+
+ ✓ tests/integrations/stripe.e2e.test.ts  (5 tests) 17ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  00:09:00
+   Duration  252ms
+
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+       rerun x32
 [2K[1A[2K[G

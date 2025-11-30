@@ -2086,4 +2086,34 @@ stdout | tests/integrations/stripe.e2e.test.ts > Stripe Integration E2E (API Key
  PASS  Waiting for file changes...
        press h to show help, press q to quit
        rerun x30
+[2K[1A[2K[G[3Jc
+ RERUN  app/api/integrations/stripe/connect/route.ts x31
+
+ ✓ tests/integrations/stripe.e2e.test.ts  (5 tests) 18ms
+stdout | tests/integrations/stripe.e2e.test.ts > Stripe Integration E2E (API Key) > Connection Flow > connects with valid API key
+{"timestamp":"2025-11-30T08:09:01.042Z","level":"info","service":"calibr-api","message":"Request started: POST /api/integrations/stripe/connect","requestId":"req_2krwmyl1migq7qthtdqij","correlationId":"corr_g33yo78levufp30uyerve","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/connect","userAgent":null,"ip":null,"query":{},"headers":{"content-type":"application/json","accept":null}}}
+{"timestamp":"2025-11-30T08:09:01.046Z","level":"info","service":"calibr-api","message":"Request completed: POST /api/integrations/stripe/connect - 200 (4ms)","requestId":"req_2krwmyl1migq7qthtdqij","correlationId":"corr_g33yo78levufp30uyerve","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/connect","userAgent":null,"ip":null,"statusCode":200,"responseTime":4}}
+
+stdout | tests/integrations/stripe.e2e.test.ts > Stripe Integration E2E (API Key) > Connection Flow > fails with missing params
+{"timestamp":"2025-11-30T08:09:01.048Z","level":"info","service":"calibr-api","message":"Request started: POST /api/integrations/stripe/connect","requestId":"req_me5ozmcfdydqg5xvtkgh3","correlationId":"corr_i01olg6kc0c4c7l5xqdj0i","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/connect","userAgent":null,"ip":null,"query":{},"headers":{"content-type":"application/json","accept":null}}}
+{"timestamp":"2025-11-30T08:09:01.048Z","level":"warn","service":"calibr-api","message":"Request completed: POST /api/integrations/stripe/connect - 400 (0ms)","requestId":"req_me5ozmcfdydqg5xvtkgh3","correlationId":"corr_i01olg6kc0c4c7l5xqdj0i","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/connect","userAgent":null,"ip":null,"statusCode":400,"responseTime":0}}
+
+stdout | tests/integrations/stripe.e2e.test.ts > Stripe Integration E2E (API Key) > Sync > triggers catalog sync and writes to database
+{"timestamp":"2025-11-30T08:09:01.048Z","level":"info","service":"calibr-api","message":"Request started: POST /api/integrations/stripe/sync/catalog","requestId":"req_42vh5to6ajpth7iwxz3q5","correlationId":"corr_8hf285z9e7b6iiqyi8tgfe","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/sync/catalog","userAgent":null,"ip":null,"query":{},"headers":{"content-type":"application/json","accept":null}}}
+{"timestamp":"2025-11-30T08:09:01.049Z","level":"info","service":"calibr-api","message":"Request completed: POST /api/integrations/stripe/sync/catalog - 200 (1ms)","requestId":"req_42vh5to6ajpth7iwxz3q5","correlationId":"corr_8hf285z9e7b6iiqyi8tgfe","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/sync/catalog","userAgent":null,"ip":null,"statusCode":200,"responseTime":1}}
+
+stdout | tests/integrations/stripe.e2e.test.ts > Stripe Integration E2E (API Key) > Sync > triggers transaction sync
+{"timestamp":"2025-11-30T08:09:01.051Z","level":"info","service":"calibr-api","message":"Request started: POST /api/integrations/stripe/sync/transactions","requestId":"req_kuott6d87zs2d3njfyqa84","correlationId":"corr_cejkwc87yys5jxsqrgrl7f","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/sync/transactions","userAgent":null,"ip":null,"query":{},"headers":{"content-type":"application/json","accept":null}}}
+{"timestamp":"2025-11-30T08:09:01.054Z","level":"info","service":"calibr-api","message":"Request completed: POST /api/integrations/stripe/sync/transactions - 200 (3ms)","requestId":"req_kuott6d87zs2d3njfyqa84","correlationId":"corr_cejkwc87yys5jxsqrgrl7f","metadata":{"method":"POST","url":"http://localhost/api/integrations/stripe/sync/transactions","userAgent":null,"ip":null,"statusCode":200,"responseTime":3}}
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  00:09:00
+   Duration  250ms
+
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+       rerun x31
 [2K[1A[2K[G
