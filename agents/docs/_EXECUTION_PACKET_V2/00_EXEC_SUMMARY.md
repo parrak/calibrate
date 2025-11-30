@@ -31,7 +31,7 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 ## Connectors
 - **Shopify (Launch)** ✅: Products/Variants ingest; price update write-back; health check; idempotent retries; rate-limit backoff. **PRODUCTION READY** — Enhanced with structured logging, OAuth improvements, and comprehensive test coverage (137 tests passing).
 - **Amazon (Stub)** ✅: SP-API auth model + catalog ingest **only**; no write; marks schema generality. **VALIDATED** November 10, 2025 — 8/8 tests passing, acceptance report complete.
-- **Competitor Monitoring** ✅: Backend API complete with 31 tests, authentication enforced, comprehensive test coverage. **VALIDATED** November 26, 2025.
+- **Competitor Monitoring** ✅: Full E2E system complete (Monitor ↔ Analytics ↔ Rules). **VALIDATED** January 11, 2025 — 100% complete with error monitoring and validation script.
 
 ## Copilot (Platform Feature)
 - **Read-only** ✅: `/copilot/query` → NL→SQL/GraphQL with schema-aware RAG; scope by tenant; log generated query + sources. **COMPLETE** — 42+ tests, GPT-4 integration, RBAC, anomaly detection, console UI delivered (M1.4).
@@ -64,10 +64,18 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - Branding guardrails documented for all public-facing assets (AGENTS.md, PROTOCOLS.md) — keep `themeColor` and palettes aligned with teal branding
 
 ### Competitor Monitoring ✅
-- Backend API complete: 31 tests, authentication enforced
-- Scrapers validated: Amazon (9 tests), Shopify (8 tests), Google Shopping (6 tests)
-- Monitor engine tested and operational (3 tests)
-- Integrated into comprehensive test suite
+- **M0.6 E2E Complete**: January 11, 2025
+- UI integration verified (Monitor ↔ Analytics ↔ Rules)
+- Error rate < 1% validated across tenants
+- Alert policies active for scrape failures
+- Backend API complete with 31 tests, authentication enforced
+
+### M1.6 — Automation Runner Safety Guardrails ✅
+- **Safety Guardrails Implemented**: November 2025
+- **Guardrail Policies**: Price Floor, Max Delta (%), and Velocity (max changes/day) limits.
+- **RulesWorker Enforcement**: Logic integrated into execution path; runs fail if limits exceeded.
+- **Validation**: Unit tests added (`rulesWorker.guardrails.test.ts`) and passed.
+- **Schema**: `GuardrailPolicy` model added to Prisma.
 
 ### Pricing Rules & Engine ✅
 - M1.1 Pricing Engine MVP: Complete rules DSL, preview, apply, rollback
@@ -80,3 +88,19 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - Comprehensive accessibility improvements across all apps
 - Enhanced error handling and user feedback
 - Deployment documentation and validation tooling
+
+### Strategic Focus (Next 4 Weeks)
+
+**Goal:** Move from "Manual/Human-in-the-loop" to "Supervised Automation" with strict safety gates.
+
+| Phase | Focus | Key Deliverables |
+|---|---|---|
+| **Phase 1** (Weeks 1-2) | Automation Safety + Stripe | Guardrails (Floor/Delta/Budget); Conflict Detect; Stripe Ingestion |
+| **Phase 2** (Weeks 3-4) | Copilot Propose Mode | Chat → Simulation → Rule Builder flow; Impact Analysis |
+| **Phase 3** (Weeks 5-6) | Pilot Launch | Live automation for 2-3 merchants; Daily digests |
+
+**Success Metrics**
+- **Safety**: 0 incidents of "runaway" automation or price floor breaches.
+- **Data Quality**: Stripe transactions mapped to SKUs for true margin analysis.
+- **Copilot Engagement**: 20% of sessions use "Simulation" feature.
+- **Monetization**: Stripe integration live in Staging.
