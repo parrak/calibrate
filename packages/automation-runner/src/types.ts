@@ -3,7 +3,7 @@
  * M0.5: Type definitions for automation runner components
  */
 
-import type { RuleRun, RuleTarget, PricingRule } from '@calibr/db'
+import type { RuleRun, RuleTarget, PricingRule, GuardrailPolicy } from '@calibr/db'
 
 export interface RulesWorkerConfig {
   /**
@@ -92,6 +92,7 @@ export interface RuleRunContext {
   targets: RuleTarget[]
   actor: string
   correlationId?: string
+  guardrailPolicy?: GuardrailPolicy | null
 }
 
 export interface TargetApplicationResult {
@@ -212,12 +213,12 @@ export interface PriceConnector {
     variantId?: string
     price: number
     currency: string
-  }): Promise<{success: boolean; externalId?: string; error?: string}>
+  }): Promise<{ success: boolean; externalId?: string; error?: string }>
 
   /**
    * Fetch current price from external system
    */
-  fetchPrice(externalId: string): Promise<{price: number; currency: string}>
+  fetchPrice(externalId: string): Promise<{ price: number; currency: string }>
 
   /**
    * Check if connector is healthy

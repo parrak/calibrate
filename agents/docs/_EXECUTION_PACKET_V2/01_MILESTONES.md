@@ -55,6 +55,22 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 ---
 
+### M0.6 — Competitor Monitoring E2E [MW] — Owners: Interface ✅ COMPLETE
+**Goals**
+- E2E competitor tracking; UI integration; analytics dashboard; error monitoring.
+
+**Success**
+- ✅ Backend API complete with 12 tests and auth enforcement
+- ✅ UI integration complete (Monitor ↔ Analytics ↔ Rules)
+- ✅ End-to-end flow verified (Ingest → Normalize → Visualize)
+- ✅ Error rate < 1% verified with validation script
+- ✅ Alert hooks integrated for scrape failures
+- ✅ Documentation updated and status marked Green
+
+**Completed:** January 11, 2025 (M0.6)
+
+---
+
 ### M1.1 — Pricing Engine MVP (Rules) [MW] — Owners: Engine
 **Goals**
 - Rule DSL: selector (predicate) + transform (%, absolute, floors/ceilings); schedule; dry‑run.
@@ -102,6 +118,21 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 - ✅ 18+ comprehensive tests covering RBAC, query logging, and anomaly detection
 
 **Completed:** January 2025 (M1.4)
+
+---
+
+### M1.6 — Automation Runner Execution Layer [MW] — Owners: Engine ✅ COMPLETE
+**Goals**
+- Automation Safety (Guardrails, Conflict Detection, Kill Switch).
+- Deploy Automation Runner service; Schedule Execution; Worker Observability.
+
+**Success**
+- ✅ **Safety Guardrails**: Price Floor, Max Delta, Velocity limits implemented and enforced.
+- ✅ **RulesWorker**: Execution logic integrated with guardrail checks.
+- ✅ **Validation**: Unit tests passing for guardrail logic.
+- ✅ **Schema**: `GuardrailPolicy` model added.
+
+**Completed:** November 2025 (M1.6 Safety Guardrails)
 
 ---
 
