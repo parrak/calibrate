@@ -81,3 +81,19 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - Enhanced error handling and user feedback
 - Deployment documentation and validation tooling
 
+### Strategic Focus (Next 4 Weeks)
+
+**Goal:** Move from "Manual/Human-in-the-loop" to "Supervised Automation" with strict safety gates.
+
+| Phase | Focus | Key Deliverables |
+|---|---|---|
+| **Phase 1** (Weeks 1-2) | Automation Safety + Stripe | Guardrails (Floor/Delta/Budget); Conflict Detect; Stripe Ingestion |
+| **Phase 2** (Weeks 3-4) | Copilot Propose Mode | Chat → Simulation → Rule Builder flow; Impact Analysis |
+| **Phase 3** (Weeks 5-6) | Pilot Launch | Live automation for 2-3 merchants; Daily digests |
+
+**Success Metrics**
+- **Safety**: 0 incidents of "runaway" automation or price floor breaches.
+- **Data Quality**: Stripe transactions mapped to SKUs for true margin analysis.
+- **Copilot Engagement**: 20% of sessions use "Simulation" feature.
+- **Monetization**: Stripe integration live in Staging.
+
