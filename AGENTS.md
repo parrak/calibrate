@@ -478,3 +478,47 @@ useEffect(() => {
 **Session:** Bug Fix & Regression Testing
 **Files Changed:** 4 code files, 1 migration, 1 test file, 2 documentation files
 **Impact:** Fixed 4 critical production bugs affecting AI queries, price approvals, sync history, and pricing rules
+
+---
+
+#### **6. E2E Testing with External Services**
+**Lesson:** Mocking entire packages is fragile; spying on service prototypes is robust.
+
+**Problem:**
+- E2E tests for Stripe Integration failed because mocking the `stripe` NPM package was inconsistent across the monorepo.
+- Mocking the `StripeService` class via `vi.mock` was bypassed by internal relative imports within the package.
+- Tests were either hitting real Stripe API (auth errors) or failing to instantiate.
+
+**Better Approach:**
+- Use `vi.spyOn(Service.prototype, 'method')` to mock specific methods of the real class.
+- This allows the consumer code (e.g., `StripeSync`) to use the *real* class structure but intercepts the heavy lifting (network calls).
+- Ensure constructor arguments are handled safely (e.g., fallback env vars) so the class instantiates without throwing.
+
+**Example:**
+```typescript
+// In test setup:
+vi.spyOn(StripeService.prototype, 'listProducts').mockResolvedValue({ data: [...] })
+process.env.STRIPE_CLIENT_SECRET = 'dummy_key' // Prevent constructor error
+```
+
+**Best Practice:**
+- Prefer prototype spying for class-based service mocks in E2E tests.
+- Always provide fallback environment variables for required constructor args in tests.
+- Verify that the *logic* (mapping, database writes) works, not just that the mock was called.
+
+**File:** `apps/api/tests/integrations/stripe.e2e.test.ts`
+
+---
+
+#### **7. Secret Management & Push Protection**
+**Lesson:** Never commit secrets, even in example files.
+
+**Problem:**
+- A real-looking test key was accidentally added to `.env.example`.
+- GitHub Push Protection blocked the push (correctly).
+- Required amending the commit to remove the secret.
+
+**Best Practice:**
+- Use obvious placeholders in `.env.example` (e.g., `sk_test_placeholder`).
+- Never paste real keys into files that are tracked by git, even temporarily.
+- If a push is blocked, **do not** bypass it unless it's a false positive. Remove the secret and amend the commit.

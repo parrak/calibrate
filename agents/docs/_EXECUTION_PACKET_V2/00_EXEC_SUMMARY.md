@@ -98,11 +98,12 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 | **Phase 2** (Weeks 3-4) | Copilot Propose Mode | Chat → Simulation → Rule Builder flow; Impact Analysis |
 | **Phase 3** (Weeks 5-6) | Pilot Launch | Live automation for 2-3 merchants; Daily digests |
 
-### Stripe Integration 🚧
+### Stripe Integration ✅ (API Key Mode)
 - **Schema & Config**: Added `StripeAccount`, `Transaction`, `StripeProductMap` models.
-- **Backend**: Implemented `StripeService` (OAuth, API) and `StripeSync` (Catalog, Transactions).
-- **API**: OAuth endpoints (`start`, `callback`, `disconnect`) and Webhooks live.
-- **UI**: Stripe added to Connectors settings (awaiting manual verification).
+- **Backend**: Implemented `StripeService` (API Key) and `StripeSync` (Catalog, Transactions).
+- **API**: Connect endpoints (`connect`, `sync`) and Webhooks live.
+- **UI**: Stripe added to Connectors settings with Secure API Key Input Modal.
+- **Docs**: Public documentation added for Restricted Key setup.
 
 **Success Metrics**
 - **Safety**: 0 incidents of "runaway" automation or price floor breaches.
