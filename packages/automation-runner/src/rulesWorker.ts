@@ -4,7 +4,7 @@
  */
 
 import { prisma, EventWriter, OutboxWorker } from '@calibr/db'
-import type { EventPayload, RuleRun, RuleTarget } from '@calibr/db'
+import type { EventPayload, RuleRun, RuleTarget, GuardrailPolicy } from '@calibr/db'
 import { logger } from '@calibr/monitor'
 import {
   calculateBackoff,
@@ -155,13 +155,19 @@ export class RulesWorker {
         throw new Error(`Pricing rule not found for run ${runId}`)
       }
 
+      // Fetch guardrail policy
+      const guardrailPolicy = await prisma().guardrailPolicy.findUnique({
+        where: { projectId: run.projectId }
+      })
+
       // Create context
       const context: RuleRunContext = {
         run,
         rule: run.PricingRule,
         targets: run.RuleTarget,
         actor: 'automation-runner',
-        correlationId: event.correlationId
+        correlationId: event.correlationId,
+        guardrailPolicy
       }
 
       // Execute the run
@@ -205,10 +211,50 @@ export class RulesWorker {
    * Execute a rule run
    */
   private async executeRun(context: RuleRunContext): Promise<RunResult> {
-    const { run, targets } = context
+    const { run, targets, guardrailPolicy } = context
     const startTime = Date.now()
 
     this.emitEvent('run.started', { targetCount: targets.length }, run.id)
+
+    // M1.6: Check Velocity Guardrail (Max Changes Per Day)
+    if (guardrailPolicy?.maxChangesPerDay && guardrailPolicy.enabled) {
+      const todayStart = new Date()
+      todayStart.setHours(0, 0, 0, 0)
+
+      const changesToday = await prisma().ruleTarget.count({
+        where: {
+          projectId: run.projectId,
+          status: 'APPLIED',
+          appliedAt: { gte: todayStart }
+        }
+      })
+
+      if (changesToday + targets.length > guardrailPolicy.maxChangesPerDay) {
+        const error = `Daily velocity limit exceeded (${changesToday + targets.length} > ${guardrailPolicy.maxChangesPerDay})`
+        logger.warn(`[RulesWorker] ${error}`, { metadata: { runId: run.id } })
+
+        // Fail the run immediately
+        await prisma().ruleRun.update({
+          where: { id: run.id },
+          data: {
+            status: 'FAILED',
+            finishedAt: new Date(),
+            errorMessage: error
+          }
+        })
+
+        this.emitEvent('run.failed', { error }, run.id)
+        return {
+          runId: run.id,
+          status: 'FAILED',
+          totalTargets: targets.length,
+          appliedTargets: 0,
+          failedTargets: targets.length,
+          duration: Date.now() - startTime,
+          results: []
+        }
+      }
+    }
 
     // Update run status to APPLYING
     await prisma().ruleRun.update({
@@ -327,6 +373,11 @@ export class RulesWorker {
 
         if (!connector) {
           throw new Error(`No connector registered for channel: ${channel}`)
+        }
+
+        // M1.6: Check Guardrails
+        if (context.guardrailPolicy && context.guardrailPolicy.enabled) {
+          this.checkGuardrails(context.guardrailPolicy, target, newPrice, target.beforeJson as any)
         }
 
         // Apply the price change via connector
@@ -618,6 +669,38 @@ export class RulesWorker {
       startedAt: run.startedAt,
       finishedAt: run.finishedAt,
       errorMessage: run.errorMessage
+    }
+  }
+  /**
+   * Check guardrails for a single target
+   */
+  private checkGuardrails(
+    policy: GuardrailPolicy,
+    target: RuleTarget,
+    newPrice: number,
+    beforeData: any
+  ) {
+    const currentPrice = beforeData.unit_amount || beforeData.price
+
+    // 1. Price Floor (Absolute)
+    if (policy.minPriceCents && newPrice < policy.minPriceCents) {
+      throw new Error(`Guardrail violation: Price ${newPrice} is below floor ${policy.minPriceCents}`)
+    }
+
+    // 2. Max Increase %
+    if (policy.maxPriceIncreasePct && newPrice > currentPrice) {
+      const increasePct = ((newPrice - currentPrice) / currentPrice) * 100
+      if (increasePct > policy.maxPriceIncreasePct) {
+        throw new Error(`Guardrail violation: Price increase ${increasePct.toFixed(2)}% exceeds limit ${policy.maxPriceIncreasePct}%`)
+      }
+    }
+
+    // 3. Max Decrease %
+    if (policy.maxPriceDecreasePct && newPrice < currentPrice) {
+      const decreasePct = ((currentPrice - newPrice) / currentPrice) * 100
+      if (decreasePct > policy.maxPriceDecreasePct) {
+        throw new Error(`Guardrail violation: Price decrease ${decreasePct.toFixed(2)}% exceeds limit ${policy.maxPriceDecreasePct}%`)
+      }
     }
   }
 }
