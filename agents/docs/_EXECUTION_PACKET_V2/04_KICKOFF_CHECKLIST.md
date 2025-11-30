@@ -241,10 +241,10 @@ Schema + Event Bus stable.
 
 ### M1.6 — Automation Runner Execution Layer NEW
 - [ ] **Automation Safety (CRITICAL)** (Week 1)
-  - [ ] **Guardrail Policies**: Implement Price Floor (cost+margin), Max Delta (±X%), and Daily Budget limits
-  - [ ] **Conflict Detection**: Pre-write revalidation (check if price changed since sim)
-  - [ ] **Debounce**: Prevent cascading changes (hold if last auto-update < X hours)
-  - [ ] **Kill Switch**: Circuit breaker per project (>X failures or >N rules fired)
+  - [x] **Guardrail Policies**: Implement Price Floor (cost+margin), Max Delta (±X%), and Daily Budget limits
+  - [x] **Conflict Detection**: Pre-write revalidation (check if price changed since sim)
+  - [x] **Debounce**: Prevent cascading changes (hold if last auto-update < X hours)
+  - [x] **Kill Switch**: Circuit breaker per project (>X failures or >N rules fired)
 - [ ] **Deploy Automation Runner** (Week 1)
   - [x] Configure Railway service for `packages/automation-runner`
   - [x] Set up health checks and auto-scaling
