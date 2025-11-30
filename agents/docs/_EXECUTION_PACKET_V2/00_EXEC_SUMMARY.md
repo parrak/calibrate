@@ -61,6 +61,7 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - Dynamic icon system with Next.js App Router (icon.tsx, apple-icon.tsx)
 - Updated all "Calibr" references to "Calibrate" in visible text
 - Light theme UI with improved accessibility (WCAG AA compliant)
+- Branding guardrails documented for all public-facing assets (AGENTS.md, PROTOCOLS.md) — keep `themeColor` and palettes aligned with teal branding
 
 ### Competitor Monitoring ✅
 - Backend API complete: 31 tests, authentication enforced
@@ -79,4 +80,3 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - Comprehensive accessibility improvements across all apps
 - Enhanced error handling and user feedback
 - Deployment documentation and validation tooling
-
