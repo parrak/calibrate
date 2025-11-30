@@ -151,6 +151,20 @@ export default function IntegrationsDocs() {
               ]}
               capabilities="Import product catalog and pricing data. Monitor competitor prices. No price write-back in MVP."
             />
+
+            <PlatformCard
+              name="Stripe"
+              icon="💳"
+              status="Beta Integration"
+              features={[
+                "OAuth-based authentication",
+                "Product and Price sync",
+                "Transaction import for margin analysis",
+                "Real-time webhooks",
+                "Unified analytics"
+              ]}
+              capabilities="Import products, prices, and transactions. Enable true margin analysis."
+            />
           </div>
         </section>
 
@@ -300,6 +314,67 @@ export default function IntegrationsDocs() {
                 <span className="font-bold text-brand shrink-0">8.</span>
                 <div>
                   If successful, catalog sync will begin automatically
+                </div>
+              </li>
+            </ol>
+          </div>
+        </section>
+
+        {/* Connecting Stripe */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-semibold text-fg mb-6">Connecting Stripe</h2>
+
+          <div className="bg-surface border border-border rounded-xl p-6 mb-6">
+            <h3 className="text-xl font-semibold text-fg mb-4">Prerequisites</h3>
+            <ul className="space-y-2 text-fg">
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                Active Stripe account
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-brand">•</span>
+                Admin access to authorize Connect applications
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-surface border border-border rounded-xl p-6">
+            <h3 className="text-xl font-semibold text-fg mb-4">Setup Process</h3>
+            <ol className="space-y-4 text-fg">
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">1.</span>
+                <div>
+                  Navigate to <strong>Integrations</strong> page and click on the <strong>Stripe</strong> card
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">2.</span>
+                <div>
+                  Click <strong>"Connect Stripe"</strong> button
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">3.</span>
+                <div>
+                  You will be redirected to Stripe's secure authorization page
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">4.</span>
+                <div>
+                  Select the account you wish to connect and click <strong>Connect</strong>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">5.</span>
+                <div>
+                  Upon success, you will be redirected back to Calibrate
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-brand shrink-0">6.</span>
+                <div>
+                  Initial sync of products, prices, and transactions will begin immediately
                 </div>
               </li>
             </ol>
@@ -591,8 +666,8 @@ export default function IntegrationsDocs() {
             />
           </div>
         </section>
-      </div>
-    </div>
+      </div >
+    </div >
   )
 }
 
