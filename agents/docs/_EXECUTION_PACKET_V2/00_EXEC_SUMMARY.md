@@ -69,6 +69,13 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - Alert policies active for scrape failures
 - Backend API complete with 31 tests, authentication enforced
 
+### M1.6 — Automation Runner Safety Guardrails ✅
+- **Safety Guardrails Implemented**: November 2025
+- **Guardrail Policies**: Price Floor, Max Delta (%), and Velocity (max changes/day) limits.
+- **RulesWorker Enforcement**: Logic integrated into execution path; runs fail if limits exceeded.
+- **Validation**: Unit tests added (`rulesWorker.guardrails.test.ts`) and passed.
+- **Schema**: `GuardrailPolicy` model added to Prisma.
+
 ### Pricing Rules & Engine ✅
 - M1.1 Pricing Engine MVP: Complete rules DSL, preview, apply, rollback
 - Enhanced pricing rules UI with database persistence
