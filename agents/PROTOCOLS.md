@@ -20,6 +20,10 @@ Code and PR Standards
 - PR body checklist (paste):
   - Summary, Scope, Testing (local + unit), Env/Config changes, Migration impact, Rollback plan.
   - Link: daily log entry + issue ID.
+- Code Review:
+  - All comments must be addressed (resolved or discussed) before merge.
+  - If a comment requires a complex fix, create a follow-up issue and link it.
+  - Update documentation if code changes affect behavior.
 
 Docs and Artifacts
 - Broadcasts: AGENTS_BROADCAST_YYYY-MM-DD.md for cross-team milestones; reference from daily log.

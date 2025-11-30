@@ -184,12 +184,16 @@ Schema + Event Bus stable.
 
 **See:** `M0.6_COMPLETION_SUMMARY.md` for full completion report
 
-### Milestone M1.5 (Conditional) — Stripe Connector
-
+### Milestone M1.5 (Conditional) — Stripe Connector (Weeks 1-2)
+- [ ] **Stripe Ingestion (Immediate)**
+  - [ ] Implement OAuth (Connect Standard)
+  - [ ] Sync Products/Prices, PaymentIntents, and BalanceTransactions
+  - [ ] Map `Transaction` → `Sku` for true margin analysis
+- [ ] **SaaS Readiness**
+  - [ ] Implement `packages/billing` (Stripe wrapper)
+  - [ ] Add "Subscription" state to Tenant model
+  - [ ] Gate features based on subscription tier
 - [ ] Only active after SaaS Validation "Go" signal
-- [ ] Implement OAuth (Connect Standard)
-- [ ] Sync Products/Prices, PaymentIntents, and BalanceTransactions
-- [ ] Map to internal entities via StripeProductMap, Transaction
 - [ ] Verify webhook signatures + idempotency
 - [ ] Build "Connectors → Stripe" UI in Console
 - [ ] Add metrics: sync latency, error %, backlog size
@@ -236,11 +240,26 @@ Schema + Event Bus stable.
   - ✅ Tracks correlation chains for tracing operations  
 
 ### M1.6 — Automation Runner Execution Layer NEW
-- [ ] Implement `job.rule.materialize`, `job.rule.apply.batch`, `job.rule.reconcile`
-- [ ] Add `POST /api/v1/runs/:runId/retry-failed`
-- [ ] End-to-end worker test (100 targets, retry path covered)
-- [ ] Metrics → `@calibr/monitor`; alert thresholds wired
-- [ ] Docs: "Automation Runner Architecture" (`docs/automation_runner.md`)
+- [ ] **Automation Safety (CRITICAL)** (Week 1)
+  - [x] **Guardrail Policies**: Implement Price Floor (cost+margin), Max Delta (±X%), and Daily Budget limits
+  - [x] **Conflict Detection**: Pre-write revalidation (check if price changed since sim)
+  - [x] **Debounce**: Prevent cascading changes (hold if last auto-update < X hours)
+  - [x] **Kill Switch**: Circuit breaker per project (>X failures or >N rules fired)
+- [ ] **Deploy Automation Runner** (Week 1)
+  - [x] Configure Railway service for `packages/automation-runner`
+  - [x] Set up health checks and auto-scaling
+  - [x] Add `packages/automation-runner` to `railway.toml`
+- [x] **Schedule Execution** (Week 1-2)
+  - [x] Verify `job.rules.apply` events are correctly emitted by the scheduler
+  - [x] Test "Scheduled Price Changes" end-to-end
+  - [x] Implement `job.rule.materialize`, `job.rule.apply.batch`, `job.rule.reconcile`
+- [x] **Worker Observability** (Week 2)
+  - [x] Add specific alerts for `RulesWorker` (lag, failure rate, dead-letter queue depth)
+  - [x] Dashboard for "Active Rule Runs"
+  - [ ] Daily Digest: "Automation made X changes today"
+- [x] Add `POST /api/v1/runs/:runId/retry-failed`
+- [x] End-to-end worker test (100 targets, retry path covered)
+- [x] Docs: "Automation Runner Architecture" (`docs/automation_runner.md`)
 
 ### Competitor Monitoring (Testing & Verification) ✅ COMPLETE
 
@@ -324,12 +343,19 @@ Schema + Event Bus stable.
 
 ### M1.4 Copilot Read-Only ✅ Complete (PR #57, January 2025)
 
-### M1.8 — Copilot Simulation NEW
-- [ ] Build `POST /api/v1/copilot/simulate` (read-only, schema validated)
-- [ ] Build `POST /api/v1/copilot/propose` → persist disabled PricingRule + preview run
-- [ ] Add modal "Ask Copilot" → show Proposed Rule + Preview Summary
-- [ ] "Open in Rule Builder" handoff to Console
-- [ ] Log full prompt, scope, and SQL for audit
+### M1.8 — Copilot Simulation NEW (Weeks 3-4)
+- [ ] **Simulation Engine**
+  - [ ] Extend `pricing-engine` to support "Ephemeral/Simulation" runs (no DB persistence or temp tables)
+  - [x] Build `POST /api/v1/copilot/simulate` (read-only, schema validated)
+- [ ] **Copilot "Propose" Mode (UX Flow)**
+  - [ ] **Two-Panel Layout**: Chat (Left) + Simulation Snapshot (Right)
+  - [ ] **Snapshot Card**: Proposed price, Volume/Margin Δ, Confidence Score
+  - [ ] **Action Buttons**: `[Apply Once]` (Drawer) vs `[Apply as Rule]` (Builder)
+  - [ ] **Rule Builder Handoff**: Auto-populate trigger/action from simulation
+  - [ ] **Rule Preview**: Show "Simulated preview" inside Rule Builder
+- [ ] **Impact Analysis**
+  - [ ] Calculate projected revenue/margin impact of simulated changes (using Stripe data)
+- [x] Log full prompt, scope, and SQL for audit
 - [ ] Red-team prompt tests (denylist, injection, scope abuse)
 - [ ] Add Copilot section in docs (`docs/copilot_simulation.md`)
 

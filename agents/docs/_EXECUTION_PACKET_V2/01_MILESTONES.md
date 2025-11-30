@@ -121,6 +121,21 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 ---
 
+### M1.6 — Automation Runner Execution Layer [MW] — Owners: Engine ✅ COMPLETE
+**Goals**
+- Automation Safety (Guardrails, Conflict Detection, Kill Switch).
+- Deploy Automation Runner service; Schedule Execution; Worker Observability.
+
+**Success**
+- ✅ **Safety Guardrails**: Price Floor, Max Delta, Velocity limits implemented and enforced.
+- ✅ **RulesWorker**: Execution logic integrated with guardrail checks.
+- ✅ **Validation**: Unit tests passing for guardrail logic.
+- ✅ **Schema**: `GuardrailPolicy` model added.
+
+**Completed:** November 2025 (M1.6 Safety Guardrails)
+
+---
+
 ### Ready‑For‑Automation Gate [NR] — ✅ 8/8 Requirements Met — COMPLETE
 **Checklist**
 - ✅ Engine supports schedule + revert
