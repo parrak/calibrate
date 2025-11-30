@@ -578,7 +578,7 @@ logger.info('[RulesWorker] Completed rule run', {
 
 ## Next Steps
 
-See [NEXT_TASK_PLAN.md](./agents/docs/_EXECUTION_PACKET_V2/NEXT_TASK_PLAN.md) for M1.6 (Automation Runner Execution APIs) implementation plan.
+See [NEXT_TASK_PLAN.md](../agents/docs/_EXECUTION_PACKET_V2/NEXT_TASK_PLAN.md) for M1.6 (Automation Runner Execution APIs) implementation plan.
 
 **M1.6 Deliverables**:
 - `POST /api/v1/rules/:ruleId/materialize`
