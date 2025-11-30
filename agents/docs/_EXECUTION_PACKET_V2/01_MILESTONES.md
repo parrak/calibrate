@@ -121,6 +121,18 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 ---
 
+### M1.5 — Stripe Connector [MW] — Owners: Connectors ✅ COMPLETE
+**Goals**
+- OAuth (Connect Standard); Sync Products/Prices/Transactions; Webhook verification.
+
+**Success**
+- ✅ Stripe integration complete with API Key flow, Sync, and Transactions (PR #124).
+- ✅ E2E tests passing.
+
+**Completed:** January 2025 (M1.5)
+
+---
+
 ### M1.6 — Automation Runner Execution Layer [MW] — Owners: Engine ✅ COMPLETE
 **Goals**
 - Automation Safety (Guardrails, Conflict Detection, Kill Switch).
