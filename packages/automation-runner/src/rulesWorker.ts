@@ -377,6 +377,7 @@ export class RulesWorker {
 
         // M1.6: Check Guardrails
         if (context.guardrailPolicy && context.guardrailPolicy.enabled) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           this.checkGuardrails(context.guardrailPolicy, target, newPrice, target.beforeJson as any)
         }
 
@@ -678,6 +679,7 @@ export class RulesWorker {
     policy: GuardrailPolicy,
     target: RuleTarget,
     newPrice: number,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     beforeData: any
   ) {
     const currentPrice = beforeData.unit_amount || beforeData.price
