@@ -2,5 +2,10 @@
   "name": "@calibr/connectors",
   "version": "0.0.1",
   "type": "module",
-  "main": "index.js"
+  "main": "index.js",
+  "dependencies": {
+    "stripe": "^14.10.0",
+    "@calibr/platform-connector": "workspace:*",
+    "@calibr/db": "workspace:*"
+  }
 }

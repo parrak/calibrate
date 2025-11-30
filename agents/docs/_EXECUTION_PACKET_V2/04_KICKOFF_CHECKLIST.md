@@ -185,19 +185,19 @@ Schema + Event Bus stable.
 **See:** `M0.6_COMPLETION_SUMMARY.md` for full completion report
 
 ### Milestone M1.5 (Conditional) — Stripe Connector (Weeks 1-2)
-- [ ] **Stripe Ingestion (Immediate)**
-  - [ ] Implement OAuth (Connect Standard)
-  - [ ] Sync Products/Prices, PaymentIntents, and BalanceTransactions
-  - [ ] Map `Transaction` → `Sku` for true margin analysis
+- [x] **Stripe Ingestion (Immediate)**
+  - [x] Implement OAuth (Connect Standard)
+  - [x] Sync Products/Prices, PaymentIntents, and BalanceTransactions
+  - [x] Map `Transaction` → `Sku` for true margin analysis (Basic mapping implemented)
 - [ ] **SaaS Readiness**
   - [ ] Implement `packages/billing` (Stripe wrapper)
   - [ ] Add "Subscription" state to Tenant model
   - [ ] Gate features based on subscription tier
 - [ ] Only active after SaaS Validation "Go" signal
-- [ ] Verify webhook signatures + idempotency
-- [ ] Build "Connectors → Stripe" UI in Console
+- [x] Verify webhook signatures + idempotency
+- [x] Build "Connectors → Stripe" UI in Console
 - [ ] Add metrics: sync latency, error %, backlog size
-- [ ] Add feature flag `STRIPE_CONNECT_ENABLED`
+- [x] Add feature flag `STRIPE_CONNECT_ENABLED`
 
 ---
 

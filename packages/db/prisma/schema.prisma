@@ -395,6 +395,7 @@ model Price {
 
   @@unique([skuId, currency], map: "skuId_currency")
   @@index([skuId, currency])
+  StripePriceMap StripePriceMap[]
 }
 
 model PriceChange {
@@ -504,6 +505,8 @@ model Product {
   @@unique([tenantId, projectId, sku], map: "tenantId_projectId_sku")
   @@index([tenantId, active])
   @@index([tags])
+  Transaction      Transaction[]
+  StripeProductMap StripeProductMap[]
 }
 
 model Project {
@@ -532,6 +535,11 @@ model Project {
   PricingRule        PricingRule[] // Pricing rules
   RuleRun            RuleRun[] // Rule executions
   RuleTarget         RuleTarget[] // Rule targets
+  StripeAccount      StripeAccount?
+  ConnectorSyncState ConnectorSyncState[]
+  Transaction        Transaction[]
+  StripeProductMap   StripeProductMap[]
+  StripePriceMap     StripePriceMap[]
 }
 
 model Quote {
@@ -604,6 +612,7 @@ model Sku {
   Product           Product             @relation(fields: [productId], references: [id])
 
   @@unique([productId, code], map: "productId_code")
+  Transaction Transaction[]
 }
 
 model Tenant {
@@ -627,6 +636,8 @@ model Tenant {
   PricingRule     PricingRule[] // Pricing rules
   RuleRun         RuleRun[] // Rule executions
   RuleTarget      RuleTarget[] // Rule targets
+  StripeAccount   StripeAccount[]
+  Transaction     Transaction[]
 }
 
 model User {
@@ -741,4 +752,112 @@ model AnalyticsDigest {
   @@unique([projectId, digestDate])
   @@index([tenantId, projectId, digestDate])
   @@index([digestDate])
+}
+
+/// StripeAccount — Stripe Connect integration
+/// Stores OAuth credentials and connection status
+model StripeAccount {
+  id              String   @id @default(cuid())
+  tenantId        String
+  projectId       String   @unique
+  stripeAccountId String   @unique // Connected account ID (acct_...)
+  livemode        Boolean  @default(false)
+  status          String   @default("pending") // pending, active, restricted
+  accessToken     String?  // Encrypted
+  refreshToken    String?  // Encrypted
+  tokenExpiresAt  DateTime?
+  scope           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  Project         Project  @relation(fields: [projectId], references: [id])
+  Tenant          Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, projectId])
+}
+
+/// ConnectorSyncState — Cursor-based sync tracking
+/// Tracks pagination cursors for backfills and incremental syncs
+model ConnectorSyncState {
+  id        String   @id @default(cuid())
+  projectId String
+  source    String   // stripe, shopify, amazon
+  cursor    Json     // Store cursor/pagination state
+  updatedAt DateTime @updatedAt
+  Project   Project  @relation(fields: [projectId], references: [id])
+
+  @@unique([projectId, source])
+}
+
+/// StripeWebhookEvent — Idempotency log for Stripe webhooks
+model StripeWebhookEvent {
+  id          String   @id @default(cuid())
+  eventId     String   @unique // Stripe event ID (evt_...)
+  type        String   // event type (e.g. payment_intent.succeeded)
+  payloadHash String
+  processedAt DateTime @default(now())
+  status      String   @default("processed") // processed, failed, ignored
+
+  @@index([eventId])
+  @@index([processedAt])
+}
+
+/// Transaction — Unified transaction record
+/// Normalized view of payments/orders across channels
+model Transaction {
+  id          String   @id @default(cuid())
+  tenantId    String
+  projectId   String
+  source      String   // stripe, shopify, amazon
+  externalId  String   // Stripe PaymentIntent ID, Shopify Order ID
+  amount      Int      // Gross amount in cents
+  currency    String
+  status      String   // succeeded, pending, failed, refunded
+  feeAmount   Int?     // Processing fees in cents
+  netAmount   Int?     // Net amount in cents
+  productId   String?  // Linked Product
+  skuId       String?  // Linked SKU
+  createdAt   DateTime @default(now())
+  occurredAt  DateTime // When the transaction actually happened
+  metadata    Json?
+  
+  Project     Project  @relation(fields: [projectId], references: [id])
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  Product     Product? @relation(fields: [productId], references: [id])
+  Sku         Sku?     @relation(fields: [skuId], references: [id])
+
+  @@unique([projectId, source, externalId])
+  @@index([projectId, source])
+  @@index([occurredAt])
+  @@index([productId])
+  @@index([skuId])
+}
+
+/// StripeProductMap — Mapping between internal Product and Stripe Product
+model StripeProductMap {
+  id              String   @id @default(cuid())
+  projectId       String
+  productId       String
+  stripeProductId String
+  createdAt       DateTime @default(now())
+  Project         Project  @relation(fields: [projectId], references: [id])
+  Product         Product  @relation(fields: [productId], references: [id])
+
+  @@unique([projectId, stripeProductId])
+  @@unique([projectId, productId]) // One-to-one mapping for now
+  @@index([stripeProductId])
+}
+
+/// StripePriceMap — Mapping between internal Price and Stripe Price
+model StripePriceMap {
+  id            String   @id @default(cuid())
+  projectId     String
+  priceId       String
+  stripePriceId String
+  createdAt     DateTime @default(now())
+  Project       Project  @relation(fields: [projectId], references: [id])
+  Price         Price    @relation(fields: [priceId], references: [id])
+
+  @@unique([projectId, stripePriceId])
+  @@unique([projectId, priceId])
+  @@index([stripePriceId])
 }

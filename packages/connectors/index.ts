@@ -1,2 +1,5 @@
 export { applyToShopify } from './shopify'
 export { applyToAmazon } from './amazon'
+export { StripeService } from './src/stripe/StripeService'
+export { StripeSync } from './src/stripe/StripeSync'
+export { StripeConnector } from './src/stripe/StripeConnector'

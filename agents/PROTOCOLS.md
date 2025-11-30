@@ -23,6 +23,14 @@ Code and PR Standards
 - Code Review:
   - All comments must be addressed (resolved or discussed) before merge.
   - If a comment requires a complex fix, create a follow-up issue and link it.
+- **Code Review**: Address all comments. If a comment requires a complex fix that is out of scope, create a follow-up issue and link it.
+- **Documentation**:
+    - Create public docs for new functionality.
+    - Update progress in status docs (`00_EXEC_SUMMARY.md`, `04_KICKOFF_CHECKLIST.md`).
+- **PR Management**:
+    - Create PRs with descriptive titles and bodies.
+    - Push changes and monitor CI checks.
+    - Fix any CI failures immediately.
   - Update documentation if code changes affect behavior.
 
 Docs and Artifacts
