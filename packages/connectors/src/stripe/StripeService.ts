@@ -3,87 +3,49 @@ import Stripe from 'stripe'
 export class StripeService {
     private stripe: Stripe
 
-    constructor() {
-        if (!process.env.STRIPE_CLIENT_SECRET) {
-            throw new Error('STRIPE_CLIENT_SECRET is not defined')
+    constructor(apiKey?: string) {
+        const key = apiKey || process.env.STRIPE_CLIENT_SECRET
+        if (!key) {
+            throw new Error('Stripe API Key is not defined')
         }
-        this.stripe = new Stripe(process.env.STRIPE_CLIENT_SECRET, {
+        this.stripe = new Stripe(key, {
             apiVersion: '2025-11-17.clover' as any,
             typescript: true,
         })
     }
 
-    getOAuthUrl(state: string): string {
-        const clientId = process.env.STRIPE_CLIENT_ID
-        if (!clientId) throw new Error('STRIPE_CLIENT_ID is not defined')
-
-        const redirectUri = `${process.env.NEXT_PUBLIC_API_BASE}/api/integrations/stripe/oauth/callback`
-
-        const args = new URLSearchParams({
-            response_type: 'code',
-            client_id: clientId,
-            scope: 'read_write',
-            redirect_uri: redirectUri,
-            state: state,
-        })
-
-        return `https://connect.stripe.com/oauth/authorize?${args.toString()}`
-    }
-
-    async authorize(code: string) {
-        return this.stripe.oauth.token({
-            grant_type: 'authorization_code',
-            code,
-        })
-    }
-
-    async deauthorize(stripeUserId: string) {
-        const clientId = process.env.STRIPE_CLIENT_ID
-        if (!clientId) throw new Error('STRIPE_CLIENT_ID is not defined')
-        return this.stripe.oauth.deauthorize({
-            client_id: clientId,
-            stripe_user_id: stripeUserId,
-        })
-    }
-
-    async getAccount(accountId: string) {
-        return this.stripe.accounts.retrieve(accountId)
+    async getAccount() {
+        return this.stripe.accounts.retrieve()
     }
 
     /**
-     * List products from a connected account
+     * List products from the connected account
      */
-    async listProducts(stripeAccountId: string, limit = 100, startingAfter?: string) {
+    async listProducts(limit = 100, startingAfter?: string) {
         return this.stripe.products.list({
             limit,
             starting_after: startingAfter,
-        }, {
-            stripeAccount: stripeAccountId,
         })
     }
 
     /**
-     * List prices from a connected account
+     * List prices from the connected account
      */
-    async listPrices(stripeAccountId: string, limit = 100, startingAfter?: string) {
+    async listPrices(limit = 100, startingAfter?: string) {
         return this.stripe.prices.list({
             limit,
             starting_after: startingAfter,
-        }, {
-            stripeAccount: stripeAccountId,
         })
     }
 
     /**
      * List balance transactions (payments, refunds, fees)
      */
-    async listBalanceTransactions(stripeAccountId: string, limit = 100, startingAfter?: string) {
+    async listBalanceTransactions(limit = 100, startingAfter?: string) {
         return this.stripe.balanceTransactions.list({
             limit,
             starting_after: startingAfter,
-            expand: ['source'], // Expand source to get Charge/PaymentIntent details
-        }, {
-            stripeAccount: stripeAccountId,
+            expand: ['data.source'], // Expand source to get Charge/PaymentIntent details
         })
     }
 

@@ -754,19 +754,16 @@ model AnalyticsDigest {
   @@index([digestDate])
 }
 
-/// StripeAccount — Stripe Connect integration
-/// Stores OAuth credentials and connection status
+/// StripeAccount — Stripe Integration (API Key)
+/// Stores encrypted API credentials
 model StripeAccount {
   id              String   @id @default(cuid())
   tenantId        String
   projectId       String   @unique
-  stripeAccountId String   @unique // Connected account ID (acct_...)
+  stripeAccountId String?  @unique // Connected account ID (acct_...) - fetched from API
   livemode        Boolean  @default(false)
   status          String   @default("pending") // pending, active, restricted
-  accessToken     String?  // Encrypted
-  refreshToken    String?  // Encrypted
-  tokenExpiresAt  DateTime?
-  scope           String?
+  secretKey       String   // Encrypted API Key (sk_...)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   Project         Project  @relation(fields: [projectId], references: [id])

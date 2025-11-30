@@ -468,6 +468,9 @@ importers:
       '@calibr/platform-connector':
         specifier: workspace:*
         version: link:../platform-connector
+      '@calibr/security':
+        specifier: workspace:*
+        version: link:../security
       stripe:
         specifier: ^14.10.0
         version: 14.25.0

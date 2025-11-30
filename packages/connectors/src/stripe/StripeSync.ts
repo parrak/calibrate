@@ -1,21 +1,32 @@
 import { prisma } from '@calibr/db'
 import { StripeService } from './StripeService'
+import { getEncryptionService } from '@calibr/security'
 
 export class StripeSync {
-    constructor(private stripeService: StripeService) { }
+    constructor() { }
 
-    async syncCatalog(projectId: string) {
+    private async getStripeService(projectId: string): Promise<StripeService> {
         const account = await prisma().stripeAccount.findUnique({ where: { projectId } })
         if (!account) throw new Error('Stripe account not connected')
+        if (!account.secretKey) throw new Error('Stripe API key not found')
 
-        const stripeAccountId = account.stripeAccountId
+        const encryption = getEncryptionService()
+        const secretKey = encryption.decrypt(account.secretKey)
+
+        return new StripeService(secretKey)
+    }
+
+    async syncCatalog(projectId: string) {
+        const stripeService = await this.getStripeService(projectId)
+        const account = await prisma().stripeAccount.findUnique({ where: { projectId } })
+        if (!account) throw new Error('Stripe account not connected')
 
         // Sync Products
         let hasMore = true
         let startingAfter: string | undefined
 
         while (hasMore) {
-            const products = await this.stripeService.listProducts(stripeAccountId, 100, startingAfter)
+            const products = await stripeService.listProducts(100, startingAfter)
 
             for (const product of products.data) {
                 const map = await prisma().stripeProductMap.findUnique({
@@ -67,7 +78,7 @@ export class StripeSync {
         startingAfter = undefined
 
         while (hasMore) {
-            const prices = await this.stripeService.listPrices(stripeAccountId, 100, startingAfter)
+            const prices = await stripeService.listPrices(100, startingAfter)
 
             for (const price of prices.data) {
                 const map = await prisma().stripePriceMap.findUnique({
@@ -137,16 +148,15 @@ export class StripeSync {
     }
 
     async syncTransactions(projectId: string) {
+        const stripeService = await this.getStripeService(projectId)
         const account = await prisma().stripeAccount.findUnique({ where: { projectId } })
         if (!account) throw new Error('Stripe account not connected')
-
-        const stripeAccountId = account.stripeAccountId
 
         let hasMore = true
         let startingAfter: string | undefined
 
         while (hasMore) {
-            const txns = await this.stripeService.listBalanceTransactions(stripeAccountId, 100, startingAfter)
+            const txns = await stripeService.listBalanceTransactions(100, startingAfter)
 
             for (const txn of txns.data) {
                 // Only process charges/payments for now
@@ -157,9 +167,6 @@ export class StripeSync {
                 })
 
                 if (existing) continue;
-
-                // Try to link to product/sku via source (Charge -> PaymentIntent -> Metadata?)
-                // This is complex, for MVP we might just store it unlinked or try simple heuristics
 
                 await prisma().transaction.create({
                     data: {

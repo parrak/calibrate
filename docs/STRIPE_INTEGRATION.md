@@ -3,8 +3,14 @@
 ## Overview
 The Stripe integration allows Calibrate to sync products, prices, and transactions from connected Stripe accounts. This enables unified analytics and pricing optimization across sales channels.
 
+## Integration Model: Direct API Key
+Calibrate currently uses a **Direct API Key** integration model (often referred to as a "Private App" or "Private Integration").
+- **Mechanism**: Users provide a Stripe **Secret Key** (or Restricted Key) directly in the Calibrate UI.
+- **Storage**: Keys are encrypted at rest using `@calibr/security`.
+- **Usage**: Calibrate acts as an API client on behalf of the user to fetch data.
+
 ## Features
-- **OAuth Connection**: Securely connect Stripe accounts via OAuth.
+- **Secure Connection**: Encrypted storage of Stripe API Keys.
 - **Product Sync**: Automatically import products from Stripe.
 - **Price Sync**: Sync pricing data and map to Calibrate SKUs.
 - **Transaction Sync**: Import charges and payments for revenue analytics.
@@ -12,31 +18,42 @@ The Stripe integration allows Calibrate to sync products, prices, and transactio
 
 ## Setup
 1. **Environment Variables**:
-   Ensure the following variables are set in `.env`:
-   - `STRIPE_CLIENT_ID`
-   - `STRIPE_CLIENT_SECRET`
-   - `STRIPE_WEBHOOK_SECRET`
-   - `STRIPE_CONNECT_ENABLED=true`
+   - `STRIPE_WEBHOOK_SECRET`: Secret for verifying webhook signatures.
+   - `ENCRYPTION_KEY`: Used for encrypting stored API keys.
 
-2. **Stripe Dashboard**:
-   - Enable Connect in your Stripe Dashboard.
-   - Add the redirect URI: `https://<your-domain>/api/integrations/stripe/oauth/callback`
+2. **User Configuration**:
+   - Users navigate to **Integrations > Stripe**.
+   - Click **Connect**.
+   - Enter a **Restricted Key** with the following permissions:
+     - `Products`: Read
+     - `Prices`: Read
+     - `Charges`: Read
+     - `PaymentIntents`: Read
 
 ## Architecture
-- **StripeService**: Handles API interactions using the `stripe` Node.js SDK.
+- **StripeService**: Handles API interactions. Instantiated dynamically with the decrypted user key.
 - **StripeSync**: Manages data synchronization logic (Catalog, Transactions).
 - **Webhooks**: Listens for `product.*`, `price.*`, and `charge.*` events.
 
 ## API Endpoints
-- `GET /api/integrations/stripe/oauth/start`: Initiate OAuth flow.
-- `GET /api/integrations/stripe/oauth/callback`: Handle OAuth redirect.
-- `POST /api/integrations/stripe/disconnect`: Disconnect account.
+- `POST /api/integrations/stripe/connect`: Submit API Key for validation and storage.
+- `POST /api/integrations/stripe/disconnect`: Remove stored key.
 - `POST /api/integrations/stripe/webhook`: Handle Stripe webhooks.
 - `POST /api/integrations/stripe/sync/catalog`: Trigger manual catalog sync.
 - `POST /api/integrations/stripe/sync/transactions`: Trigger manual transaction sync.
+- `GET /api/projects/[slug]/transactions`: Fetch synced transactions.
 
 ## Data Model
-- `StripeAccount`: Stores OAuth tokens and account status.
+- `StripeAccount`: Stores encrypted `secretKey` and account details.
 - `StripeProductMap`: Maps Stripe Products to Calibrate Products.
 - `StripePriceMap`: Maps Stripe Prices to Calibrate Prices.
 - `Transaction`: Unified transaction record linked to Source (Stripe).
+
+## Future Roadmap: Stripe App Transition
+We plan to eventually transition this integration to a formal **Stripe App** (Backend-only or Full-stack).
+- **Goal**: Distribute via Stripe App Marketplace and use the Stripe Apps permission model.
+- **Changes Required**:
+  1. Create `stripe-app.json` manifest.
+  2. Implement Stripe Apps authentication (OAuth or App-specific tokens).
+  3. Migrate existing API Key users to the new app installation flow.
+  4. Potentially add UI extensions in the Stripe Dashboard.

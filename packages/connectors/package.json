@@ -6,6 +6,7 @@
   "dependencies": {
     "stripe": "^14.10.0",
     "@calibr/platform-connector": "workspace:*",
-    "@calibr/db": "workspace:*"
+    "@calibr/db": "workspace:*",
+    "@calibr/security": "workspace:*"
   }
 }
