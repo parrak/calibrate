@@ -31,7 +31,7 @@ interface TransactionsTableProps {
 
 export function TransactionsTable({ projectSlug }: TransactionsTableProps) {
     const { data: session } = useSession()
-    const userId = (session?.user as any)?.id
+    const userId = session?.user?.id
 
     const [transactions, setTransactions] = useState<Transaction[]>([])
     const [loading, setLoading] = useState(true)

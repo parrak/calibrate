@@ -20,13 +20,8 @@ export const POST = withSecurity(async (request: NextRequest) => {
             return NextResponse.json({ error: 'Stripe account not found' }, { status: 404 });
         }
 
-        const stripeService = new StripeService();
-        // Deauthorize from Stripe
-        try {
-            await stripeService.deauthorize(stripeAccount.stripeAccountId);
-        } catch (e) {
-            console.warn('Failed to deauthorize from Stripe, but removing local record:', e);
-        }
+        // API Key integration does not require deauthorization from Stripe side
+        // We just remove the key from our database
 
         // Remove from DB
         await prisma().stripeAccount.delete({ where: { projectId } });

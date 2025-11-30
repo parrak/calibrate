@@ -1,26 +1,23 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/lib/components/Card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/lib/components/Card'
 import { Button } from '@/lib/components/Button'
-import { Badge } from '@/lib/components/Badge'
 import { StripeConnectModal } from '@/components/platforms/StripeConnectModal'
 import { TransactionsTable } from './TransactionsTable'
-import { CheckCircle, AlertCircle, Settings, ExternalLink } from 'lucide-react'
+import { CheckCircle, AlertCircle, ExternalLink } from 'lucide-react'
 
 interface StripeIntegrationContentProps {
     projectSlug: string
-    initialIntegration: any
+    initialIntegration: unknown
     isConnected: boolean
 }
 
 export function StripeIntegrationContent({
     projectSlug,
-    initialIntegration,
     isConnected: initialIsConnected,
 }: StripeIntegrationContentProps) {
     const [isConnected, setIsConnected] = useState(initialIsConnected)
-    const [integration, setIntegration] = useState(initialIntegration)
     const [showConnectModal, setShowConnectModal] = useState(false)
 
     const handleConnectSuccess = () => {

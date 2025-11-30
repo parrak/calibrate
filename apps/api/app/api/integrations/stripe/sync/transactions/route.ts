@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { StripeService, StripeSync } from '@calibr/connectors';
+import { StripeSync } from '@calibr/connectors';
 import { withSecurity } from '@/lib/security-headers';
 
 export const dynamic = 'force-dynamic'
@@ -14,9 +14,7 @@ export const POST = withSecurity(async (request: NextRequest) => {
             return NextResponse.json({ error: 'projectId is required' }, { status: 400 });
         }
 
-        const stripeService = new StripeService();
-        const stripeSync = new StripeSync(stripeService);
-
+        const stripeSync = new StripeSync();
         await stripeSync.syncTransactions(projectId);
 
         return NextResponse.json({ success: true });

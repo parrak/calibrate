@@ -9,7 +9,7 @@ export class StripeService {
             throw new Error('Stripe API Key is not defined')
         }
         this.stripe = new Stripe(key, {
-            apiVersion: '2025-11-17.clover' as any,
+            apiVersion: '2023-10-16',
             typescript: true,
         })
     }

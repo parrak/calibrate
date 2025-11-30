@@ -16,9 +16,12 @@ export class StripeConnector implements PlatformConnector {
     readonly version = '1.0.0'
 
     readonly capabilities: PlatformCapabilities = {
-        products: { read: true, write: false },
-        orders: { read: true, write: false },
-        inventory: { read: false, write: false }
+        supportsOAuth: false, // Using API Key now
+        supportsWebhooks: true,
+        supportsBatchUpdates: false,
+        supportsInventoryTracking: false,
+        supportsVariants: true, // Products have prices which act like variants
+        supportsCompareAtPrice: false
     }
 
     readonly auth: AuthOperations

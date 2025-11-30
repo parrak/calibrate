@@ -1,4 +1,4 @@
-import { applyPriceChange } from '@calibr/amazon-connector'
+// import { applyPriceChange } from '@calibr/amazon-connector'
 
 export async function applyToAmazon(priceChange: {
   skuCode: string
@@ -6,10 +6,9 @@ export async function applyToAmazon(priceChange: {
   amount: number
   context?: any
 }): Promise<{ ok: boolean; message: string; channelResult?: any }> {
-  return applyPriceChange({
-    skuCode: priceChange.skuCode,
-    currency: priceChange.currency,
-    amount: priceChange.amount,
-    context: priceChange.context,
+  // Stub implementation until amazon-connector is available
+  return Promise.resolve({
+    ok: false,
+    message: 'Amazon connector not implemented',
   })
 }

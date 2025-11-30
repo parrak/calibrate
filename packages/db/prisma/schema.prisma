@@ -383,19 +383,19 @@ model RuleTarget {
 }
 
 model Price {
-  id           String         @id @default(cuid())
-  skuId        String
-  currency     String
-  billingCycle String?
-  unit         String?
-  amount       Int
-  status       Status         @default(ACTIVE)
-  Sku          Sku            @relation(fields: [skuId], references: [id])
-  PriceVersion PriceVersion[]
+  id             String           @id @default(cuid())
+  skuId          String
+  currency       String
+  billingCycle   String?
+  unit           String?
+  amount         Int
+  status         Status           @default(ACTIVE)
+  Sku            Sku              @relation(fields: [skuId], references: [id])
+  PriceVersion   PriceVersion[]
+  StripePriceMap StripePriceMap[]
 
   @@unique([skuId, currency], map: "skuId_currency")
   @@index([skuId, currency])
-  StripePriceMap StripePriceMap[]
 }
 
 model PriceChange {
@@ -483,30 +483,30 @@ model PriceVersion {
 }
 
 model Product {
-  id           String         @id @default(cuid())
-  tenantId     String
-  projectId    String
-  name         String
-  code         String
-  status       Status         @default(DRAFT)
-  createdAt    DateTime       @default(now())
+  id               String             @id @default(cuid())
+  tenantId         String
+  projectId        String
+  name             String
+  code             String
+  status           Status             @default(DRAFT)
+  createdAt        DateTime           @default(now())
   // M0.1 fields (optional for backward compat)
-  sku          String? // M0.1: canonical SKU
-  title        String? // M0.1: product title
-  tags         String[]       @default([]) // M0.1: array of tags
-  channelRefs  Json? // M0.1: connector-specific refs
-  active       Boolean?       @default(true) // M0.1: active status
-  Project      Project        @relation(fields: [projectId], references: [id])
-  Tenant       Tenant         @relation(fields: [tenantId], references: [id])
-  Sku          Sku[]
-  PriceVersion PriceVersion[]
+  sku              String? // M0.1: canonical SKU
+  title            String? // M0.1: product title
+  tags             String[]           @default([]) // M0.1: array of tags
+  channelRefs      Json? // M0.1: connector-specific refs
+  active           Boolean?           @default(true) // M0.1: active status
+  Project          Project            @relation(fields: [projectId], references: [id])
+  Tenant           Tenant             @relation(fields: [tenantId], references: [id])
+  Sku              Sku[]
+  PriceVersion     PriceVersion[]
+  Transaction      Transaction[]
+  StripeProductMap StripeProductMap[]
 
   @@unique([tenantId, projectId, code], map: "tenantId_projectId_code")
   @@unique([tenantId, projectId, sku], map: "tenantId_projectId_sku")
   @@index([tenantId, active])
   @@index([tags])
-  Transaction      Transaction[]
-  StripeProductMap StripeProductMap[]
 }
 
 model Project {
@@ -610,9 +610,9 @@ model Sku {
   CompetitorProduct CompetitorProduct[]
   Price             Price[]
   Product           Product             @relation(fields: [productId], references: [id])
+  Transaction       Transaction[]
 
   @@unique([productId, code], map: "productId_code")
-  Transaction Transaction[]
 }
 
 model Tenant {
@@ -763,7 +763,7 @@ model StripeAccount {
   stripeAccountId String?  @unique // Connected account ID (acct_...) - fetched from API
   livemode        Boolean  @default(false)
   status          String   @default("pending") // pending, active, restricted
-  secretKey       String   // Encrypted API Key (sk_...)
+  secretKey       String // Encrypted API Key (sk_...)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   Project         Project  @relation(fields: [projectId], references: [id])
@@ -777,8 +777,8 @@ model StripeAccount {
 model ConnectorSyncState {
   id        String   @id @default(cuid())
   projectId String
-  source    String   // stripe, shopify, amazon
-  cursor    Json     // Store cursor/pagination state
+  source    String // stripe, shopify, amazon
+  cursor    Json // Store cursor/pagination state
   updatedAt DateTime @updatedAt
   Project   Project  @relation(fields: [projectId], references: [id])
 
@@ -789,7 +789,7 @@ model ConnectorSyncState {
 model StripeWebhookEvent {
   id          String   @id @default(cuid())
   eventId     String   @unique // Stripe event ID (evt_...)
-  type        String   // event type (e.g. payment_intent.succeeded)
+  type        String // event type (e.g. payment_intent.succeeded)
   payloadHash String
   processedAt DateTime @default(now())
   status      String   @default("processed") // processed, failed, ignored
@@ -801,26 +801,26 @@ model StripeWebhookEvent {
 /// Transaction — Unified transaction record
 /// Normalized view of payments/orders across channels
 model Transaction {
-  id          String   @id @default(cuid())
-  tenantId    String
-  projectId   String
-  source      String   // stripe, shopify, amazon
-  externalId  String   // Stripe PaymentIntent ID, Shopify Order ID
-  amount      Int      // Gross amount in cents
-  currency    String
-  status      String   // succeeded, pending, failed, refunded
-  feeAmount   Int?     // Processing fees in cents
-  netAmount   Int?     // Net amount in cents
-  productId   String?  // Linked Product
-  skuId       String?  // Linked SKU
-  createdAt   DateTime @default(now())
-  occurredAt  DateTime // When the transaction actually happened
-  metadata    Json?
-  
-  Project     Project  @relation(fields: [projectId], references: [id])
-  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  Product     Product? @relation(fields: [productId], references: [id])
-  Sku         Sku?     @relation(fields: [skuId], references: [id])
+  id         String   @id @default(cuid())
+  tenantId   String
+  projectId  String
+  source     String // stripe, shopify, amazon
+  externalId String // Stripe PaymentIntent ID, Shopify Order ID
+  amount     Int // Gross amount in cents
+  currency   String
+  status     String // succeeded, pending, failed, refunded
+  feeAmount  Int? // Processing fees in cents
+  netAmount  Int? // Net amount in cents
+  productId  String? // Linked Product
+  skuId      String? // Linked SKU
+  createdAt  DateTime @default(now())
+  occurredAt DateTime // When the transaction actually happened
+  metadata   Json?
+
+  Project Project  @relation(fields: [projectId], references: [id])
+  Tenant  Tenant   @relation(fields: [tenantId], references: [id])
+  Product Product? @relation(fields: [productId], references: [id])
+  Sku     Sku?     @relation(fields: [skuId], references: [id])
 
   @@unique([projectId, source, externalId])
   @@index([projectId, source])
