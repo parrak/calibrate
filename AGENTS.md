@@ -295,6 +295,11 @@ Before requesting review, ensure:
 
 This section captures critical lessons learned during development to prevent future issues.
 
+### **Branding Guardrails — November 29, 2025**
+- When creating or updating public-facing assets (site, console, docs, manifests, favicons, OG images), follow the live teal palette (`#80D9D9`, `#00A3A3`, `#008080`) and typography defined in `apps/*/app/globals.css`.
+- Reference `branding/BRANDING_UPDATE_SUMMARY.md` and the sample metadata in `branding/usage/next/metadata.ts` for correct `themeColor`, icon paths, and gradient stops before adding new assets.
+- Keep `themeColor` in metadata to `#008080` (aligns with `--brand-dark`) unless branding leadership provides a new packet.
+
 ### **Bug Fix Session - November 10, 2025**
 
 **Context:** Comprehensive manual testing of console.calibr.lat revealed 4 critical production bugs that were fixed systematically.
@@ -522,3 +527,4 @@ process.env.STRIPE_CLIENT_SECRET = 'dummy_key' // Prevent constructor error
 - Use obvious placeholders in `.env.example` (e.g., `sk_test_placeholder`).
 - Never paste real keys into files that are tracked by git, even temporarily.
 - If a push is blocked, **do not** bypass it unless it's a false positive. Remove the secret and amend the commit.
+

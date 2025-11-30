@@ -17,6 +17,7 @@ Core Channels
 Code and PR Standards
 - Branch names: feature/<phase>-<area>-<short-title>, fix/<area>-<short-title>.
 - PR titles: feat(api): ..., fix(console): ..., docs(...): ...
+- Branding: Public-facing assets (site/console/docs UI, manifests, favicons, OG images) must use the teal palette (`#80D9D9`, `#00A3A3`, `#008080`) and `themeColor: #008080` per `branding/BRANDING_UPDATE_SUMMARY.md`.
 - PR body checklist (paste):
   - Summary, Scope, Testing (local + unit), Env/Config changes, Migration impact, Rollback plan.
   - Link: daily log entry + issue ID.
@@ -63,4 +64,3 @@ How to Start/Stop Work
 2) Add intent to PHASE3_DAILY_LOG.md with acceptance criteria.
 3) Open a feature branch, implement, push PR.
 4) Summarize in daily log + Slack; broadcast if cross-cutting.
-
