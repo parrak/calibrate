@@ -1,3 +1,5 @@
+'use client'
+
 import { useSearchParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
@@ -496,10 +498,10 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
       {toastMessage && (
         <div
           className={`fixed top-4 right-4 px-4 py-2 rounded-md shadow-lg ${toastMessage.type === 'success'
-              ? 'bg-green-600 text-white'
-              : toastMessage.type === 'error'
-                ? 'bg-red-600 text-white'
-                : 'bg-blue-600 text-white'
+            ? 'bg-green-600 text-white'
+            : toastMessage.type === 'error'
+              ? 'bg-red-600 text-white'
+              : 'bg-blue-600 text-white'
             }`}
         >
           {toastMessage.msg}
