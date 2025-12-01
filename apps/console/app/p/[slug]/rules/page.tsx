@@ -110,7 +110,7 @@ type PreviewTarget = {
 export default function RulesPage({ params }: { params: { slug: string } }) {
   const { data: _session } = useSession()
   const searchParams = useSearchParams()
-  const editRuleId = searchParams.get('edit')
+  const editRuleId = searchParams?.get('edit')
 
   const [rules, setRules] = useState<PricingRule[]>([])
   const [editingRule, setEditingRule] = useState<RuleFormData | null>(null)
