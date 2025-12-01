@@ -1,5 +1,6 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Button, Card, Input, Badge, EmptyState } from '@/lib/components'
@@ -108,6 +109,8 @@ type PreviewTarget = {
 
 export default function RulesPage({ params }: { params: { slug: string } }) {
   const { data: _session } = useSession()
+  const searchParams = useSearchParams()
+  const editRuleId = searchParams?.get('edit')
 
   const [rules, setRules] = useState<PricingRule[]>([])
   const [editingRule, setEditingRule] = useState<RuleFormData | null>(null)
@@ -152,6 +155,36 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
         }))
 
         setRules(transformedRules)
+
+        // Handle auto-edit if query param exists
+        if (editRuleId) {
+          const ruleToEdit = transformedRules.find(r => r.id === editRuleId)
+          if (ruleToEdit) {
+            setEditingRule({
+              name: ruleToEdit.name,
+              description: ruleToEdit.description || '',
+              enabled: ruleToEdit.enabled || false,
+              selector: {
+                predicates: ruleToEdit.selector.predicates,
+                operator: ruleToEdit.selector.operator || 'AND',
+              },
+              transform: {
+                type: ruleToEdit.transform.transform.type,
+                value: 'value' in ruleToEdit.transform.transform ? ruleToEdit.transform.transform.value : 0,
+                factor: 'factor' in ruleToEdit.transform.transform ? ruleToEdit.transform.transform.factor : 1,
+              },
+              constraints: ruleToEdit.transform.constraints || {},
+              schedule: {
+                type: ruleToEdit.schedule?.type || 'immediate',
+                scheduledAt: ruleToEdit.schedule?.scheduledAt?.toISOString(),
+                cron: ruleToEdit.schedule?.cron,
+                timezone: ruleToEdit.schedule?.timezone,
+              },
+            })
+            // Clean up URL
+            window.history.replaceState({}, '', `/p/${params.slug}/rules`)
+          }
+        }
       } catch (err) {
         console.error('Failed to fetch pricing rules:', err)
         setToastMessage({
@@ -164,7 +197,7 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
     }
 
     fetchRules()
-  }, [params.slug])
+  }, [params.slug, editRuleId])
 
   const startNewRule = () => {
     setEditingRule({ ...DEFAULT_RULE })
@@ -298,11 +331,11 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
         totalPriceChanges: previewData.appliedTargets || 0,
         averageChange: previewData.targets?.length > 0
           ? previewData.targets.reduce((sum: number, t: PreviewTarget) => {
-              const pctChange = t.after && t.before
-                ? ((t.after.amount - t.before.amount) / t.before.amount) * 100
-                : 0
-              return sum + Math.abs(pctChange)
-            }, 0) / previewData.targets.length
+            const pctChange = t.after && t.before
+              ? ((t.after.amount - t.before.amount) / t.before.amount) * 100
+              : 0
+            return sum + Math.abs(pctChange)
+          }, 0) / previewData.targets.length
           : 0,
       })
 
@@ -464,13 +497,12 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
     <main className="p-6 space-y-6">
       {toastMessage && (
         <div
-          className={`fixed top-4 right-4 px-4 py-2 rounded-md shadow-lg ${
-            toastMessage.type === 'success'
-              ? 'bg-green-600 text-white'
-              : toastMessage.type === 'error'
+          className={`fixed top-4 right-4 px-4 py-2 rounded-md shadow-lg ${toastMessage.type === 'success'
+            ? 'bg-green-600 text-white'
+            : toastMessage.type === 'error'
               ? 'bg-red-600 text-white'
               : 'bg-blue-600 text-white'
-          }`}
+            }`}
         >
           {toastMessage.msg}
         </div>
@@ -788,8 +820,8 @@ export default function RulesPage({ params }: { params: { slug: string } }) {
                   {editingRule.transform.type === 'percentage'
                     ? 'Percentage (%)'
                     : editingRule.transform.type === 'multiply'
-                    ? 'Factor'
-                    : 'Amount'}
+                      ? 'Factor'
+                      : 'Amount'}
                 </label>
                 <Input
                   id="transformValue"
