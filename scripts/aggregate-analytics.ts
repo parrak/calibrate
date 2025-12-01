@@ -17,8 +17,8 @@ async function main() {
 
   try {
     const result = await aggregateDailySnapshots({
-      includeSales: false, // Enable when sales data available
-      includeCompetitorData: false, // Enable when competitor data available
+      includeSales: true, // Enabled - reads from Transaction table (Shopify, Amazon, Stripe)
+      includeCompetitorData: true, // Enabled - reads from CompetitorPrice table
     })
 
     const duration = Date.now() - startTime

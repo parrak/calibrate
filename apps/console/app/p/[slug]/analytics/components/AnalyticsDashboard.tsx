@@ -117,6 +117,38 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
         </div>
       )}
 
+      {/* Revenue Trend (if sales data available) */}
+      {data.trends.revenue && (
+        <div className="bg-white rounded-lg border p-6">
+          <h2 className="text-xl font-semibold mb-4">Revenue Trend</h2>
+          <TrendChart trend={data.trends.revenue} valuePrefix="$" valueFormatter={(v) => (v / 100).toFixed(2)} />
+        </div>
+      )}
+
+      {/* Price Change Frequency */}
+      {data.snapshots && data.snapshots.length > 0 && (
+        <div className="bg-white rounded-lg border p-6">
+          <h2 className="text-xl font-semibold mb-4">Price Change Frequency (Last {days} Days)</h2>
+          <PriceChangeFrequencyChart snapshots={data.snapshots} />
+        </div>
+      )}
+
+      {/* Margin Distribution (if margin data available) */}
+      {data.snapshots && data.snapshots.some(s => s.margins) && (
+        <div className="bg-white rounded-lg border p-6">
+          <h2 className="text-xl font-semibold mb-4">Margin Trend</h2>
+          <MarginChart snapshots={data.snapshots} />
+        </div>
+      )}
+
+      {/* Competitor Insights (if competitor data available) */}
+      {data.snapshots && data.snapshots.some(s => s.competitorInsights) && (
+        <div className="bg-white rounded-lg border p-6">
+          <h2 className="text-xl font-semibold mb-4">Competitive Position</h2>
+          <CompetitorInsightsChart snapshots={data.snapshots} />
+        </div>
+      )}
+
       {/* Top Performers */}
       {data.topPerformers && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -151,13 +183,10 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
 
           {data.topPerformers.bySales && data.topPerformers.bySales.length > 0 && (
             <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-semibold mb-4">Recent Products</h2>
+              <h2 className="text-xl font-semibold mb-4">Top SKUs by Sales</h2>
               <div className="space-y-3">
-                {Array.from(
-                  new Map(
-                    data.topPerformers.bySales.map((item: SkuPerformance) => [item.sku, item])
-                  ).values()
-                )
+                {data.topPerformers.bySales
+                  .filter((item: SkuPerformance) => item.revenue && item.revenue > 0)
                   .slice(0, 5)
                   .map((item: SkuPerformance) => (
                     <div
@@ -171,9 +200,16 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
                         )}
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold">
-                          ${(item.price / 100).toFixed(2)}
-                        </div>
+                        {item.revenue && (
+                          <div className="font-semibold text-blue-600">
+                            ${(item.revenue / 100).toLocaleString()}
+                          </div>
+                        )}
+                        {item.units && (
+                          <div className="text-xs text-gray-500">
+                            {item.units} units
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -218,12 +254,16 @@ function MetricCard({ title, value, subtitle, trend }: MetricCardProps) {
 
 function TrendChart({
   trend,
+  valuePrefix = '',
+  valueFormatter = (v: number) => v.toString(),
 }: {
   trend: { current: number; previous: number; direction: string }
+  valuePrefix?: string
+  valueFormatter?: (v: number) => string
 }) {
   const max = Math.max(trend.current, trend.previous)
-  const currentHeight = (trend.current / max) * 100
-  const previousHeight = (trend.previous / max) * 100
+  const currentHeight = max > 0 ? (trend.current / max) * 100 : 0
+  const previousHeight = max > 0 ? (trend.previous / max) * 100 : 0
 
   return (
     <div className="flex items-end gap-8 h-32">
@@ -235,7 +275,7 @@ function TrendChart({
           ></div>
         </div>
         <div className="mt-2 text-sm text-gray-600">Previous</div>
-        <div className="font-semibold">{trend.previous}</div>
+        <div className="font-semibold">{valuePrefix}{valueFormatter(trend.previous)}</div>
       </div>
       <div className="flex-1 flex flex-col items-center">
         <div className="w-full flex items-end justify-center h-full">
@@ -251,7 +291,121 @@ function TrendChart({
           ></div>
         </div>
         <div className="mt-2 text-sm text-gray-600">Current</div>
-        <div className="font-semibold">{trend.current}</div>
+        <div className="font-semibold">{valuePrefix}{valueFormatter(trend.current)}</div>
+      </div>
+    </div>
+  )
+}
+
+function PriceChangeFrequencyChart({ snapshots }: { snapshots: any[] }) {
+  if (snapshots.length === 0) return null
+
+  const maxChanges = Math.max(...snapshots.map(s => s.priceChanges.total))
+
+  return (
+    <div className="space-y-2">
+      {snapshots.map((snapshot, idx) => (
+        <div key={idx} className="flex items-center gap-3">
+          <div className="text-xs text-gray-500 w-20">
+            {new Date(snapshot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </div>
+          <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-500 transition-all"
+              style={{
+                width: maxChanges > 0 ? `${(snapshot.priceChanges.total / maxChanges) * 100}%` : '0%'
+              }}
+            />
+          </div>
+          <div className="text-sm font-medium w-12 text-right">
+            {snapshot.priceChanges.total}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MarginChart({ snapshots }: { snapshots: any[] }) {
+  const snapshotsWithMargins = snapshots.filter(s => s.margins)
+  if (snapshotsWithMargins.length === 0) return null
+
+  const maxMargin = Math.max(...snapshotsWithMargins.map(s => s.margins.averageMargin))
+  const minMarginValue = Math.min(...snapshotsWithMargins.map(s => s.margins.averageMargin))
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between text-sm text-gray-600">
+        <span>Min: {minMarginValue.toFixed(1)}%</span>
+        <span>Max: {maxMargin.toFixed(1)}%</span>
+      </div>
+      <div className="relative h-48">
+        <div className="absolute inset-0 flex items-end justify-around gap-1">
+          {snapshotsWithMargins.map((snapshot, idx) => (
+            <div key={idx} className="flex-1 flex flex-col items-center">
+              <div
+                className="w-full bg-gradient-to-t from-green-500 to-green-300 rounded-t"
+                style={{
+                  height: `${(snapshot.margins.averageMargin / maxMargin) * 100}%`
+                }}
+                title={`${snapshot.margins.averageMargin.toFixed(1)}%`}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="text-xs text-gray-500 text-center">
+        Average Margin Over Time
+      </div>
+    </div>
+  )
+}
+
+function CompetitorInsightsChart({ snapshots }: { snapshots: any[] }) {
+  const snapshotsWithCompetitors = snapshots.filter(s => s.competitorInsights)
+  if (snapshotsWithCompetitors.length === 0) return null
+
+  const latestSnapshot = snapshotsWithCompetitors[snapshotsWithCompetitors.length - 1]
+  const { competitorInsights } = latestSnapshot
+
+  const total = competitorInsights.pricesBelowMarket + competitorInsights.pricesAboveMarket
+  const belowPercentage = total > 0 ? (competitorInsights.pricesBelowMarket / total) * 100 : 0
+  const abovePercentage = total > 0 ? (competitorInsights.pricesAboveMarket / total) * 100 : 0
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-blue-50 rounded-lg p-4">
+          <div className="text-sm text-gray-600">Sampled Products</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {competitorInsights.totalCompetitorsSampled}
+          </div>
+        </div>
+        <div className="bg-purple-50 rounded-lg p-4">
+          <div className="text-sm text-gray-600">Avg Price Delta</div>
+          <div className="text-2xl font-bold text-purple-600">
+            ${(competitorInsights.averageCompetitiveDelta / 100).toFixed(2)}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div className="flex justify-between text-sm mb-2">
+          <span className="text-green-600">Below Market: {competitorInsights.pricesBelowMarket}</span>
+          <span className="text-red-600">Above Market: {competitorInsights.pricesAboveMarket}</span>
+        </div>
+        <div className="h-8 flex rounded-full overflow-hidden">
+          <div
+            className="bg-green-500"
+            style={{ width: `${belowPercentage}%` }}
+            title={`${belowPercentage.toFixed(1)}% below market`}
+          />
+          <div
+            className="bg-red-500"
+            style={{ width: `${abovePercentage}%` }}
+            title={`${abovePercentage.toFixed(1)}% above market`}
+          />
+        </div>
       </div>
     </div>
   )

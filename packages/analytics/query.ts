@@ -97,8 +97,59 @@ export async function getAnalyticsOverview(
     direction: 'stable',
   }
 
-  // Generate mock snapshots (in real implementation, fetch from stored snapshots)
-  const snapshots: DailySnapshot[] = []
+  // Fetch stored snapshots from database
+  const snapshots = await prisma().dailySnapshot.findMany({
+    where: {
+      projectId,
+      snapshotDate: {
+        gte: startDate,
+        lte: endDate,
+      },
+    },
+    orderBy: { snapshotDate: 'asc' },
+  })
+
+  // Convert to DailySnapshot type
+  const dailySnapshots: DailySnapshot[] = snapshots.map((s) => ({
+    projectId: s.projectId,
+    date: s.snapshotDate,
+    totalSkus: s.totalSkus,
+    priceChanges: {
+      total: s.totalPriceChanges,
+      approved: s.approvedChanges,
+      rejected: s.rejectedChanges,
+      pending: s.pendingChanges,
+      applied: s.appliedChanges,
+    },
+    pricing: {
+      averagePrice: s.averagePrice,
+      minPrice: s.minPrice,
+      maxPrice: s.maxPrice,
+      medianPrice: s.medianPrice,
+    },
+    sales: s.totalRevenue !== null && s.totalUnits !== null && s.averageOrderValue !== null
+      ? {
+          totalRevenue: s.totalRevenue,
+          totalUnits: s.totalUnits,
+          averageOrderValue: s.averageOrderValue,
+        }
+      : undefined,
+    margins: s.averageMargin !== null && s.minMargin !== null && s.maxMargin !== null
+      ? {
+          averageMargin: s.averageMargin,
+          minMargin: s.minMargin,
+          maxMargin: s.maxMargin,
+        }
+      : undefined,
+    competitorInsights: s.competitorsSampled !== null && s.avgCompetitiveDelta !== null
+      ? {
+          totalCompetitorsSampled: s.competitorsSampled,
+          averageCompetitiveDelta: s.avgCompetitiveDelta,
+          pricesBelowMarket: s.pricesBelowMarket || 0,
+          pricesAboveMarket: s.pricesAboveMarket || 0,
+        }
+      : undefined,
+  }))
 
   // Top performers by price (simplified - would need sales data for real analysis)
   const topPerformers: AnalyticsOverview['topPerformers'] = {
@@ -149,6 +200,6 @@ export async function getAnalyticsOverview(
       priceChanges: priceChangesTrend,
     },
     topPerformers,
-    snapshots,
+    snapshots: dailySnapshots,
   }
 }

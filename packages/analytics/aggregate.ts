@@ -46,8 +46,63 @@ export async function aggregateDailySnapshots(
           includeCompetitorData,
         })
 
-        // Store snapshot (implement storage later - for now just track)
-        console.log(`[Analytics] Generated snapshot for ${project.slug}:`, {
+        // Store snapshot in database
+        await prisma().dailySnapshot.upsert({
+          where: {
+            projectId_snapshotDate: {
+              projectId: project.id,
+              snapshotDate: startDate,
+            },
+          },
+          create: {
+            projectId: project.id,
+            snapshotDate: startDate,
+            totalSkus: snapshot.totalSkus,
+            totalPriceChanges: snapshot.priceChanges.total,
+            approvedChanges: snapshot.priceChanges.approved,
+            rejectedChanges: snapshot.priceChanges.rejected,
+            pendingChanges: snapshot.priceChanges.pending,
+            appliedChanges: snapshot.priceChanges.applied,
+            averagePrice: snapshot.pricing.averagePrice,
+            minPrice: snapshot.pricing.minPrice,
+            maxPrice: snapshot.pricing.maxPrice,
+            medianPrice: snapshot.pricing.medianPrice,
+            totalRevenue: snapshot.sales?.totalRevenue,
+            totalUnits: snapshot.sales?.totalUnits,
+            averageOrderValue: snapshot.sales?.averageOrderValue,
+            averageMargin: snapshot.margins?.averageMargin,
+            minMargin: snapshot.margins?.minMargin,
+            maxMargin: snapshot.margins?.maxMargin,
+            competitorsSampled: snapshot.competitorInsights?.totalCompetitorsSampled,
+            avgCompetitiveDelta: snapshot.competitorInsights?.averageCompetitiveDelta,
+            pricesBelowMarket: snapshot.competitorInsights?.pricesBelowMarket,
+            pricesAboveMarket: snapshot.competitorInsights?.pricesAboveMarket,
+          },
+          update: {
+            totalSkus: snapshot.totalSkus,
+            totalPriceChanges: snapshot.priceChanges.total,
+            approvedChanges: snapshot.priceChanges.approved,
+            rejectedChanges: snapshot.priceChanges.rejected,
+            pendingChanges: snapshot.priceChanges.pending,
+            appliedChanges: snapshot.priceChanges.applied,
+            averagePrice: snapshot.pricing.averagePrice,
+            minPrice: snapshot.pricing.minPrice,
+            maxPrice: snapshot.pricing.maxPrice,
+            medianPrice: snapshot.pricing.medianPrice,
+            totalRevenue: snapshot.sales?.totalRevenue,
+            totalUnits: snapshot.sales?.totalUnits,
+            averageOrderValue: snapshot.sales?.averageOrderValue,
+            averageMargin: snapshot.margins?.averageMargin,
+            minMargin: snapshot.margins?.minMargin,
+            maxMargin: snapshot.margins?.maxMargin,
+            competitorsSampled: snapshot.competitorInsights?.totalCompetitorsSampled,
+            avgCompetitiveDelta: snapshot.competitorInsights?.averageCompetitiveDelta,
+            pricesBelowMarket: snapshot.competitorInsights?.pricesBelowMarket,
+            pricesAboveMarket: snapshot.competitorInsights?.pricesAboveMarket,
+          },
+        })
+
+        console.log(`[Analytics] Stored snapshot for ${project.slug}:`, {
           totalSkus: snapshot.totalSkus,
           priceChanges: snapshot.priceChanges.total,
         })
@@ -173,11 +228,11 @@ async function generateSnapshot(
     maxMargin: calculateMaxMargin(skusWithCost),
   } : undefined
 
-  // TODO: Fetch sales data if includeSales is true
-  // const salesMetrics = includeSales ? await fetchSalesMetrics(projectId, dayStart, dayEnd) : undefined
+  // Fetch sales data if includeSales is true
+  const salesMetrics = includeSales ? await fetchSalesMetrics(projectId, dayStart, dayEnd) : undefined
 
-  // TODO: Fetch competitor insights if includeCompetitorData is true
-  // const competitorInsights = includeCompetitorData ? await fetchCompetitorInsights(projectId) : undefined
+  // Fetch competitor insights if includeCompetitorData is true
+  const competitorInsights = includeCompetitorData ? await fetchCompetitorInsights(projectId) : undefined
 
   return {
     projectId,
@@ -186,6 +241,8 @@ async function generateSnapshot(
     priceChanges: priceChangeMetrics,
     pricing: pricingMetrics,
     margins: marginMetrics,
+    sales: salesMetrics,
+    competitorInsights,
   }
 }
 
@@ -225,4 +282,139 @@ function calculateMaxMargin(skus: Array<{ price: number; cost: number }>): numbe
     .map((s) => ((s.price - s.cost) / s.cost) * 100)
 
   return margins.length > 0 ? Math.round(Math.max(...margins)) : 0
+}
+
+/**
+ * Fetch sales metrics from Transactions table
+ * Aggregates data from Shopify, Amazon, and Stripe sources
+ */
+async function fetchSalesMetrics(
+  projectId: string,
+  dayStart: Date,
+  dayEnd: Date
+): Promise<{ totalRevenue: number; totalUnits: number; averageOrderValue: number }> {
+  const transactions = await prisma().transaction.findMany({
+    where: {
+      projectId,
+      occurredAt: {
+        gte: dayStart,
+        lte: dayEnd,
+      },
+      status: 'succeeded', // Only successful transactions
+    },
+    select: {
+      amount: true,
+      netAmount: true,
+    },
+  })
+
+  if (transactions.length === 0) {
+    return {
+      totalRevenue: 0,
+      totalUnits: 0,
+      averageOrderValue: 0,
+    }
+  }
+
+  const totalRevenue = transactions.reduce((sum, t) => sum + (t.netAmount || t.amount), 0)
+  const totalUnits = transactions.length // Simplified - could be improved with line items
+  const averageOrderValue = Math.round(totalRevenue / totalUnits)
+
+  return {
+    totalRevenue,
+    totalUnits,
+    averageOrderValue,
+  }
+}
+
+/**
+ * Fetch competitor insights from CompetitorPrice table
+ */
+async function fetchCompetitorInsights(
+  projectId: string
+): Promise<{
+  totalCompetitorsSampled: number
+  averageCompetitiveDelta: number
+  pricesBelowMarket: number
+  pricesAboveMarket: number
+}> {
+  // Get all SKUs for the project with their current prices
+  const skus = await prisma().sku.findMany({
+    where: {
+      Product: {
+        projectId,
+      },
+    },
+    select: {
+      id: true,
+      code: true,
+      Price: {
+        where: { status: 'ACTIVE' },
+        select: { amount: true },
+        take: 1,
+      },
+    },
+  })
+
+  // Get all competitor products linked to these SKUs
+  const competitorProducts = await prisma().competitorProduct.findMany({
+    where: {
+      skuId: { in: skus.map((s) => s.id) },
+    },
+    select: {
+      id: true,
+      skuId: true,
+      CompetitorPrice: {
+        orderBy: { createdAt: 'desc' },
+        take: 1, // Latest price
+        select: {
+          amount: true,
+        },
+      },
+    },
+  })
+
+  if (competitorProducts.length === 0) {
+    return {
+      totalCompetitorsSampled: 0,
+      averageCompetitiveDelta: 0,
+      pricesBelowMarket: 0,
+      pricesAboveMarket: 0,
+    }
+  }
+
+  // Calculate competitive deltas
+  const deltas: number[] = []
+  let pricesBelowMarket = 0
+  let pricesAboveMarket = 0
+
+  for (const compProd of competitorProducts) {
+    const competitorPrice = compProd.CompetitorPrice[0]?.amount
+    if (!competitorPrice) continue
+
+    const sku = skus.find((s) => s.id === compProd.skuId)
+    const ourPrice = sku?.Price[0]?.amount
+
+    if (!ourPrice) continue
+
+    const delta = ourPrice - competitorPrice
+    deltas.push(delta)
+
+    if (ourPrice < competitorPrice) {
+      pricesBelowMarket++
+    } else if (ourPrice > competitorPrice) {
+      pricesAboveMarket++
+    }
+  }
+
+  const averageCompetitiveDelta = deltas.length > 0
+    ? Math.round(deltas.reduce((sum, d) => sum + d, 0) / deltas.length)
+    : 0
+
+  return {
+    totalCompetitorsSampled: competitorProducts.length,
+    averageCompetitiveDelta,
+    pricesBelowMarket,
+    pricesAboveMarket,
+  }
 }

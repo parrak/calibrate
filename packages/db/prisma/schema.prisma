@@ -540,6 +540,7 @@ model Project {
   Transaction        Transaction[]
   StripeProductMap   StripeProductMap[]
   StripePriceMap     StripePriceMap[]
+  DailySnapshot      DailySnapshot[] // Analytics snapshots
 }
 
 model Quote {
@@ -857,4 +858,39 @@ model StripePriceMap {
   @@unique([projectId, stripePriceId])
   @@unique([projectId, priceId])
   @@index([stripePriceId])
+}
+
+/// DailySnapshot — Analytics snapshot aggregation
+/// Stores daily aggregated metrics for analytics and reporting
+model DailySnapshot {
+  id                  String   @id @default(cuid())
+  projectId           String
+  snapshotDate        DateTime @db.Date
+  totalSkus           Int
+  totalPriceChanges   Int
+  approvedChanges     Int
+  rejectedChanges     Int
+  pendingChanges      Int
+  appliedChanges      Int
+  averagePrice        Int
+  minPrice            Int
+  maxPrice            Int
+  medianPrice         Int
+  totalRevenue        Int?
+  totalUnits          Int?
+  averageOrderValue   Int?
+  averageMargin       Float?
+  minMargin           Float?
+  maxMargin           Float?
+  competitorsSampled  Int?
+  avgCompetitiveDelta Float?
+  pricesBelowMarket   Int?
+  pricesAboveMarket   Int?
+  metadata            Json? // Additional flexible metrics
+  createdAt           DateTime @default(now())
+  Project             Project  @relation(fields: [projectId], references: [id])
+
+  @@unique([projectId, snapshotDate])
+  @@index([projectId, snapshotDate])
+  @@index([snapshotDate])
 }
