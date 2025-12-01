@@ -78,3 +78,90 @@ Response format (JSON):
     throw new Error('Failed to generate SQL query')
   }
 }
+
+/**
+ * Generate a PricingRule JSON object from natural language using GPT-4
+ */
+export async function generatePricingRule(
+  naturalLanguageQuery: string,
+  context?: string
+): Promise<{ rule: unknown; explanation: string; confidence: number }> {
+  const client = getOpenAIClient()
+
+  const systemPrompt = `You are a Pricing Engine expert. Convert natural language requests into a structured PricingRule JSON object.
+
+PricingRule Schema:
+{
+  "name": "string (descriptive name)",
+  "description": "string (optional)",
+  "selector": {
+    "operator": "AND" | "OR",
+    "predicates": [
+      { "type": "all" } |
+      { "type": "sku", "skuCodes": ["string"] } |
+      { "type": "tag", "tags": ["string"] } |
+      { "type": "priceRange", "min": number, "max": number, "currency": "string" } |
+      { "type": "custom", "field": "string", "operator": "eq"|"ne"|"gt"|"gte"|"lt"|"lte"|"in"|"contains", "value": any }
+    ]
+  },
+  "transform": {
+    "transform": 
+      { "type": "percentage", "value": number (e.g. 10 for +10%, -5 for -5%) } |
+      { "type": "absolute", "value": number (cents) } |
+      { "type": "set", "value": number (cents) } |
+      { "type": "multiply", "factor": number },
+    "constraints": {
+      "floor": number (optional),
+      "ceiling": number (optional),
+      "maxPctDelta": number (optional)
+    }
+  },
+  "schedule": {
+    "type": "immediate"
+  },
+  "enabled": false
+}
+
+Rules:
+- Interpret the user's intent carefully.
+- If they say "increase by 10%", use type: "percentage", value: 10.
+- If they say "decrease by $5", use type: "absolute", value: -500 (cents).
+- If they mention specific tags or SKUs, add them to selector predicates.
+- Always set "enabled" to false.
+- Provide a confidence score (0-1) based on how clear the request was.
+
+Response format (JSON):
+{
+  "rule": { ...PricingRule object... },
+  "explanation": "I've created a rule to...",
+  "confidence": 0.95
+}`
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: 'gpt-4-turbo-preview',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Context: ${context || 'None'}\n\nRequest: ${naturalLanguageQuery}` },
+      ],
+      temperature: 0.2,
+      max_tokens: 1000,
+      response_format: { type: 'json_object' },
+    })
+
+    const response = completion.choices[0]?.message?.content
+    if (!response) {
+      throw new Error('No response from OpenAI')
+    }
+
+    const parsed = JSON.parse(response)
+    return {
+      rule: parsed.rule,
+      explanation: parsed.explanation,
+      confidence: parsed.confidence,
+    }
+  } catch (error) {
+    console.error('[OpenAI] Error generating PricingRule:', error)
+    throw new Error('Failed to generate PricingRule')
+  }
+}

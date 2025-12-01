@@ -51,6 +51,8 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
 
   const API_BASE = apiBase || process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
 
+  const [simulationData, setSimulationData] = useState<any>(null)
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -69,6 +71,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
     setMessages((prev) => [...prev, userMessage])
     setQuery('')
     setLoading(true)
+    setSimulationData(null) // Reset simulation data on new query
 
     try {
       const res = await fetch(`${API_BASE}/api/v1/copilot`, {
@@ -88,6 +91,11 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
 
       if (!res.ok) {
         throw new Error(response.error || response.message || 'Failed to process query')
+      }
+
+      // Handle Simulation Response
+      if (response.type === 'simulation') {
+        setSimulationData(response)
       }
 
       const assistantMessage: Message = {
@@ -130,9 +138,47 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
   const handleClear = () => {
     setMessages([])
     setQuery('')
+    setSimulationData(null)
+  }
+
+  const handleApplyAsRule = async () => {
+    if (!simulationData?.rule) return
+
+    // Create draft rule
+    try {
+      setLoading(true)
+      const res = await fetch(`${API_BASE}/api/v1/rules?project=${projectSlug}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: simulationData.rule.name,
+          description: simulationData.rule.description || `Created from Copilot: "${messages[messages.length - 2]?.content}"`,
+          enabled: false,
+          selectorJson: simulationData.rule.selector,
+          transformJson: simulationData.rule.transform,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Failed to create draft rule')
+
+      const rule = await res.json()
+
+      // Redirect to rule builder
+      window.location.href = `/p/${projectSlug}/rules?edit=${rule.id}`
+    } catch (error) {
+      console.error('Failed to create rule:', error)
+      // Show error toast (omitted for brevity)
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (!isOpen) return null
+
+  const isSimulationMode = !!simulationData
 
   return (
     <>
@@ -144,202 +190,241 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
       />
 
       {/* Drawer */}
-      <div className="fixed top-0 right-0 h-full w-full md:w-[500px] lg:w-[600px] bg-surface border-l border-border z-50 shadow-2xl flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface sticky top-0">
-          <div>
-            <h2 className="text-lg font-semibold text-fg">Ask Copilot</h2>
-            <p className="text-sm text-mute">Ask questions about your pricing data</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {messages.length > 0 && (
+      <div
+        className={`fixed top-0 right-0 h-full bg-surface border-l border-border z-50 shadow-2xl flex transition-all duration-300 ${isSimulationMode ? 'w-[90vw] md:w-[1000px]' : 'w-full md:w-[500px] lg:w-[600px]'
+          }`}
+      >
+        {/* Left Panel: Chat */}
+        <div className="flex-1 flex flex-col h-full border-r border-border">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface sticky top-0">
+            <div>
+              <h2 className="text-lg font-semibold text-fg">Ask Copilot</h2>
+              <p className="text-sm text-mute">Ask questions about your pricing data</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {messages.length > 0 && (
+                <button
+                  onClick={handleClear}
+                  className="px-3 py-1.5 text-sm rounded-lg bg-muted/20 hover:bg-muted/40 transition text-fg"
+                >
+                  Clear
+                </button>
+              )}
               <button
-                onClick={handleClear}
-                className="px-3 py-1.5 text-sm rounded-lg bg-muted/20 hover:bg-muted/40 transition text-fg"
+                onClick={onClose}
+                className="p-2 rounded-lg hover:bg-muted/20 transition text-fg"
+                aria-label="Close drawer"
               >
-                Clear
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               </button>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            {messages.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-5xl mb-4">🤖</div>
+                <p className="text-lg text-fg mb-2">Welcome to Copilot!</p>
+                <p className="text-sm text-mute mb-6">
+                  I can help you analyze your pricing data in natural language
+                </p>
+
+                {/* Suggested Queries */}
+                <div className="text-left max-w-md mx-auto">
+                  <h3 className="text-sm font-medium text-fg mb-3">Try asking:</h3>
+                  <div className="grid gap-2">
+                    {SUGGESTED_QUERIES.slice(0, 4).map((suggestion, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        disabled={loading || !token}
+                        className="text-left text-sm px-4 py-3 rounded-lg border border-border bg-surface hover:bg-muted/10 hover:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="text-blue-500 mr-2">💡</span>
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             )}
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-muted/20 transition text-fg"
-              aria-label="Close drawer"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+                <div
+                  className={`max-w-[85%] rounded-lg px-4 py-3 ${message.type === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : message.type === 'system'
+                        ? 'bg-red-500/10 border border-red-500/40 text-red-400'
+                        : 'bg-muted/40 text-fg'
+                    }`}
+                >
+                  <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+
+                  {/* Method badge */}
+                  {message.method ? (
+                    <div className="mt-2 pt-2 border-t border-border/30">
+                      <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">
+                        {message.method === 'ai' ? '✨ AI-powered' : '🔍 Pattern-based'}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {/* Show data if available */}
+                  {message.data ? (
+                    <div className="mt-3 pt-3 border-t border-border/30">
+                      <details className="text-xs">
+                        <summary className="cursor-pointer font-medium mb-2">
+                          View Data
+                        </summary>
+                        <pre className="bg-gray-50 border border-gray-200 p-3 rounded overflow-x-auto text-xs font-mono text-gray-800">
+                          {JSON.stringify(message.data, null, 2)}
+                        </pre>
+                      </details>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex justify-start">
+                <div className="bg-muted/40 rounded-lg px-4 py-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Form */}
+          <div className="px-6 py-4 border-t border-border bg-surface sticky bottom-0">
+            {!token ? (
+              <div className="bg-amber-500/10 border border-amber-500/40 rounded-lg px-4 py-3 text-sm text-amber-200 mb-4">
+                Please sign in to use Copilot
+              </div>
+            ) : null}
+
+            <form onSubmit={handleSubmit} className="flex gap-3">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Ask a question about your pricing..."
+                className="flex-1 px-4 py-3 rounded-lg border border-border bg-surface focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-fg placeholder:text-mute"
+                disabled={loading || !token}
+              />
+              <button
+                type="submit"
+                disabled={!query.trim() || loading || !token}
+                className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-muted disabled:cursor-not-allowed text-white font-medium transition"
+              >
+                {loading ? 'Thinking...' : 'Ask'}
+              </button>
+            </form>
           </div>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          {messages.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-5xl mb-4">🤖</div>
-              <p className="text-lg text-fg mb-2">Welcome to Copilot!</p>
-              <p className="text-sm text-mute mb-6">
-                I can help you analyze your pricing data in natural language
-              </p>
+        {/* Right Panel: Simulation */}
+        {isSimulationMode && (
+          <div className="w-[400px] md:w-[500px] flex flex-col bg-gray-50/50">
+            <div className="px-6 py-4 border-b border-border bg-surface">
+              <h2 className="text-lg font-semibold text-fg">Simulation Results</h2>
+              <p className="text-sm text-mute">Projected impact of proposed changes</p>
+            </div>
 
-              {/* Suggested Queries */}
-              <div className="text-left max-w-md mx-auto">
-                <h3 className="text-sm font-medium text-fg mb-3">Try asking:</h3>
-                <div className="grid gap-2">
-                  {SUGGESTED_QUERIES.slice(0, 4).map((suggestion, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      disabled={loading || !token}
-                      className="text-left text-sm px-4 py-3 rounded-lg border border-border bg-surface hover:bg-muted/10 hover:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <span className="text-blue-500 mr-2">💡</span>
-                      {suggestion}
-                    </button>
-                  ))}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Impact Cards */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-surface p-4 rounded-lg border border-border shadow-sm">
+                  <div className="text-sm text-mute mb-1">Matched Products</div>
+                  <div className="text-2xl font-bold text-fg">{simulationData.summary.matched}</div>
+                </div>
+                <div className="bg-surface p-4 rounded-lg border border-border shadow-sm">
+                  <div className="text-sm text-mute mb-1">Would Change</div>
+                  <div className="text-2xl font-bold text-blue-600">{simulationData.summary.wouldChange}</div>
+                </div>
+                <div className="bg-surface p-4 rounded-lg border border-border shadow-sm">
+                  <div className="text-sm text-mute mb-1">Total Revenue Δ</div>
+                  <div className={`text-2xl font-bold ${simulationData.summary.totalDelta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {simulationData.summary.totalDelta >= 0 ? '+' : ''}{simulationData.summary.totalDelta}¢
+                  </div>
+                </div>
+                <div className="bg-surface p-4 rounded-lg border border-border shadow-sm">
+                  <div className="text-sm text-mute mb-1">Confidence</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {Math.round((simulationData.confidence || 0.9) * 100)}%
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[85%] rounded-lg px-4 py-3 ${
-                  message.type === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : message.type === 'system'
-                      ? 'bg-red-500/10 border border-red-500/40 text-red-400'
-                      : 'bg-muted/40 text-fg'
-                }`}
-              >
-                <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-
-                {/* Method badge */}
-                {message.method ? (
-                  <div className="mt-2 pt-2 border-t border-border/30">
-                    <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">
-                      {message.method === 'ai' ? '✨ AI-powered' : '🔍 Pattern-based'}
+              {/* Proposed Rule */}
+              <div className="bg-surface p-4 rounded-lg border border-border shadow-sm">
+                <h3 className="font-medium mb-3">Proposed Rule</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between py-1 border-b border-border/50">
+                    <span className="text-mute">Name</span>
+                    <span className="font-medium">{simulationData.rule.name}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-border/50">
+                    <span className="text-mute">Transform</span>
+                    <span className="font-medium">
+                      {simulationData.rule.transform.transform.type === 'percentage'
+                        ? `${simulationData.rule.transform.transform.value}%`
+                        : simulationData.rule.transform.transform.type}
                     </span>
                   </div>
-                ) : null}
-
-                {/* Show data if available */}
-                {message.data ? (
-                  <div className="mt-3 pt-3 border-t border-border/30">
-                    <details className="text-xs">
-                      <summary className="cursor-pointer font-medium mb-2">
-                        View Data
-                      </summary>
-                      <pre className="bg-gray-50 border border-gray-200 p-3 rounded overflow-x-auto text-xs font-mono text-gray-800">
-                        {JSON.stringify(message.data, null, 2)}
-                      </pre>
-                    </details>
+                  <div className="flex justify-between py-1 border-b border-border/50">
+                    <span className="text-mute">Selector</span>
+                    <span className="font-medium">
+                      {simulationData.rule.selector.predicates.length} condition(s)
+                    </span>
                   </div>
-                ) : null}
-
-                {/* Show SQL if available */}
-                {message.sql ? (
-                  <div className="mt-2 pt-2 border-t border-border/30">
-                    <details className="text-xs">
-                      <summary className="cursor-pointer font-medium mb-2">
-                        View SQL Query
-                      </summary>
-                      <pre className="bg-gray-50 border border-gray-200 p-3 rounded overflow-x-auto font-mono text-xs text-gray-800">
-                        {message.sql}
-                      </pre>
-                    </details>
-                  </div>
-                ) : null}
-
-                {/* Show suggestions */}
-                {message.suggestions && message.suggestions.length > 0 ? (
-                  <div className="mt-3 pt-3 border-t border-border/30">
-                    <div className="text-xs font-medium mb-2">Try asking:</div>
-                    <div className="space-y-1">
-                      {message.suggestions.slice(0, 3).map((suggestion, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          className="block text-xs text-left w-full px-2 py-1.5 rounded hover:bg-gray-100 transition"
-                        >
-                          • {suggestion}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="text-xs opacity-60 mt-2">
-                  {message.timestamp.toLocaleTimeString()}
                 </div>
               </div>
-            </div>
-          ))}
 
-          {loading && (
-            <div className="flex justify-start">
-              <div className="bg-muted/40 rounded-lg px-4 py-3">
-                <div className="flex items-center space-x-2">
-                  <div
-                    className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-                    style={{ animationDelay: '0ms' }}
-                  />
-                  <div
-                    className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-                    style={{ animationDelay: '150ms' }}
-                  />
-                  <div
-                    className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-                    style={{ animationDelay: '300ms' }}
-                  />
-                </div>
+              {/* Actions */}
+              <div className="space-y-3 pt-4">
+                <button
+                  onClick={handleApplyAsRule}
+                  disabled={loading}
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+                >
+                  <span>📝</span> Apply as Rule (Draft)
+                </button>
+                <button
+                  disabled={true}
+                  className="w-full py-3 px-4 bg-gray-100 text-gray-400 rounded-lg font-medium cursor-not-allowed flex items-center justify-center gap-2"
+                  title="Coming soon"
+                >
+                  <span>⚡</span> Apply Once (Coming Soon)
+                </button>
               </div>
             </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Form */}
-        <div className="px-6 py-4 border-t border-border bg-surface sticky bottom-0">
-          {!token ? (
-            <div className="bg-amber-500/10 border border-amber-500/40 rounded-lg px-4 py-3 text-sm text-amber-200 mb-4">
-              Please sign in to use Copilot
-            </div>
-          ) : null}
-
-          <form onSubmit={handleSubmit} className="flex gap-3">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ask a question about your pricing..."
-              className="flex-1 px-4 py-3 rounded-lg border border-border bg-surface focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-fg placeholder:text-mute"
-              disabled={loading || !token}
-            />
-            <button
-              type="submit"
-              disabled={!query.trim() || loading || !token}
-              className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-muted disabled:cursor-not-allowed text-white font-medium transition"
-            >
-              {loading ? 'Thinking...' : 'Ask'}
-            </button>
-          </form>
-        </div>
+          </div>
+        )}
       </div>
     </>
   )

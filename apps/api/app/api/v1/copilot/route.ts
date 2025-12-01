@@ -15,7 +15,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withSecurity } from '@/lib/security-headers'
 import { prisma, Prisma } from '@calibr/db'
-import { generateSQL } from '@/lib/openai'
+import { generateSQL, generatePricingRule } from '@/lib/openai'
+import { simulateRule, type PricingRule } from '@calibr/pricing-engine'
 
 export const runtime = 'nodejs'
 
@@ -116,9 +117,9 @@ async function requireProjectAccess(
         Tenant: true,
         Membership: userId
           ? {
-              where: { userId },
-              select: { role: true },
-            }
+            where: { userId },
+            select: { role: true },
+          }
           : false,
       },
     })
@@ -251,6 +252,54 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
 
     const { projectId, tenantId, role } = access
 
+    // Determine intent
+    const intent = determineQueryType(query)
+
+    // Handle Simulation Intent
+    if (intent === 'simulation') {
+      try {
+        const simulationResult = await handleSimulationQuery(projectId, tenantId, query, userId, role, context)
+
+        // Log successful simulation
+        await logQuery({
+          tenantId,
+          projectId,
+          userId,
+          userRole: role,
+          query,
+          queryType: 'simulation',
+          executionTime: Date.now() - startTime,
+          method: 'ai',
+          success: true,
+          metadata: {
+            context,
+            ruleName: (simulationResult.rule as PricingRule).name,
+            impact: simulationResult.summary
+          },
+        })
+
+        return NextResponse.json(
+          {
+            type: 'simulation',
+            answer: simulationResult.answer,
+            rule: simulationResult.rule,
+            summary: simulationResult.summary,
+            results: simulationResult.results,
+            method: 'ai',
+            metadata: {
+              schemaVersion: SCHEMA_VERSION,
+              executionTime: Date.now() - startTime,
+              role,
+            },
+          },
+          { status: 200 }
+        )
+      } catch (error) {
+        console.error('[Copilot] Simulation failed:', error)
+        // Fallback to standard query if simulation fails
+      }
+    }
+
     // Try AI-powered query generation first
     if (process.env.OPENAI_API_KEY) {
       try {
@@ -274,6 +323,7 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
 
         return NextResponse.json(
           {
+            type: 'query',
             answer: aiResult.answer,
             data: aiResult.data,
             sql: aiResult.sql,
@@ -312,6 +362,7 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
+        type: 'query',
         answer: result.answer,
         data: result.data,
         sql: result.sql,
@@ -339,10 +390,54 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
 })
 
 /**
+ * Handle simulation queries using AI and Pricing Engine
+ */
+async function handleSimulationQuery(
+  projectId: string,
+  tenantId: string,
+  query: string,
+  userId?: string,
+  role?: string,
+  context?: unknown
+) {
+  // 1. Generate PricingRule from natural language
+  const { rule, explanation, confidence } = await generatePricingRule(query, JSON.stringify(context))
+
+  // 2. Run simulation
+  const simulation = await simulateRule({
+    tenantId,
+    projectId,
+    rule: rule as PricingRule,
+    actor: userId,
+    dryRun: true,
+  })
+
+  return {
+    answer: explanation,
+    rule,
+    summary: simulation.summary,
+    results: simulation.results,
+    confidence
+  }
+}
+
+/**
  * Determine query type from natural language
  */
 function determineQueryType(query: string): string {
   const lowerQuery = query.toLowerCase()
+
+  // "Simulation" intent
+  if (
+    lowerQuery.includes('increase') ||
+    lowerQuery.includes('decrease') ||
+    lowerQuery.includes('change price') ||
+    lowerQuery.includes('set price') ||
+    lowerQuery.includes('simulate') ||
+    lowerQuery.includes('what if')
+  ) {
+    return 'simulation'
+  }
 
   if (lowerQuery.includes('why') || lowerQuery.includes('explain')) {
     return 'explain'
@@ -601,7 +696,7 @@ async function simulatePriceIncrease(
   const avgNewMargin =
     simulated.filter((s) => s.newMargin !== null).length > 0
       ? simulated.filter((s) => s.newMargin !== null).reduce((sum, s) => sum + (s.newMargin || 0), 0) /
-        simulated.filter((s) => s.newMargin !== null).length
+      simulated.filter((s) => s.newMargin !== null).length
       : null
 
   const answer =
