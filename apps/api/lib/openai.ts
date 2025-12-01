@@ -3,6 +3,40 @@
  */
 
 import OpenAI from 'openai'
+import { z } from 'zod'
+
+const PricingRuleSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  selector: z.object({
+    operator: z.enum(['AND', 'OR']),
+    predicates: z.array(z.object({
+      type: z.string(),
+    }).passthrough())
+  }),
+  transform: z.object({
+    transform: z.object({
+      type: z.string(),
+      value: z.number().optional(),
+      factor: z.number().optional(),
+    }),
+    constraints: z.object({
+      floor: z.number().optional(),
+      ceiling: z.number().optional(),
+      maxPctDelta: z.number().optional(),
+    }).optional()
+  }),
+  schedule: z.object({
+    type: z.literal('immediate')
+  }).optional(),
+  enabled: z.boolean().optional()
+})
+
+const AIResponseSchema = z.object({
+  rule: PricingRuleSchema,
+  explanation: z.string(),
+  confidence: z.number()
+})
 
 let openaiClient: OpenAI | null = null
 
@@ -85,7 +119,7 @@ Response format (JSON):
 export async function generatePricingRule(
   naturalLanguageQuery: string,
   context?: string
-): Promise<{ rule: unknown; explanation: string; confidence: number }> {
+): Promise<{ rule: z.infer<typeof PricingRuleSchema>; explanation: string; confidence: number }> {
   const client = getOpenAIClient()
 
   const systemPrompt = `You are a Pricing Engine expert. Convert natural language requests into a structured PricingRule JSON object.
@@ -155,10 +189,14 @@ Response format (JSON):
     }
 
     const parsed = JSON.parse(response)
+
+    // Validate with Zod
+    const validated = AIResponseSchema.parse(parsed)
+
     return {
-      rule: parsed.rule,
-      explanation: parsed.explanation,
-      confidence: parsed.confidence,
+      rule: validated.rule,
+      explanation: validated.explanation,
+      confidence: validated.confidence,
     }
   } catch (error) {
     console.error('[OpenAI] Error generating PricingRule:', error)

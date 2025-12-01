@@ -39,6 +39,33 @@ const SUGGESTED_QUERIES = [
   'Analyze margin trends for active products',
 ]
 
+interface PricingRule {
+  name: string
+  description?: string
+  selector: {
+    operator: 'AND' | 'OR'
+    predicates: Array<{ type: string;[key: string]: any }>
+  }
+  transform: {
+    transform: { type: string; value: number }
+    constraints?: { floor?: number; ceiling?: number; maxPctDelta?: number }
+  }
+}
+
+interface SimulationData {
+  type: 'simulation'
+  answer: string
+  rule: PricingRule
+  summary: {
+    total: number
+    matched: number
+    wouldChange: number
+    totalDelta: number
+  }
+  results: any[]
+  confidence?: number
+}
+
 export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: CopilotDrawerProps) {
   const { data: session } = useSession()
   const userId = (session as { user?: { id?: string } })?.user?.id
@@ -51,7 +78,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
 
   const API_BASE = apiBase || process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
 
-  const [simulationData, setSimulationData] = useState<any>(null)
+  const [simulationData, setSimulationData] = useState<SimulationData | null>(null)
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -270,10 +297,10 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
               >
                 <div
                   className={`max-w-[85%] rounded-lg px-4 py-3 ${message.type === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : message.type === 'system'
-                        ? 'bg-red-500/10 border border-red-500/40 text-red-400'
-                        : 'bg-muted/40 text-fg'
+                    ? 'bg-blue-600 text-white'
+                    : message.type === 'system'
+                      ? 'bg-red-500/10 border border-red-500/40 text-red-400'
+                      : 'bg-muted/40 text-fg'
                     }`}
                 >
                   <div className="text-sm whitespace-pre-wrap">{message.content}</div>
