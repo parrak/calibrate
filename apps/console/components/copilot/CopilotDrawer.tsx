@@ -44,7 +44,7 @@ interface PricingRule {
   description?: string
   selector: {
     operator: 'AND' | 'OR'
-    predicates: Array<{ type: string;[key: string]: any }>
+    predicates: Array<{ type: string;[key: string]: unknown }>
   }
   transform: {
     transform: { type: string; value: number }
@@ -62,7 +62,7 @@ interface SimulationData {
     wouldChange: number
     totalDelta: number
   }
-  results: any[]
+  results: unknown[]
   confidence?: number
 }
 
