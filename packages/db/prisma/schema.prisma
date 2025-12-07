@@ -333,6 +333,8 @@ model RuleRun {
   queuedAt     DateTime?     @db.Timestamptz(6) // M0.5: When queued for processing
   startedAt    DateTime?     @db.Timestamptz(6)
   finishedAt   DateTime?     @db.Timestamptz(6)
+  completedAt  DateTime?     @db.Timestamptz(6) // M0.5: When successfully completed (all targets applied)
+  failedAt     DateTime?     @db.Timestamptz(6) // M0.5: When run failed (critical error or max retries exceeded)
   explainJson  Json? // Aggregate rationale and scope
   errorMessage String?       @db.Text
   metadata     Json? // M0.5: Additional context (actor, correlation ID, etc.)
@@ -363,6 +365,8 @@ model RuleTarget {
   skuId        String? // M0.5: SKU reference for price lookups
   beforeJson   Json // Snapshot before transform (e.g., {"currency":"USD","unit_amount":1299})
   afterJson    Json // Snapshot after transform
+  fromPrice    Int? // M0.5: Price before change (in cents) for fast queries
+  toPrice      Int? // M0.5: Price after change (in cents) for fast queries
   status       RuleTargetStatus @default(PREVIEW)
   attempts     Int              @default(0) // M0.5: Retry attempt count
   lastAttempt  DateTime?        @db.Timestamptz(6) // M0.5: Last retry timestamp
