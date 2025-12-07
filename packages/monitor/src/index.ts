@@ -138,3 +138,16 @@ export {
   checkCronJobHealth
 } from './cron-heartbeat'
 
+// Prometheus exports
+export {
+  registerGauge,
+  setGauge,
+  registerCounter,
+  incrementCounter,
+  registerHistogram,
+  observeHistogram,
+  getMetricsContentType,
+  getMetrics
+} from './prometheus'
+
+

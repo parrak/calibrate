@@ -242,12 +242,12 @@ Schema + Event Bus stable.
   - ✅ Tracks correlation chains for tracing operations  
 
 ### M1.6 — Automation Runner Execution Layer NEW
-- [ ] **Automation Safety (CRITICAL)** (Week 1)
+- [x] **Automation Safety (CRITICAL)** (Week 1)
   - [x] **Guardrail Policies**: Implement Price Floor (cost+margin), Max Delta (±X%), and Daily Budget limits
   - [x] **Conflict Detection**: Pre-write revalidation (check if price changed since sim)
   - [x] **Debounce**: Prevent cascading changes (hold if last auto-update < X hours)
   - [x] **Kill Switch**: Circuit breaker per project (>X failures or >N rules fired)
-- [ ] **Deploy Automation Runner** (Week 1)
+- [x] **Deploy Automation Runner** (Week 1)
   - [x] Configure Railway service for `packages/automation-runner`
   - [x] Set up health checks and auto-scaling
   - [x] Add `packages/automation-runner` to `railway.toml`
@@ -258,7 +258,7 @@ Schema + Event Bus stable.
 - [x] **Worker Observability** (Week 2)
   - [x] Add specific alerts for `RulesWorker` (lag, failure rate, dead-letter queue depth)
   - [x] Dashboard for "Active Rule Runs"
-  - [ ] Daily Digest: "Automation made X changes today"
+  - [x] Daily Digest: "Automation made X changes today"
 - [x] Add `POST /api/v1/runs/:runId/retry-failed`
 - [x] End-to-end worker test (100 targets, retry path covered)
 - [x] Docs: "Automation Runner Architecture" (`docs/automation_runner.md`)
