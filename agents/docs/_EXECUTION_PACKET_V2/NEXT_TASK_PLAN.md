@@ -1021,16 +1021,19 @@ With **8/8 foundation milestones complete** and the Calibrate branding deployed,
 - [x] Toasts reflect server statuses (queued/applied/failed)
 - [x] Snapshot test coverage ≥ 85% (ProgressBar: 100%, runs/page: 88.03%)
 
-### M1.8 — Copilot Simulation 🟢
+### M1.8 — Copilot Simulation ✅ COMPLETE
+
+**Status**: 100% complete
+**Completed**: December 6, 2025
 **Timeline**: Week 7-8
 
-- [ ] Build `POST /api/v1/copilot/simulate` (read-only, schema validated)
-- [ ] Build `POST /api/v1/copilot/propose` → persist disabled PricingRule + preview run
-- [ ] Add modal "Ask Copilot" → show Proposed Rule + Preview Summary
-- [ ] "Open in Rule Builder" handoff to Console
-- [ ] Log full prompt, scope, and SQL for audit
-- [ ] Red-team prompt tests (denylist, injection, scope abuse)
-- [ ] Add Copilot section in docs (`docs/copilot_simulation.md`)
+- [x] Build `POST /api/v1/copilot/simulate` (read-only, schema validated)
+- [x] Build `POST /api/v1/copilot/propose` → persist disabled PricingRule + preview run
+- [x] Add modal "Ask Copilot" → show Proposed Rule + Preview Summary
+- [x] "Open in Rule Builder" handoff to Console
+- [x] Log full prompt, scope, and SQL for audit
+- [x] Red-team prompt tests (denylist, injection, scope abuse) — 30+ test cases
+- [x] Add Copilot section in docs (`docs/copilot_simulation.md`)
 
 ### M1.3 Extend — Enhanced Explainability 🟢
 **Timeline**: Ongoing

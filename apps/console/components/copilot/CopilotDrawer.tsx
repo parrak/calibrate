@@ -171,33 +171,48 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
   const handleApplyAsRule = async () => {
     if (!simulationData?.rule) return
 
-    // Create draft rule
+    const userQuery = messages[messages.length - 2]?.content || 'Copilot suggestion'
+
     try {
       setLoading(true)
-      const res = await fetch(`${API_BASE}/api/v1/rules?project=${projectSlug}`, {
+
+      // Use M1.8 propose endpoint to persist rule + preview run
+      const res = await fetch(`${API_BASE}/api/v1/copilot/propose`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: simulationData.rule.name,
-          description: simulationData.rule.description || `Created from Copilot: "${messages[messages.length - 2]?.content}"`,
-          enabled: false,
-          selectorJson: simulationData.rule.selector,
-          transformJson: simulationData.rule.transform,
+          projectSlug,
+          query: userQuery,
+          userId,
+          metadata: {
+            source: 'copilot_drawer',
+            confidence: simulationData.confidence,
+          },
         }),
       })
 
-      if (!res.ok) throw new Error('Failed to create draft rule')
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || 'Failed to propose rule')
+      }
 
-      const rule = await res.json()
+      const { rule } = await res.json()
 
-      // Redirect to rule builder
+      // Redirect to rule builder (Open in Rule Builder handoff)
       window.location.href = `/p/${projectSlug}/rules?edit=${rule.id}`
     } catch (error) {
-      console.error('Failed to create rule:', error)
-      // Show error toast (omitted for brevity)
+      console.error('Failed to propose rule:', error)
+
+      const errorMsg: Message = {
+        id: `error-${Date.now()}`,
+        type: 'system',
+        content: `Error: ${error instanceof Error ? error.message : 'Failed to save proposed rule'}`,
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMsg])
     } finally {
       setLoading(false)
     }
@@ -437,9 +452,18 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                 <button
                   onClick={handleApplyAsRule}
                   disabled={loading}
-                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+                  title="Save proposed rule and open in Rule Builder for review"
                 >
-                  <span>📝</span> Apply as Rule (Draft)
+                  {loading ? (
+                    <>
+                      <span className="animate-spin">⏳</span> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <span>📝</span> Open in Rule Builder
+                    </>
+                  )}
                 </button>
                 <button
                   disabled={true}
