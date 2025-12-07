@@ -12,6 +12,7 @@ import {
   isRetryableError,
   sleep
 } from './backoff'
+import { registerGauge, setGauge } from '@calibr/monitor'
 import { DEFAULT_WORKER_CONFIG } from './config'
 import type {
   RulesWorkerConfig,
@@ -97,6 +98,10 @@ export class RulesWorker {
 
     // Start the outbox worker
     this.outboxWorker.start()
+
+    // Register metrics
+    registerGauge('worker_queue_depth', 'Number of jobs in the worker queue', ['queue'])
+    setGauge('worker_queue_depth', 0, { queue: 'rules' })
 
     this.emitEvent('worker.started')
     logger.info('[RulesWorker] Started successfully', { metadata: { config: this.config } })
