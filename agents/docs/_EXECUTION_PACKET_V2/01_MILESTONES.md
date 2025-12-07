@@ -143,8 +143,12 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 - ✅ **RulesWorker**: Execution logic integrated with guardrail checks.
 - ✅ **Validation**: Unit tests passing for guardrail logic.
 - ✅ **Schema**: `GuardrailPolicy` model added.
+- ✅ **Job Execution APIs**: `materialize`, `apply`, `reconcile`, `retry-failed` implemented.
+- ✅ **Retry Logic**: Automatic and manual retry handling with exponential backoff.
+- ✅ **E2E Tests**: Full lifecycle verification including partial failures and rate limits.
+- ✅ **Metrics**: Prometheus metrics integrated with Grafana dashboard.
 
-**Completed:** November 2025 (M1.6 Safety Guardrails)
+**Completed:** December 2025 (M1.6 Execution Layer)
 
 ---
 

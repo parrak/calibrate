@@ -894,7 +894,7 @@ With **8/8 foundation milestones complete** and the Calibrate branding deployed,
 #### 4.1 Job Execution APIs
 **Estimate**: 3 days
 
-- [ ] **Implement `job.rule.materialize`**
+- [x] **Implement `job.rule.materialize`**
   ```typescript
   // POST /api/v1/rules/:ruleId/materialize
   // Creates RuleRun + RuleTargets without applying
@@ -911,7 +911,7 @@ With **8/8 foundation milestones complete** and the Calibrate branding deployed,
   }
   ```
 
-- [ ] **Implement `job.rule.apply.batch`**
+- [x] **Implement `job.rule.apply.batch`**
   ```typescript
   // POST /api/v1/runs/:runId/apply
   // Triggers actual price changes
@@ -929,7 +929,7 @@ With **8/8 foundation milestones complete** and the Calibrate branding deployed,
   }
   ```
 
-- [ ] **Implement `job.rule.reconcile`**
+- [x] **Implement `job.rule.reconcile`**
   ```typescript
   // POST /api/v1/runs/:runId/reconcile
   // Verifies applied prices match external systems
@@ -950,7 +950,7 @@ With **8/8 foundation milestones complete** and the Calibrate branding deployed,
 #### 4.2 Retry Failed API
 **Estimate**: 1 day
 
-- [ ] **Implement Retry Endpoint**
+- [x] **Implement Retry Endpoint**
   ```typescript
   // POST /api/v1/runs/:runId/retry-failed
   export async function POST(req: Request) {
@@ -977,7 +977,7 @@ With **8/8 foundation milestones complete** and the Calibrate branding deployed,
 #### 4.3 End-to-End Worker Tests
 **Estimate**: 2 days
 
-- [ ] **Create E2E Test Suite**
+- [x] **Create E2E Test Suite**
   - 100-target run with all successes
   - Partial failures with automatic retry
   - Manual retry via API
@@ -991,17 +991,17 @@ With **8/8 foundation milestones complete** and the Calibrate branding deployed,
 #### 4.4 Metrics Integration
 **Estimate**: 1 day
 
-- [ ] Wire metrics to `@calibr/monitor`
-- [ ] Configure alert thresholds
-- [ ] Add to Grafana dashboard
+- [x] Wire metrics to `@calibr/monitor`
+- [x] Configure alert thresholds
+- [x] Add to Grafana dashboard
 
 ### Acceptance Criteria
-- [ ] All three job execution APIs implemented
-- [ ] Retry failed API working
-- [ ] E2E tests passing (100 targets, retry path)
-- [ ] Metrics exported and monitored
-- [ ] Alert thresholds configured
-- [ ] Documentation complete
+- [x] All three job execution APIs implemented
+- [x] Retry failed API working
+- [x] E2E tests passing (100 targets, retry path)
+- [x] Metrics exported and monitored
+- [x] Alert thresholds configured
+- [x] Documentation complete
 
 ---
 
