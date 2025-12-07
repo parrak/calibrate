@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 async function checkDatabase() {
     const start = Date.now()
     try {
-        await prisma.$queryRaw`SELECT 1`
+        await prisma().$queryRaw`SELECT 1`
         return { status: 'up', latency: Date.now() - start }
     } catch (error) {
         return { status: 'down', error: error instanceof Error ? error.message : 'Unknown error' }
