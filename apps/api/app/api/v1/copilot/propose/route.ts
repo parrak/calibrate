@@ -198,9 +198,9 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
         name: rule.name,
         description: rule.description || `Copilot-generated: "${query}"`,
         enabled: false, // Disabled by default for review
-        selectorJson: rule.selector,
-        transformJson: rule.transform,
-        scheduleJson: rule.schedule || null,
+        selectorJson: rule.selector as any,
+        transformJson: rule.transform as any,
+        createdBy: userId || 'system',
         source: 'copilot',
         metadata: {
           query,
@@ -208,7 +208,7 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
           explanation,
           generatedAt: new Date().toISOString(),
           ...(metadata || {}),
-        },
+        } as any,
       },
     })
 
@@ -218,7 +218,7 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
       data: {
         tenantId: access.tenantId,
         projectId: access.projectId,
-        pricingRuleId: persistedRule.id,
+        ruleId: persistedRule.id,
         status: 'PREVIEW',
         metadata: {
           simulation: {
@@ -227,7 +227,7 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
           },
           query,
           confidence,
-        },
+        } as any,
       },
     })
 
@@ -256,7 +256,6 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
         enabled: persistedRule.enabled,
         selector: persistedRule.selectorJson,
         transform: persistedRule.transformJson,
-        schedule: persistedRule.scheduleJson,
         source: persistedRule.source,
       },
       previewRun: {
