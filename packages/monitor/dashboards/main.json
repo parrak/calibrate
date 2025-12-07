@@ -1,0 +1,141 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "title": "API Request Rate",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(http_requests_total[1m])) by (method, route)",
+                    "legendFormat": "{{method}} {{route}}"
+                }
+            ]
+        },
+        {
+            "title": "API Error Rate (5xx)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(http_requests_total{status=~\"5..\"}[1m])) / sum(rate(http_requests_total[1m])) * 100",
+                    "legendFormat": "Error %"
+                }
+            ]
+        },
+        {
+            "title": "API Latency (p95)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le))",
+                    "legendFormat": "p95"
+                }
+            ]
+        },
+        {
+            "title": "Connector Health",
+            "type": "stat",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "expr": "connector_up",
+                    "legendFormat": "{{connector}}"
+                }
+            ]
+        },
+        {
+            "title": "Event Bus Throughput",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 16
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(event_bus_published_total[1m]))",
+                    "legendFormat": "Published"
+                },
+                {
+                    "expr": "sum(rate(event_bus_consumed_total[1m]))",
+                    "legendFormat": "Consumed"
+                }
+            ]
+        },
+        {
+            "title": "Worker Queue Depth",
+            "type": "gauge",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 16
+            },
+            "targets": [
+                {
+                    "expr": "worker_queue_depth",
+                    "legendFormat": "{{queue}}"
+                }
+            ]
+        }
+    ],
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "calibrate",
+        "production"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Calibrate Production Overview",
+    "uid": "calibrate-prod-overview",
+    "version": 1,
+    "weekStart": ""
+}
