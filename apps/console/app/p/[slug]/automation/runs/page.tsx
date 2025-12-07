@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Button, Drawer, EmptyState, StatusPill, useToast, Tabs, TabsList, TabsTrigger, TabsContent } from '@/lib/components'
+import { Button, Drawer, EmptyState, StatusPill, useToast, Tabs, TabsList, TabsTrigger, TabsContent, ProgressBar } from '@/lib/components'
 import { ResponsiveTable } from '@/lib/components/ResponsiveTable'
 import { JSONView } from '@/lib/components/JSONView'
 import { AuditTrail } from '@/lib/components/AuditTrail'
@@ -271,15 +271,27 @@ export default function AutomationRunsPage({ params }: { params: { slug: string 
   }, [])
 
   // Show toast for status changes
+  const prevProgressRef = useRef<Map<string, string>>(new Map())
   useEffect(() => {
     items.forEach((item) => {
       const progress = progressData.get(item.id)
       if (progress) {
-        if (progress.status === 'APPLIED') {
-          setMsg(`Run "${item.PricingRule.name}" completed successfully`)
-        } else if (progress.status === 'FAILED') {
-          setMsg(`Run "${item.PricingRule.name}" failed`)
+        const prevStatus = prevProgressRef.current.get(item.id)
+        const currentStatus = progress.status
+
+        // Only show toast if status actually changed
+        if (prevStatus && prevStatus !== currentStatus) {
+          if (currentStatus === 'APPLYING') {
+            setMsg(`Run "${item.PricingRule.name}" is now applying changes`)
+          } else if (currentStatus === 'APPLIED') {
+            setMsg(`✓ Run "${item.PricingRule.name}" completed successfully`)
+          } else if (currentStatus === 'FAILED') {
+            setMsg(`✗ Run "${item.PricingRule.name}" failed`)
+          }
         }
+
+        // Update previous status
+        prevProgressRef.current.set(item.id, currentStatus)
       }
     })
   }, [progressData, items, setMsg])
@@ -303,11 +315,20 @@ export default function AutomationRunsPage({ params }: { params: { slug: string 
           const progress = progressData.get(item.id)
           const displayStatus = progress?.status || item.status
           return (
-            <div className="space-y-1">
+            <div className="space-y-2">
               <StatusPill status={displayStatus} />
               {progress && ['QUEUED', 'APPLYING'].includes(displayStatus) && (
-                <div className="text-xs text-mute">
-                  {progress.progress}% ({progress.completed}/{progress.totalTargets})
+                <div className="space-y-1">
+                  <ProgressBar
+                    value={progress.completed}
+                    max={progress.totalTargets}
+                    size="sm"
+                    variant={displayStatus === 'APPLYING' ? 'default' : 'warning'}
+                    showLabel={false}
+                  />
+                  <div className="text-xs text-mute">
+                    {progress.completed}/{progress.totalTargets} ({progress.progress}%)
+                  </div>
                 </div>
               )}
             </div>
