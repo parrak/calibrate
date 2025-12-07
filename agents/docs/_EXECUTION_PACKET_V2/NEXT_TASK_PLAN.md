@@ -1009,14 +1009,17 @@ With **8/8 foundation milestones complete** and the Calibrate branding deployed,
 
 ## Secondary Priorities (Weeks 4-8)
 
-### M1.7 — Automation Runner UI Enhancements 🟢
+### M1.7 — Automation Runner UI Enhancements ✅ COMPLETE
+
+**Status**: 100% complete
+**Completed**: December 6, 2025
 **Timeline**: Week 5-6
 
-- [ ] Add "Retry Failed" control in Runs table
-- [ ] Add "Explain" tab displaying transform and audit trace
-- [ ] Show apply progress indicator via SSE or polling
-- [ ] Toasts reflect server statuses (queued/applied/failed)
-- [ ] Snapshot test coverage ≥ 85%
+- [x] Add "Retry Failed" control in Runs table
+- [x] Add "Explain" tab displaying transform and audit trace
+- [x] Show apply progress indicator via SSE or polling
+- [x] Toasts reflect server statuses (queued/applied/failed)
+- [x] Snapshot test coverage ≥ 85% (ProgressBar: 100%, runs/page: 88.03%)
 
 ### M1.8 — Copilot Simulation 🟢
 **Timeline**: Week 7-8
