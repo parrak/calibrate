@@ -14,7 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { withSecurity } from '@/lib/security-headers'
-import { prisma } from '@calibr/db'
+import { prisma, Prisma } from '@calibr/db'
 import { generatePricingRule } from '@/lib/openai'
 import { simulateRule, type PricingRule } from '@calibr/pricing-engine'
 import { z } from 'zod'
@@ -198,8 +198,8 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
         name: rule.name,
         description: rule.description || `Copilot-generated: "${query}"`,
         enabled: false, // Disabled by default for review
-        selectorJson: rule.selector as any,
-        transformJson: rule.transform as any,
+        selectorJson: rule.selector as Prisma.InputJsonValue,
+        transformJson: rule.transform as Prisma.InputJsonValue,
         createdBy: userId || 'system',
         source: 'copilot',
         metadata: {
@@ -208,7 +208,7 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
           explanation,
           generatedAt: new Date().toISOString(),
           ...(metadata || {}),
-        } as any,
+        } as Prisma.InputJsonValue,
       },
     })
 
@@ -227,7 +227,7 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
           },
           query,
           confidence,
-        } as any,
+        } as Prisma.InputJsonValue,
       },
     })
 
