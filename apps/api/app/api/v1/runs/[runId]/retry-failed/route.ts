@@ -24,9 +24,9 @@ export async function POST(
       runId,
       status: 'queued',
       retriedCount: retriedTargets.length,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       targets: retriedTargets.map((t: any) => ({
         id: t.id,
-        skuId: t.skuId,
         status: t.status
       }))
     })
