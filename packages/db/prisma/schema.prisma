@@ -307,6 +307,8 @@ model PricingRule {
   transformJson Json // Transform definition (e.g., {"op":"percent","value":-10,"floor":9.99})
   scheduleAt    DateTime? @db.Timestamptz(6) // Optional one-shot schedule
   enabled       Boolean   @default(true)
+  source        String?   @default("manual") // M1.8: "manual" or "copilot" for AI-generated rules
+  metadata      Json? // M1.8: Additional context (query, confidence, explanation for copilot rules)
   createdBy     String
   createdAt     DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
@@ -318,6 +320,7 @@ model PricingRule {
   @@index([tenantId, projectId, enabled])
   @@index([scheduleAt])
   @@index([deletedAt])
+  @@index([source])
 }
 
 /// RuleRun — Execution record for pricing rules
