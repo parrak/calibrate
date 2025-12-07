@@ -24,7 +24,7 @@ export async function POST(
       runId,
       status: 'queued',
       retriedCount: retriedTargets.length,
-      targets: retriedTargets.map(t => ({
+      targets: retriedTargets.map((t: any) => ({
         id: t.id,
         skuId: t.skuId,
         status: t.status

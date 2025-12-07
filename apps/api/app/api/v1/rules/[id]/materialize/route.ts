@@ -4,7 +4,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-// @ts-expect-error - build artifacts resolve at runtime
 import { getRulesWorker } from '@calibr/automation-runner'
 import { logger } from '@calibr/monitor'
 
