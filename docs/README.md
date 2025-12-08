@@ -24,6 +24,7 @@ The documentation is automatically deployed to Vercel when changes are pushed to
 
 ## 📚 Documentation Structure
 
+- **Release Notes:** `../RELEASE_NOTES.md` - Latest features and improvements
 - **OpenAPI Specification:** `api/openapi.yaml` - Complete API specification
 - **Swagger UI:** `index.html` - Interactive documentation interface
 - **Static Assets:** All files served as static content

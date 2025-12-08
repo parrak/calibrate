@@ -11,6 +11,8 @@ The Competitor Monitoring system is now 100% complete, including:
 - ✅ Validation script ensuring < 1% error rate
 
 ## 📂 Files Updated
+- `RELEASE_NOTES.md`: Added Winter 2025 Release Notes.
+- `README.md`, `docs/README.md`: Added links to Release Notes.
 - `agents/docs/_EXECUTION_PACKET_V2/NEXT_TASK_PLAN.md`: Marked M0.6 as complete in Executive Summary and Priority 1.
 - `agents/docs/_EXECUTION_PACKET_V2/NOVEMBER_2025_PROGRESS.md`: Updated status in "In Progress" and "Needs Attention" sections.
 - `agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md`: Added M0.6 as a completed milestone.
@@ -22,3 +24,4 @@ The Competitor Monitoring system is now 100% complete, including:
 
 ## 🔗 Related Issues
 - Closes M0.6
+- Adds Release Notes for V2 (Winter 2025)

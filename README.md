@@ -158,6 +158,8 @@ The complete API documentation includes:
 - Authentication and rate limiting information
 - Code examples and integration guides
 
+**📋 Release Notes:** See [RELEASE_NOTES.md](RELEASE_NOTES.md) for the latest features and improvements.
+
 ### Quick Reference
 
 **Base URL:** `https://api.calibr.lat`
