@@ -11,6 +11,7 @@
     "prisma": "prisma",
     "migrate": "prisma migrate dev",
     "migrate:check": "tsx scripts/check-migrations.ts",
+    "migrate:resolve-init": "tsx scripts/resolve-init-migration.ts",
     "generate": "prisma generate",
     "generate:schemas": "tsx scripts/generate-schemas.ts",
     "generate:dtos": "tsx scripts/generate-dtos.ts",
