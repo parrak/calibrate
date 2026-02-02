@@ -3,6 +3,10 @@ import { resolve } from 'path'
 
 export default defineConfig({
   resolve: {
+    alias: {
+      '@calibr/monitor': resolve(__dirname, 'tests/mocks/monitor.ts'),
+      '@calibr/pricing-engine': resolve(__dirname, '../pricing-engine/index.ts'),
+    },
     extensions: ['.ts', '.js', '.json'],
   },
   test: {

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { POST } from '../app/api/v1/copilot/route'
+import { authSecurityManager } from '@/lib/auth-security'
 
 // Mock OpenAI and Pricing Engine
 vi.mock('@/lib/openai', () => ({
@@ -61,6 +62,14 @@ const store = (() => {
                 }
             },
         },
+        membership: {
+            findUnique: async ({ where }: { where: { userId_projectId: { userId: string; projectId: string } } }) => {
+                const membership = state.memberships.find(
+                    (m) => m.projectId === where.userId_projectId.projectId && m.userId === where.userId_projectId.userId
+                )
+                return membership ? clone(membership) : null
+            },
+        },
         copilotQueryLog: {
             create: async ({ data }: { data: any }) => {
                 state.copilotQueryLogs.push(data)
@@ -82,9 +91,12 @@ vi.mock('@calibr/db', () => ({
 }))
 
 const makeRequest = (body: any) => {
+    const token = authSecurityManager.generateSessionToken(
+        authSecurityManager.createAuthContext({ userId: body.userId || 'editor1', roles: ['editor'] })
+    )
     return new NextRequest('http://localhost/api/v1/copilot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
     })
 }

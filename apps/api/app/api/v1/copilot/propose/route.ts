@@ -18,6 +18,8 @@ import { prisma, Prisma } from '@calibr/db'
 import { generatePricingRule } from '@/lib/openai'
 import { simulateRule, type PricingRule } from '@calibr/pricing-engine'
 import { z } from 'zod'
+import { getRulesWorker } from '@calibr/automation-runner'
+import { requireProjectAccess, errorJson } from '../../price-changes/utils'
 
 const SCHEMA_VERSION = '1.8.0' // M1.8 schema version
 
@@ -28,60 +30,65 @@ const proposeSchema = z.object({
   projectSlug: z.string().trim().min(1),
   query: z.string().trim().min(1),
   userId: z.string().trim().optional(),
+  rule: z
+    .object({
+      id: z.string().optional(),
+      name: z.string(),
+      description: z.string().optional(),
+      selector: z.object({
+        predicates: z.array(
+          z.discriminatedUnion('type', [
+            z.object({ type: z.literal('all') }),
+            z.object({ type: z.literal('sku'), skuCodes: z.array(z.string()) }),
+            z.object({ type: z.literal('tag'), tags: z.array(z.string()) }),
+            z.object({
+              type: z.literal('priceRange'),
+              min: z.number().optional(),
+              max: z.number().optional(),
+              currency: z.string().optional(),
+            }),
+            z.object({
+              type: z.literal('custom'),
+              field: z.string(),
+              operator: z.enum(['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'contains']),
+              value: z.custom<unknown>((val) => val !== undefined, {
+                message: 'value is required for custom selector predicates',
+              }),
+            }),
+          ])
+        ),
+        operator: z.enum(['AND', 'OR']).optional(),
+      }),
+      transform: z.object({
+        transform: z.union([
+          z.object({ type: z.literal('percentage'), value: z.number() }),
+          z.object({ type: z.literal('absolute'), value: z.number() }),
+          z.object({ type: z.literal('set'), value: z.number() }),
+          z.object({ type: z.literal('multiply'), factor: z.number() }),
+        ]),
+        constraints: z
+          .object({
+            floor: z.number().optional(),
+            ceiling: z.number().optional(),
+            maxPctDelta: z.number().optional(),
+          })
+          .optional(),
+      }),
+      schedule: z
+        .object({
+          type: z.enum(['immediate', 'scheduled', 'recurring']),
+          scheduledAt: z.coerce.date().optional(),
+          cron: z.string().optional(),
+          timezone: z.string().optional(),
+        })
+        .optional(),
+      enabled: z.boolean().optional(),
+    })
+    .optional(),
+  explanation: z.string().optional(),
+  confidence: z.number().optional(),
   metadata: z.record(z.unknown()).optional(),
 })
-
-/**
- * RBAC: Check user has access to project and required role
- */
-async function requireProjectAccess(
-  projectSlug: string,
-  userId?: string,
-  requiredRole: 'VIEWER' | 'EDITOR' | 'ADMIN' | 'OWNER' = 'EDITOR'
-): Promise<{
-  allowed: boolean
-  role?: string
-  projectId?: string
-  tenantId?: string
-}> {
-  try {
-    const project = await prisma().project.findUnique({
-      where: { slug: projectSlug },
-      include: {
-        Membership: userId
-          ? {
-              where: { userId },
-              select: { role: true },
-            }
-          : false,
-      },
-    })
-
-    if (!project) {
-      return { allowed: false }
-    }
-
-    if (!userId || !project.Membership || project.Membership.length === 0) {
-      return { allowed: false, projectId: project.id, tenantId: project.tenantId }
-    }
-
-    const membership = project.Membership[0]
-    const hierarchy = { OWNER: 4, ADMIN: 3, EDITOR: 2, VIEWER: 1 }
-    const allowed =
-      hierarchy[(membership.role as keyof typeof hierarchy) ?? 'VIEWER'] >=
-      hierarchy[requiredRole]
-
-    return {
-      allowed,
-      role: membership.role,
-      projectId: project.id,
-      tenantId: project.tenantId,
-    }
-  } catch (error) {
-    console.error('[Copilot Propose] RBAC check failed:', error)
-    return { allowed: false }
-  }
-}
 
 /**
  * Log propose operation for audit trail
@@ -148,36 +155,42 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
     )
   }
 
-  const { projectSlug, query, userId, metadata } = parsed.data
+  const {
+    projectSlug,
+    query,
+    metadata,
+    rule: providedRule,
+    explanation: providedExplanation,
+    confidence: providedConfidence,
+  } = parsed.data
 
   // Check access
-  const access = await requireProjectAccess(projectSlug, userId, 'EDITOR')
-  if (!access.allowed || !access.projectId || !access.tenantId) {
-    if (access.projectId && access.tenantId) {
-      await logPropose({
-        tenantId: access.tenantId,
-        projectId: access.projectId,
-        userId,
-        userRole: access.role,
-        query,
-        ruleName: 'unknown',
-        executionTime: Date.now() - start,
-        success: false,
-        error: 'Access denied',
-        metadata,
-      })
-    }
-
-    return NextResponse.json(
-      { error: 'Access denied', message: 'User does not have permission to propose rules' },
-      { status: 403 }
-    )
+  const access = await requireProjectAccess(req, projectSlug, 'EDITOR')
+  if ('error' in access) {
+    return errorJson(access.error)
   }
 
   try {
-    // 1. Generate PricingRule from natural language using AI
-    console.log('[Copilot Propose] Generating rule from query:', query)
-    const { rule, explanation, confidence } = await generatePricingRule(query, JSON.stringify(metadata))
+    const userId = access.session.userId
+
+    // 1. Generate PricingRule from natural language using AI (unless provided)
+    let rule = providedRule
+    let explanation = providedExplanation
+    let confidence = providedConfidence
+
+    if (!rule) {
+      console.log('[Copilot Propose] Generating rule from query:', query)
+      const generated = await generatePricingRule(query, JSON.stringify(metadata))
+      rule = generated.rule
+      explanation = generated.explanation
+      confidence = generated.confidence
+    }
+
+    if (!rule) {
+      throw new Error('Failed to generate pricing rule')
+    }
+
+    rule.enabled = false
 
     // 2. Run simulation to get impact preview
     console.log('[Copilot Propose] Simulating rule:', rule.name)
@@ -193,8 +206,8 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
     console.log('[Copilot Propose] Persisting disabled rule')
     const persistedRule = await prisma().pricingRule.create({
       data: {
-        tenantId: access.tenantId,
-        projectId: access.projectId,
+        tenantId: access.project.tenantId,
+        projectId: access.project.id,
         name: rule.name,
         description: rule.description || `Copilot-generated: "${query}"`,
         enabled: false, // Disabled by default for review
@@ -212,18 +225,19 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
       },
     })
 
-    // 4. Create preview run (PREVIEW state, not executed)
-    console.log('[Copilot Propose] Creating preview run')
-    const previewRun = await prisma().ruleRun.create({
+    // 4. Materialize preview run with targets (PREVIEW state)
+    console.log('[Copilot Propose] Materializing preview run')
+    const worker = getRulesWorker()
+    const previewRun = await worker.materialize(persistedRule.id, userId || 'system')
+    const runStatus = await worker.getRunStatus(previewRun.id)
+
+    await prisma().ruleRun.update({
+      where: { id: previewRun.id },
       data: {
-        tenantId: access.tenantId,
-        projectId: access.projectId,
-        ruleId: persistedRule.id,
-        status: 'PREVIEW',
         metadata: {
           simulation: {
             summary: simulation.summary,
-            results: simulation.results.slice(0, 10), // Store first 10 results for preview
+            results: simulation.results.slice(0, 10),
           },
           query,
           confidence,
@@ -233,10 +247,10 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
 
     // 5. Log successful propose operation
     await logPropose({
-      tenantId: access.tenantId,
-      projectId: access.projectId,
+      tenantId: access.project.tenantId,
+      projectId: access.project.id,
       userId,
-      userRole: access.role,
+      userRole: access.membership.role,
       query,
       ruleName: rule.name,
       ruleId: persistedRule.id,
@@ -262,6 +276,7 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
         id: previewRun.id,
         status: previewRun.status,
         createdAt: previewRun.createdAt,
+        targetCount: runStatus?.totalTargets ?? 0,
       },
       simulation: {
         summary: simulation.summary,
@@ -279,19 +294,27 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
   } catch (error) {
     console.error('[Copilot Propose] Failed to propose rule:', error)
 
+    const access = await requireProjectAccess(req, projectSlug, 'EDITOR')
+    const userId = 'error' in access ? undefined : access.session.userId
+    const projectId = 'error' in access ? undefined : access.project.id
+    const tenantId = 'error' in access ? undefined : access.project.tenantId
+    const userRole = 'error' in access ? undefined : access.membership.role
+
     // Log failed operation
-    await logPropose({
-      tenantId: access.tenantId,
-      projectId: access.projectId,
-      userId,
-      userRole: access.role,
-      query,
-      ruleName: 'unknown',
-      executionTime: Date.now() - start,
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      metadata,
-    })
+    if (tenantId && projectId) {
+      await logPropose({
+        tenantId,
+        projectId,
+        userId,
+        userRole,
+        query,
+        ruleName: 'unknown',
+        executionTime: Date.now() - start,
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        metadata,
+      })
+    }
 
     return NextResponse.json(
       {

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { POST as copilotRoute } from '../app/api/v1/copilot/route'
+import { authSecurityManager } from '@/lib/auth-security'
 
 type StoreState = {
   projects: Array<{ id: string; slug: string; tenantId: string }>
@@ -149,6 +150,18 @@ const store = (() => {
         return null
       },
     },
+    membership: {
+      findUnique: async ({
+        where,
+      }: {
+        where: { userId_projectId: { userId: string; projectId: string } }
+      }) => {
+        const membership = state.memberships.find(
+          (m) => m.userId === where.userId_projectId.userId && m.projectId === where.userId_projectId.projectId
+        )
+        return membership ? clone(membership) : null
+      },
+    },
     priceChange: {
       findFirst: async ({ where, orderBy }: { where: { projectId: string }; orderBy?: unknown }) => {
         const matches = state.priceChanges.filter((pc) => pc.projectId === where.projectId)
@@ -250,12 +263,24 @@ vi.mock('@/lib/openai', () => ({
 
 const makeRequest = (
   url: string,
-  init: { method?: string; headers?: Record<string, string>; body?: string } = {}
+  init: { method?: string; headers?: Record<string, string>; body?: string; token?: string } = {}
 ) => {
-  const { method = 'POST', headers = {}, body } = init
-  const request = new Request(url, { method, headers, body })
+  const { method = 'POST', headers = {}, body, token } = init
+  const finalHeaders = { ...headers }
+  if (token) {
+    finalHeaders.Authorization = `Bearer ${token}`
+  }
+  const request = new Request(url, { method, headers: finalHeaders, body })
   return new NextRequest(request)
 }
+
+const createToken = (userId: string) =>
+  authSecurityManager.generateSessionToken(
+    authSecurityManager.createAuthContext({
+      userId,
+      roles: ['viewer'],
+    })
+  )
 
 describe('copilot API', () => {
   beforeEach(() => {
@@ -265,6 +290,7 @@ describe('copilot API', () => {
   it('requires projectSlug and query', async () => {
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token: createToken('user1'),
       body: JSON.stringify({}),
     })
     const res = await copilotRoute(req)
@@ -273,7 +299,7 @@ describe('copilot API', () => {
     expect(body.error).toBe('projectSlug and query are required')
   })
 
-  it('enforces RBAC - denies access without userId', async () => {
+  it('enforces RBAC - denies access without auth token', async () => {
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -282,33 +308,35 @@ describe('copilot API', () => {
       }),
     })
     const res = await copilotRoute(req)
-    expect(res.status).toBe(403)
+    expect(res.status).toBe(401)
     const body = await res.json()
-    expect(body.error).toBe('Access denied')
+    expect(body.error).toBe('Unauthorized')
   })
 
   it('enforces RBAC - denies access for non-member', async () => {
+    const token = createToken('user999')
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token,
       body: JSON.stringify({
         projectSlug: 'demo',
         query: 'Show me price changes',
-        userId: 'user999', // Not a member
       }),
     })
     const res = await copilotRoute(req)
     expect(res.status).toBe(403)
     const body = await res.json()
-    expect(body.error).toBe('Access denied')
+    expect(body.error).toBe('Forbidden')
   })
 
   it('allows VIEWER role to query (read-only)', async () => {
+    const token = createToken('user2')
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token,
       body: JSON.stringify({
         projectSlug: 'demo',
         query: 'Why was this price changed?',
-        userId: 'user2', // VIEWER role
       }),
     })
     const res = await copilotRoute(req)
@@ -319,12 +347,13 @@ describe('copilot API', () => {
   })
 
   it('allows ADMIN role to query', async () => {
+    const token = createToken('user1')
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token,
       body: JSON.stringify({
         projectSlug: 'demo',
         query: 'Why was this price changed?',
-        userId: 'user1', // ADMIN role
       }),
     })
     const res = await copilotRoute(req)
@@ -334,12 +363,13 @@ describe('copilot API', () => {
   })
 
   it('logs queries to CopilotQueryLog', async () => {
+    const token = createToken('user1')
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token,
       body: JSON.stringify({
         projectSlug: 'demo',
         query: 'Show me low margin products',
-        userId: 'user1',
       }),
     })
 
@@ -360,12 +390,13 @@ describe('copilot API', () => {
   })
 
   it('handles "why was price changed" pattern query', async () => {
+    const token = createToken('user1')
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token,
       body: JSON.stringify({
         projectSlug: 'demo',
         query: 'Why was this price changed?',
-        userId: 'user1',
       }),
     })
     const res = await copilotRoute(req)
@@ -377,12 +408,13 @@ describe('copilot API', () => {
   })
 
   it('handles "what if increase" pattern query', async () => {
+    const token = createToken('user1')
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token,
       body: JSON.stringify({
         projectSlug: 'demo',
         query: 'What if I increase prices by 15%?',
-        userId: 'user1',
       }),
     })
     const res = await copilotRoute(req)
@@ -394,12 +426,13 @@ describe('copilot API', () => {
   })
 
   it('handles "low margin" pattern query', async () => {
+    const token = createToken('user1')
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token,
       body: JSON.stringify({
         projectSlug: 'demo',
         query: 'Show me products with low margins',
-        userId: 'user1',
       }),
     })
     const res = await copilotRoute(req)
@@ -410,12 +443,13 @@ describe('copilot API', () => {
   })
 
   it('handles "how many price changes" pattern query', async () => {
+    const token = createToken('user1')
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token,
       body: JSON.stringify({
         projectSlug: 'demo',
         query: 'How many price changes last week?',
-        userId: 'user1',
       }),
     })
     const res = await copilotRoute(req)
@@ -427,12 +461,13 @@ describe('copilot API', () => {
   })
 
   it('provides suggestions for unknown queries', async () => {
+    const token = createToken('user1')
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token,
       body: JSON.stringify({
         projectSlug: 'demo',
         query: 'random query',
-        userId: 'user1',
       }),
     })
     const res = await copilotRoute(req)
@@ -444,12 +479,13 @@ describe('copilot API', () => {
   })
 
   it('includes metadata in response', async () => {
+    const token = createToken('user1')
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token,
       body: JSON.stringify({
         projectSlug: 'demo',
         query: 'Why was this price changed?',
-        userId: 'user1',
       }),
     })
     const res = await copilotRoute(req)
@@ -463,17 +499,18 @@ describe('copilot API', () => {
 
   it('isolates queries by tenant (cross-tenant protection)', async () => {
     // User from tenant2 tries to query tenant1's project
+    const token = createToken('user3')
     const req = makeRequest('http://localhost/api/v1/copilot', {
       headers: { 'Content-Type': 'application/json' },
+      token,
       body: JSON.stringify({
         projectSlug: 'demo', // tenant1's project
         query: 'Show me price changes',
-        userId: 'user3', // user from tenant2
       }),
     })
     const res = await copilotRoute(req)
     expect(res.status).toBe(403)
     const body = await res.json()
-    expect(body.error).toBe('Access denied')
+    expect(body.error).toBe('Forbidden')
   })
 })

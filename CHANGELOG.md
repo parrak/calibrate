@@ -7,6 +7,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **M1.9 Copilot Apply Flow** — End-to-end Copilot simulation → propose → approve/apply wiring with Automation Runner materialized preview runs, new run-apply API RBAC, and Copilot drawer “Approve & Apply Now” action. Includes new API tests for run apply.
 - **M1.9 Copilot Simulation API** — Introduced `/api/v1/copilot/simulate` for EDITOR+ users with zod validation, RBAC, pricing-engine execution, and Copilot audit logging. Includes Vitest coverage for payload validation, access control, and simulation logging.
 - **M1.6 Safety Guardrails** — November 2025 ✅ MILESTONE
   - **Guardrail Policies**: Implemented `GuardrailPolicy` model with Price Floor, Max Delta, and Velocity limits.
@@ -112,6 +113,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
   - **Status**: Platform validated and ready for automation features
 
 ### Changed
+- **Copilot Auth + Automation Runner Materialize** — Copilot endpoints now use session-token RBAC, Automation Runner materialize now honors selector/transform rules DSL with legacy fallback, and demo seed data now includes guardrail policy + demo rule/tag/cost data for end-to-end testing.
 - Updated branding guidance to align all public assets with the teal palette and metadata `themeColor` (`#008080`); refreshed AGENTS/PROTOCOLS docs and sample Next.js metadata.
 
 - **Automation Runner Foundation M0.5 — Phase 1** — Completed November 13, 2025 🚧 PHASE 1 COMPLETE

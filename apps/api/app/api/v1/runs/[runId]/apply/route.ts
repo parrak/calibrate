@@ -1,14 +1,69 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getRulesWorker } from '@calibr/automation-runner'
+import { prisma } from '@calibr/db'
+import { withSecurity } from '@/lib/security-headers'
+import { requireProjectAccess, errorJson } from '../../../price-changes/utils'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(
-  req: Request,
+export const POST = withSecurity(async function POST(
+  req: NextRequest,
   { params }: { params: { runId: string } }
 ) {
   try {
     const { runId } = params
+    const url = new URL(req.url)
+    const projectSlug = url.searchParams.get('project')?.trim()
+    if (!projectSlug) {
+      return errorJson({
+        status: 400,
+        error: 'BadRequest',
+        message: 'The `project` query parameter is required.',
+      })
+    }
+
+    const access = await requireProjectAccess(req, projectSlug, 'ADMIN')
+    if ('error' in access) {
+      return errorJson(access.error)
+    }
+
+    const run = await prisma().ruleRun.findFirst({
+      where: {
+        id: runId,
+        projectId: access.project.id,
+        tenantId: access.project.tenantId,
+      },
+      select: {
+        id: true,
+        status: true,
+        RuleTarget: { select: { id: true }, take: 1 },
+      },
+    })
+
+    if (!run) {
+      return errorJson({
+        status: 404,
+        error: 'NotFound',
+        message: 'Run not found',
+      })
+    }
+
+    if (run.status !== 'PREVIEW') {
+      return errorJson({
+        status: 409,
+        error: 'Conflict',
+        message: 'Only preview runs can be queued for application.',
+      })
+    }
+
+    if (!run.RuleTarget.length) {
+      return errorJson({
+        status: 400,
+        error: 'NoTargets',
+        message: 'Run has no targets to apply.',
+      })
+    }
+
     const worker = getRulesWorker()
 
     await worker.queueRun(runId)
@@ -29,4 +84,8 @@ export async function POST(
       { status: 500 }
     )
   }
-}
+})
+
+export const OPTIONS = withSecurity(async function OPTIONS() {
+  return new NextResponse(null, { status: 204 })
+})
