@@ -115,7 +115,6 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - **Worker**: Outbox worker now starts RulesWorker and registers Shopify connectors per project.
 - **Apply readiness**: RulesWorker resolves Shopify variant IDs from channelRefs for apply/reconcile.
 - **Status**: In progress — pending merge. (PR #136)
-
 ### Stripe Integration ✅ (API Key Mode)
 - **Schema & Config**: Added `StripeAccount`, `Transaction`, `StripeProductMap` models.
 - **Backend**: Implemented `StripeService` (API Key) and `StripeSync` (Catalog, Transactions).

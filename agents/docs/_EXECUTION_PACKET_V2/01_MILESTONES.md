@@ -183,7 +183,6 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 **Status:** 🔄 In Progress (February 2026)
 
 ---
-
 ### Ready‑For‑Automation Gate [NR] — ✅ 8/8 Requirements Met — COMPLETE
 **Checklist**
 - ✅ Engine supports schedule + revert
