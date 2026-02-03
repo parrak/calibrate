@@ -178,7 +178,7 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 **Success**
 - ✅ Worker starts RulesWorker and registers per-project Shopify connectors.
 - ✅ RulesWorker applies/reconciles using resolved Shopify variant IDs.
-- 🔄 PR in review (PR #TBD).
+- 🔄 PR in review (PR #136).
 
 **Status:** 🔄 In Progress (February 2026)
 
