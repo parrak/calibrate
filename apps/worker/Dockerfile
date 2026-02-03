@@ -37,6 +37,7 @@ COPY --from=base /app/packages ./packages
 COPY --from=base /app/apps/worker ./apps/worker
 COPY --from=base /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=base /app/package.json ./package.json
+COPY --from=base /app/tsconfig.json ./tsconfig.json
 
 WORKDIR /app/apps/worker
 
