@@ -152,6 +152,24 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 ---
 
+### M1.8 — Copilot Propose + Automation Runner Preview/Apply [MW] — Owners: Copilot + Engine ✅ COMPLETE
+**Goals**
+- Copilot simulation → propose → approve/apply flow with preview runs and RBAC gating.
+- Console actions wired to existing price-change workflows.
+- Public enablement with demo tenant test data.
+
+**Success**
+- ✅ Preview runs materialized via Automation Runner and apply path uses admin-gated endpoints.
+- ✅ Copilot propose endpoint persists disabled rule + preview run and logs metadata.
+- ✅ Console supports “Approve & Apply Now” end-to-end.
+- ✅ Demo tenant seeded with test data for public usage.
+- ✅ CI green; Railway deploy verified with smoke checks.
+- ✅ PR #134 merged to master.
+
+**Completed:** February 3, 2026 (M1.8)
+
+---
+
 ### Ready‑For‑Automation Gate [NR] — ✅ 8/8 Requirements Met — COMPLETE
 **Checklist**
 - ✅ Engine supports schedule + revert
@@ -178,4 +196,3 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 **Outcome**
 - ✅ **GREEN LIGHT** for **Automation Runner** (M1.8) + **Copilot Simulation** (M1.9)
-

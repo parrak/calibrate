@@ -226,6 +226,14 @@ Cursor ensures `develop` is always stable and deployable.
 
 ---
 
+## 📌 Execution Packet Update Policy (All Agents)
+
+When any milestone or major deliverable is completed, **all agents must**:
+- Update `agents/docs/_EXECUTION_PACKET_V2/00_EXEC_SUMMARY.md` with the date + PR reference.
+- Update `agents/docs/_EXECUTION_PACKET_V2/01_MILESTONES.md` to mark status and completion date.
+
+---
+
 ## 🔄 Pull Request Workflow to Master
 
 ### **Mandatory PR Requirements**
