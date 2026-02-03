@@ -168,7 +168,29 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 **Completed:** February 3, 2026 (M1.8)
 
----
+### M1.8.1 — Automation Runner Worker Enablement [MW] — Owners: Engine 🔄 In Progress
+**Goals**
+- Start RulesWorker from the worker service and register Shopify connectors per project.
+- Resolve Shopify variant IDs from channelRefs for apply/reconcile.
+
+**Success**
+- ✅ Worker starts RulesWorker and registers per-project Shopify connectors.
+- ✅ RulesWorker applies/reconciles using resolved Shopify variant IDs.
+- 🔄 PR in review (PR #136).
+
+
+### M1.9 — Copilot Feedback Loop [MW] — Owners: Copilot + Interface ✅ COMPLETE
+**Goals**
+- Collect user feedback on Copilot responses (rating + comment).
+- Tune prompt strategies based on low-rated queries.
+
+**Success**
+- ✅ Feedback UI (thumbs up/down) in Copilot drawer.
+- ✅ API endpoint to persist feedback to `CopilotQueryLog`.
+- ✅ Analytics metric for "Average Copilot Rating".
+- ✅ PR #137 merged.
+
+**Completed:** February 2026 (M1.9)
 
 ### Ready‑For‑Automation Gate [NR] — ✅ 8/8 Requirements Met — COMPLETE
 **Checklist**
@@ -194,5 +216,5 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 **Completed:** November 26, 2025
 
-**Outcome**
 - ✅ **GREEN LIGHT** for **Automation Runner** (M1.8) + **Copilot Simulation** (M1.9)
+
