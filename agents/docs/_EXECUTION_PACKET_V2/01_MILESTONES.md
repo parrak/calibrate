@@ -179,6 +179,7 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 - ✅ RulesWorker applies/reconciles using resolved Shopify variant IDs.
 - ✅ Pre-flight health check gate implemented; aborts on unreachable connectors.
 - ✅ Integration tests passing for variant ID resolution and health checks.
+- ✅ Worker deployment hardening: health endpoint, ESM entrypoint alignment, Debian base for Prisma runtime stability. (PR #140)
 
 **Completed:** February 2, 2026
 
@@ -221,4 +222,3 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 **Completed:** November 26, 2025
 
 - ✅ **GREEN LIGHT** for **Automation Runner** (M1.8) + **Copilot Simulation** (M1.9)
-

@@ -27,6 +27,7 @@ pnpm start
 Environment variables:
 
 - `DATABASE_URL` - PostgreSQL connection string (required)
+- `PORT` - Health server port (default: 3001)
 - `OUTBOX_POLL_INTERVAL_MS` - How often to check for pending events (default: 5000)
 - `OUTBOX_MAX_RETRIES` - Max retry attempts before DLQ (default: 5)
 - `OUTBOX_INITIAL_DELAY_MS` - Initial retry delay (default: 1000)

@@ -119,6 +119,7 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 ### M1.8.1 — Automation Runner Worker Enablement ✅
 - **Worker**: Outbox worker now starts RulesWorker and registers Shopify connectors per project.
 - **Apply readiness**: RulesWorker resolves Shopify variant IDs from channelRefs for apply/reconcile. (PR #136)
+- **Deployment hardening**: Worker health endpoint, ESM entrypoint alignment, and Debian-based image for Prisma reliability. (PR #140)
 - **Safety**: Added Pre-flight Health Check gate to abort runs if connectors are unreachable.
 - **Status**: COMPLETE — February 2, 2026.
 ### Stripe Integration ✅ (API Key Mode)
