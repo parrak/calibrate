@@ -302,9 +302,11 @@ Before requesting review, ensure:
 ## 🚀 Deployment Verification Checklist
 
 When deploying to Railway/Vercel, do not consider the task complete until:
-- [ ] Railway deployment status is **SUCCESS** (not BUILDING/FAILED)
-- [ ] If FAILED, fetch build logs and document the failure + fix plan
-- [ ] Run smoke checks (at minimum `/api/health` on API and Console landing load)
+- [ ] Railway/Vercel deployment status is **SUCCESS** for all target services (not BUILDING/FAILED)
+- [ ] If FAILED, fetch build + runtime logs and document the failure + fix plan
+- [ ] Verify required env vars are set on new services (e.g., `DATABASE_URL`, connector secrets)
+- [ ] Check runtime logs for startup errors and database connectivity
+- [ ] Run smoke checks (at minimum `/api/health` on API and Console landing load; worker `/health` if public)
 - [ ] If still BUILDING, explicitly call out pending status and follow-up check time
 
 ---

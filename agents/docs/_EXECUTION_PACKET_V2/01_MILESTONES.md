@@ -178,7 +178,8 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 **Success**
 - ✅ Worker starts RulesWorker and registers per-project Shopify connectors.
 - ✅ RulesWorker applies/reconciles using resolved Shopify variant IDs.
-- 🔄 PR in review (PR #136).
+- ✅ Worker service deployed on Railway with health endpoint and DB connectivity verified.
+- 🔄 PR pending for worker health + deployment fixes (branch `codex/automation-worker-health`).
 
 **Status:** 🔄 In Progress (February 2026)
 

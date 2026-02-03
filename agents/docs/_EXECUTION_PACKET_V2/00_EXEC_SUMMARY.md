@@ -114,7 +114,8 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 ### Automation Runner Worker Enablement 🚧
 - **Worker**: Outbox worker now starts RulesWorker and registers Shopify connectors per project.
 - **Apply readiness**: RulesWorker resolves Shopify variant IDs from channelRefs for apply/reconcile.
-- **Status**: In progress — pending merge. (PR #136)
+- **Deployment**: Worker service now deployed on Railway with health endpoint and verified DB connectivity; Shopify connector registration confirmed in logs.
+- **Status**: In progress — pending merge of worker health + deployment fixes (branch `codex/automation-worker-health`).
 ### Stripe Integration ✅ (API Key Mode)
 - **Schema & Config**: Added `StripeAccount`, `Transaction`, `StripeProductMap` models.
 - **Backend**: Implemented `StripeService` (API Key) and `StripeSync` (Catalog, Transactions).
