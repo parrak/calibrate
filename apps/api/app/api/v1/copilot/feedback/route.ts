@@ -23,7 +23,7 @@ export const runtime = 'nodejs'
 const feedbackSchema = z.object({
     projectSlug: z.string(),
     queryId: z.string(),
-    rating: z.number().int(),
+    rating: z.union([z.literal(-1), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
     comment: z.string().optional(),
 })
 
@@ -48,6 +48,7 @@ export const POST = withSecurity(
                 }
 
                 const { project } = access
+
 
                 // Verify the log entry exists and belongs to this project
                 const logEntry = await prisma().copilotQueryLog.findUnique({

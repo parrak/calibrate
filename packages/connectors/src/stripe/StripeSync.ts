@@ -71,10 +71,19 @@ export class StripeSync {
                 const metadata = product.metadata || {}
                 const costStr = metadata['cost'] || metadata['Cost'] || metadata['COGS'] || metadata['cogs']
                 if (costStr) {
-                    const cost = parseFloat(costStr)
-                    if (!isNaN(cost)) {
-                        // Find or Create Default SKU
-                        const sku = await prisma().sku.upsert({
+                    const costNum = parseFloat(costStr)
+                    if (!isNaN(costNum)) {
+                        const cost = Math.round(costNum * 100) // Convert to cents
+
+                        // Find existing SKU to merge attributes
+                        const existingSku = await prisma().sku.findUnique({
+                            where: { productId_code: { productId, code: `${productId}-default` } }
+                        })
+
+                        const existingAttrs = (existingSku?.attributes as Record<string, unknown>) || {}
+                        const mergedAttrs = { ...existingAttrs, cost }
+
+                        await prisma().sku.upsert({
                             where: { productId_code: { productId, code: `${productId}-default` } },
                             create: {
                                 productId,
@@ -84,7 +93,7 @@ export class StripeSync {
                                 attributes: { cost }
                             },
                             update: {
-                                attributes: { cost }
+                                attributes: mergedAttrs
                             }
                         })
                     }

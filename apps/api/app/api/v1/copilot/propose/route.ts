@@ -298,11 +298,10 @@ export const POST = withSecurity(
       } catch (error) {
         console.error('[Copilot Propose] Failed to propose rule:', error)
 
-        const access = await requireProjectAccess(req, projectSlug, 'EDITOR')
-        const userId = 'error' in access ? undefined : access.session.userId
-        const projectId = 'error' in access ? undefined : access.project.id
-        const tenantId = 'error' in access ? undefined : access.project.tenantId
-        const userRole = 'error' in access ? undefined : access.membership.role
+        const userId = 'session' in access ? access.session.userId : undefined
+        const projectId = 'project' in access ? access.project.id : undefined
+        const tenantId = 'project' in access ? access.project.tenantId : undefined
+        const userRole = 'membership' in access ? access.membership.role : undefined
 
         // Log failed operation
         if (tenantId && projectId) {

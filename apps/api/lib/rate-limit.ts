@@ -16,6 +16,8 @@ interface RateLimitStore {
 }
 
 // In-memory store (in production, use Redis)
+// TODO: Replace with Redis/Upstash for production horizontal scaling.
+// Current implementation scales with instance count, which is acceptable for M1.9 but needs replacement for M2.
 const store: RateLimitStore = {}
 
 export function createRateLimit(config: RateLimitConfig) {
