@@ -12,6 +12,8 @@
   "dependencies": {
     "@calibr/db": "workspace:*",
     "@calibr/monitor": "workspace:*",
+    "@calibr/automation-runner": "workspace:*",
+    "@calibr/shopify-connector": "workspace:*",
     "@prisma/client": "^5.22.0"
   },
   "devDependencies": {

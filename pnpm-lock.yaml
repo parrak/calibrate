@@ -346,12 +346,18 @@ importers:
 
   apps/worker:
     dependencies:
+      '@calibr/automation-runner':
+        specifier: workspace:*
+        version: link:../../packages/automation-runner
       '@calibr/db':
         specifier: workspace:*
         version: link:../../packages/db
       '@calibr/monitor':
         specifier: workspace:*
         version: link:../../packages/monitor
+      '@calibr/shopify-connector':
+        specifier: workspace:*
+        version: link:../../packages/shopify-connector
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
