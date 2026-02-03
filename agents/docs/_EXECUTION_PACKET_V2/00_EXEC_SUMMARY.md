@@ -111,6 +111,15 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - **Deployment**: Railway API deploy verified with smoke checks.
 - **PR**: #134 (merged February 3, 2026).
 
+### M1.9 — Copilot Feedback Loop ✅
+- **Feedback**: Added `feedbackRating` and `feedbackComment` to `CopilotQueryLog`.
+- **API**: New endpoint for submitting user feedback.
+- **Status**: Completed February 2026 (PR #137).
+
+### Automation Runner Worker Enablement 🚧
+- **Worker**: Outbox worker now starts RulesWorker and registers Shopify connectors per project.
+- **Apply readiness**: RulesWorker resolves Shopify variant IDs from channelRefs for apply/reconcile.
+- **Status**: In progress — pending merge. (PR #136)
 ### Stripe Integration ✅ (API Key Mode)
 - **Schema & Config**: Added `StripeAccount`, `Transaction`, `StripeProductMap` models.
 - **Backend**: Implemented `StripeService` (API Key) and `StripeSync` (Catalog, Transactions).
