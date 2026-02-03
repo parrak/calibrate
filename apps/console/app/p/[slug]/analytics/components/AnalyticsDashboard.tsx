@@ -73,11 +73,10 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
           <button
             key={d}
             onClick={() => setDays(d)}
-            className={`px-4 py-2 rounded ${
-              days === d
-                ? 'bg-blue-600 text-white'
-                : 'bg-white border text-gray-700 hover:bg-gray-50'
-            }`}
+            className={`px-4 py-2 rounded ${days === d
+              ? 'bg-blue-600 text-white'
+              : 'bg-white border text-gray-700 hover:bg-gray-50'
+              }`}
           >
             {d} Days
           </button>
@@ -85,7 +84,7 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <MetricCard
           title="Total SKUs"
           value={data.summary.totalSkus.toLocaleString()}
@@ -98,14 +97,24 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
           trend={data.trends.priceChanges}
         />
         <MetricCard
-          title="Approval Rate"
-          value={`${(data.summary.approvalRate * 100).toFixed(0)}%`}
-          trend={null}
-        />
-        <MetricCard
           title="Avg Price"
           value={`$${(data.trends.averagePrice.current / 100).toFixed(2)}`}
           trend={data.trends.averagePrice}
+        />
+        <MetricCard
+          title="Revenue"
+          value={`$${((data.trends.revenue?.current || 0) / 100).toLocaleString()}`}
+          trend={data.trends.revenue}
+        />
+        <MetricCard
+          title="Units Sold"
+          value={(data.trends.units?.current || 0).toLocaleString()}
+          trend={data.trends.units}
+        />
+        <MetricCard
+          title="Approval Rate"
+          value={`${(data.summary.approvalRate * 100).toFixed(0)}%`}
+          trend={null}
         />
       </div>
 
@@ -151,32 +160,29 @@ export function AnalyticsDashboard({ projectSlug }: Props) {
 
           {data.topPerformers.bySales && data.topPerformers.bySales.length > 0 && (
             <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-semibold mb-4">Recent Products</h2>
+              <h2 className="text-xl font-semibold mb-4">Top Sellers</h2>
               <div className="space-y-3">
-                {Array.from(
-                  new Map(
-                    data.topPerformers.bySales.map((item: SkuPerformance) => [item.sku, item])
-                  ).values()
-                )
-                  .slice(0, 5)
-                  .map((item: SkuPerformance) => (
-                    <div
-                      key={item.sku}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded"
-                    >
-                      <div>
-                        <div className="font-medium">{item.sku}</div>
-                        {item.name && (
-                          <div className="text-sm text-gray-500">{item.name}</div>
-                        )}
+                {data.topPerformers.bySales.slice(0, 5).map((item: SkuPerformance) => (
+                  <div
+                    key={item.sku}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded"
+                  >
+                    <div>
+                      <div className="font-medium">{item.sku}</div>
+                      {item.name && (
+                        <div className="text-sm text-gray-500">{item.name}</div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">
+                        ${((item.revenue || 0) / 100).toLocaleString()}
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold">
-                          ${(item.price / 100).toFixed(2)}
-                        </div>
+                      <div className="text-sm text-gray-500">
+                        {item.units || 0} unit{(item.units || 0) !== 1 ? 's' : ''}
                       </div>
                     </div>
-                  ))}
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -240,13 +246,12 @@ function TrendChart({
       <div className="flex-1 flex flex-col items-center">
         <div className="w-full flex items-end justify-center h-full">
           <div
-            className={`w-24 rounded-t ${
-              trend.direction === 'up'
-                ? 'bg-green-500'
-                : trend.direction === 'down'
-                  ? 'bg-red-500'
-                  : 'bg-blue-500'
-            }`}
+            className={`w-24 rounded-t ${trend.direction === 'up'
+              ? 'bg-green-500'
+              : trend.direction === 'down'
+                ? 'bg-red-500'
+                : 'bg-blue-500'
+              }`}
             style={{ height: `${currentHeight}%` }}
           ></div>
         </div>

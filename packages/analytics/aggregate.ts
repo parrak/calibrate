@@ -166,15 +166,15 @@ async function generateSnapshot(
     .filter((s: { price?: number | null; cost?: number | null }): s is { price: number; cost: number } =>
       s.price !== undefined && s.price !== null && s.cost !== undefined && s.cost !== null && s.cost > 0
     )
-  
+
   const marginMetrics = skusWithCost.length > 0 ? {
     averageMargin: calculateAverageMargin(skusWithCost),
     minMargin: calculateMinMargin(skusWithCost),
     maxMargin: calculateMaxMargin(skusWithCost),
   } : undefined
 
-  // TODO: Fetch sales data if includeSales is true
-  // const salesMetrics = includeSales ? await fetchSalesMetrics(projectId, dayStart, dayEnd) : undefined
+  // Fetch sales data
+  const salesMetrics = await fetchSalesMetrics(projectId, dayStart, dayEnd)
 
   // TODO: Fetch competitor insights if includeCompetitorData is true
   // const competitorInsights = includeCompetitorData ? await fetchCompetitorInsights(projectId) : undefined
@@ -186,6 +186,42 @@ async function generateSnapshot(
     priceChanges: priceChangeMetrics,
     pricing: pricingMetrics,
     margins: marginMetrics,
+    sales: salesMetrics,
+  }
+}
+
+/**
+ * Fetch sales metrics from Transactions table
+ */
+async function fetchSalesMetrics(
+  projectId: string,
+  startDate: Date,
+  endDate: Date
+) {
+  const txns = await prisma().transaction.findMany({
+    where: {
+      projectId,
+      occurredAt: { gte: startDate, lte: endDate },
+      status: { in: ['succeeded', 'paid', 'complete'] }
+    },
+    select: {
+      amount: true,
+      feeAmount: true,
+      netAmount: true,
+      skuId: true
+    }
+  })
+
+  if (txns.length === 0) return undefined
+
+  const totalRevenue = txns.reduce((sum, t) => sum + t.amount, 0)
+  const totalUnits = txns.length
+  const averageOrderValue = Math.round(totalRevenue / totalUnits)
+
+  return {
+    totalRevenue,
+    totalUnits,
+    averageOrderValue
   }
 }
 

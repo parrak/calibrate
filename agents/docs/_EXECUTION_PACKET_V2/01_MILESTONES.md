@@ -168,15 +168,19 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 **Completed:** February 3, 2026 (M1.8)
 
-### M1.8.1 — Automation Runner Worker Enablement [MW] — Owners: Engine 🔄 In Progress
+### M1.8.1 — Automation Runner Worker Enablement [MW] — Owners: Engine ✅ COMPLETE
 **Goals**
 - Start RulesWorker from the worker service and register Shopify connectors per project.
 - Resolve Shopify variant IDs from channelRefs for apply/reconcile.
+- Implement pre-flight health checks for safety.
 
 **Success**
 - ✅ Worker starts RulesWorker and registers per-project Shopify connectors.
 - ✅ RulesWorker applies/reconciles using resolved Shopify variant IDs.
-- 🔄 PR in review (PR #136).
+- ✅ Pre-flight health check gate implemented; aborts on unreachable connectors.
+- ✅ Integration tests passing for variant ID resolution and health checks.
+
+**Completed:** February 2, 2026
 
 
 ### M1.9 — Copilot Feedback Loop [MW] — Owners: Copilot + Interface ✅ COMPLETE
