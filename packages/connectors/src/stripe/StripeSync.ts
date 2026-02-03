@@ -33,6 +33,7 @@ export class StripeSync {
                     where: { projectId_stripeProductId: { projectId, stripeProductId: product.id } }
                 })
 
+                let productId: string
                 if (!map) {
                     // Create Product
                     const newProduct = await prisma().product.create({
@@ -44,6 +45,7 @@ export class StripeSync {
                             status: product.active ? 'ACTIVE' : 'ARCHIVED',
                         }
                     })
+                    productId = newProduct.id
 
                     // Create Map
                     await prisma().stripeProductMap.create({
@@ -62,6 +64,39 @@ export class StripeSync {
                             status: product.active ? 'ACTIVE' : 'ARCHIVED',
                         }
                     })
+                    productId = map.productId
+                }
+
+                // Sync Cost from Metadata to SKU
+                const metadata = product.metadata || {}
+                const costStr = metadata['cost'] || metadata['Cost'] || metadata['COGS'] || metadata['cogs']
+                if (costStr) {
+                    const costNum = parseFloat(costStr)
+                    if (!isNaN(costNum)) {
+                        const cost = Math.round(costNum * 100) // Convert to cents
+
+                        // Find existing SKU to merge attributes
+                        const existingSku = await prisma().sku.findUnique({
+                            where: { productId_code: { productId, code: `${productId}-default` } }
+                        })
+
+                        const existingAttrs = (existingSku?.attributes as Record<string, unknown>) || {}
+                        const mergedAttrs = { ...existingAttrs, cost }
+
+                        await prisma().sku.upsert({
+                            where: { productId_code: { productId, code: `${productId}-default` } },
+                            create: {
+                                productId,
+                                name: 'Default SKU',
+                                code: `${productId}-default`,
+                                status: 'ACTIVE',
+                                attributes: { cost }
+                            },
+                            update: {
+                                attributes: mergedAttrs
+                            }
+                        })
+                    }
                 }
             }
 
@@ -168,6 +203,57 @@ export class StripeSync {
 
                 if (existing) continue;
 
+                // Attempt to find linked Product/SKU via PaymentIntent -> CheckoutSession
+                let productId: string | undefined
+                let skuId: string | undefined
+
+                const source = txn.source as any
+                const paymentIntentId = source?.payment_intent
+
+                if (paymentIntentId) {
+                    try {
+                        const sessions = await stripeService.listCheckoutSessions(paymentIntentId)
+                        if (sessions.data.length > 0) {
+                            const session = sessions.data[0]
+                            const lineItems = session.line_items?.data || []
+
+                            if (lineItems.length > 0) {
+                                // For MVP, just grab the first line item
+                                // TODO M1.5+: Handle multi-item carts properly via order breakout
+                                const item = lineItems[0]
+                                const stripePriceId = item.price?.id
+                                const stripeProductId = item.price?.product as string
+
+                                if (stripePriceId) {
+                                    const priceMap = await prisma().stripePriceMap.findUnique({
+                                        where: { projectId_stripePriceId: { projectId, stripePriceId } },
+                                        include: { Price: true }
+                                    })
+                                    if (priceMap) {
+                                        skuId = priceMap.Price.skuId
+                                    }
+                                }
+
+                                if (!skuId && stripeProductId) {
+                                    const productMap = await prisma().stripeProductMap.findUnique({
+                                        where: { projectId_stripeProductId: { projectId, stripeProductId } }
+                                    })
+                                    if (productMap) {
+                                        productId = productMap.productId
+                                        // Try to find default SKU
+                                        const sku = await prisma().sku.findFirst({
+                                            where: { productId }
+                                        })
+                                        if (sku) skuId = sku.id
+                                    }
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.warn(`[StripeSync] Failed to fetch session for PI ${paymentIntentId}:`, err)
+                    }
+                }
+
                 await prisma().transaction.create({
                     data: {
                         tenantId: account.tenantId,
@@ -180,7 +266,12 @@ export class StripeSync {
                         feeAmount: txn.fee,
                         netAmount: txn.net,
                         occurredAt: new Date(txn.created * 1000),
-                        // productId, skuId left null for now
+                        productId,
+                        skuId,
+                        metadata: {
+                            paymentIntentId,
+                            description: txn.description
+                        }
                     }
                 })
             }

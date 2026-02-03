@@ -111,11 +111,17 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - **Deployment**: Railway API deploy verified with smoke checks.
 - **PR**: #134 (merged February 3, 2026).
 
-### Automation Runner Worker Enablement 🚧
+### M1.9 — Copilot Feedback Loop ✅
+- **Feedback**: Added `feedbackRating` and `feedbackComment` to `CopilotQueryLog`.
+- **API**: New endpoint for submitting user feedback.
+- **Status**: Completed February 2026 (PR #137).
+
+### M1.8.1 — Automation Runner Worker Enablement ✅
 - **Worker**: Outbox worker now starts RulesWorker and registers Shopify connectors per project.
-- **Apply readiness**: RulesWorker resolves Shopify variant IDs from channelRefs for apply/reconcile.
-- **Deployment**: Worker service now deployed on Railway with health endpoint and verified DB connectivity; Shopify connector registration confirmed in logs.
-- **Status**: In progress — pending merge of worker health + deployment fixes (branch `codex/automation-worker-health`).
+- **Apply readiness**: RulesWorker resolves Shopify variant IDs from channelRefs for apply/reconcile. (PR #136)
+- **Deployment hardening**: Worker health endpoint, ESM entrypoint alignment, and Debian-based image for Prisma reliability. (PR #140)
+- **Safety**: Added Pre-flight Health Check gate to abort runs if connectors are unreachable.
+- **Status**: COMPLETE — February 2, 2026.
 ### Stripe Integration ✅ (API Key Mode)
 - **Schema & Config**: Added `StripeAccount`, `Transaction`, `StripeProductMap` models.
 - **Backend**: Implemented `StripeService` (API Key) and `StripeSync` (Catalog, Transactions).
@@ -126,5 +132,7 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 **Success Metrics**
 - **Safety**: 0 incidents of "runaway" automation or price floor breaches.
 - **Data Quality**: Stripe transactions mapped to SKUs for true margin analysis.
+- **Realized Margin**: Analytics upgraded to calculate true realized margin from transaction data.
+- **Dashboard**: Console upgraded to surface Revenue, Units Sold, and Top Sellers leaderboard.
 - **Copilot Engagement**: 20% of sessions use "Simulation" feature.
 - **Monetization**: Stripe integration live in Staging.

@@ -168,22 +168,35 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 **Completed:** February 3, 2026 (M1.8)
 
----
-
-### M1.8.1 — Automation Runner Worker Enablement [MW] — Owners: Engine 🔄 In Progress
+### M1.8.1 — Automation Runner Worker Enablement [MW] — Owners: Engine ✅ COMPLETE
 **Goals**
 - Start RulesWorker from the worker service and register Shopify connectors per project.
 - Resolve Shopify variant IDs from channelRefs for apply/reconcile.
+- Implement pre-flight health checks for safety.
 
 **Success**
 - ✅ Worker starts RulesWorker and registers per-project Shopify connectors.
 - ✅ RulesWorker applies/reconciles using resolved Shopify variant IDs.
-- ✅ Worker service deployed on Railway with health endpoint and DB connectivity verified.
-- 🔄 PR pending for worker health + deployment fixes (branch `codex/automation-worker-health`).
+- ✅ Pre-flight health check gate implemented; aborts on unreachable connectors.
+- ✅ Integration tests passing for variant ID resolution and health checks.
+- ✅ Worker deployment hardening: health endpoint, ESM entrypoint alignment, Debian base for Prisma runtime stability. (PR #140)
 
-**Status:** 🔄 In Progress (February 2026)
+**Completed:** February 2, 2026
 
----
+
+### M1.9 — Copilot Feedback Loop [MW] — Owners: Copilot + Interface ✅ COMPLETE
+**Goals**
+- Collect user feedback on Copilot responses (rating + comment).
+- Tune prompt strategies based on low-rated queries.
+
+**Success**
+- ✅ Feedback UI (thumbs up/down) in Copilot drawer.
+- ✅ API endpoint to persist feedback to `CopilotQueryLog`.
+- ✅ Analytics metric for "Average Copilot Rating".
+- ✅ PR #137 merged.
+
+**Completed:** February 2026 (M1.9)
+
 ### Ready‑For‑Automation Gate [NR] — ✅ 8/8 Requirements Met — COMPLETE
 **Checklist**
 - ✅ Engine supports schedule + revert
@@ -208,5 +221,4 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 **Completed:** November 26, 2025
 
-**Outcome**
 - ✅ **GREEN LIGHT** for **Automation Runner** (M1.8) + **Copilot Simulation** (M1.9)

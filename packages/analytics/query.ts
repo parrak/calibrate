@@ -55,6 +55,66 @@ export async function getAnalyticsOverview(
     },
   })
 
+  // Get transactions for period
+  const txns = await prisma().transaction.findMany({
+    where: {
+      projectId,
+      occurredAt: { gte: startDate, lte: endDate },
+      status: { in: ['succeeded', 'paid', 'complete'] }
+    },
+    select: {
+      amount: true,
+      skuId: true,
+      occurredAt: true
+    }
+  })
+
+  const prevStartDate = new Date(startDate.getTime() - days * 24 * 60 * 60 * 1000)
+  const prevTxns = await prisma().transaction.findMany({
+    where: {
+      projectId,
+      occurredAt: { gte: prevStartDate, lte: startDate },
+      status: { in: ['succeeded', 'paid', 'complete'] }
+    },
+    select: {
+      amount: true
+    }
+  })
+
+  // Calculate trends for revenue and units
+  const currentRevenue = txns.reduce((a, b) => a + b.amount, 0)
+  const prevRevenue = prevTxns.reduce((a, b) => a + b.amount, 0)
+  const currentUnits = txns.length
+  const prevUnits = prevTxns.length
+
+  const revenueTrend: TrendData = calculateTrend(currentRevenue, prevRevenue)
+  const unitsTrend: TrendData = calculateTrend(currentUnits, prevUnits)
+
+  // Calculate top performers by sales (actual revenue)
+  const skuSales = txns.reduce((acc, t) => {
+    if (!t.skuId) return acc
+    acc[t.skuId] = (acc[t.skuId] || 0) + t.amount
+    return acc
+  }, {} as Record<string, number>)
+
+  const skuUnits = txns.reduce((acc, t) => {
+    if (!t.skuId) return acc
+    acc[t.skuId] = (acc[t.skuId] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+
+  const topBySales = skus
+    .filter(s => skuSales[s.id] !== undefined)
+    .map(s => ({
+      sku: s.code,
+      name: s.name,
+      price: s.Price[0]?.amount || 0,
+      revenue: skuSales[s.id],
+      units: skuUnits[s.id]
+    }))
+    .sort((a, b) => (b.revenue || 0) - (a.revenue || 0))
+    .slice(0, 5)
+
   // Calculate summary
   const totalPriceChanges = priceChanges.length
   const approvedChanges = priceChanges.filter((pc: { status: string }) => pc.status === 'APPROVED').length
@@ -67,23 +127,11 @@ export async function getAnalyticsOverview(
   const firstHalfChanges = priceChanges.filter((pc: { createdAt: Date }) => pc.createdAt < midPoint).length
   const secondHalfChanges = priceChanges.filter((pc: { createdAt: Date }) => pc.createdAt >= midPoint).length
 
-  const priceChangesTrend: TrendData = {
-    current: secondHalfChanges,
-    previous: firstHalfChanges,
-    change: secondHalfChanges - firstHalfChanges,
-    changePercent: firstHalfChanges > 0
-      ? Math.round(((secondHalfChanges - firstHalfChanges) / firstHalfChanges) * 100)
-      : 0,
-    direction: secondHalfChanges > firstHalfChanges
-      ? 'up'
-      : secondHalfChanges < firstHalfChanges
-        ? 'down'
-        : 'stable',
-  }
+  const priceChangesTrend: TrendData = calculateTrend(secondHalfChanges, firstHalfChanges)
 
   // Calculate average price trend
   const prices = skus
-    .map((s: typeof skus[0]) => s.Price[0]?.amount)
+    .map((s: any) => s.Price[0]?.amount)
     .filter((p: number | undefined | null): p is number => p !== undefined && p !== null)
   const avgPrice = prices.length > 0
     ? Math.round(prices.reduce((a: number, b: number) => a + b, 0) / prices.length)
@@ -97,39 +145,34 @@ export async function getAnalyticsOverview(
     direction: 'stable',
   }
 
-  // Generate mock snapshots (in real implementation, fetch from stored snapshots)
+  // Generate snapshots (simplified - would fetch from DB in production)
   const snapshots: DailySnapshot[] = []
 
-  // Top performers by price (simplified - would need sales data for real analysis)
-  const topPerformers: AnalyticsOverview['topPerformers'] = {
-    bySales: skus
-      .filter((s: typeof skus[0]) => s.Price[0]?.amount !== undefined)
-      .slice(0, 5)
-      .map((s: typeof skus[0]) => ({
+  // Top performers by margin (realized margin if sales exist, otherwise potential margin)
+  const topByMargin = skus
+    .map((s: any) => {
+      const price = s.Price[0]?.amount
+      const cost = s.attributes && typeof s.attributes === 'object' && 'cost' in s.attributes
+        ? (s.attributes as any).cost
+        : null
+
+      const sales = skuSales[s.id] || 0
+      const units = skuUnits[s.id] || 0
+      const realizedMargin = (sales > 0 && cost) ? ((sales - (units * cost)) / (units * cost)) * 100 : undefined
+      const potentialMargin = (price && cost) ? ((price - cost) / cost) * 100 : undefined
+
+      return {
         sku: s.code,
         name: s.name,
-        price: s.Price[0]!.amount,
-      })),
-    byMargin: skus
-      .map((s: typeof skus[0]) => {
-        const price = s.Price[0]?.amount
-        const cost = s.attributes && typeof s.attributes === 'object' && 'cost' in s.attributes
-          ? (s.attributes as any).cost
-          : null
-        return { sku: s.code, name: s.name, price, cost }
-      })
-      .filter((s: { sku: string; name: string; price?: number | null; cost?: number | null }): s is { sku: string; name: string; price: number; cost: number } =>
-        s.price !== undefined && s.price !== null && s.cost !== undefined && s.cost !== null && s.cost > 0
-      )
-      .map((s: { sku: string; name: string; price: number; cost: number }) => ({
-        sku: s.sku,
-        name: s.name,
-        price: s.price,
-        margin: ((s.price - s.cost) / s.cost) * 100,
-      }))
-      .sort((a: { margin?: number }, b: { margin?: number }) => (b.margin || 0) - (a.margin || 0))
-      .slice(0, 5),
-  }
+        price: price || 0,
+        margin: realizedMargin ?? potentialMargin,
+        revenue: sales,
+        units
+      }
+    })
+    .filter((s: any) => s.margin !== undefined)
+    .sort((a: any, b: any) => (b.margin || 0) - (a.margin || 0))
+    .slice(0, 5)
 
   return {
     projectId,
@@ -145,10 +188,28 @@ export async function getAnalyticsOverview(
       approvalRate,
     },
     trends: {
+      revenue: revenueTrend,
+      units: unitsTrend,
       averagePrice: avgPriceTrend,
       priceChanges: priceChangesTrend,
     },
-    topPerformers,
+    topPerformers: {
+      bySales: topBySales,
+      byMargin: topByMargin,
+    },
     snapshots,
+  }
+}
+
+function calculateTrend(current: number, previous: number): TrendData {
+  const change = current - previous
+  const changePercent = previous > 0 ? Math.round((change / previous) * 100) : 0
+
+  return {
+    current,
+    previous,
+    change,
+    changePercent,
+    direction: current > previous ? 'up' : current < previous ? 'down' : 'stable'
   }
 }
