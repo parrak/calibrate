@@ -6,9 +6,20 @@
  * Or as Docker container / Railway service
  */
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, type ShopifyIntegration } from '@prisma/client'
 import { OutboxWorker, type EventPayload } from '@calibr/db'
 import { logger, recordEventMetric } from '@calibr/monitor'
+import {
+  getRulesWorker,
+  getWorkerConfig,
+  type PriceConnector,
+  type RulesWorker
+} from '@calibr/automation-runner'
+import {
+  ShopifyConnector,
+  type ShopifyConfig,
+  type ShopifyCredentials
+} from '@calibr/shopify-connector'
 
 // Configuration
 const POLL_INTERVAL_MS = parseInt(process.env.OUTBOX_POLL_INTERVAL_MS || '5000', 10)
@@ -21,6 +32,112 @@ const BACKOFF_MULTIPLIER = parseInt(process.env.OUTBOX_BACKOFF_MULTIPLIER || '2'
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
 })
+
+let rulesWorker: RulesWorker | null = null
+
+function requireEnv(name: string): string {
+  const value = process.env[name]
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`)
+  }
+  return value
+}
+
+function buildShopifyConfig(isActive: boolean): ShopifyConfig {
+  const apiKey = requireEnv('SHOPIFY_API_KEY')
+  const apiSecret = requireEnv('SHOPIFY_API_SECRET')
+  const webhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET || ''
+  const apiVersion = process.env.SHOPIFY_API_VERSION
+
+  return {
+    platform: 'shopify',
+    name: 'Shopify Integration',
+    isActive,
+    apiKey,
+    apiSecret,
+    scopes: process.env.SHOPIFY_SCOPES?.split(',') || ['read_products', 'write_products'],
+    webhookSecret,
+    apiVersion,
+  }
+}
+
+async function buildShopifyPriceConnector(
+  integration: ShopifyIntegration
+): Promise<PriceConnector> {
+  const connector = new ShopifyConnector(buildShopifyConfig(integration.isActive))
+  const credentials: ShopifyCredentials = {
+    platform: 'shopify',
+    shopDomain: integration.shopDomain,
+    accessToken: integration.accessToken,
+    scope: integration.scope,
+  }
+
+  await connector.initialize(credentials)
+
+  return {
+    name: 'shopify',
+    async applyPrice({ externalId, variantId, price, currency }) {
+      const id = variantId || externalId
+      if (!id) {
+        return { success: false, error: 'Missing Shopify variant id' }
+      }
+
+      const result = await connector.pricing.updatePrice({
+        externalId: id,
+        price,
+        currency
+      })
+
+      return result.success
+        ? { success: true, externalId: result.externalId }
+        : { success: false, error: result.error }
+    },
+    async fetchPrice(externalId: string) {
+      const price = await connector.pricing.getPrice(externalId)
+      return { price: price.price, currency: price.currency }
+    },
+    async isHealthy() {
+      const health = await connector.healthCheck()
+      return health.isHealthy
+    }
+  }
+}
+
+async function registerAutomationConnectors(worker: RulesWorker) {
+  const integrations = await prisma.shopifyIntegration.findMany({
+    where: { isActive: true }
+  })
+
+  const seenProjects = new Set<string>()
+  for (const integration of integrations) {
+    if (seenProjects.has(integration.projectId)) {
+      continue
+    }
+    seenProjects.add(integration.projectId)
+
+    try {
+      const connector = await buildShopifyPriceConnector(integration)
+      worker.registerConnector(`shopify:${integration.projectId}`, connector)
+      logger.info('[Automation] Registered Shopify connector', {
+        metadata: {
+          projectId: integration.projectId,
+          shopDomain: integration.shopDomain
+        }
+      })
+    } catch (error) {
+      logger.error(
+        '[Automation] Failed to register Shopify connector',
+        error as Error,
+        {
+          metadata: {
+            projectId: integration.projectId,
+            shopDomain: integration.shopDomain
+          }
+        }
+      )
+    }
+  }
+}
 
 // Initialize Outbox Worker
 const worker = new OutboxWorker(prisma, {
@@ -186,6 +303,9 @@ async function shutdown(signal: string) {
   logger.info(`Received ${signal}, shutting down gracefully...`)
 
   worker.stop()
+  if (rulesWorker) {
+    await rulesWorker.stop()
+  }
 
   await prisma.$disconnect()
 
@@ -231,6 +351,11 @@ async function main() {
   // Start worker
   worker.start()
   logger.info('Outbox Worker started')
+
+  rulesWorker = getRulesWorker(getWorkerConfig())
+  await registerAutomationConnectors(rulesWorker)
+  await rulesWorker.start()
+  logger.info('Automation Rules Worker started')
 
   // Periodic health checks and metrics logging
   setInterval(async () => {

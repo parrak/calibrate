@@ -117,6 +117,52 @@ export class RulesWorker {
     return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
   }
 
+  private resolveShopifyVariantId(
+    channelRefs: unknown,
+    skuCode: string,
+    attributes: Record<string, unknown>
+  ): string | null {
+    const attrVariantId = attributes.variantId
+    if (typeof attrVariantId === 'string' || typeof attrVariantId === 'number') {
+      return String(attrVariantId)
+    }
+
+    if (!channelRefs || typeof channelRefs !== 'object') {
+      return null
+    }
+
+    const refs = channelRefs as Record<string, unknown>
+    const shopify = refs.shopify
+    if (!shopify || typeof shopify !== 'object') {
+      return null
+    }
+
+    const shopifyRefs = shopify as Record<string, unknown>
+    const directVariantId = shopifyRefs.variantId
+    if (typeof directVariantId === 'string' || typeof directVariantId === 'number') {
+      return String(directVariantId)
+    }
+
+    const variants = shopifyRefs.variants
+    if (!Array.isArray(variants)) {
+      return null
+    }
+
+    for (const variant of variants) {
+      if (!variant || typeof variant !== 'object') continue
+      const record = variant as Record<string, unknown>
+      const sku = record.sku
+      if (typeof sku === 'string' && sku === skuCode) {
+        const id = record.id
+        if (typeof id === 'string' || typeof id === 'number') {
+          return String(id)
+        }
+      }
+    }
+
+    return null
+  }
+
   /**
    * Stop the worker
    */
@@ -383,8 +429,11 @@ export class RulesWorker {
         // Get the appropriate connector
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const channelRefs = product.channelRefs as any
-        const channel = channelRefs?.channel || 'shopify'
-        const connector = this.connectors.get(channel)
+        const channel =
+          (channelRefs?.channel as string) || (channelRefs?.shopify ? 'shopify' : 'shopify')
+        const connector =
+          this.connectors.get(`${channel}:${context.run.projectId}`) ||
+          this.connectors.get(channel)
 
         if (!connector) {
           throw new Error(`No connector registered for channel: ${channel}`)
@@ -397,7 +446,11 @@ export class RulesWorker {
         }
 
         // Apply the price change via connector
-        const externalId = channelRefs?.external_id || channelRefs?.externalId
+        const externalId =
+          channelRefs?.external_id || channelRefs?.externalId || target.variantId || undefined
+        if (!externalId) {
+          throw new Error('Missing external id for target application')
+        }
         const variantId = target.variantId || undefined
 
         const applyResult = await connector.applyPrice({
@@ -565,6 +618,8 @@ export class RulesWorker {
             ? (sku.attributes as Record<string, unknown>)
             : {}
 
+        const variantId = this.resolveShopifyVariantId(product.channelRefs, sku.code, attributes)
+
         const activePrices = sku.Price.filter((p) => p.status === 'ACTIVE')
         const pricesToUse = activePrices.length > 0 ? activePrices : sku.Price
         for (const price of pricesToUse) {
@@ -603,7 +658,7 @@ export class RulesWorker {
               projectId: rule.projectId,
               ruleRunId: run.id,
               productId: product.id,
-              variantId: null,
+              variantId,
               skuId: sku.id,
               beforeJson: {
                 currency: price.currency,

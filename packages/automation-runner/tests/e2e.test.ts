@@ -192,6 +192,39 @@ describe('Automation Runner E2E', () => {
         dlqService = new DLQService()
     })
 
+    it('materialize sets variantId from Shopify channelRefs', async () => {
+        const ruleId = 'rule-variant'
+        const productId = 'prod-variant'
+
+        prismaMock._store.pricingRule.set(ruleId, {
+            id: ruleId,
+            tenantId: 'tenant-1',
+            projectId: 'proj-1',
+            selectorJson: { predicates: [{ type: 'all' }], operator: 'AND' },
+            transformJson: { op: 'percent', value: 10 }
+        })
+
+        prismaMock._store.product.set(productId, {
+            id: productId,
+            tenantId: 'tenant-1',
+            projectId: 'proj-1',
+            tags: [],
+            active: true,
+            channelRefs: {
+                shopify: {
+                    variants: [{ id: 12345, sku: 'SKU-1' }]
+                }
+            },
+            Sku: [{ id: 'sku-1', code: 'SKU-1', Price: [{ amount: 1000, currency: 'USD' }] }]
+        })
+
+        await worker.materialize(ruleId)
+
+        const targets = Array.from(prismaMock._store.ruleTarget.values())
+        expect(targets.length).toBe(1)
+        expect(targets[0].variantId).toBe('12345')
+    })
+
     it('should execute a full successful run', async () => {
         // 1. Setup Data
         const ruleId = 'rule-1'

@@ -27,6 +27,8 @@
       "@calibr/security/*": ["packages/security/*"],
       "@calibr/connectors/*": ["packages/connectors/*"],
       "@calibr/amazon-connector/*": ["packages/amazon-connector/*"],
+      "@calibr/shopify-connector": ["packages/shopify-connector/src/index.ts"],
+      "@calibr/shopify-connector/*": ["packages/shopify-connector/src/*"],
       "@calibr/platform-connector/*": ["packages/platform-connector/src/*"],
       "@calibr/ui/*": ["packages/ui/*"],
       "@calibr/monitor": ["packages/monitor/src/index.ts"],

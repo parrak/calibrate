@@ -102,8 +102,10 @@ export class ReconciliationService {
     }
 
     const channelRefs = product.channelRefs as Record<string, unknown>
-    const channel = (channelRefs?.channel as string) || 'shopify'
-    const connector = this.connectors.get(channel)
+    const channel =
+      (channelRefs?.channel as string) || (channelRefs?.shopify ? 'shopify' : 'shopify')
+    const connector =
+      this.connectors.get(`${channel}:${product.projectId}`) || this.connectors.get(channel)
 
     if (!connector) {
       logger.warn(`[Reconciliation] No connector for channel ${channel}, skipping target ${target.id}`)
@@ -111,7 +113,9 @@ export class ReconciliationService {
     }
 
     // Fetch current external price
-    const externalId = (channelRefs?.external_id || channelRefs?.externalId) as string
+    const externalId = (channelRefs?.external_id ||
+      channelRefs?.externalId ||
+      target.variantId) as string
     if (!externalId) {
       logger.warn(`[Reconciliation] No external ID for product ${product.id}, skipping`)
       return null
