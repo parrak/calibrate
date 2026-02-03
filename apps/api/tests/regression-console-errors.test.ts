@@ -17,8 +17,7 @@ import { GET as analyticsRoute } from '../app/api/v1/analytics/[projectId]/route
 import { POST as shopifySyncRoute } from '../app/api/platforms/shopify/sync/route'
 import { buildShopifyConnectorConfig } from '../lib/shopify-connector'
 
-// Mock Prisma - create a shared mock client
-const createMockPrismaClient = () => {
+const { mockPrismaClient, mockGetAnalyticsOverview } = vi.hoisted(() => {
   const mockProject = {
     findUnique: vi.fn(),
     findFirst: vi.fn(),
@@ -34,46 +33,52 @@ const createMockPrismaClient = () => {
     findMany: vi.fn().mockResolvedValue([]),
     count: vi.fn().mockResolvedValue(0),
   }
+  const mockTransaction = {
+    findMany: vi.fn().mockResolvedValue([]),
+  }
 
-  return {
+  const prismaClient = {
     project: mockProject,
     product: mockProduct,
     sku: mockSku,
     priceChange: mockPriceChange,
+    transaction: mockTransaction,
   }
-}
 
-const mockPrismaClient = createMockPrismaClient()
+  const getAnalyticsOverview = vi.fn().mockResolvedValue({
+    summary: {
+      totalSkus: 10,
+      totalPriceChanges: 5,
+      approvalRate: 0.8,
+      averageChangePerDay: 0.5,
+    },
+    trends: {
+      priceChanges: { current: 3, previous: 2, direction: 'up', changePercent: 50 },
+      averagePrice: { current: 10000, previous: 9500, direction: 'up', changePercent: 5.26 },
+    },
+    topPerformers: {
+      byMargin: [],
+      bySales: [],
+    },
+  })
+
+  return {
+    mockPrismaClient: prismaClient,
+    mockGetAnalyticsOverview: getAnalyticsOverview,
+  }
+})
 
 vi.mock('@calibr/db', () => ({
   prisma: vi.fn(() => mockPrismaClient),
 }))
 
-// Mock analytics package - use vi.doMock to ensure it's called at runtime
-const mockGetAnalyticsOverview = vi.fn().mockResolvedValue({
-  summary: {
-    totalSkus: 10,
-    totalPriceChanges: 5,
-    approvalRate: 0.8,
-    averageChangePerDay: 0.5,
-  },
-  trends: {
-    priceChanges: { current: 3, previous: 2, direction: 'up', changePercent: 50 },
-    averagePrice: { current: 10000, previous: 9500, direction: 'up', changePercent: 5.26 },
-  },
-  topPerformers: {
-    byMargin: [],
-    bySales: [],
-  },
-})
-
 // Mock using the exact relative path the route uses
-vi.mock('../../../../../../../packages/analytics/index', () => ({
+vi.mock('../../../packages/analytics/index', () => ({
   getAnalyticsOverview: mockGetAnalyticsOverview,
 }))
 
 // Also mock the query module to prevent the real implementation from running
-vi.mock('../../../../../../../packages/analytics/query', () => ({
+vi.mock('../../../packages/analytics/query', () => ({
   getAnalyticsOverview: mockGetAnalyticsOverview,
 }))
 
@@ -374,22 +379,22 @@ describe('Console Errors Regression Tests', () => {
       // This test verifies that middleware matcher excludes RSC routes
       // RSC routes have the pattern: /path?_rsc=...
       // The middleware should not run for these routes
-      
+
       const middlewareMatcher = '/((?!api|_next/static|_next/image|favicon.ico|_rsc|.*\\..*).*)'
-      
+
       // Test that _rsc is excluded from the matcher
       const rscPath = '/p?_rsc=vujpb'
       const rscPathname = '/p'
-      
+
       // The matcher should NOT match paths with _rsc in the exclusion list
       // Since _rsc is in the negative lookahead, paths matching _rsc should be excluded
       // However, the matcher only checks pathname, not query params
       // So we need to ensure the middleware logic handles this correctly
-      
+
       expect(middlewareMatcher).toContain('_rsc')
       expect(middlewareMatcher).toContain('_next/static')
       expect(middlewareMatcher).toContain('_next/image')
-      
+
       // Verify the pattern structure
       expect(middlewareMatcher.startsWith('/((?!')).toBe(true)
     })
@@ -403,9 +408,9 @@ describe('Console Errors Regression Tests', () => {
         '/favicon.ico',
         '/p?_rsc=vujpb', // RSC route
       ]
-      
+
       const middlewareMatcher = '/((?!api|_next/static|_next/image|favicon.ico|_rsc|.*\\..*).*)'
-      
+
       // These paths should be excluded from middleware
       excludedPaths.forEach((path) => {
         // The matcher uses negative lookahead, so paths starting with excluded patterns won't match
@@ -421,7 +426,7 @@ describe('Console Errors Regression Tests', () => {
           hasRscInQuery || // RSC routes should be excluded even if _rsc is in query
           /\.\w+$/.test(pathname) // Has file extension
         )
-        
+
         // For RSC routes, the pathname is /p, but the query has _rsc
         // The middleware should handle this by checking the full URL
         if (path.includes('_rsc')) {
