@@ -49,7 +49,6 @@ export const POST = withSecurity(
 
                 const { project } = access
 
-
                 // Verify the log entry exists and belongs to this project
                 const logEntry = await prisma().copilotQueryLog.findUnique({
                     where: { id: queryId },
