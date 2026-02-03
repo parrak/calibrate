@@ -1,10 +1,15 @@
 # Outbox Worker Dockerfile
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 
-RUN apk add --no-cache openssl1.1-compat
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
 RUN npm install -g pnpm@9.0.0
+
+# Ensure Prisma uses Debian OpenSSL 3 engines
+ENV PRISMA_DISABLE_POSTINSTALL_GENERATE=true
+ENV PRISMA_CLI_BINARY_TARGETS="debian-openssl-3.0.x"
 
 WORKDIR /app
 
@@ -27,11 +32,16 @@ RUN pnpm --filter @calibr/monitor build
 RUN pnpm --filter @calibr/db build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 
-RUN apk add --no-cache openssl1.1-compat
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g pnpm@9.0.0 tsx@4.7.0
+
+ENV PRISMA_DISABLE_POSTINSTALL_GENERATE=true
+ENV PRISMA_ENGINE_BINARY_TARGET="debian-openssl-3.0.x"
+ENV PRISMA_CLIENT_ENGINE_TYPE=binary
 
 WORKDIR /app
 
