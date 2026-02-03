@@ -174,14 +174,14 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
     const userId = access.session.userId
 
     // 1. Generate PricingRule from natural language using AI (unless provided)
-    let rule = providedRule
+    let rule: PricingRule | undefined = providedRule ? (providedRule as PricingRule) : undefined
     let explanation = providedExplanation
     let confidence = providedConfidence
 
     if (!rule) {
       console.log('[Copilot Propose] Generating rule from query:', query)
       const generated = await generatePricingRule(query, JSON.stringify(metadata))
-      rule = generated.rule
+      rule = generated.rule as PricingRule
       explanation = generated.explanation
       confidence = generated.confidence
     }
@@ -195,9 +195,9 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
     // 2. Run simulation to get impact preview
     console.log('[Copilot Propose] Simulating rule:', rule.name)
     const simulation = await simulateRule({
-      tenantId: access.tenantId,
-      projectId: access.projectId,
-      rule: rule as PricingRule,
+      tenantId: access.project.tenantId,
+      projectId: access.project.id,
+      rule,
       actor: userId,
       dryRun: true,
     })

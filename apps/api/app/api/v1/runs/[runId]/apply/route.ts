@@ -8,10 +8,17 @@ export const dynamic = 'force-dynamic'
 
 export const POST = withSecurity(async function POST(
   req: NextRequest,
-  { params }: { params: { runId: string } }
+  ctx?: { params: { runId: string } }
 ) {
   try {
-    const { runId } = params
+    const runId = ctx?.params?.runId
+    if (!runId) {
+      return errorJson({
+        status: 400,
+        error: 'BadRequest',
+        message: 'Run id is required.',
+      })
+    }
     const url = new URL(req.url)
     const projectSlug = url.searchParams.get('project')?.trim()
     if (!projectSlug) {

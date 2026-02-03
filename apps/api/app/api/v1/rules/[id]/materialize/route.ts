@@ -12,10 +12,17 @@ import { requireProjectAccess, errorJson } from '../../../price-changes/utils'
 
 export const POST = withSecurity(async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  ctx?: { params: { id: string } }
 ) {
+  const ruleId = ctx?.params?.id
   try {
-    const ruleId = params.id
+    if (!ruleId) {
+      return errorJson({
+        status: 400,
+        error: 'BadRequest',
+        message: 'Rule id is required.',
+      })
+    }
     const url = new URL(request.url)
     const projectSlug = url.searchParams.get('project')?.trim()
     if (!projectSlug) {
@@ -52,8 +59,8 @@ export const POST = withSecurity(async function POST(
     const actor = access.session.userId || 'api'
 
     logger.info(`[API] Materializing rule run for rule: ${ruleId}`, {
-      actor
-    } as any)
+      metadata: { actor }
+    })
 
     // Get worker instance
     const worker = getRulesWorker()
@@ -70,10 +77,12 @@ export const POST = withSecurity(async function POST(
       : 0
 
     logger.info(`[API] Materialized rule run: ${run.id}`, {
-      ruleId,
-      runId: run.id,
-      targetCount: targetCount?.totalTargets
-    } as any)
+      metadata: {
+        ruleId,
+        runId: run.id,
+        targetCount: targetCount?.totalTargets
+      }
+    })
 
     return NextResponse.json({
       success: true,
@@ -87,10 +96,15 @@ export const POST = withSecurity(async function POST(
       }
     })
   } catch (error) {
-    logger.error('[API] Error materializing rule run', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      ruleId: params.id
-    } as any)
+    logger.error(
+      '[API] Error materializing rule run',
+      error instanceof Error ? error : undefined,
+      {
+        metadata: {
+          ruleId
+        }
+      }
+    )
 
     return NextResponse.json(
       {
