@@ -50,6 +50,16 @@ export class StripeService {
     }
 
     /**
+     * List checkout sessions for a payment intent
+     */
+    async listCheckoutSessions(paymentIntentId: string) {
+        return this.stripe.checkout.sessions.list({
+            payment_intent: paymentIntentId,
+            expand: ['data.line_items'],
+        })
+    }
+
+    /**
      * Verify webhook signature
      */
     verifyWebhookSignature(payload: string | Buffer, signature: string, secret: string) {

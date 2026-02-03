@@ -16,6 +16,8 @@ interface RateLimitStore {
 }
 
 // In-memory store (in production, use Redis)
+// TODO: Replace with Redis/Upstash for production horizontal scaling.
+// Current implementation scales with instance count, which is acceptable for M1.9 but needs replacement for M2.
 const store: RateLimitStore = {}
 
 export function createRateLimit(config: RateLimitConfig) {
@@ -106,6 +108,19 @@ export const rateLimiters = {
     keyGenerator: (req) => {
       const project = req.headers.get('x-calibr-project')
       return project ? `webhook:${project}` : req.ip || 'unknown'
+    }
+  }),
+
+  // Copilot rate limiting (expensive AI operations)
+  copilot: createRateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 20, // 20 requests per minute
+    keyGenerator: (req) => {
+      // Use tenant/project from header if available, otherwise IP
+      // withSecurity middleware adds x-calibr-project header
+      const project = req.headers.get('x-calibr-project')
+      const tenant = req.headers.get('x-calibr-tenant')
+      return project ? `copilot:${project}` : tenant ? `copilot:${tenant}` : req.ip || 'unknown'
     }
   }),
 

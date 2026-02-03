@@ -170,19 +170,6 @@ _Milestone-based; no calendars. Each milestone unlocks the next._
 
 ---
 
-### M1.8.1 — Automation Runner Worker Enablement [MW] — Owners: Engine 🔄 In Progress
-**Goals**
-- Start RulesWorker from the worker service and register Shopify connectors per project.
-- Resolve Shopify variant IDs from channelRefs for apply/reconcile.
-
-**Success**
-- ✅ Worker starts RulesWorker and registers per-project Shopify connectors.
-- ✅ RulesWorker applies/reconciles using resolved Shopify variant IDs.
-- 🔄 PR in review (PR #136).
-
-**Status:** 🔄 In Progress (February 2026)
-
----
 ### Ready‑For‑Automation Gate [NR] — ✅ 8/8 Requirements Met — COMPLETE
 **Checklist**
 - ✅ Engine supports schedule + revert

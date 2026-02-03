@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withSecurity } from '@/lib/security-headers'
+import { withRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { prisma } from '@calibr/db'
 import { simulateRule, type PricingRule } from '@calibr/pricing-engine'
 import { z } from 'zod'
@@ -123,80 +124,85 @@ async function logSimulation(params: SimulationLogParams, generatedSQL?: string)
   }
 }
 
-export const POST = withSecurity(async function POST(req: NextRequest) {
-  const start = Date.now()
+export const POST = withSecurity(
+  withRateLimit(
+    rateLimiters.copilot,
+    async function POST(req: NextRequest) {
+      const start = Date.now()
 
-  const parsed = simulateSchema.safeParse(await req.json())
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: 'Invalid request payload', issues: parsed.error.flatten() },
-      { status: 400 }
-    )
-  }
-
-  const { projectSlug, rule, policyRules, actor, metadata } = parsed.data
-
-  const access = await requireProjectAccess(req, projectSlug, 'EDITOR')
-  if ('error' in access) {
-    return errorJson(access.error)
-  }
-
-  try {
-    const userId = access.session.userId
-    const simulation = await simulateRule({
-      tenantId: access.project.tenantId,
-      projectId: access.project.id,
-      rule,
-      policyRules,
-      actor: actor || userId,
-      dryRun: true,
-    })
-
-    await logSimulation(
-      {
-        tenantId: access.project.tenantId,
-        projectId: access.project.id,
-        userId,
-        userRole: access.membership.role,
-        ruleName: rule.name,
-        summary: simulation.summary,
-        executionTime: Date.now() - start,
-        success: true,
-        metadata,
+      const parsed = simulateSchema.safeParse(await req.json())
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request payload', issues: parsed.error.flatten() },
+          { status: 400 }
+        )
       }
-    )
 
-    return NextResponse.json({
-      tenantId: access.project.tenantId,
-      projectId: access.project.id,
-      summary: simulation.summary,
-      results: simulation.results,
-      explainTrace: simulation.explainTrace,
-    })
-  } catch (error) {
-    console.error('[Copilot Simulation] Failed to simulate rule:', error)
+      const { projectSlug, rule, policyRules, actor, metadata } = parsed.data
 
-    const userId = access.session.userId
-    await logSimulation(
-      {
-        tenantId: access.project.tenantId,
-        projectId: access.project.id,
-        userId,
-        userRole: access.membership.role,
-        ruleName: rule.name,
-        summary: { total: 0, matched: 0, wouldChange: 0, totalDelta: 0 },
-        executionTime: Date.now() - start,
-        success: false,
-        error: 'Simulation failed',
-        metadata,
+      const access = await requireProjectAccess(req, projectSlug, 'EDITOR')
+      if ('error' in access) {
+        return errorJson(access.error)
       }
-    )
-    return NextResponse.json(
-      { error: 'Failed to simulate pricing rule' },
-      { status: 500 }
-    )
-  }
-})
+
+      try {
+        const userId = access.session.userId
+        const simulation = await simulateRule({
+          tenantId: access.project.tenantId,
+          projectId: access.project.id,
+          rule,
+          policyRules,
+          actor: actor || userId,
+          dryRun: true,
+        })
+
+        await logSimulation(
+          {
+            tenantId: access.project.tenantId,
+            projectId: access.project.id,
+            userId,
+            userRole: access.membership.role,
+            ruleName: rule.name,
+            summary: simulation.summary,
+            executionTime: Date.now() - start,
+            success: true,
+            metadata,
+          }
+        )
+
+        return NextResponse.json({
+          tenantId: access.project.tenantId,
+          projectId: access.project.id,
+          summary: simulation.summary,
+          results: simulation.results,
+          explainTrace: simulation.explainTrace,
+        })
+      } catch (error) {
+        console.error('[Copilot Simulation] Failed to simulate rule:', error)
+
+        const userId = access.session.userId
+        await logSimulation(
+          {
+            tenantId: access.project.tenantId,
+            projectId: access.project.id,
+            userId,
+            userRole: access.membership.role,
+            ruleName: rule.name,
+            summary: { total: 0, matched: 0, wouldChange: 0, totalDelta: 0 },
+            executionTime: Date.now() - start,
+            success: false,
+            error: 'Simulation failed',
+            metadata,
+          }
+        )
+        return NextResponse.json(
+          { error: 'Failed to simulate pricing rule' },
+          { status: 500 }
+        )
+      }
+    }
+  )
+)
 
 export const OPTIONS = withSecurity(async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
