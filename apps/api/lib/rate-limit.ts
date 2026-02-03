@@ -109,6 +109,19 @@ export const rateLimiters = {
     }
   }),
 
+  // Copilot rate limiting (expensive AI operations)
+  copilot: createRateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 20, // 20 requests per minute
+    keyGenerator: (req) => {
+      // Use tenant/project from header if available, otherwise IP
+      // withSecurity middleware adds x-calibr-project header
+      const project = req.headers.get('x-calibr-project')
+      const tenant = req.headers.get('x-calibr-tenant')
+      return project ? `copilot:${project}` : tenant ? `copilot:${tenant}` : req.ip || 'unknown'
+    }
+  }),
+
   // Price changes rate limiting
   priceChanges: createRateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes

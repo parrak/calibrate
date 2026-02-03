@@ -18,6 +18,7 @@ import { prisma, Prisma } from '@calibr/db'
 import { generateSQL, generatePricingRule } from '@/lib/openai'
 import { simulateRule, type PricingRule } from '@calibr/pricing-engine'
 import { requireProjectAccess, errorJson } from '../price-changes/utils'
+import { withRateLimit, rateLimiters } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
@@ -119,9 +120,9 @@ async function logQuery(params: {
   success: boolean
   error?: string
   metadata?: Record<string, unknown>
-}) {
+}): Promise<string | null> {
   try {
-    await prisma().copilotQueryLog.create({
+    const log = await prisma().copilotQueryLog.create({
       data: {
         tenantId: params.tenantId,
         projectId: params.projectId,
@@ -139,9 +140,10 @@ async function logQuery(params: {
         metadata: (params.metadata || {}) as Prisma.InputJsonValue,
       },
     })
+    return log.id
   } catch (error) {
     console.error('[Copilot] Failed to log query:', error)
-    // Don't throw - logging failure shouldn't break the request
+    return null
   }
 }
 
@@ -154,100 +156,144 @@ async function logQuery(params: {
  * - userId?: string (for RBAC)
  * - context?: object (additional context)
  */
-export const POST = withSecurity(async function POST(req: NextRequest) {
-  const startTime = Date.now()
+export const POST = withSecurity(
+  withRateLimit(
+    rateLimiters.copilot,
+    async function POST(req: NextRequest) {
+      const startTime = Date.now()
 
-  try {
-    const body = await req.json()
-    const { projectSlug, query, context } = body
-
-    if (!projectSlug || !query) {
-      return NextResponse.json(
-        { error: 'projectSlug and query are required' },
-        { status: 400 }
-      )
-    }
-
-    console.log('[Copilot] Query received:', { projectSlug, query })
-
-    // RBAC: Check project access
-    const access = await requireProjectAccess(req, projectSlug, 'VIEWER')
-    if ('error' in access) {
-      return errorJson(access.error)
-    }
-
-    const { project, membership, session } = access
-    const projectId = project.id
-    const tenantId = project.tenantId
-    const role = membership.role
-    const userId = session.userId
-
-    // Determine intent
-    const intent = determineQueryType(query)
-
-    // Handle Simulation Intent
-    if (intent === 'simulation') {
       try {
-        const simulationResult = await handleSimulationQuery(projectId, tenantId, query, userId, role, context)
+        const body = await req.json()
+        const { projectSlug, query, context } = body
 
-        // Log successful simulation
-        await logQuery({
-          tenantId,
-          projectId,
-          userId,
-          userRole: role,
-          query,
-          queryType: 'simulation',
-          executionTime: Date.now() - startTime,
-          method: 'ai',
-          success: true,
-          metadata: {
-            context,
-            ruleName: (simulationResult.rule as PricingRule).name,
-            impact: simulationResult.summary
-          },
-        })
+        if (!projectSlug || !query) {
+          return NextResponse.json(
+            { error: 'projectSlug and query are required' },
+            { status: 400 }
+          )
+        }
 
-        return NextResponse.json(
-          {
-            type: 'simulation',
-            answer: simulationResult.answer,
-            rule: simulationResult.rule,
-            summary: simulationResult.summary,
-            results: simulationResult.results,
-            confidence: simulationResult.confidence,
-            method: 'ai',
-            metadata: {
-              schemaVersion: SCHEMA_VERSION,
+        console.log('[Copilot] Query received:', { projectSlug, query })
+
+        // RBAC: Check project access
+        const access = await requireProjectAccess(req, projectSlug, 'VIEWER')
+        if ('error' in access) {
+          return errorJson(access.error)
+        }
+
+        const { project, membership, session } = access
+        const projectId = project.id
+        const tenantId = project.tenantId
+        const role = membership.role
+        const userId = session.userId
+
+        // Determine intent
+        const intent = determineQueryType(query)
+
+        // Handle Simulation Intent
+        if (intent === 'simulation') {
+          try {
+            const simulationResult = await handleSimulationQuery(projectId, tenantId, query, userId, role, context)
+
+            // Log successful simulation
+            const queryId = await logQuery({
+              tenantId,
+              projectId,
+              userId,
+              userRole: role,
+              query,
+              queryType: 'simulation',
               executionTime: Date.now() - startTime,
-              role,
-            },
-          },
-          { status: 200 }
-        )
-      } catch (error) {
-        console.error('[Copilot] Simulation failed:', error)
-        // Fallback to standard query if simulation fails
-      }
-    }
+              method: 'ai',
+              success: true,
+              metadata: {
+                context,
+                ruleName: (simulationResult.rule as PricingRule).name,
+                impact: simulationResult.summary
+              },
+            })
 
-    // Try AI-powered query generation first
-    if (process.env.OPENAI_API_KEY) {
-      try {
-        const aiResult = await handleAIQuery(projectId, tenantId, query, context)
+            return NextResponse.json(
+              {
+                type: 'simulation',
+                queryId,
+                answer: simulationResult.answer,
+                rule: simulationResult.rule,
+                summary: simulationResult.summary,
+                results: simulationResult.results,
+                confidence: simulationResult.confidence,
+                method: 'ai',
+                metadata: {
+                  schemaVersion: SCHEMA_VERSION,
+                  executionTime: Date.now() - startTime,
+                  role,
+                },
+              },
+              { status: 200 }
+            )
+          } catch (error) {
+            console.error('[Copilot] Simulation failed:', error)
+            // Fallback to standard query if simulation fails
+          }
+        }
 
-        // Log successful AI query
-        await logQuery({
+        // Try AI-powered query generation first
+        if (process.env.OPENAI_API_KEY) {
+          try {
+            const aiResult = await handleAIQuery(projectId, tenantId, query, context)
+
+            // Log successful AI query
+            const queryId = await logQuery({
+              tenantId,
+              projectId,
+              userId,
+              userRole: role,
+              query,
+              generatedSQL: aiResult.sql,
+              queryType: determineQueryType(query),
+              resultCount: Array.isArray(aiResult.data) ? aiResult.data.length : undefined,
+              executionTime: Date.now() - startTime,
+              method: 'ai',
+              success: true,
+              metadata: { context },
+            })
+
+            return NextResponse.json(
+              {
+                type: 'query',
+                queryId,
+                answer: aiResult.answer,
+                data: aiResult.data,
+                sql: aiResult.sql,
+                method: 'ai',
+                metadata: {
+                  schemaVersion: SCHEMA_VERSION,
+                  executionTime: Date.now() - startTime,
+                  role,
+                },
+              },
+              { status: 200 }
+            )
+          } catch (error) {
+            console.warn('[Copilot] AI query failed, falling back to patterns:', error)
+          }
+        }
+
+        // Fallback to pattern matching
+        const result = await handlePatternQuery(projectId, tenantId, query, context)
+
+        // Log successful pattern query
+        const queryId = await logQuery({
           tenantId,
           projectId,
           userId,
           userRole: role,
           query,
-          generatedSQL: aiResult.sql,
+          generatedSQL: result.sql,
           queryType: determineQueryType(query),
-          resultCount: Array.isArray(aiResult.data) ? aiResult.data.length : undefined,
+          resultCount: Array.isArray(result.data) ? result.data.length : undefined,
           executionTime: Date.now() - startTime,
-          method: 'ai',
+          method: 'pattern',
           success: true,
           metadata: { context },
         })
@@ -255,10 +301,12 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             type: 'query',
-            answer: aiResult.answer,
-            data: aiResult.data,
-            sql: aiResult.sql,
-            method: 'ai',
+            queryId,
+            answer: result.answer,
+            data: result.data,
+            sql: result.sql,
+            suggestions: result.suggestions,
+            method: 'pattern',
             metadata: {
               schemaVersion: SCHEMA_VERSION,
               executionTime: Date.now() - startTime,
@@ -268,57 +316,19 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
           { status: 200 }
         )
       } catch (error) {
-        console.warn('[Copilot] AI query failed, falling back to patterns:', error)
+        console.error('[Copilot API] Error:', error)
+
+        return NextResponse.json(
+          {
+            error: 'Failed to process query',
+            message: error instanceof Error ? error.message : 'Unknown error',
+          },
+          { status: 500 }
+        )
       }
     }
-
-    // Fallback to pattern matching
-    const result = await handlePatternQuery(projectId, tenantId, query, context)
-
-    // Log successful pattern query
-    await logQuery({
-      tenantId,
-      projectId,
-      userId,
-      userRole: role,
-      query,
-      generatedSQL: result.sql,
-      queryType: determineQueryType(query),
-      resultCount: Array.isArray(result.data) ? result.data.length : undefined,
-      executionTime: Date.now() - startTime,
-      method: 'pattern',
-      success: true,
-      metadata: { context },
-    })
-
-    return NextResponse.json(
-      {
-        type: 'query',
-        answer: result.answer,
-        data: result.data,
-        sql: result.sql,
-        suggestions: result.suggestions,
-        method: 'pattern',
-        metadata: {
-          schemaVersion: SCHEMA_VERSION,
-          executionTime: Date.now() - startTime,
-          role,
-        },
-      },
-      { status: 200 }
-    )
-  } catch (error) {
-    console.error('[Copilot API] Error:', error)
-
-    return NextResponse.json(
-      {
-        error: 'Failed to process query',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
-  }
-})
+  )
+)
 
 /**
  * Handle simulation queries using AI and Pricing Engine

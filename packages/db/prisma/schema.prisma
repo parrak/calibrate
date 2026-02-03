@@ -730,6 +730,9 @@ model CopilotQueryLog {
   method        String? // 'ai' or 'pattern'
   success       Boolean  @default(true)
   error         String? // Error message if failed
+  feedbackRating Int? // 1-5 or -1/1
+  feedbackComment String?
+  feedbackAt    DateTime?
   metadata      Json? // Additional context (filters, params, etc.)
   createdAt     DateTime @default(now()) @db.Timestamptz(6)
   Tenant        Tenant   @relation(fields: [tenantId], references: [id])
