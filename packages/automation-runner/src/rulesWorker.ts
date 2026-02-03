@@ -4,7 +4,7 @@
  */
 
 import { prisma, EventWriter, OutboxWorker } from '@calibr/db'
-import type { EventPayload, RuleRun, RuleTarget, GuardrailPolicy } from '@calibr/db'
+import type { EventPayload, RuleRun, RuleTarget, GuardrailPolicy, Prisma } from '@calibr/db'
 import { logger } from '@calibr/monitor'
 import {
   calculateBackoff,
@@ -111,6 +111,10 @@ export class RulesWorker {
 
     this.emitEvent('worker.started')
     logger.info('[RulesWorker] Started successfully', { metadata: { config: this.config } })
+  }
+
+  private toJson(value: unknown): Prisma.InputJsonValue {
+    return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
   }
 
   /**
@@ -540,10 +544,10 @@ export class RulesWorker {
         status: 'PREVIEW',
         queuedAt: null,
         scheduledFor: rule.scheduleAt ?? null,
-        explainJson: {
+        explainJson: this.toJson({
           selector,
           transform
-        },
+        }),
         metadata: {
           actor,
           createdBy: actor
@@ -626,13 +630,13 @@ export class RulesWorker {
     await prisma().ruleRun.update({
       where: { id: run.id },
       data: {
-        explainJson: {
+        explainJson: this.toJson({
           selector,
           transform,
           matched,
           wouldChange,
           totalDeltaCents
-        }
+        })
       }
     })
 

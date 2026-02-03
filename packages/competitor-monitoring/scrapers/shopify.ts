@@ -43,7 +43,16 @@ export async function scrapeShopifyPrice(
       }
     }
 
-    const data = await response.json()
+    const data = (await response.json()) as {
+      product?: {
+        variants?: Array<{
+          price: string
+          compare_at_price?: string | null
+          available?: boolean
+          inventory_quantity?: number | null
+        }>
+      }
+    }
 
     // Extract price from first variant (Shopify stores prices in cents as strings)
     const product = data.product
