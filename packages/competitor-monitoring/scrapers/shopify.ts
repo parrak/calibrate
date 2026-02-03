@@ -73,7 +73,7 @@ export async function scrapeShopifyPrice(
     let stockStatus: 'in_stock' | 'out_of_stock' | 'limited' = 'in_stock'
     if (!variant.available) {
       stockStatus = 'out_of_stock'
-    } else if (variant.inventory_quantity !== undefined && variant.inventory_quantity < 10) {
+    } else if (variant.inventory_quantity != null && variant.inventory_quantity < 10) {
       stockStatus = 'limited'
     }
 
