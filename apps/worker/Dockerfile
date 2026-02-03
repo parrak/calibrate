@@ -1,6 +1,8 @@
 # Outbox Worker Dockerfile
 FROM node:20-alpine AS base
 
+RUN apk add --no-cache openssl1.1-compat
+
 # Install pnpm
 RUN npm install -g pnpm@9.0.0
 
@@ -26,6 +28,8 @@ RUN pnpm --filter @calibr/db build
 
 # Production stage
 FROM node:20-alpine AS production
+
+RUN apk add --no-cache openssl1.1-compat
 
 RUN npm install -g pnpm@9.0.0 tsx@4.7.0
 
