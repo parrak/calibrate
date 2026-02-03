@@ -116,10 +116,11 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - **API**: New endpoint for submitting user feedback.
 - **Status**: Completed February 2026 (PR #137).
 
-### Automation Runner Worker Enablement 🚧
+### M1.8.1 — Automation Runner Worker Enablement ✅
 - **Worker**: Outbox worker now starts RulesWorker and registers Shopify connectors per project.
-- **Apply readiness**: RulesWorker resolves Shopify variant IDs from channelRefs for apply/reconcile.
-- **Status**: In progress — pending merge. (PR #136)
+- **Apply readiness**: RulesWorker resolves Shopify variant IDs from channelRefs for apply/reconcile. (PR #136)
+- **Safety**: Added Pre-flight Health Check gate to abort runs if connectors are unreachable.
+- **Status**: COMPLETE — February 2, 2026.
 ### Stripe Integration ✅ (API Key Mode)
 - **Schema & Config**: Added `StripeAccount`, `Transaction`, `StripeProductMap` models.
 - **Backend**: Implemented `StripeService` (API Key) and `StripeSync` (Catalog, Transactions).
@@ -130,5 +131,7 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 **Success Metrics**
 - **Safety**: 0 incidents of "runaway" automation or price floor breaches.
 - **Data Quality**: Stripe transactions mapped to SKUs for true margin analysis.
+- **Realized Margin**: Analytics upgraded to calculate true realized margin from transaction data.
+- **Dashboard**: Console upgraded to surface Revenue, Units Sold, and Top Sellers leaderboard.
 - **Copilot Engagement**: 20% of sessions use "Simulation" feature.
 - **Monetization**: Stripe integration live in Staging.

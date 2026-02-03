@@ -317,6 +317,45 @@ export class RulesWorker {
       }
     }
 
+    // M1.8.1: Pre-flight Connector Health Check
+    try {
+      // Find the required connector for this project's primary channel (defaulting to shopify)
+      const channel = 'shopify' // TODO: Detect from targets if multi-channel is needed
+      const connector = this.connectors.get(`${channel}:${run.projectId}`) || this.connectors.get(channel)
+
+      if (!connector) {
+        throw new Error(`Required connector '${channel}' not registered for project ${run.projectId}`)
+      }
+
+      const healthy = await connector.isHealthy()
+      if (!healthy) {
+        throw new Error(`Connector '${channel}' is currently unhealthy. Aborting automated run for safety.`)
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Connector health check failed'
+      logger.error(`[RulesWorker] ${errorMessage}`, undefined, { metadata: { runId: run.id } })
+
+      await prisma().ruleRun.update({
+        where: { id: run.id },
+        data: {
+          status: 'FAILED',
+          finishedAt: new Date(),
+          errorMessage
+        }
+      })
+
+      this.emitEvent('run.failed', { error: errorMessage }, run.id)
+      return {
+        runId: run.id,
+        status: 'FAILED',
+        totalTargets: targets.length,
+        appliedTargets: 0,
+        failedTargets: targets.length,
+        duration: Date.now() - startTime,
+        results: []
+      }
+    }
+
     // Update run status to APPLYING
     await prisma().ruleRun.update({
       where: { id: run.id },
@@ -857,10 +896,10 @@ function normalizeTransform(value: unknown): EngineTransformDefinition {
   const constraints =
     legacy?.floor !== undefined || legacy?.ceiling !== undefined || legacy?.maxPctDelta !== undefined
       ? {
-          floor: legacy.floor,
-          ceiling: legacy.ceiling,
-          maxPctDelta: legacy.maxPctDelta
-        }
+        floor: legacy.floor,
+        ceiling: legacy.ceiling,
+        maxPctDelta: legacy.maxPctDelta
+      }
       : undefined
 
   return { transform, constraints }

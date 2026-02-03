@@ -1,26 +1,26 @@
-# Next Task Plan — Q4 2025 / Q1 2026
-**Generated**: November 11, 2025
-**Status**: 🟢 Foundation Complete — Ready for Automation Phase
-**Master Branch**: Up to date (a8a10d2)
+# Next Task Plan — Q1 2026
+**Generated**: February 2, 2026
+**Status**: 🟢 Automation Layer Complete — Preparing for Public Beta
+**Master Branch**: Up to date (f94aed9)
 
 ---
 
 ## Executive Summary
 
-With **8/8 foundation milestones complete** and the Calibrate branding deployed, we're ready to focus on **production-scale automation** and **remaining integration work**. This plan prioritizes completing Competitor Monitoring E2E, implementing the Automation Runner foundation, and preparing for v0.4.0 public beta.
+With **M1.8, M1.8.1, and M1.9 complete**, the Calibrate platform now supports end-to-end AI-supervised automation with strict safety gates, user feedback loops, and real-world margin analysis. The focus now shifts to **Stability, Performance at Scale, and Merchant Onboarding**.
 
 ### Current State
-- ✅ **Foundation**: All core milestones complete (M0.1-M0.4, M1.1-M1.5)
-- ✅ **Branding**: Calibrate v1 deployed across all apps
-- ✅ **Testing**: 900+ tests, 100% pass rate
-- ✅ **Competitor Monitoring**: 100% complete (M0.6 E2E verified)
-- 📋 **Automation Runner**: Not started (critical for production scale)
+- ✅ **Automation**: RulesWorker enabled with per-project Shopify connectors and health gates.
+- ✅ **Copilot**: Simulation, Proposal, and Feedback Loop integrated.
+- ✅ **Analytics**: Real-world margin analysis live using Stripe transactions.
+- ✅ **Safety**: 3-tier guardrails (Price Floor, Max Delta, Velocity) operational.
+- ✅ **Monitoring**: 900+ tests passing; Railway/Vercel production-ready.
 
 ### Next 30 Days Goals
-1. **Complete M0.6** - Competitor Monitoring E2E (Week 1)
-2. **Start M0.5** - Automation Runner Foundation (Week 1-3)
-3. **Production Monitoring** - Grafana, alerts, synthetic probes (Week 2-3)
-4. **Begin M1.6** - Automation Runner Execution Layer (Week 4)
+1. **Performance Tuning** - Optimize 1000+ SKU rule runs (p95 < 2min).
+2. **Merchant Onboarding** - Seed 3-5 pilot merchants from waitlist.
+3. **Advanced Alerts** - Multi-channel health monitoring (Shopify + Stripe status).
+4. **V0.5.0 Release** - Public beta documentation and launch sequence.
 
 ---
 
