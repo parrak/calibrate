@@ -1,5 +1,5 @@
 # Calibr V2 Execution Packet — Internal Engineering Summary
-_Last updated: November 26, 2025_
+_Last updated: February 3, 2026_
 
 ## Purpose
 Define the **technical execution plan** for Calibr V2 with an **e‑commerce wedge** (Shopify launch; Amazon read‑only stub), while preserving the long‑term **Composable Data OS** architecture.
@@ -35,7 +35,7 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 
 ## Copilot (Platform Feature)
 - **Read-only** ✅: `/copilot/query` → NL→SQL/GraphQL with schema-aware RAG; scope by tenant; log generated query + sources. **COMPLETE** — 42+ tests, GPT-4 integration, RBAC, anomaly detection, console UI delivered (M1.4).
-- **Next**: Simulation proposals (no execution) once Automation Runner lands (M1.8).
+- **Propose + Apply** ✅: Copilot simulate → propose → approve/apply flow integrated with Automation Runner preview runs, RBAC, and Console actions. Demo tenant seeded for public enablement. **COMPLETE** — February 3, 2026 (PR #134).
 
 ## Security & Observability
 - RLS policies tested; scoped service tokens; per-connector secrets vault.
@@ -99,6 +99,18 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 | **Phase 2** (Weeks 3-4) | Copilot Propose Mode | Chat → Simulation → Rule Builder flow; Impact Analysis |
 | **Phase 3** (Weeks 5-6) | Pilot Launch | Live automation for 2-3 merchants; Daily digests |
 
+---
+
+## Recent Progress (February 2026)
+
+### M1.8 — Copilot Propose + Automation Runner Preview/Apply ✅
+- **End-to-end flow**: Copilot simulate → propose → approve/apply now integrated with Automation Runner preview runs.
+- **RBAC**: Editor/Admin gating for propose/apply enforced via token auth.
+- **Console UX**: “Approve & Apply Now” action wired to existing flows.
+- **Demo seed**: Demo tenant populated with test data for public enablement.
+- **Deployment**: Railway API deploy verified with smoke checks.
+- **PR**: #134 (merged February 3, 2026).
+
 ### Stripe Integration ✅ (API Key Mode)
 - **Schema & Config**: Added `StripeAccount`, `Transaction`, `StripeProductMap` models.
 - **Backend**: Implemented `StripeService` (API Key) and `StripeSync` (Catalog, Transactions).
@@ -111,4 +123,3 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - **Data Quality**: Stripe transactions mapped to SKUs for true margin analysis.
 - **Copilot Engagement**: 20% of sessions use "Simulation" feature.
 - **Monetization**: Stripe integration live in Staging.
-
