@@ -139,7 +139,13 @@ export async function scrapeWithSerpAPI(
       }
     }
 
-    const data = await response.json()
+    const data = (await response.json()) as {
+      shopping_results?: Array<{
+        price?: string
+        sale_price?: string
+        in_stock?: boolean
+      }>
+    }
 
     // Extract price from first result
     if (data.shopping_results && data.shopping_results.length > 0) {

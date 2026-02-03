@@ -5,31 +5,59 @@
 import OpenAI from 'openai'
 import { z } from 'zod'
 
+const selectorPredicateSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('all') }),
+  z.object({ type: z.literal('sku'), skuCodes: z.array(z.string()) }),
+  z.object({ type: z.literal('tag'), tags: z.array(z.string()) }),
+  z.object({
+    type: z.literal('priceRange'),
+    min: z.number().optional(),
+    max: z.number().optional(),
+    currency: z.string().optional(),
+  }),
+  z.object({
+    type: z.literal('custom'),
+    field: z.string(),
+    operator: z.enum(['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'contains']),
+    value: z.custom<unknown>((val) => val !== undefined, {
+      message: 'value is required for custom selector predicates',
+    }),
+  }),
+])
+
+const transformSchema = z.union([
+  z.object({ type: z.literal('percentage'), value: z.number() }),
+  z.object({ type: z.literal('absolute'), value: z.number() }),
+  z.object({ type: z.literal('set'), value: z.number() }),
+  z.object({ type: z.literal('multiply'), factor: z.number() }),
+])
+
 const PricingRuleSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   selector: z.object({
-    operator: z.enum(['AND', 'OR']),
-    predicates: z.array(z.object({
-      type: z.string(),
-    }).passthrough())
+    operator: z.enum(['AND', 'OR']).optional(),
+    predicates: z.array(selectorPredicateSchema),
   }),
   transform: z.object({
-    transform: z.object({
-      type: z.string(),
-      value: z.number().optional(),
-      factor: z.number().optional(),
-    }),
-    constraints: z.object({
-      floor: z.number().optional(),
-      ceiling: z.number().optional(),
-      maxPctDelta: z.number().optional(),
-    }).optional()
+    transform: transformSchema,
+    constraints: z
+      .object({
+        floor: z.number().optional(),
+        ceiling: z.number().optional(),
+        maxPctDelta: z.number().optional(),
+      })
+      .optional(),
   }),
-  schedule: z.object({
-    type: z.literal('immediate')
-  }).optional(),
-  enabled: z.boolean().optional()
+  schedule: z
+    .object({
+      type: z.enum(['immediate', 'scheduled', 'recurring']),
+      scheduledAt: z.coerce.date().optional(),
+      cron: z.string().optional(),
+      timezone: z.string().optional(),
+    })
+    .optional(),
+  enabled: z.boolean().optional(),
 })
 
 const AIResponseSchema = z.object({

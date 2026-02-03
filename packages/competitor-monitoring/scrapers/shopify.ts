@@ -43,7 +43,16 @@ export async function scrapeShopifyPrice(
       }
     }
 
-    const data = await response.json()
+    const data = (await response.json()) as {
+      product?: {
+        variants?: Array<{
+          price: string
+          compare_at_price?: string | null
+          available?: boolean
+          inventory_quantity?: number | null
+        }>
+      }
+    }
 
     // Extract price from first variant (Shopify stores prices in cents as strings)
     const product = data.product
@@ -64,7 +73,7 @@ export async function scrapeShopifyPrice(
     let stockStatus: 'in_stock' | 'out_of_stock' | 'limited' = 'in_stock'
     if (!variant.available) {
       stockStatus = 'out_of_stock'
-    } else if (variant.inventory_quantity !== undefined && variant.inventory_quantity < 10) {
+    } else if (variant.inventory_quantity != null && variant.inventory_quantity < 10) {
       stockStatus = 'limited'
     }
 

@@ -3,15 +3,9 @@ import { withSecurity } from '@/lib/security-headers'
 import { prisma } from '@calibr/db'
 import { simulateRule, type PricingRule } from '@calibr/pricing-engine'
 import { z } from 'zod'
+import { requireProjectAccess, errorJson } from '../../price-changes/utils'
 
 const SCHEMA_VERSION = '1.9.0'
-
-type AccessResult = {
-  allowed: boolean
-  role?: string
-  projectId?: string
-  tenantId?: string
-}
 
 const customSelectorPredicateSchema = z.object({
   type: z.literal('custom'),
@@ -86,50 +80,6 @@ const simulateSchema = z.object({
   metadata: z.record(z.unknown()).optional(),
 })
 
-async function requireProjectAccess(
-  projectSlug: string,
-  userId?: string,
-  requiredRole: 'VIEWER' | 'EDITOR' | 'ADMIN' | 'OWNER' = 'EDITOR'
-): Promise<AccessResult> {
-  try {
-    const project = await prisma().project.findUnique({
-      where: { slug: projectSlug },
-      include: {
-        Membership: userId
-          ? {
-            where: { userId },
-            select: { role: true },
-          }
-          : false,
-      },
-    })
-
-    if (!project) {
-      return { allowed: false }
-    }
-
-    if (!userId || !project.Membership || project.Membership.length === 0) {
-      return { allowed: false, projectId: project.id, tenantId: project.tenantId }
-    }
-
-    const membership = project.Membership[0]
-    const hierarchy = { OWNER: 4, ADMIN: 3, EDITOR: 2, VIEWER: 1 }
-    const allowed =
-      hierarchy[(membership.role as keyof typeof hierarchy) ?? 'VIEWER'] >=
-      hierarchy[requiredRole]
-
-    return {
-      allowed,
-      role: membership.role,
-      projectId: project.id,
-      tenantId: project.tenantId,
-    }
-  } catch (error) {
-    console.error('[Copilot Simulation] RBAC check failed:', error)
-    return { allowed: false }
-  }
-}
-
 type SimulationLogParams = {
   tenantId: string
   projectId: string
@@ -184,37 +134,18 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
     )
   }
 
-  const { projectSlug, rule, policyRules, userId, actor, metadata } = parsed.data
+  const { projectSlug, rule, policyRules, actor, metadata } = parsed.data
 
-  const access = await requireProjectAccess(projectSlug, userId, 'EDITOR')
-  if (!access.allowed || !access.projectId || !access.tenantId) {
-    if (access.projectId && access.tenantId) {
-      await logSimulation(
-        {
-          tenantId: access.tenantId,
-          projectId: access.projectId,
-          userId,
-          userRole: access.role,
-          ruleName: rule.name,
-          summary: { total: 0, matched: 0, wouldChange: 0, totalDelta: 0 },
-          executionTime: Date.now() - start,
-          success: false,
-          error: 'Access denied',
-          metadata,
-        }
-      )
-    }
-
-    return NextResponse.json(
-      { error: 'Access denied', message: 'User does not have permission to simulate rules' },
-      { status: 403 }
-    )
+  const access = await requireProjectAccess(req, projectSlug, 'EDITOR')
+  if ('error' in access) {
+    return errorJson(access.error)
   }
 
   try {
+    const userId = access.session.userId
     const simulation = await simulateRule({
-      tenantId: access.tenantId,
-      projectId: access.projectId,
+      tenantId: access.project.tenantId,
+      projectId: access.project.id,
       rule,
       policyRules,
       actor: actor || userId,
@@ -223,10 +154,10 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
 
     await logSimulation(
       {
-        tenantId: access.tenantId,
-        projectId: access.projectId,
+        tenantId: access.project.tenantId,
+        projectId: access.project.id,
         userId,
-        userRole: access.role,
+        userRole: access.membership.role,
         ruleName: rule.name,
         summary: simulation.summary,
         executionTime: Date.now() - start,
@@ -236,20 +167,22 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
     )
 
     return NextResponse.json({
-      tenantId: access.tenantId,
-      projectId: access.projectId,
+      tenantId: access.project.tenantId,
+      projectId: access.project.id,
       summary: simulation.summary,
       results: simulation.results,
       explainTrace: simulation.explainTrace,
     })
   } catch (error) {
     console.error('[Copilot Simulation] Failed to simulate rule:', error)
+
+    const userId = access.session.userId
     await logSimulation(
       {
-        tenantId: access.tenantId,
-        projectId: access.projectId,
+        tenantId: access.project.tenantId,
+        projectId: access.project.id,
         userId,
-        userRole: access.role,
+        userRole: access.membership.role,
         ruleName: rule.name,
         summary: { total: 0, matched: 0, wouldChange: 0, totalDelta: 0 },
         executionTime: Date.now() - start,

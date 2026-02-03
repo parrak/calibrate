@@ -79,6 +79,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
   const API_BASE = apiBase || process.env.NEXT_PUBLIC_API_BASE || 'https://api.calibr.lat'
 
   const [simulationData, setSimulationData] = useState<SimulationData | null>(null)
+  const [actionLoading, setActionLoading] = useState<'save' | 'apply' | null>(null)
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -175,6 +176,7 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
 
     try {
       setLoading(true)
+      setActionLoading('save')
 
       // Use M1.8 propose endpoint to persist rule + preview run
       const res = await fetch(`${API_BASE}/api/v1/copilot/propose`, {
@@ -187,6 +189,9 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
           projectSlug,
           query: userQuery,
           userId,
+          rule: simulationData.rule,
+          explanation: simulationData.answer,
+          confidence: simulationData.confidence,
           metadata: {
             source: 'copilot_drawer',
             confidence: simulationData.confidence,
@@ -215,6 +220,90 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
       setMessages((prev) => [...prev, errorMsg])
     } finally {
       setLoading(false)
+      setActionLoading(null)
+    }
+  }
+
+  const handleApplyOnce = async () => {
+    if (!simulationData?.rule || !token) return
+
+    const userQuery = messages[messages.length - 2]?.content || 'Copilot suggestion'
+    const confirmApply = window.confirm('Apply this rule now? This will queue a run in Automation.')
+    if (!confirmApply) return
+
+    try {
+      setLoading(true)
+      setActionLoading('apply')
+
+      const res = await fetch(`${API_BASE}/api/v1/copilot/propose`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          projectSlug,
+          query: userQuery,
+          userId,
+          rule: simulationData.rule,
+          explanation: simulationData.answer,
+          confidence: simulationData.confidence,
+          metadata: {
+            source: 'copilot_drawer_apply',
+            confidence: simulationData.confidence,
+          },
+        }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || 'Failed to propose rule')
+      }
+
+      const proposed = await res.json()
+      const runId = proposed.previewRun?.id
+      if (!runId) {
+        throw new Error('Preview run missing from proposal response')
+      }
+
+      const applyRes = await fetch(
+        `${API_BASE}/api/v1/runs/${runId}/apply?project=${projectSlug}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      if (!applyRes.ok) {
+        const error = await applyRes.json().catch(() => ({}))
+        throw new Error(error.message || 'Failed to queue run')
+      }
+
+      const systemMsg: Message = {
+        id: `system-${Date.now()}`,
+        type: 'system',
+        content: `Queued run ${runId.slice(0, 8)} for application. Redirecting to Automation Runs...`,
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, systemMsg])
+
+      window.location.href = `/p/${projectSlug}/automation/runs`
+    } catch (error) {
+      console.error('Failed to apply rule:', error)
+
+      const errorMsg: Message = {
+        id: `error-${Date.now()}`,
+        type: 'system',
+        content: `Error: ${error instanceof Error ? error.message : 'Failed to apply rule'}`,
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMsg])
+    } finally {
+      setLoading(false)
+      setActionLoading(null)
     }
   }
 
@@ -451,11 +540,11 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
               <div className="space-y-3 pt-4">
                 <button
                   onClick={handleApplyAsRule}
-                  disabled={loading}
+                  disabled={loading || !token}
                   className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
                   title="Save proposed rule and open in Rule Builder for review"
                 >
-                  {loading ? (
+                  {actionLoading === 'save' ? (
                     <>
                       <span className="animate-spin">⏳</span> Saving...
                     </>
@@ -466,11 +555,20 @@ export function CopilotDrawer({ isOpen, onClose, projectSlug, apiBase }: Copilot
                   )}
                 </button>
                 <button
-                  disabled={true}
-                  className="w-full py-3 px-4 bg-gray-100 text-gray-400 rounded-lg font-medium cursor-not-allowed flex items-center justify-center gap-2"
-                  title="Coming soon"
+                  onClick={handleApplyOnce}
+                  disabled={loading || !token}
+                  className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+                  title="Queue this rule to apply now"
                 >
-                  <span>⚡</span> Apply Once (Coming Soon)
+                  {actionLoading === 'apply' ? (
+                    <>
+                      <span className="animate-spin">⏳</span> Applying...
+                    </>
+                  ) : (
+                    <>
+                      <span>⚡</span> Approve & Apply Now
+                    </>
+                  )}
                 </button>
               </div>
             </div>

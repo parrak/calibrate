@@ -6,21 +6,61 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRulesWorker } from '@calibr/automation-runner'
 import { logger } from '@calibr/monitor'
+import { prisma } from '@calibr/db'
+import { withSecurity } from '@/lib/security-headers'
+import { requireProjectAccess, errorJson } from '../../../price-changes/utils'
 
-export async function POST(
+export const POST = withSecurity(async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  ctx?: { params: { id: string } }
 ) {
+  const ruleId = ctx?.params?.id
   try {
-    const ruleId = params.id
+    if (!ruleId) {
+      return errorJson({
+        status: 400,
+        error: 'BadRequest',
+        message: 'Rule id is required.',
+      })
+    }
+    const url = new URL(request.url)
+    const projectSlug = url.searchParams.get('project')?.trim()
+    if (!projectSlug) {
+      return errorJson({
+        status: 400,
+        error: 'BadRequest',
+        message: 'The `project` query parameter is required.',
+      })
+    }
 
-    // Get actor from request (would be from auth in production)
-    const actor = request.headers.get('x-actor') || 'api'
+    const access = await requireProjectAccess(request, projectSlug, 'EDITOR')
+    if ('error' in access) {
+      return errorJson(access.error)
+    }
+
+    const rule = await prisma().pricingRule.findFirst({
+      where: {
+        id: ruleId,
+        projectId: access.project.id,
+        tenantId: access.project.tenantId,
+        deletedAt: null,
+      },
+      select: { id: true },
+    })
+
+    if (!rule) {
+      return errorJson({
+        status: 404,
+        error: 'NotFound',
+        message: 'Pricing rule not found',
+      })
+    }
+
+    const actor = access.session.userId || 'api'
 
     logger.info(`[API] Materializing rule run for rule: ${ruleId}`, {
-      actor
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any)
+      metadata: { actor }
+    })
 
     // Get worker instance
     const worker = getRulesWorker()
@@ -37,11 +77,12 @@ export async function POST(
       : 0
 
     logger.info(`[API] Materialized rule run: ${run.id}`, {
-      ruleId,
-      runId: run.id,
-      targetCount: targetCount?.totalTargets
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any)
+      metadata: {
+        ruleId,
+        runId: run.id,
+        targetCount: targetCount?.totalTargets
+      }
+    })
 
     return NextResponse.json({
       success: true,
@@ -55,11 +96,15 @@ export async function POST(
       }
     })
   } catch (error) {
-    logger.error('[API] Error materializing rule run', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      ruleId: params.id
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any)
+    logger.error(
+      '[API] Error materializing rule run',
+      error instanceof Error ? error : undefined,
+      {
+        metadata: {
+          ruleId
+        }
+      }
+    )
 
     return NextResponse.json(
       {
@@ -69,4 +114,8 @@ export async function POST(
       { status: 500 }
     )
   }
-}
+})
+
+export const OPTIONS = withSecurity(async function OPTIONS() {
+  return new NextResponse(null, { status: 204 })
+})

@@ -86,6 +86,7 @@ async function main() {
       status: 'ACTIVE',
       tenantId: tenant.id,
       projectId: project.id,
+      tags: ['pro', 'core'],
     },
   })
 
@@ -96,6 +97,7 @@ async function main() {
       status: 'ACTIVE',
       tenantId: tenant.id,
       projectId: project.id,
+      tags: ['enterprise'],
     },
   })
 
@@ -106,6 +108,7 @@ async function main() {
       status: 'ACTIVE',
       tenantId: tenant.id,
       projectId: project.id,
+      tags: ['starter', 'entry'],
     },
   })
   console.log('✅ Created 3 products')
@@ -117,7 +120,7 @@ async function main() {
       code: 'PRO-MONTHLY',
       status: 'ACTIVE',
       productId: proProduct.id,
-      attributes: { term: 'monthly', region: 'US' },
+      attributes: { term: 'monthly', region: 'US', cost: 2000 },
     },
   })
 
@@ -127,7 +130,7 @@ async function main() {
       code: 'PRO-ANNUAL',
       status: 'ACTIVE',
       productId: proProduct.id,
-      attributes: { term: 'annual', region: 'US' },
+      attributes: { term: 'annual', region: 'US', cost: 20000 },
     },
   })
 
@@ -138,7 +141,7 @@ async function main() {
       code: 'ENTERPRISE-MONTHLY',
       status: 'ACTIVE',
       productId: enterpriseProduct.id,
-      attributes: { term: 'monthly', region: 'US' },
+      attributes: { term: 'monthly', region: 'US', cost: 9000 },
     },
   })
 
@@ -149,7 +152,7 @@ async function main() {
       code: 'STARTER-MONTHLY',
       status: 'ACTIVE',
       productId: starterProduct.id,
-      attributes: { term: 'monthly', region: 'US' },
+      attributes: { term: 'monthly', region: 'US', cost: 800 },
     },
   })
   console.log('✅ Created 4 SKUs')
@@ -232,6 +235,44 @@ async function main() {
     },
   })
   console.log('✅ Created policy with guardrails')
+
+  // Create Automation Guardrail Policy (M1.6)
+  await prisma.guardrailPolicy.create({
+    data: {
+      tenantId: tenant.id,
+      projectId: project.id,
+      minPriceCents: 1500,
+      maxPriceIncreasePct: 20,
+      maxPriceDecreasePct: 15,
+      maxChangesPerDay: 50,
+      minChangeIntervalMinutes: 30,
+      enabled: true,
+    },
+  })
+  console.log('✅ Created automation guardrail policy')
+
+  // Create Demo Pricing Rule (Copilot-ready)
+  await prisma.pricingRule.create({
+    data: {
+      tenantId: tenant.id,
+      projectId: project.id,
+      name: 'Demo: Pro plan +5%',
+      description: 'Increase Pro plan prices by 5% for demo testing',
+      selectorJson: {
+        operator: 'OR',
+        predicates: [{ type: 'sku', skuCodes: ['PRO-MONTHLY', 'PRO-ANNUAL'] }],
+      },
+      transformJson: {
+        transform: { type: 'percentage', value: 5 },
+        constraints: { maxPctDelta: 20 },
+      },
+      enabled: false,
+      source: 'demo',
+      metadata: { seeded: true },
+      createdBy: owner.id,
+    },
+  })
+  console.log('✅ Created demo pricing rule')
 
   // Create Demo Customers
   const customer1 = await prisma.customer.create({

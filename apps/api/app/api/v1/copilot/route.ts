@@ -17,6 +17,7 @@ import { withSecurity } from '@/lib/security-headers'
 import { prisma, Prisma } from '@calibr/db'
 import { generateSQL, generatePricingRule } from '@/lib/openai'
 import { simulateRule, type PricingRule } from '@calibr/pricing-engine'
+import { requireProjectAccess, errorJson } from '../price-changes/utils'
 
 export const runtime = 'nodejs'
 
@@ -102,63 +103,6 @@ Important:
 const SCHEMA_VERSION = '1.4.0' // M1.4 schema version
 
 /**
- * RBAC: Check user has access to project and required role
- */
-async function requireProjectAccess(
-  projectSlug: string,
-  userId?: string,
-  requiredRole: 'VIEWER' | 'EDITOR' | 'ADMIN' | 'OWNER' = 'VIEWER'
-): Promise<{ allowed: boolean; role?: string; projectId?: string; tenantId?: string }> {
-  try {
-    // Get project
-    const project = await prisma().project.findUnique({
-      where: { slug: projectSlug },
-      include: {
-        Tenant: true,
-        Membership: userId
-          ? {
-            where: { userId },
-            select: { role: true },
-          }
-          : false,
-      },
-    })
-
-    if (!project) {
-      return { allowed: false }
-    }
-
-    // If no userId provided, assume system/anonymous access (deny)
-    if (!userId) {
-      return { allowed: false, projectId: project.id, tenantId: project.tenantId }
-    }
-
-    // Check membership
-    const membership = Array.isArray(project.Membership) ? project.Membership[0] : null
-    if (!membership) {
-      return { allowed: false, projectId: project.id, tenantId: project.tenantId }
-    }
-
-    // Check role hierarchy: OWNER > ADMIN > EDITOR > VIEWER
-    const roleHierarchy = { OWNER: 4, ADMIN: 3, EDITOR: 2, VIEWER: 1 }
-    const userRoleLevel = roleHierarchy[membership.role as keyof typeof roleHierarchy] || 0
-    const requiredRoleLevel = roleHierarchy[requiredRole] || 0
-
-    const allowed = userRoleLevel >= requiredRoleLevel
-
-    return {
-      allowed,
-      role: membership.role,
-      projectId: project.id,
-      tenantId: project.tenantId,
-    }
-  } catch (error) {
-    console.error('[Copilot] RBAC check failed:', error)
-    return { allowed: false }
-  }
-}
-
-/**
  * Log copilot query for audit trail
  */
 async function logQuery(params: {
@@ -215,7 +159,7 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { projectSlug, query, userId, context } = body
+    const { projectSlug, query, context } = body
 
     if (!projectSlug || !query) {
       return NextResponse.json(
@@ -224,33 +168,19 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
       )
     }
 
-    console.log('[Copilot] Query received:', { projectSlug, query, userId })
+    console.log('[Copilot] Query received:', { projectSlug, query })
 
     // RBAC: Check project access
-    const access = await requireProjectAccess(projectSlug, userId, 'VIEWER')
-    if (!access.allowed || !access.projectId || !access.tenantId) {
-      // Log failed access attempt
-      if (access.projectId && access.tenantId) {
-        await logQuery({
-          tenantId: access.tenantId,
-          projectId: access.projectId,
-          userId,
-          userRole: access.role,
-          query,
-          queryType: 'read',
-          executionTime: Date.now() - startTime,
-          success: false,
-          error: 'Access denied',
-        })
-      }
-
-      return NextResponse.json(
-        { error: 'Access denied', message: 'User does not have access to this project' },
-        { status: 403 }
-      )
+    const access = await requireProjectAccess(req, projectSlug, 'VIEWER')
+    if ('error' in access) {
+      return errorJson(access.error)
     }
 
-    const { projectId, tenantId, role } = access
+    const { project, membership, session } = access
+    const projectId = project.id
+    const tenantId = project.tenantId
+    const role = membership.role
+    const userId = session.userId
 
     // Determine intent
     const intent = determineQueryType(query)
@@ -285,6 +215,7 @@ export const POST = withSecurity(async function POST(req: NextRequest) {
             rule: simulationResult.rule,
             summary: simulationResult.summary,
             results: simulationResult.results,
+            confidence: simulationResult.confidence,
             method: 'ai',
             metadata: {
               schemaVersion: SCHEMA_VERSION,

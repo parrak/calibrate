@@ -4,7 +4,7 @@
  */
 
 import { prisma, EventWriter, OutboxWorker } from '@calibr/db'
-import type { EventPayload, RuleRun, RuleTarget, GuardrailPolicy } from '@calibr/db'
+import type { EventPayload, RuleRun, RuleTarget, GuardrailPolicy, Prisma } from '@calibr/db'
 import { logger } from '@calibr/monitor'
 import {
   calculateBackoff,
@@ -12,6 +12,12 @@ import {
   isRetryableError,
   sleep
 } from './backoff'
+import {
+  calculatePriceDiff,
+  evaluateSelector,
+  type Selector as EngineSelector,
+  type TransformDefinition as EngineTransformDefinition
+} from '@calibr/pricing-engine'
 import { registerGauge, setGauge } from '@calibr/monitor'
 import { DEFAULT_WORKER_CONFIG } from './config'
 import type {
@@ -105,6 +111,10 @@ export class RulesWorker {
 
     this.emitEvent('worker.started')
     logger.info('[RulesWorker] Started successfully', { metadata: { config: this.config } })
+  }
+
+  private toJson(value: unknown): Prisma.InputJsonValue {
+    return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
   }
 
   /**
@@ -501,8 +511,10 @@ export class RulesWorker {
       throw new Error(`Pricing rule ${ruleId} not found`)
     }
 
+    const selector = normalizeSelector(rule.selectorJson)
+    const transform = normalizeTransform(rule.transformJson)
+
     // Get matching products based on selector
-    // For now, simplified - get all active products in the project
     const products = await prisma().product.findMany({
       where: {
         tenantId: rule.tenantId,
@@ -518,6 +530,10 @@ export class RulesWorker {
       }
     })
 
+    let matched = 0
+    let wouldChange = 0
+    let totalDeltaCents = 0
+
     // Create rule run
     const run = await prisma().ruleRun.create({
       data: {
@@ -527,6 +543,11 @@ export class RulesWorker {
         ruleId: rule.id,
         status: 'PREVIEW',
         queuedAt: null,
+        scheduledFor: rule.scheduleAt ?? null,
+        explainJson: this.toJson({
+          selector,
+          transform
+        }),
         metadata: {
           actor,
           createdBy: actor
@@ -535,30 +556,45 @@ export class RulesWorker {
     })
 
     // Create targets for each product
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const transform = rule.transformJson as any
     const targets = []
 
     for (const product of products) {
       for (const sku of product.Sku) {
-        for (const price of sku.Price) {
+        const attributes =
+          sku.attributes && typeof sku.attributes === 'object' && !Array.isArray(sku.attributes)
+            ? (sku.attributes as Record<string, unknown>)
+            : {}
+
+        const activePrices = sku.Price.filter((p) => p.status === 'ACTIVE')
+        const pricesToUse = activePrices.length > 0 ? activePrices : sku.Price
+        for (const price of pricesToUse) {
+          const priceAmount = price.amount / 100
+          const context = {
+            skuCode: sku.code,
+            tags: product.tags || [],
+            price: priceAmount,
+            currency: price.currency,
+            productId: product.id,
+            productName: product.name,
+            productCode: product.code,
+            ...attributes
+          }
+
+          if (!evaluateSelector(selector, context)) {
+            continue
+          }
+
+          matched += 1
+
+          const diff = calculatePriceDiff(priceAmount, transform)
+          if (diff.delta === 0) {
+            continue
+          }
+
           const beforePrice = price.amount
-          let afterPrice = beforePrice
-
-          // Apply transform
-          if (transform.op === 'percent') {
-            afterPrice = Math.round(beforePrice * (1 + transform.value / 100))
-          } else if (transform.op === 'absolute') {
-            afterPrice = beforePrice + transform.value
-          }
-
-          // Apply floor/ceiling
-          if (transform.floor && afterPrice < transform.floor) {
-            afterPrice = transform.floor
-          }
-          if (transform.ceiling && afterPrice > transform.ceiling) {
-            afterPrice = transform.ceiling
-          }
+          const afterPrice = Math.round(diff.to * 100)
+          totalDeltaCents += Math.round(Math.abs(diff.delta) * 100)
+          wouldChange += 1
 
           const target = await prisma().ruleTarget.create({
             data: {
@@ -579,6 +615,8 @@ export class RulesWorker {
                 unit_amount: afterPrice,
                 price: afterPrice
               },
+              fromPrice: beforePrice,
+              toPrice: afterPrice,
               status: 'PREVIEW',
               attempts: 0
             }
@@ -588,6 +626,19 @@ export class RulesWorker {
         }
       }
     }
+
+    await prisma().ruleRun.update({
+      where: { id: run.id },
+      data: {
+        explainJson: this.toJson({
+          selector,
+          transform,
+          matched,
+          wouldChange,
+          totalDeltaCents
+        })
+      }
+    })
 
     logger.info(`[RulesWorker] Materialized rule run ${run.id}`, {
       metadata: {
@@ -716,6 +767,48 @@ export class RulesWorker {
       }
     }
   }
+}
+
+function normalizeSelector(value: unknown): EngineSelector {
+  if (value && typeof value === 'object' && 'predicates' in (value as Record<string, unknown>)) {
+    return value as EngineSelector
+  }
+
+  return {
+    predicates: [{ type: 'all' }],
+    operator: 'AND'
+  }
+}
+
+function normalizeTransform(value: unknown): EngineTransformDefinition {
+  if (value && typeof value === 'object' && 'transform' in (value as Record<string, unknown>)) {
+    return value as EngineTransformDefinition
+  }
+
+  const legacy = value as { op?: string; value?: number; factor?: number; floor?: number; ceiling?: number; maxPctDelta?: number }
+  const op = legacy?.op ?? 'percent'
+
+  let transform: EngineTransformDefinition['transform']
+  if (op === 'absolute') {
+    transform = { type: 'absolute', value: legacy.value ?? 0 }
+  } else if (op === 'set') {
+    transform = { type: 'set', value: legacy.value ?? 0 }
+  } else if (op === 'multiply') {
+    transform = { type: 'multiply', factor: legacy.factor ?? 1 }
+  } else {
+    transform = { type: 'percentage', value: legacy.value ?? 0 }
+  }
+
+  const constraints =
+    legacy?.floor !== undefined || legacy?.ceiling !== undefined || legacy?.maxPctDelta !== undefined
+      ? {
+          floor: legacy.floor,
+          ceiling: legacy.ceiling,
+          maxPctDelta: legacy.maxPctDelta
+        }
+      : undefined
+
+  return { transform, constraints }
 }
 
 /**

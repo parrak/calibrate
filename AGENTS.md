@@ -291,6 +291,16 @@ Before requesting review, ensure:
 
 ---
 
+## 🚀 Deployment Verification Checklist
+
+When deploying to Railway/Vercel, do not consider the task complete until:
+- [ ] Railway deployment status is **SUCCESS** (not BUILDING/FAILED)
+- [ ] If FAILED, fetch build logs and document the failure + fix plan
+- [ ] Run smoke checks (at minimum `/api/health` on API and Console landing load)
+- [ ] If still BUILDING, explicitly call out pending status and follow-up check time
+
+---
+
 ## 📚 Agent Learnings & Best Practices
 
 This section captures critical lessons learned during development to prevent future issues.
@@ -527,4 +537,3 @@ process.env.STRIPE_CLIENT_SECRET = 'dummy_key' // Prevent constructor error
 - Use obvious placeholders in `.env.example` (e.g., `sk_test_placeholder`).
 - Never paste real keys into files that are tracked by git, even temporarily.
 - If a push is blocked, **do not** bypass it unless it's a false positive. Remove the secret and amend the commit.
-

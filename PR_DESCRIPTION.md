@@ -1,29 +1,21 @@
-# Production Monitoring Setup (Priority 3)
+# Copilot Simulate -> Approve/Apply + Automation Runner Enablement
 
 ## Summary
-This PR establishes the production monitoring infrastructure for Calibrate, enabling observability into API performance, connector health, and system reliability.
+End-to-end Copilot flow (simulate -> propose -> approve/apply) integrated with current Console UI and Automation Runner, plus demo seed data and deployment verification checklist.
 
 ## Changes
-- **Grafana Dashboard**: Added `packages/monitor/dashboards/main.json` with panels for:
-    - API Request Rates & Latency
-    - Error Rates
-    - Connector Health
-    - Event Bus Metrics
-    - Worker Queue Depth
-- **Documentation**: Added `packages/monitor/docs/grafana-setup.md`.
-- **Synthetic Probes**:
-    - Added `GET /api/health` (Basic check)
-    - Added `GET /api/health/detailed` (Granular dependency check)
-    - Configured probe definitions in `packages/monitor/src/probes.ts`
-- **Alerts**: Verified existing alert policies in `packages/monitor/src/alerts.ts` cover all requirements.
+- **API**: Added RBAC token enforcement on copilot simulate/propose and run apply; materialize preview runs on propose; require project scoping for apply.
+- **Automation Runner**: Materialize now uses pricing-engine selector/transform, builds targets from active prices, and records explainJson safely.
+- **Console**: Copilot drawer adds "Approve & Apply Now" flow with optimistic UX.
+- **Seed data**: Demo tenant includes test data for users to try Copilot and rules.
+- **Docs**: Added Deployment Verification Checklist in `AGENTS.md`.
+- **Fixes**: Type safety in competitor scrapers and automation-runner JSON writes.
 
 ## Verification
-- **Build**: `pnpm build` passed.
-- **Lint**: `pnpm lint` passed.
-- **Manual**: Verified health endpoints return correct JSON structure.
+- **Tests**: `pnpm test` fails locally due to TLS keychain error. Ran `CI=1 pnpm -r --if-present test` (pass).
+- **Deploy**: Railway API deploy SUCCESS; smoke checks: `/api/health` -> 200, Console landing -> 307 redirect.
 
 ## Checklist
-- [x] Grafana dashboard JSON created
-- [x] Alert policies verified
-- [x] Health endpoints implemented
-- [x] Documentation added
+- [x] API + UI flow verified locally with tests
+- [x] Demo tenant seeded for public enablement
+- [x] Deployment verification checklist added
