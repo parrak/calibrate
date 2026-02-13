@@ -13,6 +13,8 @@ The format is based on Keep a Changelog and follows semantic versioning.
 - **M1.9 Copilot Apply Flow** — End-to-end Copilot simulation → propose → approve/apply wiring with Automation Runner materialized preview runs, new run-apply API RBAC, and Copilot drawer “Approve & Apply Now” action. Includes new API tests for run apply.
 - **M1.9 Copilot Simulation API** — Introduced `/api/v1/copilot/simulate` for EDITOR+ users with zod validation, RBAC, pricing-engine execution, and Copilot audit logging. Includes Vitest coverage for payload validation, access control, and simulation logging.
 - **Automation Runner Worker Enablement (PR #136, #138)** — Outbox worker now starts the RulesWorker, registers Shopify connectors per project, and RulesWorker resolves Shopify variant IDs for apply/reconcile flows (plus test coverage for variant ID materialization).
+- **Worker Deployment Hardening (PR #140)** — Added worker health endpoint, aligned package entrypoints for tsx runtime, marked platform-connector as ESM, and switched worker image to Debian with Prisma engine settings for reliable Railway deploys.
+- **M1.8.1 Lead Capture Enhancement** — Replaced broken Tally placeholder with native Early Access form, added Waitlist database model, and lead management dashboard in Console.
 - **M1.6 Safety Guardrails** — November 2025 ✅ MILESTONE
   - **Guardrail Policies**: Implemented `GuardrailPolicy` model with Price Floor, Max Delta, and Velocity limits.
   - **RulesWorker Logic**: Enforced guardrails in `RulesWorker` execution (Price Floor, Max Increase/Decrease %, Max Changes/Day).

@@ -7,6 +7,7 @@
  */
 
 import { PrismaClient, type ShopifyIntegration } from '@prisma/client'
+import http from 'node:http'
 import { OutboxWorker, type EventPayload } from '@calibr/db'
 import { logger, recordEventMetric } from '@calibr/monitor'
 import {
@@ -34,6 +35,8 @@ const prisma = new PrismaClient({
 })
 
 let rulesWorker: RulesWorker | null = null
+let healthServer: http.Server | null = null
+const HEALTH_PORT = parseInt(process.env.PORT || '3001', 10)
 
 function requireEnv(name: string): string {
   const value = process.env[name]
@@ -306,6 +309,10 @@ async function shutdown(signal: string) {
   if (rulesWorker) {
     await rulesWorker.stop()
   }
+  if (healthServer) {
+    healthServer.close()
+    healthServer = null
+  }
 
   await prisma.$disconnect()
 
@@ -356,6 +363,29 @@ async function main() {
   await registerAutomationConnectors(rulesWorker)
   await rulesWorker.start()
   logger.info('Automation Rules Worker started')
+
+  healthServer = http.createServer(async (req, res) => {
+    if (!req.url || !req.url.startsWith('/health')) {
+      res.statusCode = 404
+      res.end()
+      return
+    }
+
+    try {
+      const healthy = await healthCheck()
+      res.statusCode = healthy ? 200 : 503
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify({ status: healthy ? 'ok' : 'degraded' }))
+    } catch (error) {
+      res.statusCode = 503
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify({ status: 'error' }))
+    }
+  })
+
+  healthServer.listen(HEALTH_PORT, () => {
+    logger.info('Health server listening', { metadata: { port: HEALTH_PORT } })
+  })
 
   // Periodic health checks and metrics logging
   setInterval(async () => {
