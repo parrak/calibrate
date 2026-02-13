@@ -49,6 +49,7 @@
     "eslint": "^8.55.0",
     "jsdom": "^22.1.0",
     "prettier": "^3.1.0",
+    "prisma": "^5.22.0",
     "supertest": "^6.3.0",
     "tsx": "^4.7.0",
     "turbo": "^1.11.0",
@@ -57,7 +58,6 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
-    "clsx": "^2.1.1",
-    "prisma": "^5.22.0"
+    "clsx": "^2.1.1"
   }
 }

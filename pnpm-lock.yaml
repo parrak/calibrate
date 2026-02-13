@@ -14,9 +14,6 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      prisma:
-        specifier: ^5.22.0
-        version: 5.22.0
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.2.0
@@ -48,6 +45,9 @@ importers:
       prettier:
         specifier: ^3.1.0
         version: 3.6.2
+      prisma:
+        specifier: ^5.22.0
+        version: 5.22.0
       supertest:
         specifier: ^6.3.0
         version: 6.3.4
@@ -96,6 +96,9 @@ importers:
       '@paralleldrive/cuid2':
         specifier: ^3.0.4
         version: 3.0.4
+      '@prisma/client':
+        specifier: 5.22.0
+        version: 5.22.0(prisma@5.22.0)
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -309,6 +312,9 @@ importers:
       '@calibr/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@prisma/client':
+        specifier: 5.22.0
+        version: 5.22.0(prisma@5.22.0)
       '@types/node':
         specifier: ^20.10.0
         version: 20.19.22
