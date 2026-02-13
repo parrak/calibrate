@@ -38,17 +38,17 @@ export default async function WaitlistPage() {
                 <StatsCard title="Total Leads" value={waitlist.length} />
                 <StatsCard
                     title="Pending"
-                    value={waitlist.filter((w: Waitlist) => w.status === 'pending').length}
+                    value={waitlist.filter((w) => w.status === 'pending').length}
                     color="text-yellow-600"
                 />
                 <StatsCard
                     title="Contacted"
-                    value={waitlist.filter((w: Waitlist) => w.status === 'contacted').length}
+                    value={waitlist.filter((w) => w.status === 'contacted').length}
                     color="text-blue-600"
                 />
                 <StatsCard
                     title="Onboarded"
-                    value={waitlist.filter((w: Waitlist) => w.status === 'onboarded').length}
+                    value={waitlist.filter((w) => w.status === 'onboarded').length}
                     color="text-green-600"
                 />
             </div>

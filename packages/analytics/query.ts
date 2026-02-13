@@ -117,15 +117,15 @@ export async function getAnalyticsOverview(
 
   // Calculate summary
   const totalPriceChanges = priceChanges.length
-  const approvedChanges = priceChanges.filter((pc: { status: string }) => pc.status === 'APPROVED').length
+  const approvedChanges = priceChanges.filter((pc) => pc.status === 'APPROVED').length
   const approvalRate = totalPriceChanges > 0
     ? Math.round((approvedChanges / totalPriceChanges) * 100) / 100
     : 0
 
   // Calculate trends
   const midPoint = new Date(startDate.getTime() + (days / 2) * 24 * 60 * 60 * 1000)
-  const firstHalfChanges = priceChanges.filter((pc: { createdAt: Date }) => pc.createdAt < midPoint).length
-  const secondHalfChanges = priceChanges.filter((pc: { createdAt: Date }) => pc.createdAt >= midPoint).length
+  const firstHalfChanges = priceChanges.filter((pc) => pc.createdAt < midPoint).length
+  const secondHalfChanges = priceChanges.filter((pc) => pc.createdAt >= midPoint).length
 
   const priceChangesTrend: TrendData = calculateTrend(secondHalfChanges, firstHalfChanges)
 
