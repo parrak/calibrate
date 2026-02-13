@@ -112,7 +112,7 @@ importers:
         specifier: ^4.75.0
         version: 4.104.0(ws@8.18.3)(zod@3.25.76)
       prisma:
-        specifier: ^5.22.0
+        specifier: 5.22.0
         version: 5.22.0
       react:
         specifier: ^18.2.0
@@ -176,7 +176,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       '@prisma/client':
-        specifier: ^5.22.0
+        specifier: 5.22.0
         version: 5.22.0(prisma@5.22.0)
       bcryptjs:
         specifier: ^2.4.3
@@ -242,6 +242,9 @@ importers:
       postcss:
         specifier: ^8.4.32
         version: 8.5.6
+      prisma:
+        specifier: 5.22.0
+        version: 5.22.0
       tailwindcss:
         specifier: ^3.3.6
         version: 3.4.18(tsx@4.20.6)(yaml@2.8.1)
@@ -352,6 +355,9 @@ importers:
       eslint-config-next:
         specifier: 14.0.4
         version: 14.0.4(eslint@8.57.1)(typescript@5.9.3)
+      prisma:
+        specifier: 5.22.0
+        version: 5.22.0
 
   apps/worker:
     dependencies:
@@ -504,13 +510,13 @@ importers:
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
+      prisma:
+        specifier: ^5.22.0
+        version: 5.22.0
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.22
-      prisma:
-        specifier: ^5.22.0
-        version: 5.22.0
       tsx:
         specifier: ^4.7.0
         version: 4.20.6
