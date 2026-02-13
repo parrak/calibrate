@@ -6,7 +6,7 @@
  * Or as Docker container / Railway service
  */
 
-import { PrismaClient, type ShopifyIntegration } from '@prisma/client'
+import { PrismaClient, type ShopifyIntegration } from '@calibr/db'
 import http from 'node:http'
 import { OutboxWorker, type EventPayload } from '@calibr/db'
 import { logger, recordEventMetric } from '@calibr/monitor'
