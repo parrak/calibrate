@@ -3,7 +3,7 @@
  * Evaluates selector predicates to match products
  */
 
-import { PrismaClient, Product, RuleRunStatus } from '@calibr/db';
+import { PrismaClient, Product } from '@calibr/db';
 
 export type SelectorCondition =
   | { all: true }
