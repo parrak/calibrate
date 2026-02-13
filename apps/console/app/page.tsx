@@ -60,7 +60,14 @@ export default async function Home() {
 
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold mb-4">System Dashboards</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link
+            href="/waitlist"
+            className="block bg-orange-600 text-white px-4 py-3 rounded hover:bg-orange-700 transition-colors text-center"
+          >
+            <div className="font-semibold">Waitlist Management</div>
+            <div className="text-sm opacity-90">Manage early access leads</div>
+          </Link>
           <Link
             href="/performance"
             className="block bg-green-600 text-white px-4 py-3 rounded hover:bg-green-700 transition-colors text-center"

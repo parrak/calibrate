@@ -131,7 +131,7 @@ export async function getAnalyticsOverview(
 
   // Calculate average price trend
   const prices = skus
-    .map((s: any) => s.Price[0]?.amount)
+    .map((s) => s.Price[0]?.amount)
     .filter((p: number | undefined | null): p is number => p !== undefined && p !== null)
   const avgPrice = prices.length > 0
     ? Math.round(prices.reduce((a: number, b: number) => a + b, 0) / prices.length)
@@ -150,7 +150,7 @@ export async function getAnalyticsOverview(
 
   // Top performers by margin (realized margin if sales exist, otherwise potential margin)
   const topByMargin = skus
-    .map((s: any) => {
+    .map((s) => {
       const price = s.Price[0]?.amount
       const cost = s.attributes && typeof s.attributes === 'object' && 'cost' in s.attributes
         ? (s.attributes as any).cost
@@ -170,8 +170,8 @@ export async function getAnalyticsOverview(
         units
       }
     })
-    .filter((s: any) => s.margin !== undefined)
-    .sort((a: any, b: any) => (b.margin || 0) - (a.margin || 0))
+    .filter((s) => s.margin !== undefined)
+    .sort((a, b) => (b.margin || 0) - (a.margin || 0))
     .slice(0, 5)
 
   return {

@@ -120,8 +120,9 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - **Worker**: Outbox worker now starts RulesWorker and registers Shopify connectors per project.
 - **Apply readiness**: RulesWorker resolves Shopify variant IDs from channelRefs for apply/reconcile. (PR #136)
 - **Deployment hardening**: Worker health endpoint, ESM entrypoint alignment, and Debian-based image for Prisma reliability. (PR #140)
+- **Lead Capture**: Replaced broken Tally placeholder with native Early Access form and Console management dashboard. (PR #141)
 - **Safety**: Added Pre-flight Health Check gate to abort runs if connectors are unreachable.
-- **Status**: COMPLETE — February 2, 2026.
+- **Status**: COMPLETE — February 13, 2026.
 ### Stripe Integration ✅ (API Key Mode)
 - **Schema & Config**: Added `StripeAccount`, `Transaction`, `StripeProductMap` models.
 - **Backend**: Implemented `StripeService` (API Key) and `StripeSync` (Catalog, Transactions).

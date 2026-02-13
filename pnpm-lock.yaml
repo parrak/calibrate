@@ -306,6 +306,9 @@ importers:
 
   apps/site:
     dependencies:
+      '@calibr/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@types/node':
         specifier: ^20.10.0
         version: 20.19.22
