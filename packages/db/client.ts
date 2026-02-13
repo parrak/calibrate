@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from './.generated/client'
 import { encryptionMiddleware } from './src/middleware/encryption'
 
 const globalForPrisma = globalThis as unknown as {
