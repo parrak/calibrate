@@ -2,20 +2,21 @@
 
 import { updateWaitlistStatus, deleteWaitlistEntry } from './actions'
 import { useState } from 'react'
+import { Waitlist } from '@calibr/db'
 
-export function WaitlistTable({ initialData }: { initialData: any[] }) {
-    const [data, setData] = useState(initialData)
+export function WaitlistTable({ initialData }: { initialData: Waitlist[] }) {
+    const [data, setData] = useState<Waitlist[]>(initialData)
 
     const handleStatusUpdate = async (id: string, status: string) => {
         await updateWaitlistStatus(id, status)
         // Update local state for immediate feedback
-        setData(data.map(item => item.id === id ? { ...item, status } : item))
+        setData(data.map((item: Waitlist) => item.id === id ? { ...item, status } : item))
     }
 
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this lead?')) {
             await deleteWaitlistEntry(id)
-            setData(data.filter(item => item.id !== id))
+            setData(data.filter((item: Waitlist) => item.id !== id))
         }
     }
 

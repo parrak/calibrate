@@ -33,7 +33,7 @@ export async function notifyWaitlistJoin(data: {
                                     type: 'plain_text',
                                     text: 'View in DB',
                                 },
-                                url: 'https://console.calibr.lat/admin/waitlist', // Placeholder for now
+                                url: 'https://console.calibr.lat/waitlist',
                             },
                         ],
                     },

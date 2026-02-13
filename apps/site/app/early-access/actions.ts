@@ -23,7 +23,6 @@ export async function submitEarlyAccess(formData: FormData) {
                 storeUrl,
                 monthlyRevenue,
                 challenges,
-                updatedAt: new Date(),
             },
             create: {
                 email,

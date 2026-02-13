@@ -1,8 +1,16 @@
-import { prisma } from '@calibr/db'
+import { prisma, Waitlist } from '@calibr/db'
 import { WaitlistTable } from './WaitlistTable'
 import Link from 'next/link'
+import { getServerSession } from '../../lib/auth'
+import { redirect } from 'next/navigation'
 
 export default async function WaitlistPage() {
+    const session = await getServerSession()
+
+    if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'OWNER')) {
+        redirect('/')
+    }
+
     const waitlist = await prisma().waitlist.findMany({
         orderBy: { createdAt: 'desc' },
     })
@@ -30,17 +38,17 @@ export default async function WaitlistPage() {
                 <StatsCard title="Total Leads" value={waitlist.length} />
                 <StatsCard
                     title="Pending"
-                    value={waitlist.filter((w: any) => w.status === 'pending').length}
+                    value={waitlist.filter((w: Waitlist) => w.status === 'pending').length}
                     color="text-yellow-600"
                 />
                 <StatsCard
                     title="Contacted"
-                    value={waitlist.filter((w: any) => w.status === 'contacted').length}
+                    value={waitlist.filter((w: Waitlist) => w.status === 'contacted').length}
                     color="text-blue-600"
                 />
                 <StatsCard
                     title="Onboarded"
-                    value={waitlist.filter((w: any) => w.status === 'onboarded').length}
+                    value={waitlist.filter((w: Waitlist) => w.status === 'onboarded').length}
                     color="text-green-600"
                 />
             </div>

@@ -496,7 +496,7 @@ model Waitlist {
   name            String?
   storeUrl        String?
   monthlyRevenue  String?
-  challenges      String?  @db.Text
+  challenges      String?
   status          String   @default("pending") // pending, contacted, onboarded
   createdAt       DateTime @default(now()) @db.Timestamptz(6)
   updatedAt       DateTime @updatedAt @db.Timestamptz(6)
