@@ -491,15 +491,15 @@ model PriceVersion {
 
 /// Waitlist — Early access signups from marketing site
 model Waitlist {
-  id              String   @id @default(cuid())
-  email           String   @unique
-  name            String?
-  storeUrl        String?
-  monthlyRevenue  String?
-  challenges      String?
-  status          String   @default("pending") // pending, contacted, onboarded
-  createdAt       DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt       DateTime @updatedAt @db.Timestamptz(6)
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String?
+  storeUrl       String?
+  monthlyRevenue String?
+  challenges     String?
+  status         String   @default("pending") // pending, contacted, onboarded
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
 
   @@index([email])
   @@index([status])
