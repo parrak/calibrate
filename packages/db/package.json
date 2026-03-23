@@ -21,13 +21,13 @@
     "test:db": "tsx scripts/test-db.ts"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "@calibr/security": "workspace:*",
     "@prisma/client": "^5.22.0",
-    "@calibr/security": "workspace:*"
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "prisma": "^5.22.0",
-    "tsx": "^4.7.0",
-    "@types/node": "^20.0.0"
+    "tsx": "^4.21.0"
   }
 }

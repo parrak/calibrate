@@ -21,12 +21,12 @@
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "lucide-react": "^0.263.1",
-    "next": "14.0.4",
+    "next": "14.2.35",
     "next-auth": "4.24.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwind-merge": "^1.14.0",
-    "zod": "^3.22.4"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -36,11 +36,11 @@
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
     "@vitest/coverage-v8": "^1.6.1",
-    "autoprefixer": "^10.4.16",
+    "autoprefixer": "^10.4.27",
     "eslint": "^8.55.0",
     "eslint-config-next": "14.0.4",
-    "glob": "^11.0.3",
-    "postcss": "^8.4.32",
+    "glob": "^11.1.0",
+    "postcss": "^8.5.8",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.3.0"
   }

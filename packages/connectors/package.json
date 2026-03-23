@@ -4,9 +4,9 @@
   "type": "module",
   "main": "index.js",
   "dependencies": {
-    "stripe": "^14.10.0",
-    "@calibr/platform-connector": "workspace:*",
     "@calibr/db": "workspace:*",
-    "@calibr/security": "workspace:*"
+    "@calibr/platform-connector": "workspace:*",
+    "@calibr/security": "workspace:*",
+    "stripe": "^14.25.0"
   }
 }

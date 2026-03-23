@@ -11,7 +11,7 @@
     "@calibr/ai-engine": "workspace:*",
     "@calibr/db": "workspace:*",
     "@calibrate/competitor-monitoring": "workspace:*",
-    "@paralleldrive/cuid2": "^3.0.4"
+    "@paralleldrive/cuid2": "^3.3.0"
   },
   "devDependencies": {
     "vitest": "^1.0.0"
