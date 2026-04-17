@@ -4,6 +4,13 @@ generator client {
   binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
 }
 
+// Required: @prisma/client's default.js and direct `from '@prisma/client'` imports
+// (used in type declarations, seed scripts, and rls-test) need the standard output path.
+// This generator satisfies that while `client` above emits to the custom .generated path.
+generator client_default {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
+}
 
 datasource db {
   provider = "postgresql"
