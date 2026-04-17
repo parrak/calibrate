@@ -16,6 +16,11 @@
     --accent: #008080;       /* Deep Teal accent */
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
+
+    /* Semantic / State Colors */
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --success: #10B981;
   }
 
   :root.dark {
@@ -31,5 +36,13 @@
 
   body {
     @apply bg-bg text-fg;
+  }
+
+  /* Tabular figures everywhere a number could render. */
+  .mono, code, kbd, samp, pre,
+  .num, .tabular, [data-tabular],
+  td.num, .cb-price, .cb-delta {
+    font-variant-numeric: tabular-nums slashed-zero;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
   }
 }

@@ -3,7 +3,7 @@
  * Supports filtering by tenant, event type, date range, and correlation ID
  */
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../../.generated/client'
 import type { EventPayload, ReplayOptions, EventSubscriber } from './types'
 
 export class EventReplay {

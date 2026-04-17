@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import { inter, plexMono } from './fonts'
 
 export const metadata: Metadata = {
   title: 'Calibrate — the AI-native pricing control plane',
@@ -48,14 +49,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${plexMono.variable}`}>
       <head>
         <link rel="preload" as="video" href="/demo.mp4" type="video/mp4" />
         <link rel="preconnect" href="https://console.calibr.lat" />
         <link rel="preconnect" href="https://docs.calibr.lat" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet" />
       </head>
       <body className="bg-[color:var(--bg)] text-[color:var(--fg)]">
         <header className="border-b border-[color:var(--border)] bg-white">

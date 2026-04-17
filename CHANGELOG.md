@@ -7,6 +7,7 @@ The format is based on Keep a Changelog and follows semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Docs Design System Integration & Local Auth Setup** — Synchronized `apps/docs` with the Calibrate Design System, including native `next/font/local` tabular typography constraints and semantic CSS variables. Resolved local development `401 Unauthorized` errors by augmenting the database seeding workflow with bcrypt-hashed credentials for `demo@calibr.lat` and `admin@calibr.lat`.
 - **M1.8.1 Strategic Enhancement: Real-World Margin Analysis** — Integrated Stripe `Transaction` data into the analytics pipeline to calculate true "realized margin" (Revenue - Fees - Cost). Replaced potential margin estimates with actual sales performance data.
 - **M1.8.1 Safety Gate: Connector Pre-flight Health Checks** — Added a mandatory health check to the `RulesWorker` execution path. Automated pricing runs now abort safely if the target platform (e.g., Shopify) is unreachable, prevents partial application during outages.
 - **M1.8.1 UI Upgrade: Analytics Dashboard 2.0** — Added Revenue and Units Sold trend cards to the merchant dashboard. Replaced "Recent Products" with a data-driven "Top Sellers" leaderboard ranked by sales volume and margin.

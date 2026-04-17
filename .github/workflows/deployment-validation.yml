@@ -52,8 +52,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
+          packages/db/.generated
           packages/db/node_modules/.prisma
-          packages/db/node_modules/@prisma
+          packages/db/.generated
+          packages/db/node_modules/.prisma
         key: prisma-${{ runner.os }}-${{ hashFiles('packages/db/prisma/schema.prisma') }}
         restore-keys: |
           prisma-${{ runner.os }}-
@@ -105,8 +107,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
+          packages/db/.generated
           packages/db/node_modules/.prisma
-          packages/db/node_modules/@prisma
+          packages/db/.generated
+          packages/db/node_modules/.prisma
         key: prisma-${{ runner.os }}-${{ hashFiles('packages/db/prisma/schema.prisma') }}
         restore-keys: |
           prisma-${{ runner.os }}-
@@ -170,8 +174,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
+          packages/db/.generated
           packages/db/node_modules/.prisma
-          packages/db/node_modules/@prisma
+          packages/db/.generated
+          packages/db/node_modules/.prisma
         key: prisma-${{ runner.os }}-${{ hashFiles('packages/db/prisma/schema.prisma') }}
         restore-keys: |
           prisma-${{ runner.os }}-
@@ -235,8 +241,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
+          packages/db/.generated
           packages/db/node_modules/.prisma
-          packages/db/node_modules/@prisma
+          packages/db/.generated
+          packages/db/node_modules/.prisma
         key: prisma-${{ runner.os }}-${{ hashFiles('packages/db/prisma/schema.prisma') }}
         restore-keys: |
           prisma-${{ runner.os }}-
@@ -303,8 +311,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
+          packages/db/.generated
           packages/db/node_modules/.prisma
-          packages/db/node_modules/@prisma
+          packages/db/.generated
+          packages/db/node_modules/.prisma
         key: prisma-${{ runner.os }}-${{ hashFiles('packages/db/prisma/schema.prisma') }}
         restore-keys: |
           prisma-${{ runner.os }}-
@@ -397,8 +407,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
+          packages/db/.generated
           packages/db/node_modules/.prisma
-          packages/db/node_modules/@prisma
+          packages/db/.generated
+          packages/db/node_modules/.prisma
         key: prisma-${{ runner.os }}-${{ hashFiles('packages/db/prisma/schema.prisma') }}
         restore-keys: |
           prisma-${{ runner.os }}-

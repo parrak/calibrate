@@ -3,6 +3,19 @@
 **Status**: 🟢 Automation Layer Complete — Preparing for Public Beta
 **Master Branch**: Up to date (f94aed9)
 
+> [!CAUTION]
+> **DEPRECATED** (February 13, 2026)
+> 
+> This task plan has been superseded by the mutation lifecycle strategy.
+> 
+> **Current source of truth:**
+> - `/agents/QUEUE.md` - 75 prioritized tasks across 12 weeks
+> - `/agents/execution-packets/week-01-mutation-core.md` - Start here
+> 
+> This file is preserved for historical reference only.
+
+---
+
 ---
 
 ## Executive Summary

@@ -3,7 +3,7 @@
  * Implements the transactional outbox pattern
  */
 
-import { PrismaClient, Prisma } from '@prisma/client'
+import { PrismaClient, Prisma } from '../../.generated/client'
 import type { EventPayload, RetryConfig } from './types'
 
 type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>

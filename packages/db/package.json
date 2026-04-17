@@ -23,10 +23,10 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "@prisma/client": "^5.22.0",
+    "prisma": "^5.22.0",
     "@calibr/security": "workspace:*"
   },
   "devDependencies": {
-    "prisma": "^5.22.0",
     "tsx": "^4.7.0",
     "@types/node": "^20.0.0"
   }

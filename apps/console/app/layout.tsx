@@ -3,6 +3,7 @@ import './globals.css'
 import Image from 'next/image'
 import { UserMenu } from '@/components/UserMenu'
 import Providers from './providers'
+import { inter, plexMono } from './fonts'
 
 export const metadata: Metadata = {
   title: 'Calibrate Console',
@@ -29,11 +30,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${plexMono.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-screen bg-[color:var(--bg)] text-[color:var(--fg)]">
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 bg-[color:var(--surface)] border border-[color:var(--border)] rounded px-3 py-2 shadow">

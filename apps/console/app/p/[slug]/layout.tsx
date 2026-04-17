@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { ProjectSidebar } from '@/components/ProjectSidebar'
+import { SidebarNav } from '@/components/SidebarNav'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { GuidedTour } from '@/components/GuidedTour'
 import { prisma } from '@calibr/db'
@@ -38,12 +38,12 @@ export default async function ProjectLayout({
   return (
     <>
       <GuidedTour projectSlug={slug} />
-      <div className="grid grid-cols-12 gap-6">
-        <aside className="col-span-12 lg:col-span-3 xl:col-span-2">
-          <ProjectSidebar projectName={project.name} nav={nav} />
-        </aside>
-        <section className="col-span-12 lg:col-span-9 xl:col-span-10">
-          <Breadcrumbs />
+      <div className="flex flex-col min-[900px]:flex-row min-[900px]:items-start gap-6">
+        <SidebarNav projectName={project.name} nav={nav} />
+        <section className="flex-1 min-w-0 w-full">
+          <div className="hidden min-[900px]:block">
+            <Breadcrumbs />
+          </div>
           {children}
         </section>
       </div>

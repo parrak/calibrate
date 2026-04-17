@@ -3,7 +3,7 @@
  * Handles failed events and moves them to DLQ after max retries
  */
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../../.generated/client'
 import type { EventSubscriber, RetryConfig } from './types'
 
 const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {

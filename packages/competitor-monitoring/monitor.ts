@@ -1,14 +1,14 @@
-import { PrismaClient } from '@prisma/client'
-import { 
-  CompetitorData, 
-  CompetitorProductData, 
-  CompetitorPriceData, 
+import { PrismaClient } from '@calibr/db'
+import {
+  CompetitorData,
+  CompetitorProductData,
+  CompetitorPriceData,
   MonitoringResult,
-  PriceComparison 
+  PriceComparison
 } from './types'
 
 export class CompetitorMonitor {
-  constructor(private db: PrismaClient) {}
+  constructor(private db: PrismaClient) { }
 
   /**
    * Monitor all active competitors for a project
@@ -63,10 +63,10 @@ export class CompetitorMonitor {
       for (const product of competitor.CompetitorProduct) {
         try {
           productsChecked++
-          
+
           // TODO: Implement actual price scraping based on competitor channel
           const currentPrice = await this.scrapePrice(competitor, product)
-          
+
           if (currentPrice) {
             await this.db.competitorPrice.create({
               data: {
@@ -175,7 +175,7 @@ export class CompetitorMonitor {
    */
   async getPriceHistory(competitorProductId: string, days: number = 30): Promise<CompetitorPriceData[]> {
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-    
+
     const prices = await this.db.competitorPrice.findMany({
       where: {
         productId: competitorProductId,

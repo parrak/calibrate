@@ -20,18 +20,28 @@
     --brand-hover: #008c8c;  /* Darker teal on hover */
     --brand-light: #80D9D9;  /* Light Teal (L1) */
     --brand-dark: #008080;   /* Deep Teal (L3) */
+    --brand-subtle: rgba(128, 217, 217, 0.10); /* Light teal tint for subtle bg */
     --accent: #008080;       /* Deep Teal accent */
 
     --code-bg: #F6F9FC;      /* Light gray for code blocks */
     --code-border: #E3E8EE;  /* Border for code blocks */
+
+    /* Semantic / State Colors */
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --success: #10B981;
+
+    /* Info banner colors */
+    --info-bg: #EFF6FF;
+    --info-border: #BFDBFE;
+    --info-fg: #1E3A8A;
 
     /* Card specific colors */
     --card: #FFFFFF;
     --card-foreground: #001845;
 
     /* Typography - Inter font family */
-    --font-sans: 'Inter', system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    /* --font-sans and --font-mono are set by next/font/local on <html> */
 
     /* Radius & shadow */
     --radius: 8px;
@@ -204,5 +214,13 @@
 
   tbody tr:last-child td {
     border-bottom: none;
+  }
+
+  /* Tabular figures everywhere a number could render. */
+  .mono, code, kbd, samp, pre,
+  .num, .tabular, [data-tabular],
+  td.num, .cb-price, .cb-delta {
+    font-variant-numeric: tabular-nums slashed-zero;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
   }
 }

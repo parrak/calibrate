@@ -4,7 +4,7 @@
  * Automatically encrypts/decrypts credentials field in PlatformIntegration model
  */
 
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../../.generated/client'
 import { encryptCredentials, decryptCredentials } from '@calibr/security'
 
 export function encryptionMiddleware(): any {

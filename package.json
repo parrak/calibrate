@@ -18,7 +18,7 @@
     "migrate": "pnpm --filter @calibr/db prisma migrate dev",
     "migrate:check": "powershell -ExecutionPolicy Bypass -File ./scripts/migrate-check.ps1",
     "seed": "pnpm --filter @calibr/db ts-node scripts/seed.ts",
-    "db:generate": "pnpm --filter @calibr/db prisma generate",
+    "db:generate": "prisma generate --schema=packages/db/prisma/schema.prisma",
     "db:studio": "pnpm --filter @calibr/db prisma studio",
     "env:validate": "powershell -ExecutionPolicy Bypass -File ./scripts/validate-env.ps1",
     "docs:dev": "pnpm --filter @calibr/docs dev",
@@ -49,6 +49,7 @@
     "eslint": "^8.55.0",
     "jsdom": "^22.1.0",
     "prettier": "^3.1.0",
+    "prisma": "^5.22.0",
     "supertest": "^6.3.0",
     "tsx": "^4.7.0",
     "turbo": "^1.11.0",
@@ -57,7 +58,6 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
-    "clsx": "^2.1.1",
-    "prisma": "^5.22.0"
+    "clsx": "^2.1.1"
   }
 }
