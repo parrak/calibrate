@@ -1,20 +1,6 @@
 # Milestones — V2 (E‑Comm Focus)
 _Milestone-based; no calendars. Each milestone unlocks the next._
 
-> [!WARNING]
-> **STRATEGIC PIVOT** (February 13, 2026)
-> 
-> These milestones represent the **platform foundation** that enables the new mutation lifecycle strategy.
-> 
-> **For current work:**
-> - See `/agents/QUEUE.md` for the 75-task breakdown (CAL-001 to CAL-075)
-> - See `/agents/execution-packets/` for weekly execution packets
-> - See `/agents/PIVOT.md` for what changed and why
-> 
-> **Historical context**: M0.1-M1.9 established event-sourced governance, multi-tenant RLS, explainability, and connector patterns that now power the mutation lifecycle system.
-
----
-
 ## Legend
 - Owners: **Platform** (infra/schema), **Connectors**, **Engine**, **Interface**, **Copilot**
 - Types: [NR] = No‑regrets platform layer, [MW] = Market‑wedge specific

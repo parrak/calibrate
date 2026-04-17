@@ -1,9 +1,26 @@
-# Calibrate — Composable Pricing Data OS (E-Comm Wedge)
+# Calibrate — Revenue Mutation Governance for SaaS
 
-Calibr is a **composable pricing data platform** with an **e-commerce wedge**:
-we ship a **reliable bulk & rule-based pricing control plane** for Shopify first,
-with explainability, governance, and multi-tenant safety — built on a schema-
-and event-driven core that later extends to Amazon (read-only) and Stripe (conditional).
+> [!IMPORTANT]
+> **STRATEGIC PIVOT** (February 13, 2026)
+> 
+> Calibrate has pivoted from e-commerce pricing to **SaaS revenue mutation governance**.
+> 
+> **For agents/contributors:**
+> - Start here: `/agents/AGENTS.md` - Agent contributor guide
+> - Read: `/agents/PIVOT.md` - What changed and why
+> - Tasks: `/agents/QUEUE.md` - 75 prioritized tasks (CAL-001 to CAL-075)
+> - Architecture: `/agents/ARCHITECTURE.md` - Complete system design
+
+Calibr is a **revenue mutation governance platform** for AI-native SaaS companies:
+we ship **discount approval workflows** and **plan price change governance** with
+explainability, outcome tracking, and multi-tenant safety — built on an event-sourced
+core that extends to any revenue decision requiring approval and audit.
+
+**Product focus:**
+- **Discount Governance**: Approval workflows for sales discount overrides
+- **Plan Price Changes**: Governed price changes with cohort analysis
+- **Outcome Tracking**: Expected vs. realized metrics for every revenue decision
+
 
 **Read this first (source of truth):**
 
