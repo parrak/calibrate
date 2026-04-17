@@ -20,9 +20,11 @@ const iconMap: Record<string, string> = {
 interface SidebarNavProps {
   projectName: string
   nav: NavItem[]
+  /** Live count of PENDING price changes — shown in the sidebar badge. */
+  pendingPriceChanges?: number
 }
 
-export function SidebarNav({ projectName, nav }: SidebarNavProps) {
+export function SidebarNav({ projectName, nav, pendingPriceChanges }: SidebarNavProps) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [startX, setStartX] = useState<number | null>(null)
@@ -47,7 +49,7 @@ export function SidebarNav({ projectName, nav }: SidebarNavProps) {
       {/* Mobile-only header inside drawer */}
       <div className="flex items-center justify-between px-1 pb-2 mb-2 min-[900px]:hidden">
         <div className="flex items-center gap-2 font-semibold text-[14px] text-[color:var(--text-strong)]">
-          <div className="w-[22px] h-[22px] rounded-md bg-gradient-to-br from-[#80D9D9] to-[#008080]" />
+          <div className="w-[22px] h-[22px] rounded-md bg-gradient-to-br from-[color:var(--brand-light)] to-[color:var(--brand-dark)]" />
           Calibrate
         </div>
         <button
@@ -61,8 +63,8 @@ export function SidebarNav({ projectName, nav }: SidebarNavProps) {
         </button>
       </div>
 
-      <div className="flex items-center gap-2.5 p-2.5 min-[900px]:p-3 rounded-[10px] bg-gradient-to-b from-[rgba(128,217,217,0.10)] to-[rgba(128,217,217,0)]">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#80D9D9] to-[#008080] flex items-center justify-center text-[#001845] font-bold text-[13px] shadow-[0_1px_2px_rgba(0,128,128,0.25)] shrink-0">
+      <div className="flex items-center gap-2.5 p-2.5 min-[900px]:p-3 rounded-[10px] bg-[color:var(--brand-subtle)]">
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[color:var(--brand-light)] to-[color:var(--brand-dark)] flex items-center justify-center text-[#001845] font-bold text-[13px] shadow-[0_1px_2px_rgba(0,128,128,0.25)] shrink-0">
           A
         </div>
         <div className="flex flex-col min-w-0 leading-[1.15]">
@@ -122,13 +124,13 @@ export function SidebarNav({ projectName, nav }: SidebarNavProps) {
             {icon}
           </em>
           {item.label}
-          {item.key === 'price-changes' && (
+          {item.key === 'price-changes' && pendingPriceChanges !== undefined && pendingPriceChanges > 0 && (
             <span className={`ml-auto font-mono text-[11px] px-[7px] py-[1px] rounded-full leading-[1.4] border ${
               isActive
                 ? 'bg-white text-brand border-brand/25'
                 : 'text-mute bg-bg-subtle border-border'
             }`}>
-              24
+              {pendingPriceChanges}
             </span>
           )}
         </Link>
@@ -152,7 +154,7 @@ export function SidebarNav({ projectName, nav }: SidebarNavProps) {
           </svg>
         </button>
         <div className="flex items-center gap-2 text-[13px] text-[color:var(--text-strong)] font-semibold min-w-0">
-          <span className="w-[22px] h-[22px] rounded-md bg-gradient-to-br from-[#80D9D9] to-[#008080] flex items-center justify-center text-[#001845] font-bold text-[11px] shrink-0">
+          <span className="w-[22px] h-[22px] rounded-md bg-gradient-to-br from-[color:var(--brand-light)] to-[color:var(--brand-dark)] flex items-center justify-center text-[#001845] font-bold text-[11px] shrink-0">
             A
           </span>
           <span className="truncate">{projectName}</span>

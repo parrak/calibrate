@@ -20,6 +20,7 @@
     --brand-hover: #008c8c;  /* Darker teal on hover */
     --brand-light: #80D9D9;  /* Light Teal (L1) */
     --brand-dark: #008080;   /* Deep Teal (L3) */
+    --brand-subtle: rgba(128, 217, 217, 0.10); /* Light teal tint for subtle bg */
     --accent: #008080;       /* Deep Teal accent */
 
     --code-bg: #F6F9FC;      /* Light gray for code blocks */
