@@ -76,7 +76,7 @@ export function SidebarNav({ projectName, nav }: SidebarNavProps) {
 
       <div className="h-px bg-border mx-1 my-2.5" />
       <div className="px-1 pb-1 text-[10px] uppercase tracking-[0.08em] text-mute font-semibold">Workspace</div>
-      
+
       <ul className="list-none m-0 p-0 flex flex-col gap-0.5">
         {workspaceNav.map(renderItem)}
       </ul>
@@ -99,7 +99,7 @@ export function SidebarNav({ projectName, nav }: SidebarNavProps) {
   function renderItem(item: NavItem) {
     const isActive = pathname === item.href || (pathname?.startsWith(item.href + '/') ?? false)
     const icon = iconMap[item.key] || '•'
-    
+
     return (
       <li key={item.key}>
         <Link
@@ -110,8 +110,8 @@ export function SidebarNav({ projectName, nav }: SidebarNavProps) {
           }}
           aria-current={isActive ? 'page' : undefined}
           className={`group flex items-center gap-2.5 px-2.5 py-2 min-[900px]:py-2 max-[900px]:p-[12px_10px] rounded-[10px] text-[13.5px] max-[900px]:text-[15px] max-[900px]:min-h-[44px] font-medium transition-colors duration-150 relative outline-none focus-visible:ring-2 focus-visible:ring-brand/35 select-none touch-manipulation ${
-            isActive 
-              ? 'bg-gradient-to-b from-[rgba(0,163,163,0.11)] to-[rgba(0,163,163,0.06)] text-[color:var(--text-strong)]' 
+            isActive
+              ? 'bg-gradient-to-b from-[rgba(0,163,163,0.11)] to-[rgba(0,163,163,0.06)] text-[color:var(--text-strong)]'
               : 'text-mute hover:bg-bg-subtle hover:text-[color:var(--text-strong)]'
           }`}
         >
@@ -124,8 +124,8 @@ export function SidebarNav({ projectName, nav }: SidebarNavProps) {
           {item.label}
           {item.key === 'price-changes' && (
             <span className={`ml-auto font-mono text-[11px] px-[7px] py-[1px] rounded-full leading-[1.4] border ${
-              isActive 
-                ? 'bg-white text-brand border-brand/25' 
+              isActive
+                ? 'bg-white text-brand border-brand/25'
                 : 'text-mute bg-bg-subtle border-border'
             }`}>
               24
@@ -140,7 +140,7 @@ export function SidebarNav({ projectName, nav }: SidebarNavProps) {
     <>
       {/* Mobile Topbar (Hidden on desktop) */}
       <div className="min-[900px]:hidden flex items-center h-[52px] bg-surface border-b border-border px-2.5 mx-[-16px] mt-[-24px] mb-6 sm:mx-[-24px]">
-        <button 
+        <button
           className="w-10 h-10 rounded-[10px] border border-border bg-surface flex items-center justify-center cursor-pointer hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35 mr-2.5"
           onClick={() => setIsOpen(true)}
           aria-label="Open menu"
@@ -165,7 +165,7 @@ export function SidebarNav({ projectName, nav }: SidebarNavProps) {
       </div>
 
       {/* Scrim (Mobile only) */}
-      <div 
+      <div
         className={`fixed inset-0 z-40 bg-[rgba(0,24,69,0.35)] backdrop-blur-[2px] transition-opacity duration-220 min-[900px]:hidden ${
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
