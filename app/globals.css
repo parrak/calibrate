@@ -22,6 +22,16 @@
     --brand-dark: #008080;   /* Deep Teal (L3) */
     --accent: #008080;       /* Deep Teal accent */
 
+    /* Semantic / State Colors */
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --success: #10B981;
+
+    /* Info banner colors */
+    --info-bg: #EFF6FF;
+    --info-border: #BFDBFE;
+    --info-fg: #1E3A8A;
+
     --code-bg: #F6F9FC;      /* Light gray for code blocks */
     --code-border: #E3E8EE;  /* Border for code blocks */
     
@@ -301,6 +311,14 @@
   *:focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
+  }
+
+  /* Tabular figures everywhere a number could render. */
+  .mono, code, kbd, samp, pre,
+  .num, .tabular, [data-tabular],
+  td.num, .cb-price, .cb-delta {
+    font-variant-numeric: tabular-nums slashed-zero;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
   }
 }
 
