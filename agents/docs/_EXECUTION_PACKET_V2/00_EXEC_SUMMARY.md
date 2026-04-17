@@ -77,6 +77,7 @@ Define the **technical execution plan** for Calibr V2 with an **e‑commerce wed
 - Updated all "Calibr" references to "Calibrate" in visible text
 - Light theme UI with improved accessibility (WCAG AA compliant)
 - Branding guardrails documented for all public-facing assets (AGENTS.md, PROTOCOLS.md) — keep `themeColor` and palettes aligned with teal branding
+- **Docs Design System Sync**: Migrated `apps/docs` typography to leverage native `next/font/local` tabular typography constraints and synced semantic CSS variables with the global platform token set. Local authentication environment restored via bcrypt-seeded mock users.
 
 ### Competitor Monitoring ✅
 - **M0.6 E2E Complete**: January 11, 2025

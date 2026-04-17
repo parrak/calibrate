@@ -3,6 +3,7 @@ import Link from 'next/link'
 import './globals.css'
 import { Sidebar } from '../components/Sidebar'
 import { TopNav } from '../components/TopNav'
+import { inter, plexMono } from './fonts'
 
 export const metadata: Metadata = {
   title: 'Calibrate Documentation',
@@ -29,11 +30,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${plexMono.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-screen bg-[color:var(--bg)] text-[color:var(--fg)]">
         <div className="flex flex-col min-h-screen">
