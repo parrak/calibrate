@@ -33,8 +33,8 @@ export async function submitEarlyAccess(formData: FormData) {
             },
         })
 
-        // Background notification (don't await to keep response fast)
-        notifyWaitlistJoin({ email, name, storeUrl, monthlyRevenue }).catch(console.error)
+        // Background notification (await to ensure completion in serverless)
+        await notifyWaitlistJoin({ email, name, storeUrl, monthlyRevenue }).catch(console.error)
 
         revalidatePath('/early-access')
         return { success: true }

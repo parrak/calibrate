@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@calibr/db';
-import { RuleRunStatus } from '@prisma/client';
+import { RuleRunStatus } from '@calibr/db';
 import { trackPerformance } from '@/lib/performance-middleware';
 import { withSecurity } from '@/lib/security-headers';
 import { requireProjectAccess, errorJson } from '../price-changes/utils';

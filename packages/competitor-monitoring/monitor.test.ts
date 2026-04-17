@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { CompetitorMonitor } from './monitor'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@calibr/db'
 
 // Mock scrapers module
 vi.mock('./scrapers', () => ({

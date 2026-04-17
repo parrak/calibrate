@@ -1,21 +1,6 @@
 # Calibr V2 Execution Packet — Internal Engineering Summary
 _Last updated: February 3, 2026_
 
-> [!WARNING]
-> **STRATEGIC PIVOT** (February 13, 2026)
-> 
-> This execution packet has been superseded by the **agent directive structure**.
-> 
-> **Read these files first:**
-> - `/agents/PIVOT.md` - Explains the strategic pivot from e-commerce to SaaS discount governance
-> - `/agents/QUEUE.md` - 75 prioritized tasks (CAL-001 to CAL-075)
-> - `/agents/ARCHITECTURE.md` - Complete system architecture and schema
-> - `/agents/execution-packets/week-01-mutation-core.md` - Start here for implementation
-> 
-> This file is preserved for historical context and architectural reference.
-
----
-
 ## Purpose
 Define the **technical execution plan** for Calibr V2 with an **e‑commerce wedge** (Shopify launch; Amazon read‑only stub), while preserving the long‑term **Composable Data OS** architecture.
 
